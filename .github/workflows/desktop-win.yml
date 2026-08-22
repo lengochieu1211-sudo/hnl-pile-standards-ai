@@ -1,0 +1,51 @@
+name: Build HNL Desktop AI for Windows
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Read app version
+        shell: pwsh
+        run: |
+          $version = node -p "require('./package.json').version"
+          "APP_VERSION=$version" >> $env:GITHUB_ENV
+          Write-Host "HNL version: $version"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Test core logic
+        run: npm test
+
+      - name: Build NSIS and Portable EXE
+        run: npm run dist:win
+
+      - name: Show embedded build metadata
+        shell: pwsh
+        run: Get-Content dist/build-info.json
+
+      - name: Upload EXE artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: HNL-Pile-Standards-AI-Windows-v${{ env.APP_VERSION }}-build-${{ github.run_number }}
+          path: release/*.exe
+          if-no-files-found: error

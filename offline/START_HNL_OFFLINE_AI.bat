@@ -4,7 +4,7 @@ cd /d "%~dp0\.."
 title HNL Pile Standards AI - Offline Launcher
 
 echo =====================================================
-echo       HNL PILE STANDARDS AI - OFFLINE MODE
+echo       HNL PILE STANDARDS AI - LOCAL OFFLINE MODE
 echo =====================================================
 echo.
 
@@ -58,7 +58,7 @@ if not exist node_modules (
 )
 
 echo [3/4] Build giao dien Local...
-call npm run build
+call npm run build:desktop
 if errorlevel 1 goto :fail
 
 echo [4/4] Khoi dong HNL Local AI...

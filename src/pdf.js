@@ -3,7 +3,7 @@ import pdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?url';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 const pdfCache = new Map();
-let activeRenderTask = null;
+const activeRenderTasks = new WeakMap();
 
 function normalizeText(items) {
   if (!items?.length) return '';
@@ -104,19 +104,20 @@ export async function renderPdfPage(doc, pageNumber, canvas, scale = 1.2) {
   context.setTransform(ratio, 0, 0, ratio, 0, 0);
   context.fillStyle = '#fff';
   context.fillRect(0, 0, viewport.width, viewport.height);
-  if (activeRenderTask) {
-    try { activeRenderTask.cancel(); } catch { /* noop */ }
+  const previousTask = activeRenderTasks.get(canvas);
+  if (previousTask) {
+    try { previousTask.cancel(); } catch { /* noop */ }
   }
   const renderTask = page.render({ canvasContext: context, viewport });
-  activeRenderTask = renderTask;
+  activeRenderTasks.set(canvas, renderTask);
   try {
     await renderTask.promise;
   } catch (error) {
     if (error?.name !== 'RenderingCancelledException') throw error;
   } finally {
-    // Chỉ xóa task nếu đây vẫn là task mới nhất. Tránh race condition khi
-    // người dùng đổi tab/trang/zoom nhanh làm một task cũ xóa task mới.
-    if (activeRenderTask === renderTask) activeRenderTask = null;
+    // Mỗi canvas có render task riêng để chế độ cuộn liên tục có thể
+    // hiển thị nhiều trang song song mà không hủy lẫn nhau.
+    if (activeRenderTasks.get(canvas) === renderTask) activeRenderTasks.delete(canvas);
   }
   return pdf.numPages;
 }

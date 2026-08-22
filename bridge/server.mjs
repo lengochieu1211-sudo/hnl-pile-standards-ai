@@ -5,7 +5,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import os from 'node:os';
-import { spawnSync } from 'node:child_process';
+import { spawnSync, spawn } from 'node:child_process';
 import crypto from 'node:crypto';
 
 const app = express();
@@ -197,6 +197,27 @@ app.post('/api/local/semantic-rerank', async (req,res)=>{
   }
 });
 
+
+function currentModelsDir() { return process.env.OLLAMA_MODELS || path.join(os.homedir(), '.ollama', 'models'); }
+function directoryDiskInfo(targetPath='') {
+  try { let probe=path.resolve(targetPath||currentModelsDir()); while(!fs.existsSync(probe)){ const parent=path.dirname(probe); if(parent===probe) break; probe=parent; } if(!fs.existsSync(probe)||typeof fs.statfsSync!=='function') return {freeBytes:0,totalBytes:0,path:probe}; const s=fs.statfsSync(probe); return {freeBytes:Number(s.bavail||s.bfree||0)*Number(s.bsize||0),totalBytes:Number(s.blocks||0)*Number(s.bsize||0),path:probe}; } catch { return {freeBytes:0,totalBytes:0,path:targetPath}; }
+}
+function windowsDrives() {
+  if(process.platform!=='win32') return [];
+  try { const script='Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" | Select-Object DeviceID,FreeSpace,Size | ConvertTo-Json -Compress'; const r=spawnSync('powershell.exe',['-NoProfile','-Command',script],{encoding:'utf8',windowsHide:true,timeout:5000}); if(r.status!==0||!r.stdout?.trim()) return []; const raw=JSON.parse(r.stdout.trim()); return (Array.isArray(raw)?raw:[raw]).map(x=>({device:String(x.DeviceID||''),freeBytes:Number(x.FreeSpace||0),totalBytes:Number(x.Size||0)})).filter(x=>x.device); } catch { return []; }
+}
+function setUserModelsDir(dir) {
+  process.env.OLLAMA_MODELS=dir;
+  if(process.platform==='win32'){ const script=`[Environment]::SetEnvironmentVariable('OLLAMA_MODELS', ${JSON.stringify(dir)}, 'User')`; const r=spawnSync('powershell.exe',['-NoProfile','-Command',script],{encoding:'utf8',windowsHide:true,timeout:8000}); if(r.status!==0) throw new Error((r.stderr||r.stdout||'Không đặt được OLLAMA_MODELS').trim()); }
+}
+async function restartOllamaServer() {
+  if(process.platform!=='win32') return {ok:false,message:'Tự khởi động lại Ollama hiện chỉ hỗ trợ Windows.'};
+  try{spawnSync('taskkill',['/IM','ollama.exe','/F'],{encoding:'utf8',windowsHide:true,timeout:5000});}catch{}
+  try{const child=spawn('ollama',['serve'],{detached:true,windowsHide:true,stdio:'ignore',env:{...process.env}});child.unref();}catch(err){return {ok:false,message:err.message};}
+  const base=(process.env.OLLAMA_BASE_URL||'http://127.0.0.1:11434').replace(/\/$/,''); for(let i=0;i<12;i++){await new Promise(r=>setTimeout(r,500));try{const resp=await fetch(`${base}/api/tags`,{signal:AbortSignal.timeout(900)});if(resp.ok)return {ok:true};}catch{}} return {ok:false,message:'Đã đặt thư mục nhưng Ollama chưa phản hồi sau khi khởi động lại.'};
+}
+function stripAnsi(text=''){return String(text).replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g,'').replace(/\r/g,'\n');}
+function updatePullProgress(job,chunk){const text=stripAnsi(chunk);job.output=(job.output+text).slice(-12000);const matches=[...text.matchAll(/(\d{1,3})\s*%/g)];if(matches.length)job.progress=Math.max(job.progress||0,Math.min(99,Number(matches.at(-1)[1])||0));}
 function gpuInfo() {
   try {
     const r=spawnSync('nvidia-smi',['--query-gpu=name,memory.total','--format=csv,noheader,nounits'],{encoding:'utf8',windowsHide:true,timeout:3000});
@@ -329,6 +350,49 @@ app.post('/api/extract-archive', express.raw({ type:'application/octet-stream', 
   }
 });
 
+
+
+const MODEL_PULL_JOBS = new Map();
+app.post('/api/local/pull-model', (req, res) => {
+  try {
+    const model = String(req.body?.model || '').trim();
+    if (!model || !/^[a-zA-Z0-9._:/-]{2,120}$/.test(model)) return res.status(400).json({ error:'Tên model Ollama không hợp lệ.' });
+    if (MODEL_PULL_JOBS.get(model)?.status === 'running') return res.json({ ok:true, model, status:'running' });
+    const child = spawn('ollama', ['pull', model], { windowsHide:true, stdio:['ignore','pipe','pipe'] });
+    const job = { status:'running', startedAt:new Date().toISOString(), output:'', progress:0, pid:child.pid, child };
+    MODEL_PULL_JOBS.set(model, job);
+    const add = chunk => updatePullProgress(job, chunk);
+    child.stdout?.on('data', add); child.stderr?.on('data', add);
+    child.on('error', err => { job.status='error'; job.error=err.message; });
+    child.on('exit', code => { job.status = code === 0 ? 'done' : (job.status === 'cancelled' ? 'cancelled' : 'error'); job.progress = code === 0 ? 100 : job.progress; job.exitCode=code; job.finishedAt=new Date().toISOString(); delete job.child; });
+    res.json({ ok:true, model, status:'running' });
+  } catch (err) { res.status(500).json({ error:err.message || 'Không chạy được ollama pull.' }); }
+});
+app.get('/api/local/model-jobs', (_req,res) => {
+  res.json({ jobs:[...MODEL_PULL_JOBS.entries()].map(([model,j])=>({ model, status:j.status, startedAt:j.startedAt, finishedAt:j.finishedAt, progress:j.progress||0, error:j.error, exitCode:j.exitCode, output:j.output })) });
+});
+app.post('/api/local/cancel-model-pull', (req,res)=>{
+  const model=String(req.body?.model||'').trim(); const job=MODEL_PULL_JOBS.get(model);
+  if(!job||job.status!=='running') return res.status(404).json({error:'Không có tác vụ tải model đang chạy.'});
+  try{job.status='cancelled';if(job.child&&!job.child.killed)job.child.kill();res.json({ok:true,model,status:'cancelled'});}catch(err){res.status(500).json({error:err.message});}
+});
+
+app.get('/api/local/model-manager', async (_req,res)=>{
+  const base=(process.env.OLLAMA_BASE_URL||'http://127.0.0.1:11434').replace(/\/$/,''); let ollama=false,models=[],version='';
+  try{const tags=await jsonFetch(`${base}/api/tags`,{method:'GET'});ollama=true;models=(tags.models||[]).map(m=>({name:m.name||m.model,size:Number(m.size||0),modifiedAt:m.modified_at||'',digest:m.digest||'',details:m.details||{}}));try{const v=await jsonFetch(`${base}/api/version`,{method:'GET'});version=String(v.version||'');}catch{}}catch{}
+  const modelsDir=currentModelsDir(); const disk=directoryDiskInfo(modelsDir); const jobs=[...MODEL_PULL_JOBS.entries()].map(([model,j])=>({model,status:j.status,progress:j.progress||0,startedAt:j.startedAt,finishedAt:j.finishedAt,error:j.error,output:j.output}));
+  res.json({ok:true,ollama,ollamaVersion:version,models,modelsDir,disk,installedBytes:models.reduce((n,m)=>n+(Number(m.size)||0),0),drives:windowsDrives(),jobs});
+});
+app.post('/api/local/delete-model',(req,res)=>{
+  const model=String(req.body?.model||'').trim(); if(!model||!/^[a-zA-Z0-9._:/-]{2,120}$/.test(model))return res.status(400).json({error:'Tên model không hợp lệ.'}); if(MODEL_PULL_JOBS.get(model)?.status==='running')return res.status(409).json({error:'Model đang tải. Hãy hủy tải trước khi xóa.'});
+  try{const r=spawnSync('ollama',['rm',model],{encoding:'utf8',windowsHide:true,timeout:120000});if(r.error)throw r.error;if(r.status!==0)throw new Error((r.stderr||r.stdout||'ollama rm thất bại').trim());res.json({ok:true,model});}catch(err){res.status(500).json({error:err.message||'Không xóa được model.'});}
+});
+app.post('/api/local/model-directory',async(req,res)=>{
+  try{if([...MODEL_PULL_JOBS.values()].some(j=>j.status==='running'))return res.status(409).json({error:'Đang có model được tải. Hãy chờ hoặc hủy tải trước khi đổi thư mục model.'});const requested=String(req.body?.path||'').trim();if(!requested)return res.status(400).json({error:'Thiếu đường dẫn thư mục model.'});const dir=path.resolve(requested);fs.mkdirSync(dir,{recursive:true});setUserModelsDir(dir);const restart=req.body?.restart!==false;const rr=restart?await restartOllamaServer():{ok:true};res.json({ok:true,path:dir,restartOk:rr.ok,message:rr.ok?`Đã dùng thư mục model: ${dir}`:`Đã đặt OLLAMA_MODELS=${dir}. ${rr.message||'Hãy khởi động lại Ollama.'}`});}catch(err){res.status(500).json({error:err.message||'Không đổi được thư mục model.'});}
+});
+app.post('/api/local/open-model-directory',(_req,res)=>{
+  try{const dir=currentModelsDir();fs.mkdirSync(dir,{recursive:true});if(process.platform==='win32')spawn('explorer.exe',[dir],{detached:true,windowsHide:true,stdio:'ignore'}).unref();else if(process.platform==='darwin')spawn('open',[dir],{detached:true,stdio:'ignore'}).unref();else spawn('xdg-open',[dir],{detached:true,stdio:'ignore'}).unref();res.json({ok:true,path:dir});}catch(err){res.status(500).json({error:err.message||'Không mở được thư mục model.'});}
+});
 
 const BRIDGE_FALLBACK_MODELS = {
   ollama: [],

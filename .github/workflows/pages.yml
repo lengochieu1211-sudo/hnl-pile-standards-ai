@@ -1,4 +1,4 @@
-name: Deploy HNL Pile Standards AI to GitHub Pages
+name: Deploy HNL Web to GitHub Pages
 
 on:
   push:
@@ -21,8 +21,6 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      # IMPORTANT: do not enable setup-node npm cache unless package-lock.json
-      # (or another supported lock file) is committed to the repository.
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -31,8 +29,14 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Build Vite app
-        run: npm run build
+      - name: Test core logic
+        run: npm test
+
+      - name: Build HNL Web
+        run: npm run build:web
+
+      - name: Show build metadata
+        run: cat dist/build-info.json
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

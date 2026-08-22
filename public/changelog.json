@@ -1,0 +1,40 @@
+{
+  "current": "1.9.3",
+  "releases": [
+    {
+      "version": "1.9.3",
+      "title": "Icon Pro & Windows Identity",
+      "changes": [
+        "Tối ưu logo HNL cho icon Windows ở kích thước nhỏ, giảm khoảng trống và tăng độ nét/độ tương phản.",
+        "ICO đa kích thước 16/20/24/32/40/48/64/128/256 px cho Setup, Portable, Desktop Shortcut, Start Menu và File Explorer.",
+        "Bổ sung favicon 32/48/64 px và cập nhật PWA manifest dùng icon HNL tối ưu.",
+        "Desktop đặt AppUserModelID cố định để icon taskbar/shortcut nhất quán trên Windows."
+      ]
+    },
+    {
+      "version": "1.9.2",
+      "title": "Build Metadata & Update Diagnostics",
+      "changes": [
+        "Ngày giờ trên giao diện lấy từ build-info.json được tạo sau khi Vite build thành công.",
+        "Phiên bản chỉ lấy từ package.json; GitHub Actions và giao diện dùng chung một nguồn version.",
+        "Hiển thị Build #, commit, nhánh, kênh Web/Desktop và nguồn build.",
+        "Thêm kiểm tra cập nhật từ GitHub Releases và sao chép thông tin chẩn đoán.",
+        "Service Worker dùng version từ URL đăng ký, build-info/changelog luôn network-first để tránh cache cũ."
+      ]
+    },
+    {
+      "version": "1.9.1",
+      "title": "Offline Model Manager",
+      "changes": [
+        "Quản lý model Ollama, dung lượng ổ đĩa, tiến độ tải, hủy tải và đổi thư mục model."
+      ]
+    },
+    {
+      "version": "1.9.0",
+      "title": "Reader Pro",
+      "changes": [
+        "PDF cuộn liên tục, kéo/pan, tìm trong PDF, focus reader và panel co giãn."
+      ]
+    }
+  ]
+}

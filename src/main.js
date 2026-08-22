@@ -8,11 +8,25 @@ import { annulusAreaMm2, axialResistance, loadClassSigmaCe, tcvn7888Checklist } 
 import { diameters7888, lookup7888, classesForDiameter7888 } from './tcvn7888.js';
 import { extractFormulaLibrary, formulaStats, verifiedFormulaLibrary, evaluateExpression, clearFormulaCache } from './formulas.js';
 
-const APP_META = Object.freeze({
-  version: '1.7.1',
-  updatedAt: '22/08/2026 23:26 GMT+7',
-  release: 'AI Formula Scanner · OCR/Vision Formula Extraction · Full Document Scan'
+const SOURCE_META = Object.freeze({
+  version: typeof __HNL_APP_VERSION__ !== 'undefined' ? __HNL_APP_VERSION__ : '0.0.0',
+  release: 'Build Metadata · Update Diagnostics · PWA Freshness'
 });
+
+let APP_META = {
+  ...SOURCE_META,
+  builtAt: null, source: 'Source fallback', runNumber: null, runAttempt: null, runId: null,
+  repository: null, branch: null, commit: null, commitShort: null, workflowUrl: null,
+  target: null, edition: null
+};
+
+const APP_EDITION = String(import.meta.env.VITE_HNL_EDITION || 'web').toLowerCase();
+const IS_DESKTOP_EDITION = APP_EDITION === 'desktop';
+const EDITION_LABEL = IS_DESKTOP_EDITION ? 'HNL Desktop AI' : 'HNL Web';
+
+function availableProviderEntries() {
+  return Object.entries(PROVIDERS).filter(([id]) => IS_DESKTOP_EDITION || id !== 'ollama');
+}
 
 const STORAGE = {
   provider: 'hnl.provider.v12',
@@ -28,7 +42,13 @@ const STORAGE = {
   retrievalMode: 'hnl.retrievalMode.v17',
   embeddingModel: 'hnl.embeddingModel.v17',
   semanticRerank: 'hnl.semanticRerank.v17',
-  formulaScanMode: 'hnl.formulaScanMode.v171'
+  formulaScanMode: 'hnl.formulaScanMode.v171',
+  readerMode: 'hnl.readerMode.v19',
+  readerQuery: 'hnl.readerQuery.v19',
+  leftCollapsed: 'hnl.leftCollapsed.v19',
+  rightCollapsed: 'hnl.rightCollapsed.v19',
+  leftWidth: 'hnl.leftWidth.v19',
+  rightWidth: 'hnl.rightWidth.v19'
 };
 
 const state = {
@@ -37,6 +57,17 @@ const state = {
   activeDocId: null,
   page: 1,
   zoom: 1.08,
+  readerMode: localStorage.getItem(STORAGE.readerMode) || 'continuous',
+  readerQuery: localStorage.getItem(STORAGE.readerQuery) || '',
+  readerMatchIndex: -1,
+  focusReader: false,
+  leftCollapsed: localStorage.getItem(STORAGE.leftCollapsed) === 'true',
+  rightCollapsed: localStorage.getItem(STORAGE.rightCollapsed) === 'true',
+  layout: {
+    left: Math.min(390, Math.max(240, Number(localStorage.getItem(STORAGE.leftWidth)) || 290)),
+    right: Math.min(560, Math.max(330, Number(localStorage.getItem(STORAGE.rightWidth)) || 440))
+  },
+  pendingPageScroll: true,
   tab: 'summary',
   mobile: 'library',
   chat: [],
@@ -65,14 +96,18 @@ const state = {
   diagnosticHtml: '',
   modelOptions: [],
   modelStatus: '',
+  localModelManager: { loading:false, data:null, error:'', pollTimer:null },
   searchStats: null,
   formulaSelection: localStorage.getItem(STORAGE.formulaSelection) || '',
   formulaQuery: '',
   formulaScanMode: localStorage.getItem(STORAGE.formulaScanMode) || 'auto',
-  archivePasswordCache: new Map()
+  archivePasswordCache: new Map(),
+  buildInfoLoaded: false,
+  updateStatus: null,
+  changelog: []
 };
 
-if (!PROVIDERS[state.settings.provider]) state.settings.provider = 'local';
+if (!PROVIDERS[state.settings.provider] || (!IS_DESKTOP_EDITION && state.settings.provider === 'ollama')) state.settings.provider = 'local';
 if (new URLSearchParams(location.search).get('offline') === '1' && ['localhost','127.0.0.1','::1'].includes(location.hostname)) {
   state.settings.provider = 'ollama';
   state.settings.connection = 'bridge';
@@ -174,6 +209,106 @@ function showToast(message, type = 'info') {
 }
 function setBusy(value) { state.busy = value; render(); }
 
+function formatBuildTime(value) {
+  if (!value) return 'Chưa có dấu build';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  const parts = new Intl.DateTimeFormat('vi-VN', {
+    timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+  }).format(d);
+  return `${parts} GMT+7`;
+}
+function buildNumberLabel() {
+  return APP_META.runNumber ? `Build #${APP_META.runNumber}${APP_META.runAttempt && APP_META.runAttempt > 1 ? `.${APP_META.runAttempt}` : ''}` : (APP_META.source || 'Local build');
+}
+function currentBuildSummary() {
+  return [
+    `HNL Pile Standards AI v${APP_META.version}`,
+    `Edition: ${EDITION_LABEL}`,
+    `Build: ${buildNumberLabel()}`,
+    `Build time: ${formatBuildTime(APP_META.builtAt)}`,
+    `Source: ${APP_META.source || '-'}`,
+    `Repository: ${APP_META.repository || '-'}`,
+    `Branch: ${APP_META.branch || '-'}`,
+    `Commit: ${APP_META.commit || '-'}`,
+    `Provider: ${(PROVIDERS[state.settings.provider] || {}).label || state.settings.provider}`,
+    `Connection: ${state.settings.connection}`,
+    `Documents: ${state.docs.length}`,
+    `Sources: ${sourceDocs().length}`,
+    `User agent: ${navigator.userAgent}`
+  ].join('\n');
+}
+function versionCardHtml() {
+  const update = state.updateStatus;
+  const updateHtml = update ? `<div class="notice ${update.ok ? (update.available ? 'warning' : 'success') : 'error'}"><b>${esc(update.title || '')}</b>${update.message ? `<br>${esc(update.message)}` : ''}${update.url ? ` <a class="inline-link" href="${esc(update.url)}" target="_blank" rel="noreferrer">Mở GitHub Release</a>` : ''}</div>` : '';
+  const changes = (state.changelog || []).slice(0, 2);
+  const changelogHtml = changes.length ? `<div class="mini-changelog">${changes.map(r => `<div><b>v${esc(r.version)} · ${esc(r.title || '')}</b><small>${(r.changes || []).slice(0, 3).map(x => `• ${esc(x)}`).join('<br>')}</small></div>`).join('')}</div>` : '';
+  return `<div class="panel-section app-version-card">
+    <div class="panel-section-title"><h3>Phiên bản & bản build</h3><span>${EDITION_LABEL}</span></div>
+    <div class="version-grid">
+      <div><span>Phiên bản</span><b>v${APP_META.version}</b></div>
+      <div><span>Bản build</span><b>${esc(buildNumberLabel())}</b></div>
+      <div><span>Thời điểm build</span><b>${esc(formatBuildTime(APP_META.builtAt))}</b></div>
+      <div><span>Kênh</span><b>${EDITION_LABEL}</b></div>
+      <div><span>Commit</span><b>${esc(APP_META.commitShort || 'local')}</b></div>
+      <div><span>Nhánh</span><b>${esc(APP_META.branch || 'local')}</b></div>
+    </div>
+    <p class="muted">Ngày giờ này được đọc từ <code>build-info.json</code> tạo <b>sau khi bước build thành công</b>. Không dùng ngày giờ ghi cứng trong source.</p>
+    <div class="action-row"><button class="btn" id="checkAppUpdate">↻ Kiểm tra cập nhật</button><button class="btn" id="copyBuildDiagnostics">⧉ Sao chép thông tin</button>${APP_META.workflowUrl ? `<a class="btn inline-link" href="${esc(APP_META.workflowUrl)}" target="_blank" rel="noreferrer">GitHub Build</a>` : ''}</div>
+    ${updateHtml}${changelogHtml}
+  </div>`;
+}
+async function loadBuildMetadata() {
+  try {
+    const res = await fetch(`./build-info.json?t=${Date.now()}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const info = await res.json();
+    APP_META = { ...APP_META, ...info, version: info.version || SOURCE_META.version, release: info.release || SOURCE_META.release };
+  } catch {
+    APP_META = { ...APP_META, version: SOURCE_META.version, target: APP_EDITION, edition: EDITION_LABEL };
+  } finally { state.buildInfoLoaded = true; }
+}
+async function loadChangelog() {
+  try {
+    const res = await fetch(`./changelog.json?t=${Date.now()}`, { cache: 'no-store' });
+    if (!res.ok) return;
+    const data = await res.json();
+    state.changelog = Array.isArray(data.releases) ? data.releases : [];
+  } catch { state.changelog = []; }
+}
+function compareVersions(a, b) {
+  const pa = String(a || '').replace(/^v/i, '').split('.').map(x => Number.parseInt(x, 10) || 0);
+  const pb = String(b || '').replace(/^v/i, '').split('.').map(x => Number.parseInt(x, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) { const d = (pa[i] || 0) - (pb[i] || 0); if (d) return d; }
+  return 0;
+}
+async function checkAppUpdate() {
+  const repo = APP_META.repository;
+  if (!repo || !/^[^/]+\/[^/]+$/.test(repo)) {
+    state.updateStatus = { ok:false, title:'Chưa xác định repository', message:'Build local hoặc build-info chưa có tên owner/repo GitHub.' }; render(); return;
+  }
+  state.updateStatus = { ok:true, title:'Đang kiểm tra…', message:`GitHub Releases · ${repo}` }; render();
+  try {
+    const res = await fetch(`https://api.github.com/repos/${repo}/releases/latest`, { headers:{ Accept:'application/vnd.github+json' }, cache:'no-store' });
+    if (res.status === 404) throw new Error('Repository chưa có GitHub Release hoặc Release không công khai.');
+    if (!res.ok) throw new Error(`GitHub API HTTP ${res.status}`);
+    const rel = await res.json();
+    const latest = String(rel.tag_name || rel.name || '').replace(/^v/i, '');
+    const available = latest && compareVersions(latest, APP_META.version) > 0;
+    state.updateStatus = { ok:true, available, title: available ? `Có bản mới v${latest}` : `Đang ở bản mới nhất v${APP_META.version}`, message: available ? 'Mở GitHub Release để tải/cập nhật bản Desktop hoặc kiểm tra deploy Web.' : `Release mới nhất: ${rel.tag_name || latest}.`, url: rel.html_url || null };
+  } catch (error) { state.updateStatus = { ok:false, title:'Không kiểm tra được cập nhật', message:error.message }; }
+  render();
+}
+async function copyBuildDiagnostics() {
+  const text = currentBuildSummary();
+  try {
+    if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(text);
+    else { const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+    showToast('Đã sao chép thông tin phiên bản/build để gửi kiểm tra lỗi.', 'success');
+  } catch (error) { showToast(`Không sao chép được: ${error.message}`, 'error'); }
+}
+
 function render() {
   const doc = activeDoc();
   const sources = sourceDocs();
@@ -185,8 +320,8 @@ function render() {
         <img class="brand-mark" src="./hnl-mark-192.png" alt="HNL" />
         <div class="brand-copy">
           <div class="brand-title">HNL Pile Standards AI</div>
-          <div class="brand-sub">Tra cứu tiêu chuẩn · kiểm tra kỹ thuật cọc</div>
-          <div class="build-meta"><span class="version-chip">v${APP_META.version}</span><span>Cập nhật ${APP_META.updatedAt}</span></div>
+          <div class="brand-sub">${IS_DESKTOP_EDITION ? 'Desktop AI · Offline Ollama + AI Online' : 'Web · Gemini / ChatGPT / Claude / Grok'}</div>
+          <div class="build-meta"><span class="version-chip">v${APP_META.version}</span><span class="version-chip edition-chip">${EDITION_LABEL}</span><span>${esc(buildNumberLabel())} · ${esc(formatBuildTime(APP_META.builtAt))}</span></div>
         </div>
       </div>
       <div class="top-actions">
@@ -197,13 +332,14 @@ function render() {
       </div>
     </header>
 
-    <main class="workspace" data-mobile="${state.mobile}">
+    <main class="workspace ${state.focusReader ? 'reader-focus' : ''} ${state.leftCollapsed ? 'left-collapsed' : ''} ${state.rightCollapsed ? 'right-collapsed' : ''}" data-mobile="${state.mobile}" style="--left-w:${state.layout.left}px;--right-w:${state.layout.right}px">
       <aside class="sidebar">
         <div class="side-head">
           <div><div class="section-kicker">Tài liệu</div><h2>Thư viện tiêu chuẩn</h2></div>
           <div class="mini-actions">
             <button class="icon-btn" id="selectAll" title="Chọn tất cả làm nguồn">✓</button>
             <button class="icon-btn" id="clearSelection" title="Bỏ chọn tất cả">×</button>
+            <button class="icon-btn" id="toggleLibrary" title="Thu gọn thư viện">◀</button>
           </div>
         </div>
         <div class="import-grid">
@@ -232,31 +368,46 @@ function render() {
           </label>
         </div>
       </aside>
+      <div class="workspace-splitter splitter-left" aria-hidden="true"></div>
 
       <section class="viewer">
         <div class="viewer-toolbar">
           <div class="viewer-title-wrap">
+            <button class="icon-btn viewer-side-toggle" id="toggleLibrary" title="Ẩn/hiện thư viện">☰</button>
             <span class="viewer-title">${doc ? esc(doc.standard || doc.name) : 'Trình đọc PDF'}</span>
-            ${doc?.scannedLikely ? '<span class="warn-chip" title="PDF có rất ít lớp text">Có thể là PDF scan</span>' : ''}
+            ${doc?.scannedLikely ? '<span class="warn-chip" title="PDF có rất ít lớp text">PDF scan</span>' : ''}
+          </div>
+          <div class="reader-search ${state.readerQuery ? 'active' : ''}">
+            <input id="pdfSearchInput" value="${esc(state.readerQuery)}" placeholder="Tìm trong PDF…" ${!doc ? 'disabled' : ''}>
+            <button class="icon-btn" id="pdfSearchPrev" ${!doc ? 'disabled' : ''} title="Kết quả trước">↑</button>
+            <button class="icon-btn" id="pdfSearchNext" ${!doc ? 'disabled' : ''} title="Kết quả sau">↓</button>
           </div>
           <div class="viewer-controls">
-            <button class="icon-btn" id="zoomOut" ${!doc ? 'disabled' : ''} title="Thu nhỏ">−</button>
-            <button class="zoom-value" id="fitWidth" ${!doc ? 'disabled' : ''} title="Về kích thước mặc định">${Math.round(state.zoom * 100)}%</button>
-            <button class="icon-btn" id="zoomIn" ${!doc ? 'disabled' : ''} title="Phóng to">＋</button>
+            <div class="reader-mode-switch" title="Kiểu đọc PDF">
+              <button id="readerContinuous" class="${state.readerMode === 'continuous' ? 'active' : ''}" ${!doc || doc.viewerKind !== 'pdf' ? 'disabled' : ''}>Liên tục</button>
+              <button id="readerSingle" class="${state.readerMode === 'single' ? 'active' : ''}" ${!doc || doc.viewerKind !== 'pdf' ? 'disabled' : ''}>1 trang</button>
+            </div>
+            <button class="icon-btn" id="zoomOut" ${!doc ? 'disabled' : ''} title="Thu nhỏ (−)">−</button>
+            <button class="zoom-value" id="fitWidth" ${!doc ? 'disabled' : ''} title="Vừa chiều rộng (Ctrl+0)">${Math.round(state.zoom * 100)}%</button>
+            <button class="icon-btn" id="zoomIn" ${!doc ? 'disabled' : ''} title="Phóng to (+)">＋</button>
             <span class="toolbar-divider"></span>
-            <button class="icon-btn" id="prevPage" ${!doc ? 'disabled' : ''} title="Trang trước">‹</button>
+            <button class="icon-btn" id="prevPage" ${!doc ? 'disabled' : ''} title="Trang trước (Page Up)">‹</button>
             <input class="page-input" id="pageInput" value="${state.page}" ${!doc ? 'disabled' : ''} aria-label="Số trang">
             <span class="page-total">/ ${doc?.pageCount || 0}</span>
-            <button class="icon-btn" id="nextPage" ${!doc ? 'disabled' : ''} title="Trang sau">›</button>
+            <button class="icon-btn" id="nextPage" ${!doc ? 'disabled' : ''} title="Trang sau (Page Down)">›</button>
+            <span class="toolbar-divider"></span>
+            <button class="icon-btn" id="toggleAssistant" title="Ẩn/hiện trợ lý">AI</button>
+            <button class="icon-btn" id="focusReader" title="Chế độ tập trung PDF">⛶</button>
           </div>
         </div>
         ${doc ? viewerContentHtml(doc) : emptyViewerHtml()}
       </section>
+      <div class="workspace-splitter splitter-right" aria-hidden="true"></div>
 
       <aside class="assistant-panel">
         <div class="assistant-head">
           <div><div class="section-kicker">Kỹ thuật</div><h2>Trợ lý tiêu chuẩn</h2></div>
-          <span class="mode-chip">${state.settings.provider === 'local' ? 'Tra nhanh' : esc(PROVIDERS[state.settings.provider]?.short)}</span>
+          <div class="assistant-head-actions"><span class="mode-chip">${state.settings.provider === 'local' ? 'Tra nhanh' : esc(PROVIDERS[state.settings.provider]?.short)}</span><button class="icon-btn" id="toggleAssistant" title="Thu gọn trợ lý">▶</button></div>
         </div>
         <div class="tabs">${[
           ['summary', 'Tóm tắt'], ['chat', 'Hỏi đáp'], ['lookup', 'Tra cứu'], ['calc', 'Tính'], ['compare', 'So sánh'], ['checklist', 'Nghiệm thu'], ['settings', 'Cài đặt']
@@ -276,6 +427,8 @@ function render() {
   </div>`;
 
   bind();
+  bindWorkspaceSplitters();
+  bindGlobalReaderShortcuts();
   if (doc) queueMicrotask(drawPage);
 }
 
@@ -291,7 +444,14 @@ function viewerContentHtml(doc) {
     const page = doc.pages?.[Math.max(0, state.page - 1)];
     return `<div class="canvas-wrap text-wrap"><pre class="text-viewer">${esc(page?.text || '')}</pre></div>`;
   }
-  return '<div class="canvas-wrap"><canvas id="pdfCanvas"></canvas></div>';
+  if (state.readerMode === 'continuous') {
+    const pages = Array.from({ length: doc.pageCount || 0 }, (_, i) => {
+      const p = i + 1;
+      return `<section class="pdf-page-shell" id="pdf-page-${p}" data-page="${p}"><div class="page-float-label">${p}</div><canvas class="pdf-page-canvas" data-page="${p}"></canvas><div class="pdf-page-loading">Trang ${p}</div></section>`;
+    }).join('');
+    return `<div class="canvas-wrap pdf-continuous" id="pdfScroll">${pages}</div><div class="reader-statusbar"><span>Trang <b id="readerStatusPage">${state.page}</b>/${doc.pageCount}</span><input id="pageRange" type="range" min="1" max="${doc.pageCount}" value="${state.page}"><span>${Math.round(state.zoom*100)}% · kéo chuột để pan · Ctrl+cuộn để zoom</span></div>`;
+  }
+  return `<div class="canvas-wrap pdf-single" id="pdfScroll"><section class="pdf-page-shell single" data-page="${state.page}"><canvas id="pdfCanvas"></canvas></section></div><div class="reader-statusbar"><span>Trang <b>${state.page}</b>/${doc.pageCount}</span><input id="pageRange" type="range" min="1" max="${doc.pageCount}" value="${state.page}"><span>${Math.round(state.zoom*100)}% · PageUp/PageDown đổi trang</span></div>`;
 }
 
 function emptyViewerHtml() {
@@ -497,16 +657,54 @@ function checklistHtml() {
   </div>`;
 }
 
+function formatBytes(value = 0) {
+  const n = Number(value) || 0;
+  if (n <= 0) return '0 B';
+  const units = ['B','KB','MB','GB','TB'];
+  const i = Math.min(units.length - 1, Math.floor(Math.log(n) / Math.log(1024)));
+  const v = n / (1024 ** i);
+  return `${v >= 100 || i === 0 ? v.toFixed(0) : v.toFixed(1)} ${units[i]}`;
+}
+function localModelManagerHtml() {
+  if (!IS_DESKTOP_EDITION && !isLocalHost()) return '';
+  const mm = state.localModelManager || {};
+  const d = mm.data;
+  if (mm.loading && !d) return `<div class="model-manager-card"><div class="panel-section-title"><h3>Quản lý AI Offline</h3><span>Đang đọc...</span></div><div class="notice">Đang kiểm tra Ollama, model và ổ đĩa trên máy.</div></div>`;
+  if (mm.error && !d) return `<div class="model-manager-card"><div class="panel-section-title"><h3>Quản lý AI Offline</h3><span>Lỗi</span></div><div class="notice error">${esc(mm.error)}</div><button class="btn" id="refreshLocalModelManager">Thử lại</button></div>`;
+  if (!d) return `<div class="model-manager-card"><div class="panel-section-title"><h3>Quản lý AI Offline</h3><span>Desktop</span></div><p class="muted">Xem model đã cài, dung lượng, ổ đĩa và thư mục lưu model Ollama.</p><button class="btn primary" id="refreshLocalModelManager">Mở trình quản lý model</button></div>`;
+  const models = Array.isArray(d.models) ? d.models : [];
+  const jobs = Array.isArray(d.jobs) ? d.jobs : [];
+  const drives = Array.isArray(d.drives) ? d.drives : [];
+  const driveOptions = drives.map(x => `<button class="drive-chip" data-model-dir="${esc(`${x.device || ''}\\HNL_AI\\Models`)}"><b>${esc(x.device || '')}</b><span>${formatBytes(x.freeBytes)} trống</span></button>`).join('');
+  const modelRows = models.length ? models.map(m => {
+    const name = m.name || m.model || '';
+    const family = m.details?.family || m.details?.families?.[0] || '';
+    const params = m.details?.parameter_size || '';
+    const quant = m.details?.quantization_level || '';
+    return `<div class="model-row"><div class="model-main"><b>${esc(name)}</b><small>${[family, params, quant].filter(Boolean).map(esc).join(' · ') || 'Ollama model'} · ${formatBytes(m.size)}</small></div><button class="btn compact-btn danger-btn" data-delete-local-model="${esc(name)}">Xóa</button></div>`;
+  }).join('') : `<div class="empty-models">Chưa có model Ollama nào trên máy.</div>`;
+  const jobRows = jobs.length ? `<div class="model-jobs"><b>Tác vụ tải model</b>${jobs.slice().reverse().map(j => `<div class="model-job"><div><span>${esc(j.model)}</span><small>${j.status === 'running' ? `Đang tải · ${Number(j.progress||0)}%` : j.status === 'done' ? 'Hoàn tất' : j.status === 'cancelled' ? 'Đã hủy' : 'Lỗi'}</small></div><div class="job-progress"><i style="width:${Math.max(0,Math.min(100,Number(j.progress||0)))}%"></i></div>${j.status === 'running' ? `<button class="icon-btn danger-btn" data-cancel-local-model="${esc(j.model)}" title="Hủy tải">×</button>` : ''}</div>`).join('')}</div>` : '';
+  return `<div class="model-manager-card">
+    <div class="panel-section-title"><h3>Quản lý AI Offline</h3><span>${d.ollama ? `${models.length} model` : 'Ollama chưa chạy'}</span></div>
+    <div class="model-storage-grid"><div><span>Thư mục model</span><b>${esc(d.modelsDir || 'Chưa xác định')}</b></div><div><span>Model đã cài</span><b>${formatBytes(d.installedBytes || 0)}</b></div><div><span>Ổ đĩa còn trống</span><b>${formatBytes(d.disk?.freeBytes || 0)}</b></div><div><span>Tổng dung lượng ổ</span><b>${formatBytes(d.disk?.totalBytes || 0)}</b></div></div>
+    <label class="field"><span>Đổi thư mục lưu model</span><div class="model-dir-picker"><input id="modelDirectoryInput" value="${esc(d.modelsDir || '')}" placeholder="Ví dụ D:\\HNL_AI\\Models"><button class="btn compact-btn" id="applyModelDirectory">Áp dụng</button></div><small>HNL đặt biến OLLAMA_MODELS cho tài khoản Windows. Sau khi đổi, HNL sẽ khởi động lại Ollama để model tải mới dùng đúng thư mục.</small></label>
+    ${driveOptions ? `<div class="drive-chips">${driveOptions}</div>` : ''}
+    <div class="model-pack-grid"><button class="model-pack" data-install-pack="light"><b>Nhẹ</b><span>Qwen 4B + embedding nhẹ + Vision</span></button><button class="model-pack recommended" data-install-pack="balanced"><b>Cân bằng</b><span>Qwen 8B + bge-m3 + Vision</span></button><button class="model-pack" data-install-pack="strong"><b>Mạnh</b><span>Qwen 14B + bge-m3 + Vision</span></button></div>
+    <div class="model-list-head"><b>Model đã cài</b><div><button class="btn compact-btn" id="refreshLocalModelManager">↻ Làm mới</button><button class="btn compact-btn" id="openModelDirectory">Mở thư mục</button></div></div>
+    <div class="model-list">${modelRows}</div>${jobRows}${mm.error ? `<div class="notice error">${esc(mm.error)}</div>` : ''}
+  </div>`;
+}
+
 function settingsHtml() {
   const provider = PROVIDERS[state.settings.provider];
-  const options = Object.entries(PROVIDERS).map(([id, p]) => `<option value="${id}" ${id === state.settings.provider ? 'selected' : ''}>${esc(p.label)}</option>`).join('');
+  const options = availableProviderEntries().map(([id, p]) => `<option value="${id}" ${id === state.settings.provider ? 'selected' : ''}>${esc(p.label)}</option>`).join('');
   const directNeedsKey = state.settings.connection === 'direct' && provider?.needsKey;
   const isOllama = state.settings.provider === 'ollama';
   const githubHttps = location.protocol === 'https:' && !isLocalHost();
   return `<div class="panel-section">
     <div class="panel-section-title"><h3>AI & kết nối</h3><span>${state.connectionStatus?.ok ? 'Sẵn sàng' : 'Chưa kiểm tra'}</span></div>
     <label class="field"><span>Nhà cung cấp</span><select id="providerSelect">${options}</select></label>
-    ${state.settings.provider === 'local' ? `<div class="notice success"><b>Tra cứu nhanh không phải AI.</b><br>Chế độ này tìm kiếm cục bộ, không cần mạng nhưng không suy luận như mô hình ngôn ngữ. Muốn AI offline thật, chọn <b>HNL Offline AI · Ollama</b>.</div>` : `
+    ${state.settings.provider === 'local' ? `<div class="notice success"><b>Tra cứu nhanh không phải AI.</b><br>${IS_DESKTOP_EDITION ? 'Chế độ này tìm kiếm cục bộ, không cần mạng. Muốn AI offline suy luận, chọn <b>HNL Offline AI · Ollama</b>.' : 'Chế độ này tìm ngay trong dữ liệu đã nạp, không cần API. Muốn AI suy luận trên bản Web, chọn <b>Gemini / ChatGPT / Claude / Grok</b>.'}</div>` : `
       <div class="segmented"><button data-connection="direct" class="${state.settings.connection === 'direct' ? 'active' : ''}">Trực tiếp</button><button data-connection="bridge" class="${state.settings.connection === 'bridge' ? 'active' : ''}">HNL Bridge</button></div>
       <label class="field"><span>Model văn bản</span><div class="model-picker"><input id="modelInput" list="modelOptionsList" value="${esc(providerModel())}" placeholder="Chọn hoặc nhập tên model"><button class="btn compact-btn" id="refreshModels" type="button">↻ Model</button></div><datalist id="modelOptionsList">${state.modelOptions.map(m => `<option value="${esc(m)}"></option>`).join('')}</datalist><small>${esc(state.modelStatus || 'Bấm ↻ Model để lấy danh sách model khả dụng của tài khoản/máy.')}</small></label>
       ${isOllama ? `<label class="field"><span>Model đọc ảnh offline</span><input id="visionModelInput" value="${esc(state.settings.visionModel)}" placeholder="gemma3:4b"></label>` : ''}
@@ -515,7 +713,7 @@ function settingsHtml() {
       ${isOllama && state.settings.connection === 'direct' ? `<label class="field"><span>Ollama URL</span><input id="ollamaInput" value="${esc(state.settings.ollamaUrl)}"></label>` : ''}
       ${isOllama && githubHttps ? `<div class="notice error"><b>Đây là nguyên nhân Offline AI trong video không chạy.</b><br>GitHub Pages là HTTPS nhưng Ollama trên máy là HTTP. Trình duyệt chặn kết nối này. Hãy chạy <b>START_HNL_OFFLINE_AI.bat</b> trong source và mở app tại <b>http://127.0.0.1:8787</b>.</div>` : ''}
       ${isOllama && isLocalHost() ? `<div class="notice success"><b>Đang ở chế độ Local.</b> Đây là môi trường đúng để dùng Ollama offline, semantic embedding và đọc ảnh bằng model vision.</div>` : ''}
-      ${isOllama ? `<div class="local-engine-card"><div class="panel-section-title"><h3>HNL Local Intelligence Engine</h3><span>v1.7</span></div>
+      ${isOllama ? `<div class="local-engine-card"><div class="panel-section-title"><h3>HNL Local Intelligence Engine</h3><span>v${APP_META.version}</span></div>
         <label class="field"><span>Chế độ tìm kiếm</span><select id="retrievalModeInput">
           <option value="auto" ${state.settings.retrievalMode === 'auto' ? 'selected' : ''}>Auto · tự chọn nhanh/chuyên sâu/semantic</option>
           <option value="hybrid" ${state.settings.retrievalMode === 'hybrid' ? 'selected' : ''}>Hybrid Semantic · từ khóa + vector + rerank</option>
@@ -525,7 +723,8 @@ function settingsHtml() {
         <label class="field"><span>Model embedding cục bộ</span><input id="embeddingModelInput" value="${esc(state.settings.embeddingModel)}" placeholder="bge-m3"><small>Khuyến nghị tiếng Việt/kỹ thuật: bge-m3. Có thể dùng nomic-embed-text nếu máy nhẹ.</small></label>
         <label class="switch-row"><input id="semanticRerankInput" type="checkbox" ${state.settings.semanticRerank ? 'checked' : ''}><span><b>Semantic rerank</b><small>Rerank các đoạn ứng viên bằng embedding cục bộ trước khi gửi cho model trả lời.</small></span></label>
         <div class="notice"><b>Cơ chế v1.7:</b> quét toàn bộ trang → tìm từ khóa/cấu trúc → embedding semantic → cân bằng giữa PDF → thêm trang lân cận → model trả lời có citation.</div>
-        <div class="action-row"><button class="btn" id="autoLocalModels" type="button">⚙ Tự chọn model theo máy</button></div>
+        <div class="action-row"><button class="btn" id="autoLocalModels" type="button">⚙ Tự chọn model theo máy</button><button class="btn" id="installCurrentLocalModel" type="button">⬇ Cài model văn bản</button><button class="btn" id="installLocalAiPack" type="button">⬇ Cài bộ AI Offline chuẩn</button></div><div class="notice"><b>Desktop:</b> nút cài model gọi Ollama ngay trên máy. Bộ chuẩn gồm model văn bản + embedding + vision; chỉ cần tải một lần rồi có thể dùng offline.</div>
+        ${localModelManagerHtml()}
       </div>` : ''}
       ${state.settings.connection === 'bridge' ? `<label class="field"><span>HNL Bridge URL</span><input id="bridgeInput" value="${esc(state.settings.bridgeUrl)}"></label><div class="notice">Khi chạy Local, nên để Bridge cùng địa chỉ app, ví dụ http://127.0.0.1:8787.</div>` : ''}
     `}
@@ -533,8 +732,8 @@ function settingsHtml() {
     <div class="action-row"><button class="btn primary" id="saveSettings">Lưu cài đặt</button><button class="btn" id="testConnection">Kiểm tra kết nối</button></div>
     ${state.connectionStatus ? `<div class="notice ${state.connectionStatus.ok ? 'success' : 'error'}"><b>${state.connectionStatus.ok ? 'Kết nối OK' : 'Kết nối lỗi'}</b><br>${esc(state.connectionStatus.message || '')}</div>` : ''}
   </div>
-  <div class="panel-section app-version-card"><div class="panel-section-title"><h3>Phiên bản ứng dụng</h3><span>Đang chạy</span></div><div class="version-grid"><div><span>Phiên bản</span><b>v${APP_META.version}</b></div><div><span>Cập nhật</span><b>${APP_META.updatedAt}</b></div><div><span>Nhánh tính năng</span><b>${APP_META.release}</b></div></div><p class="muted">Ngày giờ trên là mốc phát hành của source đang chạy, giúp đối chiếu đúng bản sau khi GitHub Pages/PWA cập nhật cache.</p></div>
-  <div class="panel-section"><div class="panel-section-title"><h3>Dữ liệu đầu vào</h3><span>v${APP_META.version}</span></div><div class="capability-grid"><span>✓ PDF nhiều file</span><span>✓ ZIP tự bung</span><span>✓ Đọc cả thư mục</span><span>✓ Ảnh JPG/PNG/WebP</span><span>✓ TXT/CSV/JSON</span><span>✓ RAR/7Z/TAR/GZ ở HNL Local</span><span>✓ Archive có mật khẩu</span><span>✓ Quét toàn bộ trang</span><span>✓ Thư viện công thức tự quét</span><span>✓ Hybrid Semantic RAG</span><span>✓ Local Embedding/Rerank</span><span>✓ Tự chẩn đoán Ollama/RAM/GPU</span><span>✓ Nhiều model AI</span></div></div>
+  ${versionCardHtml()}
+  <div class="panel-section"><div class="panel-section-title"><h3>Dữ liệu đầu vào</h3><span>v${APP_META.version}</span></div><div class="capability-grid"><span>✓ PDF nhiều file</span><span>✓ ZIP tự bung</span><span>✓ Đọc cả thư mục</span><span>✓ Ảnh JPG/PNG/WebP</span><span>✓ TXT/CSV/JSON</span><span>${IS_DESKTOP_EDITION ? '✓ RAR/7Z/TAR/GZ cục bộ' : '✓ ZIP trên Web; RAR/7Z dùng Desktop'}</span><span>✓ Archive có mật khẩu</span><span>✓ Quét toàn bộ trang</span><span>✓ Thư viện công thức tự quét</span><span>✓ Hybrid Semantic RAG</span><span>✓ Local Embedding/Rerank</span><span>✓ Tự chẩn đoán Ollama/RAM/GPU</span><span>✓ Quản lý model Offline & ổ đĩa</span><span>✓ Nhiều model AI</span><span>✓ PDF liên tục + kéo/pan</span><span>✓ Tìm trong PDF + phím tắt</span><span>✓ Giao diện co giãn</span></div></div>
   <div class="panel-section"><div class="panel-section-title"><h3>Chẩn đoán ứng dụng</h3><span>v${APP_META.version}</span></div><p class="muted">Kiểm tra bộ nhớ trình duyệt, tài liệu, nguồn đang chọn và cấu hình AI.</p><button class="btn" id="runDiagnostics">Chạy chẩn đoán</button>${state.diagnosticHtml}</div>`;
 }
 
@@ -564,6 +763,13 @@ function bind() {
       if (el.id === 'openSettings') { state.tab = 'settings'; state.mobile = 'assistant'; render(); return; }
       if (el.id === 'selectAll') { state.docs.forEach(d => state.selected.add(d.id)); showToast(`Đã chọn ${state.docs.length} tài liệu làm nguồn.`, 'success'); render(); return; }
       if (el.id === 'clearSelection') { state.selected.clear(); showToast(state.settings.scope === 'selected' ? 'Đã bỏ chọn nguồn. Phạm vi “Đã chọn” hiện không có tài liệu.' : 'Đã bỏ dấu tick. Phạm vi Toàn thư viện vẫn tra cứu tất cả tài liệu.', 'info'); render(); return; }
+      if (el.id === 'toggleLibrary') { state.leftCollapsed = !state.leftCollapsed; localStorage.setItem(STORAGE.leftCollapsed, String(state.leftCollapsed)); render(); return; }
+      if (el.id === 'toggleAssistant') { state.rightCollapsed = !state.rightCollapsed; localStorage.setItem(STORAGE.rightCollapsed, String(state.rightCollapsed)); render(); return; }
+      if (el.id === 'focusReader') { state.focusReader = !state.focusReader; state.pendingPageScroll = true; render(); return; }
+      if (el.id === 'readerContinuous') { setReaderMode('continuous'); return; }
+      if (el.id === 'readerSingle') { setReaderMode('single'); return; }
+      if (el.id === 'pdfSearchPrev') { findNextInActive(-1); return; }
+      if (el.id === 'pdfSearchNext') { findNextInActive(1); return; }
       if (el.matches('[data-open]')) { openDoc(el.dataset.open); return; }
       if (el.matches('[data-delete]')) { await removeDoc(el.dataset.delete); return; }
       if (el.id === 'prevPage') { jumpPage(state.page - 1); return; }
@@ -603,7 +809,18 @@ function bind() {
       if (el.id === 'refreshModels') { await refreshModels(); return; }
       if (el.id === 'ocrActivePdf') { await ocrActivePdfLocal(); return; }
       if (el.id === 'autoLocalModels') { await applyRecommendedLocalModels(); return; }
+      if (el.id === 'installCurrentLocalModel') { await installLocalModels([state.settings.model || 'qwen3:8b']); return; }
+      if (el.id === 'installLocalAiPack') { await installLocalModels([state.settings.model || 'qwen3:8b', state.settings.embeddingModel || 'bge-m3', state.settings.visionModel || 'gemma3:4b']); return; }
+      if (el.id === 'refreshLocalModelManager') { await refreshLocalModelManager(true); return; }
+      if (el.id === 'applyModelDirectory') { await applyModelDirectory(); return; }
+      if (el.id === 'openModelDirectory') { await openModelDirectory(); return; }
+      if (el.matches('[data-model-dir]')) { const input=document.querySelector('#modelDirectoryInput'); if(input) input.value=el.dataset.modelDir || ''; return; }
+      if (el.matches('[data-install-pack]')) { await installModelPack(el.dataset.installPack); return; }
+      if (el.matches('[data-delete-local-model]')) { await deleteLocalModel(el.dataset.deleteLocalModel); return; }
+      if (el.matches('[data-cancel-local-model]')) { await cancelLocalModelPull(el.dataset.cancelLocalModel); return; }
       if (el.id === 'runDiagnostics') { await runDiagnostics(); return; }
+      if (el.id === 'checkAppUpdate') { await checkAppUpdate(); return; }
+      if (el.id === 'copyBuildDiagnostics') { await copyBuildDiagnostics(); return; }
       if (el.matches('[data-jump]')) {
         if (el.dataset.doc) state.activeDocId = el.dataset.doc;
         jumpPage(Number(el.dataset.jump));
@@ -631,6 +848,7 @@ function bind() {
     if (el.id === 'strictSide') { state.settings.strict = el.checked; saveSettings(); render(); return; }
     if (el.id === 'scopeSelect') { state.settings.scope = el.value; state.searchStats = null; saveSettings(); showToast(`Phạm vi: ${scopeLabel()}.`, 'success'); render(); return; }
     if (el.id === 'pageInput') { jumpPage(Number(el.value)); return; }
+    if (el.id === 'pageRange') { jumpPage(Number(el.value)); return; }
     if (el.id === 'tableDiameter') { updateTableClassOptions(); return; }
     if (el.id === 'cType' || el.id === 'cClass') { syncCalcDefaults(); return; }
     if (el.id === 'formulaScanMode') { state.formulaScanMode = el.value || 'auto'; localStorage.setItem(STORAGE.formulaScanMode, state.formulaScanMode); return; }
@@ -642,6 +860,8 @@ function bind() {
   app.oninput = event => {
     const el = event.target;
     if (el.id === 'chatQuestion') state.chatDraft = el.value;
+    else if (el.id === 'pdfSearchInput') { state.readerQuery = el.value; state.readerMatchIndex = -1; localStorage.setItem(STORAGE.readerQuery, state.readerQuery); }
+    else if (el.id === 'pageRange') { const n=Number(el.value)||1; const label=document.querySelector('#readerStatusPage'); if(label) label.textContent=String(n); }
     else if (el.id === 'lookupQuery') state.lookup.draft = el.value;
     else if (el.id === 'compareQuestion') state.compare.draft = el.value;
     else if (el.id === 'modelInput') state.settings.model = el.value;
@@ -659,6 +879,7 @@ function bind() {
     if (event.isComposing) return;
     const el = event.target;
     if (el.id === 'pageInput' && event.key === 'Enter') { event.preventDefault(); jumpPage(Number(el.value)); return; }
+    if (el.id === 'pdfSearchInput' && event.key === 'Enter') { event.preventDefault(); findNextInActive(event.shiftKey ? -1 : 1); return; }
     if (el.id === 'lookupQuery' && event.key === 'Enter') { event.preventDefault(); runLookup(); return; }
     if (el.id === 'chatQuestion' && event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
@@ -677,23 +898,52 @@ function bindSourceButtons() { /* event delegation handles source buttons */ }
 function openDoc(id) {
   state.activeDocId = id;
   state.page = 1;
+  state.pendingPageScroll = true;
   state.mobile = window.innerWidth <= 880 ? 'viewer' : state.mobile;
   render();
 }
+function setReaderMode(mode) {
+  if (!['continuous','single'].includes(mode)) return;
+  state.readerMode = mode;
+  state.pendingPageScroll = true;
+  localStorage.setItem(STORAGE.readerMode, mode);
+  render();
+}
 function setZoom(value) {
-  state.zoom = Math.min(2.2, Math.max(0.55, Math.round(value * 100) / 100));
+  state.zoom = Math.min(2.5, Math.max(0.45, Math.round(value * 100) / 100));
+  state.pendingPageScroll = true;
   render();
 }
 function fitPageWidth() {
   const wrap = document.querySelector('.canvas-wrap');
-  const canvas = document.querySelector('#pdfCanvas');
+  const shell = document.querySelector('.pdf-page-shell');
+  const canvas = document.querySelector('#pdfCanvas, .pdf-page-canvas[data-rendered="1"]');
   if (!wrap || !activeDoc()) return;
   if (activeDoc().viewerKind !== 'pdf') return setZoom(1.0);
-  if (!canvas) return;
-  const renderedWidth = parseFloat(canvas.style.width) || canvas.getBoundingClientRect().width;
-  const available = Math.max(240, wrap.clientWidth - 48);
+  const renderedWidth = parseFloat(canvas?.style.width) || canvas?.getBoundingClientRect().width || shell?.getBoundingClientRect().width || 794 * state.zoom;
+  const available = Math.max(260, wrap.clientWidth - (state.readerMode === 'continuous' ? 68 : 48));
   if (!Number.isFinite(renderedWidth) || renderedWidth <= 0) return setZoom(1.08);
   setZoom(state.zoom * available / renderedWidth);
+}
+function readerMatches() {
+  const doc = activeDoc();
+  const q = String(state.readerQuery || '').trim().toLocaleLowerCase('vi');
+  if (!doc || !q) return [];
+  return (doc.pages || []).filter(p => String(p.text || '').toLocaleLowerCase('vi').includes(q)).map(p => Number(p.page));
+}
+function findNextInActive(direction = 1) {
+  const q = String(document.querySelector('#pdfSearchInput')?.value ?? state.readerQuery ?? '').trim();
+  state.readerQuery = q; localStorage.setItem(STORAGE.readerQuery, q);
+  if (!q) return showToast('Nhập từ khóa cần tìm trong PDF.', 'warning');
+  const matches = readerMatches();
+  if (!matches.length) return showToast(`Không tìm thấy “${q}” trong PDF đang mở.`, 'warning');
+  if (state.readerMatchIndex < 0) {
+    const currentIdx = matches.findIndex(p => p >= state.page);
+    state.readerMatchIndex = currentIdx >= 0 ? currentIdx : 0;
+  } else state.readerMatchIndex = (state.readerMatchIndex + direction + matches.length) % matches.length;
+  const page = matches[state.readerMatchIndex];
+  jumpPage(page);
+  showToast(`“${q}” · kết quả ${state.readerMatchIndex + 1}/${matches.length} · trang ${page}.`, 'success');
 }
 async function extractArchiveWithPassword(archive) {
   let password = state.archivePasswordCache.get(archive.name) || '';
@@ -786,6 +1036,104 @@ async function removeDoc(id) {
   } catch (error) { showToast(`Không xóa được: ${error.message}`, 'error'); }
   render();
 }
+let activePdfObserver = null;
+let panCleanup = null;
+let readerScrollCleanup = null;
+
+async function renderContinuousPage(doc, shell) {
+  const canvas = shell?.querySelector('.pdf-page-canvas');
+  if (!canvas) return;
+  const page = Number(shell.dataset.page || canvas.dataset.page || 1);
+  const key = `${doc.id}:${page}:${state.zoom}`;
+  if (canvas.dataset.renderKey === key) return;
+  canvas.dataset.renderKey = key;
+  shell.classList.add('rendering');
+  try {
+    await renderPdfPage(doc, page, canvas, state.zoom);
+    canvas.dataset.rendered = '1';
+    shell.style.width = canvas.style.width || '';
+    shell.style.minHeight = canvas.style.height || '';
+    shell.style.aspectRatio = 'auto';
+    shell.classList.add('rendered');
+  } catch (error) {
+    canvas.dataset.renderKey = '';
+    shell.classList.add('render-error');
+    console.error(error);
+  } finally { shell.classList.remove('rendering'); }
+}
+
+function updateReaderPageUi(page) {
+  const safe = Math.max(1, Number(page) || 1);
+  state.page = safe;
+  const input = document.querySelector('#pageInput');
+  const range = document.querySelector('#pageRange');
+  const label = document.querySelector('#readerStatusPage');
+  if (input && document.activeElement !== input) input.value = String(safe);
+  if (range && document.activeElement !== range) range.value = String(safe);
+  if (label) label.textContent = String(safe);
+}
+
+function bindReaderPanAndZoom(wrap) {
+  panCleanup?.();
+  let dragging = false, sx = 0, sy = 0, sl = 0, st = 0;
+  const down = e => {
+    if (e.pointerType !== 'mouse' || e.button !== 0 || e.target.closest('input,button')) return;
+    dragging = true; sx = e.clientX; sy = e.clientY; sl = wrap.scrollLeft; st = wrap.scrollTop;
+    wrap.classList.add('dragging'); wrap.setPointerCapture?.(e.pointerId); e.preventDefault();
+  };
+  const move = e => { if (!dragging) return; wrap.scrollLeft = sl - (e.clientX - sx); wrap.scrollTop = st - (e.clientY - sy); };
+  const up = e => { if (!dragging) return; dragging = false; wrap.classList.remove('dragging'); try { wrap.releasePointerCapture?.(e.pointerId); } catch {} };
+  const wheel = e => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    e.preventDefault();
+    const dir = e.deltaY < 0 ? 0.1 : -0.1;
+    clearTimeout(bindReaderPanAndZoom.zoomTimer);
+    bindReaderPanAndZoom.zoomTimer = setTimeout(() => setZoom(state.zoom + dir), 20);
+  };
+  wrap.addEventListener('pointerdown', down); wrap.addEventListener('pointermove', move); wrap.addEventListener('pointerup', up); wrap.addEventListener('pointercancel', up); wrap.addEventListener('wheel', wheel, { passive:false });
+  panCleanup = () => { wrap.removeEventListener('pointerdown', down); wrap.removeEventListener('pointermove', move); wrap.removeEventListener('pointerup', up); wrap.removeEventListener('pointercancel', up); wrap.removeEventListener('wheel', wheel); };
+}
+
+async function setupContinuousPdfViewer(doc) {
+  activePdfObserver?.disconnect();
+  const wrap = document.querySelector('#pdfScroll');
+  if (!wrap) return;
+  bindReaderPanAndZoom(wrap);
+  const shells = [...wrap.querySelectorAll('.pdf-page-shell')];
+  activePdfObserver = new IntersectionObserver(entries => {
+    for (const entry of entries) if (entry.isIntersecting) renderContinuousPage(doc, entry.target);
+  }, { root:wrap, rootMargin:'900px 0px', threshold:0.01 });
+  shells.forEach(s => activePdfObserver.observe(s));
+  readerScrollCleanup?.();
+  let scrollRaf = 0;
+  const syncCurrentPage = () => {
+    scrollRaf = 0;
+    const wrapRect = wrap.getBoundingClientRect();
+    const center = wrapRect.top + Math.min(wrap.clientHeight * .38, 340);
+    let best = null, bestDist = Infinity;
+    for (const shell of shells) {
+      const r = shell.getBoundingClientRect();
+      if (r.bottom < wrapRect.top - 40 || r.top > wrapRect.bottom + 40) continue;
+      const anchor = Math.max(r.top, wrapRect.top);
+      const dist = Math.abs(anchor - center);
+      if (dist < bestDist) { best = shell; bestDist = dist; }
+    }
+    if (best) updateReaderPageUi(Number(best.dataset.page));
+  };
+  const onScroll = () => { if (!scrollRaf) scrollRaf = requestAnimationFrame(syncCurrentPage); };
+  wrap.addEventListener('scroll', onScroll, { passive:true });
+  readerScrollCleanup = () => { wrap.removeEventListener('scroll', onScroll); if (scrollRaf) cancelAnimationFrame(scrollRaf); };
+  requestAnimationFrame(syncCurrentPage);
+  // Eagerly render current page and neighbors so jumping feels immediate.
+  for (const p of [state.page-1, state.page, state.page+1].filter(x => x >= 1 && x <= doc.pageCount)) {
+    const shell = document.querySelector(`#pdf-page-${p}`); if (shell) renderContinuousPage(doc, shell);
+  }
+  if (state.pendingPageScroll) {
+    state.pendingPageScroll = false;
+    requestAnimationFrame(() => document.querySelector(`#pdf-page-${state.page}`)?.scrollIntoView({ block:'start' }));
+  }
+}
+
 async function drawPage() {
   const doc = activeDoc();
   if (!doc) return;
@@ -799,6 +1147,10 @@ async function drawPage() {
     return;
   }
   if (doc.viewerKind === 'text') return;
+  if (state.readerMode === 'continuous') return setupContinuousPdfViewer(doc);
+  activePdfObserver?.disconnect();
+  const wrap = document.querySelector('#pdfScroll');
+  if (wrap) bindReaderPanAndZoom(wrap);
   const canvas = document.querySelector('#pdfCanvas');
   if (!canvas) return;
   try { await renderPdfPage(doc, state.page, canvas, state.zoom); }
@@ -807,8 +1159,16 @@ async function drawPage() {
 function jumpPage(page) {
   const doc = activeDoc();
   if (!doc) return;
-  state.page = Math.min(Math.max(1, Number(page) || 1), doc.pageCount);
+  const target = Math.min(Math.max(1, Number(page) || 1), doc.pageCount);
+  state.page = target;
   state.mobile = window.innerWidth <= 880 ? 'viewer' : state.mobile;
+  if (state.readerMode === 'continuous' && document.querySelector(`#pdf-page-${target}`)) {
+    updateReaderPageUi(target);
+    document.querySelector(`#pdf-page-${target}`)?.scrollIntoView({ behavior:'smooth', block:'start' });
+    renderContinuousPage(doc, document.querySelector(`#pdf-page-${target}`));
+    return;
+  }
+  state.pendingPageScroll = true;
   render();
 }
 function findInActive(term) {
@@ -1405,6 +1765,7 @@ function providerChanged(event) {
   if (provider === 'ollama' && isLocalHost()) { state.settings.connection = 'bridge'; state.settings.bridgeUrl = location.origin; }
   state.connectionStatus = null;
   render();
+  if (provider === 'ollama' && (IS_DESKTOP_EDITION || isLocalHost())) setTimeout(() => refreshLocalModelManager(false), 0);
 }
 async function refreshModels() {
   if (state.settings.provider === 'local') return showToast('Tra cứu nhanh không dùng model AI.', 'info');
@@ -1457,6 +1818,77 @@ async function applyRecommendedLocalModels() {
   render();
 }
 
+
+async function refreshLocalModelManager(showFeedback = false) {
+  if (!IS_DESKTOP_EDITION && !isLocalHost()) return;
+  if (state.localModelManager.loading) return;
+  state.localModelManager.loading = true; state.localModelManager.error = '';
+  if (showFeedback) render();
+  try {
+    readSettingsForm();
+    const base = String(state.settings.bridgeUrl || location.origin).replace(/\/$/, '');
+    const r = await fetch(`${base}/api/local/model-manager`);
+    const data = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(data.error || 'Không đọc được thông tin model Offline.');
+    state.localModelManager.data = data;
+    state.modelOptions = (data.models || []).map(x => x.name || x.model).filter(Boolean);
+    if (showFeedback) showToast(`Đã đọc ${state.modelOptions.length} model Offline.`, 'success');
+    const hasRunning = (data.jobs || []).some(j => j.status === 'running');
+    if (state.localModelManager.pollTimer) clearTimeout(state.localModelManager.pollTimer);
+    if (hasRunning) state.localModelManager.pollTimer = setTimeout(() => refreshLocalModelManager(false), 1800);
+  } catch (error) {
+    state.localModelManager.error = error.message;
+    if (showFeedback) showToast(`Không mở được quản lý model: ${error.message}`, 'error');
+  } finally { state.localModelManager.loading = false; render(); }
+}
+async function installModelPack(kind = 'balanced') {
+  const packs = { light:['qwen3:4b','nomic-embed-text','gemma3:4b'], balanced:['qwen3:8b','bge-m3','gemma3:4b'], strong:['qwen3:14b','bge-m3','gemma3:4b'] };
+  const models = packs[kind] || packs.balanced;
+  if (kind === 'light') { state.settings.model='qwen3:4b'; state.settings.embeddingModel='nomic-embed-text'; }
+  else if (kind === 'strong') { state.settings.model='qwen3:14b'; state.settings.embeddingModel='bge-m3'; }
+  else { state.settings.model='qwen3:8b'; state.settings.embeddingModel='bge-m3'; }
+  state.settings.visionModel='gemma3:4b'; saveSettings(); await installLocalModels(models); await refreshLocalModelManager(false);
+}
+async function deleteLocalModel(model) {
+  model = String(model || '').trim(); if (!model) return;
+  if (!confirm(`Xóa model Offline "${model}" khỏi máy?\n\nModel có thể tải lại sau bằng Ollama.`)) return;
+  try { const base=String(state.settings.bridgeUrl||location.origin).replace(/\/$/,''); const r=await fetch(`${base}/api/local/delete-model`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model})}); const data=await r.json().catch(()=>({})); if(!r.ok) throw new Error(data.error||'Không xóa được model.'); showToast(`Đã xóa ${model}.`,'success'); await refreshLocalModelManager(false); } catch(error){ showToast(`Không xóa được model: ${error.message}`,'error'); }
+}
+async function cancelLocalModelPull(model) {
+  try { const base=String(state.settings.bridgeUrl||location.origin).replace(/\/$/,''); const r=await fetch(`${base}/api/local/cancel-model-pull`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model})}); const data=await r.json().catch(()=>({})); if(!r.ok) throw new Error(data.error||'Không hủy được tải model.'); showToast(`Đã yêu cầu hủy tải ${model}.`,'success'); await refreshLocalModelManager(false); } catch(error){ showToast(`Không hủy được: ${error.message}`,'error'); }
+}
+async function applyModelDirectory() {
+  const dir=String(document.querySelector('#modelDirectoryInput')?.value||'').trim(); if(!dir) return showToast('Hãy nhập thư mục lưu model, ví dụ D:\\HNL_AI\\Models.','warning');
+  if(!confirm(`Đổi thư mục model Ollama sang:\n${dir}\n\nHNL sẽ đặt OLLAMA_MODELS cho tài khoản Windows và khởi động lại Ollama. Model cũ KHÔNG tự di chuyển; hãy xóa/move thủ công nếu cần.`)) return;
+  try { const base=String(state.settings.bridgeUrl||location.origin).replace(/\/$/,''); const r=await fetch(`${base}/api/local/model-directory`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:dir,restart:true})}); const data=await r.json().catch(()=>({})); if(!r.ok) throw new Error(data.error||'Không đổi được thư mục model.'); showToast(data.message||'Đã đổi thư mục model.',data.restartOk===false?'warning':'success'); await refreshLocalModelManager(false); } catch(error){ showToast(`Không đổi được thư mục model: ${error.message}`,'error'); }
+}
+async function openModelDirectory() {
+  try { const base=String(state.settings.bridgeUrl||location.origin).replace(/\/$/,''); const r=await fetch(`${base}/api/local/open-model-directory`,{method:'POST'}); const data=await r.json().catch(()=>({})); if(!r.ok) throw new Error(data.error||'Không mở được thư mục model.'); } catch(error){ showToast(`Không mở được thư mục: ${error.message}`,'error'); }
+}
+
+async function installLocalModels(models = []) {
+  if (!IS_DESKTOP_EDITION && !isLocalHost()) return showToast('Cài model Offline chỉ dùng trong HNL Desktop AI/HNL Local.', 'warning');
+  if (state.settings.provider !== 'ollama') return showToast('Hãy chọn HNL Offline AI · Ollama trước.', 'warning');
+  readSettingsForm();
+  const unique = [...new Set(models.map(x => String(x || '').trim()).filter(Boolean))];
+  if (!unique.length) return showToast('Chưa có tên model để cài.', 'warning');
+  if (!confirm(`Tải model Ollama về máy?\n\n${unique.join('\n')}\n\nChỉ cần tải một lần; dung lượng có thể vài GB.`)) return;
+  try {
+    const base = String(state.settings.bridgeUrl || location.origin).replace(/\/$/, '');
+    for (const model of unique) {
+      const r = await fetch(`${base}/api/local/pull-model`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({model}) });
+      const data = await r.json().catch(()=>({}));
+      if (!r.ok) throw new Error(data.error || `Không khởi động được tải ${model}`);
+    }
+    state.modelStatus = `Đang tải model nền: ${unique.join(', ')}. Có thể tiếp tục dùng app; Trình quản lý Offline sẽ hiển thị tiến độ.`;
+    showToast('Đã bắt đầu tải model Offline trên máy.', 'success');
+    setTimeout(() => refreshLocalModelManager(false), 500);
+  } catch (error) {
+    showToast(`Không cài được model: ${error.message}`, 'error');
+  }
+  render();
+}
+
 function readSettingsForm() {
   const provider = document.querySelector('#providerSelect')?.value || state.settings.provider;
   state.settings.provider = provider;
@@ -1503,11 +1935,62 @@ async function testConnection() {
   render();
 }
 
+function bindWorkspaceSplitters() {
+  const workspace = document.querySelector('.workspace');
+  if (!workspace || window.innerWidth <= 880) return;
+  for (const side of ['left','right']) {
+    const handle = document.querySelector(`.splitter-${side}`);
+    if (!handle) continue;
+    handle.onpointerdown = event => {
+      event.preventDefault();
+      const startX = event.clientX; const start = state.layout[side];
+      handle.setPointerCapture?.(event.pointerId);
+      const move = e => {
+        const delta = e.clientX - startX;
+        const next = side === 'left' ? start + delta : start - delta;
+        state.layout[side] = Math.round(Math.min(side === 'left' ? 390 : 560, Math.max(side === 'left' ? 240 : 330, next)));
+        workspace.style.setProperty(side === 'left' ? '--left-w' : '--right-w', `${state.layout[side]}px`);
+      };
+      const up = e => {
+        handle.removeEventListener('pointermove', move); handle.removeEventListener('pointerup', up);
+        localStorage.setItem(side === 'left' ? STORAGE.leftWidth : STORAGE.rightWidth, String(state.layout[side]));
+        try { handle.releasePointerCapture?.(e.pointerId); } catch {}
+      };
+      handle.addEventListener('pointermove', move); handle.addEventListener('pointerup', up);
+    };
+  }
+}
+
+function bindGlobalReaderShortcuts() {
+  if (bindGlobalReaderShortcuts.bound) return;
+  bindGlobalReaderShortcuts.bound = true;
+  window.addEventListener('keydown', event => {
+    if (event.isComposing) return;
+    const tag = String(event.target?.tagName || '').toLowerCase();
+    const typing = ['input','textarea','select'].includes(tag) || event.target?.isContentEditable;
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f' && activeDoc()) {
+      event.preventDefault(); document.querySelector('#pdfSearchInput')?.focus(); document.querySelector('#pdfSearchInput')?.select(); return;
+    }
+    if (typing) return;
+    if (!activeDoc()) return;
+    if (event.key === 'PageDown' || event.key === 'ArrowRight') { event.preventDefault(); jumpPage(state.page + 1); return; }
+    if (event.key === 'PageUp' || event.key === 'ArrowLeft') { event.preventDefault(); jumpPage(state.page - 1); return; }
+    if (event.key === 'Home') { event.preventDefault(); jumpPage(1); return; }
+    if (event.key === 'End') { event.preventDefault(); jumpPage(activeDoc().pageCount); return; }
+    if (event.key === '+' || event.key === '=') { event.preventDefault(); setZoom(state.zoom + .1); return; }
+    if (event.key === '-') { event.preventDefault(); setZoom(state.zoom - .1); return; }
+    if ((event.ctrlKey || event.metaKey) && event.key === '0') { event.preventDefault(); fitPageWidth(); return; }
+    if (event.key.toLowerCase() === 'f' && !event.ctrlKey && !event.metaKey) { state.focusReader = !state.focusReader; state.pendingPageScroll = true; render(); }
+  });
+}
+
 async function runDiagnostics() {
   const tests = [];
   tests.push(['IndexedDB', 'indexedDB' in window, 'Bộ nhớ tài liệu cục bộ']);
   tests.push(['Web Crypto', Boolean(crypto?.subtle), 'Phát hiện PDF trùng']);
   tests.push(['Service Worker', 'serviceWorker' in navigator, 'PWA/cache cập nhật']);
+  tests.push(['Phiên bản', Boolean(APP_META.version), `v${APP_META.version} · ${buildNumberLabel()}`]);
+  tests.push(['Dấu build', Boolean(APP_META.builtAt), `${formatBuildTime(APP_META.builtAt)} · ${APP_META.commitShort || 'local'}`]);
   tests.push(['PDF thư viện', state.docs.length > 0, `${state.docs.length} tài liệu`]);
   tests.push(['Nguồn tra cứu', sourceDocs().length > 0, `${sourceDocs().length} nguồn`]);
   if (state.settings.provider !== 'local') {
@@ -1531,6 +2014,7 @@ async function runDiagnostics() {
 }
 
 (async function init() {
+  await Promise.all([loadBuildMetadata(), loadChangelog()]);
   try {
     state.docs = await getDocuments();
     state.docs.forEach(d => { if (!d.viewerKind) d.viewerKind = 'pdf'; state.selected.add(d.id); });
@@ -1542,10 +2026,10 @@ async function runDiagnostics() {
   render();
 })();
 
-if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+if (!IS_DESKTOP_EDITION && 'serviceWorker' in navigator && location.protocol !== 'file:') {
   window.addEventListener('load', async () => {
     try {
-      const registration = await navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' });
+      const registration = await navigator.serviceWorker.register(`./sw.js?v=${encodeURIComponent(SOURCE_META.version)}`, { updateViaCache: 'none' });
       registration.update().catch(() => {});
     } catch { /* PWA is optional */ }
   });

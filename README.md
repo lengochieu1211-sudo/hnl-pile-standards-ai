@@ -70,3 +70,6 @@ Source không kèm file PDF tiêu chuẩn. Người dùng tự tải tài liệu
 
 ## PWA
 Bản build có `manifest.webmanifest` và service worker để có thể cài như ứng dụng web. Các tài nguyên đã mở sẽ được cache; PDF người dùng được giữ trong IndexedDB cục bộ.
+
+### Sửa lỗi GitHub Pages v1.0.1
+Nếu bản v1.0 báo `Dependencies lock file is not found` ở bước `actions/setup-node@v4`, dùng workflow trong v1.0.1. Bản này đã bỏ `cache: npm` cho đến khi repository có `package-lock.json`.

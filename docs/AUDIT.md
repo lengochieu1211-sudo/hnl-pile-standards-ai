@@ -17,3 +17,8 @@ Môi trường tạo ZIP này không truy cập được npm registry nên chưa
 - RAG cục bộ dùng lexical search, chưa dùng embedding/vector database.
 - Công thức/bảng PDF phức tạp cần người dùng đối chiếu trang gốc.
 - Online AI cần API key riêng của từng nhà cung cấp; không mặc định miễn phí.
+
+## v1.0.1 – GitHub Actions build fix
+- Đã xử lý lỗi setup-node yêu cầu lock file khi bật `cache: npm`.
+- Workflow hiện không dùng npm cache khi repository chưa có `package-lock.json`.
+- Node 22 vẫn được sử dụng cho Vite 7.

@@ -1,8 +1,9 @@
 import './styles.css';
-import { parsePdf, renderPdfPage, clearPdfCache } from './pdf.js';
+import { renderPdfPage, clearPdfCache } from './pdf.js';
+import { expandInputItems, parseInputFile, fileToBase64, extractArchiveViaLocalBridge } from './ingest.js';
 import { saveDocument, getDocuments, deleteDocument } from './db.js';
-import { searchChunks, localSummary, localAnswer } from './search.js';
-import { PROVIDERS, buildRagPrompt, callBridge, callDirect, bridgeHealth, testDirectProvider } from './ai.js';
+import { searchChunks, searchEveryPage, smartSearchChunks, localSummary, localAnswer, corpusStats, isBroadQuery, clearSearchCache } from './search.js';
+import { PROVIDERS, buildRagPrompt, callBridge, callDirect, bridgeHealth, testDirectProvider, listAvailableModels } from './ai.js';
 import { annulusAreaMm2, axialResistance, loadClassSigmaCe, tcvn7888Checklist } from './calculators.js';
 import { diameters7888, lookup7888, classesForDiameter7888 } from './tcvn7888.js';
 
@@ -13,7 +14,9 @@ const STORAGE = {
   bridge: 'hnl.bridge.v12',
   ollama: 'hnl.ollama.v12',
   strict: 'hnl.strict.v12',
-  checklist: 'hnl.checklist.v12'
+  checklist: 'hnl.checklist.v12',
+  visionModel: 'hnl.visionModel.v14',
+  scope: 'hnl.scope.v14'
 };
 
 const state = {
@@ -34,18 +37,28 @@ const state = {
     provider: localStorage.getItem(STORAGE.provider) || 'local',
     connection: localStorage.getItem(STORAGE.connection) || 'direct',
     model: localStorage.getItem(STORAGE.model) || '',
-    bridgeUrl: localStorage.getItem(STORAGE.bridge) || 'http://127.0.0.1:8787',
+    visionModel: localStorage.getItem(STORAGE.visionModel) || 'gemma3:4b',
+    bridgeUrl: localStorage.getItem(STORAGE.bridge) || (['localhost','127.0.0.1','::1'].includes(location.hostname) ? location.origin : 'http://127.0.0.1:8787'),
     ollamaUrl: localStorage.getItem(STORAGE.ollama) || 'http://127.0.0.1:11434',
-    strict: localStorage.getItem(STORAGE.strict) !== 'false'
+    strict: localStorage.getItem(STORAGE.strict) !== 'false',
+    scope: localStorage.getItem(STORAGE.scope) || 'all'
   },
   progress: null,
   toast: null,
   busy: false,
   connectionStatus: null,
-  diagnosticHtml: ''
+  diagnosticHtml: '',
+  modelOptions: [],
+  modelStatus: '',
+  searchStats: null
 };
 
 if (!PROVIDERS[state.settings.provider]) state.settings.provider = 'local';
+if (new URLSearchParams(location.search).get('offline') === '1' && ['localhost','127.0.0.1','::1'].includes(location.hostname)) {
+  state.settings.provider = 'ollama';
+  state.settings.connection = 'bridge';
+  state.settings.bridgeUrl = location.origin;
+}
 const app = document.querySelector('#app');
 
 function loadJson(key, fallback) {
@@ -64,16 +77,26 @@ function fmtBytes(n) {
 function activeDoc() { return state.docs.find(d => d.id === state.activeDocId) || null; }
 function selectedDocs() { return state.docs.filter(d => state.selected.has(d.id)); }
 function sourceDocs() {
-  const selected = selectedDocs();
-  if (selected.length) return selected;
-  const active = activeDoc();
-  return active ? [active] : [];
+  // v1.4 default: search the ENTIRE loaded library. The user can explicitly
+  // narrow to checked documents or only the currently open document.
+  if (state.settings.scope === 'selected') return selectedDocs();
+  if (state.settings.scope === 'active') { const active = activeDoc(); return active ? [active] : []; }
+  return [...state.docs];
+}
+function scopeLabel() {
+  if (state.settings.scope === 'selected') return `Đã chọn (${selectedDocs().length})`;
+  if (state.settings.scope === 'active') return 'PDF đang mở';
+  return `Toàn thư viện (${state.docs.length})`;
 }
 function is7888(doc) {
   return Boolean(doc && (/TCVN\s*7888\s*:\s*2014/i.test(doc.standard || '') || /7888/.test(doc.name || '')));
 }
 function sourceHas7888() { return sourceDocs().some(is7888); }
-function providerModel() { return state.settings.model || PROVIDERS[state.settings.provider]?.model || ''; }
+function providerModel(forVision = false) {
+  if (forVision && state.settings.provider === 'ollama') return state.settings.visionModel || 'gemma3:4b';
+  return state.settings.model || PROVIDERS[state.settings.provider]?.model || '';
+}
+function isLocalHost() { return ['localhost','127.0.0.1','::1'].includes(location.hostname); }
 function sessionKeyName(provider) { return `hnl.apiKey.${provider}`; }
 function currentApiKey() { return sessionStorage.getItem(sessionKeyName(state.settings.provider)) || ''; }
 
@@ -81,9 +104,11 @@ function saveSettings() {
   localStorage.setItem(STORAGE.provider, state.settings.provider);
   localStorage.setItem(STORAGE.connection, state.settings.connection);
   localStorage.setItem(STORAGE.model, state.settings.model);
+  localStorage.setItem(STORAGE.visionModel, state.settings.visionModel);
   localStorage.setItem(STORAGE.bridge, state.settings.bridgeUrl);
   localStorage.setItem(STORAGE.ollama, state.settings.ollamaUrl);
   localStorage.setItem(STORAGE.strict, String(state.settings.strict));
+  localStorage.setItem(STORAGE.scope, state.settings.scope);
 }
 function saveChecklist() { localStorage.setItem(STORAGE.checklist, JSON.stringify(state.checklist)); }
 function showToast(message, type = 'info') {
@@ -132,14 +157,26 @@ function render() {
             <button class="icon-btn" id="clearSelection" title="Bỏ chọn tất cả">×</button>
           </div>
         </div>
-        <label class="upload-box" ${state.busy ? 'aria-disabled="true"' : ''}>
-          <span class="upload-icon">＋</span>
-          <span><b>Thêm PDF</b><small>1 hoặc nhiều tiêu chuẩn</small></span>
-          <input id="pdfInput" type="file" accept="application/pdf,.pdf" multiple ${state.busy ? 'disabled' : ''}>
-        </label>
-        <div class="library-note">PDF được phân tích và lưu cục bộ trong trình duyệt này.</div>
+        <div class="import-grid">
+          <label class="upload-box" ${state.busy ? 'aria-disabled="true"' : ''}>
+            <span class="upload-icon">＋</span>
+            <span><b>Thêm dữ liệu</b><small>PDF · ZIP · ảnh · TXT/CSV/JSON</small></span>
+            <input id="dataInput" type="file" accept=".pdf,.zip,.png,.jpg,.jpeg,.webp,.bmp,.gif,.txt,.md,.csv,.json,.xml,.html,.htm,.yaml,.yml,.rar,.7z" multiple ${state.busy ? 'disabled' : ''}>
+          </label>
+          <label class="folder-box" ${state.busy ? 'aria-disabled="true"' : ''}>
+            <span>▣</span><b>Đọc cả thư mục</b>
+            <input id="folderInput" type="file" webkitdirectory directory multiple ${state.busy ? 'disabled' : ''}>
+          </label>
+        </div>
+        <div class="library-note">Tự quét file trong thư mục/ZIP. Ảnh được giữ làm nguồn thị giác cho Gemini hoặc Offline AI. RAR/7Z tự bung khi chạy HNL Local nếu máy có tar/7-Zip.</div>
         <div class="doc-list">${state.docs.length ? state.docs.map(docItem).join('') : emptyLibraryHtml()}</div>
         <div class="source-rule">
+          <label class="field compact-field"><span>Phạm vi hỏi đáp / tìm kiếm</span><select id="scopeSelect">
+            <option value="all" ${state.settings.scope === 'all' ? 'selected' : ''}>Toàn bộ tài liệu đã tải</option>
+            <option value="selected" ${state.settings.scope === 'selected' ? 'selected' : ''}>Chỉ tài liệu đã tick</option>
+            <option value="active" ${state.settings.scope === 'active' ? 'selected' : ''}>Chỉ PDF đang mở</option>
+          </select></label>
+          <div class="coverage-line"><b>${esc(scopeLabel())}</b><small>Mặc định v1.4 quét tất cả trang có lớp chữ trước khi xếp hạng kết quả.</small></div>
           <label class="switch-row">
             <input id="strictSide" type="checkbox" ${state.settings.strict ? 'checked' : ''}>
             <span><b>Khóa nguồn</b><small>Không cho AI tự thêm nội dung ngoài PDF</small></span>
@@ -164,13 +201,13 @@ function render() {
             <button class="icon-btn" id="nextPage" ${!doc ? 'disabled' : ''} title="Trang sau">›</button>
           </div>
         </div>
-        ${doc ? '<div class="canvas-wrap"><canvas id="pdfCanvas"></canvas></div>' : emptyViewerHtml()}
+        ${doc ? viewerContentHtml(doc) : emptyViewerHtml()}
       </section>
 
       <aside class="assistant-panel">
         <div class="assistant-head">
           <div><div class="section-kicker">Kỹ thuật</div><h2>Trợ lý tiêu chuẩn</h2></div>
-          <span class="mode-chip">${state.settings.provider === 'local' ? 'Không AI' : esc(PROVIDERS[state.settings.provider]?.short)}</span>
+          <span class="mode-chip">${state.settings.provider === 'local' ? 'Tra nhanh' : esc(PROVIDERS[state.settings.provider]?.short)}</span>
         </div>
         <div class="tabs">${[
           ['summary', 'Tóm tắt'], ['chat', 'Hỏi đáp'], ['lookup', 'Tra cứu'], ['calc', 'Tính'], ['compare', 'So sánh'], ['checklist', 'Nghiệm thu'], ['settings', 'Cài đặt']
@@ -196,12 +233,24 @@ function render() {
 function emptyLibraryHtml() {
   return '<div class="empty-card"><div class="empty-icon">PDF</div><b>Chưa có tài liệu</b><span>Tải tiêu chuẩn lên để bắt đầu.</span></div>';
 }
+
+function viewerContentHtml(doc) {
+  if (doc.viewerKind === 'image') {
+    return `<div class="canvas-wrap image-wrap"><img id="sourceImage" alt="${esc(doc.name)}"><div class="image-source-note">Nguồn ảnh · ${esc(doc.sourcePath || doc.name)}${doc.ocrStatus === 'browser' ? ' · đã OCR cục bộ' : ' · AI Vision sẽ đọc trực tiếp khi hỏi'}</div></div>`;
+  }
+  if (doc.viewerKind === 'text') {
+    const page = doc.pages?.[Math.max(0, state.page - 1)];
+    return `<div class="canvas-wrap text-wrap"><pre class="text-viewer">${esc(page?.text || '')}</pre></div>`;
+  }
+  return '<div class="canvas-wrap"><canvas id="pdfCanvas"></canvas></div>';
+}
+
 function emptyViewerHtml() {
   return `<div class="empty-view">
     <img src="./hnl-mark-192.png" alt="HNL" />
     <h1>Đọc tiêu chuẩn nhanh hơn</h1>
-    <p>Tải PDF để tra cứu đúng trang, hỏi đáp theo nguồn, kiểm tra bảng cọc và tính toán kỹ thuật.</p>
-    <div class="feature-row"><span>PDF nhiều file</span><span>Citation theo trang</span><span>AI tùy chọn</span></div>
+    <p>Tải PDF, ZIP, ảnh hoặc cả thư mục để tra cứu, hỏi đáp theo nguồn, kiểm tra bảng cọc và tính toán kỹ thuật.</p>
+    <div class="feature-row"><span>PDF · ZIP · Folder</span><span>Ảnh đa phương thức</span><span>AI Offline/Online</span></div>
   </div>`;
 }
 function progressHtml() {
@@ -215,8 +264,8 @@ function docItem(d) {
     <div class="doc-row">
       <input class="source-check" type="checkbox" data-select="${d.id}" ${selected ? 'checked' : ''} title="Chọn làm nguồn tra cứu">
       <button class="doc-main" data-open="${d.id}">
-        <span class="pdf-badge">PDF</span>
-        <span class="doc-copy"><b>${esc(d.standard || d.name)}</b><small>${d.pageCount} trang · ${fmtBytes(d.size)}</small>${d.scannedLikely ? '<em>Có thể cần OCR</em>' : ''}</span>
+        <span class="pdf-badge">${d.viewerKind === 'image' ? 'IMG' : d.viewerKind === 'text' ? 'TXT' : 'PDF'}</span>
+        <span class="doc-copy"><b>${esc(d.standard || d.name)}</b><small>${d.pageCount} ${d.viewerKind === 'image' ? 'ảnh' : 'trang'} · ${fmtBytes(d.size)}</small><em>${d.viewerKind === 'image' ? (d.ocrStatus === 'browser' ? 'OCR ảnh: có' : 'Ảnh: AI Vision') : `${(d.pages || []).filter(p => String(p.text || '').trim()).length}/${d.pageCount} trang đã lấy chữ · ${(d.textChars || 0).toLocaleString('vi-VN')} ký tự`}</em>${d.sourcePath && d.sourcePath !== d.name ? `<em>${esc(d.sourcePath)}</em>` : (d.scannedLikely ? '<em class="warn-text">Có thể cần OCR/AI Vision</em>' : '')}</span>
       </button>
       <button class="more-btn danger" data-delete="${d.id}" title="Xóa tài liệu">×</button>
     </div>
@@ -234,7 +283,7 @@ function panelHtml() {
 }
 
 function noSourceCard(action = 'sử dụng chức năng này') {
-  return `<div class="empty-panel"><b>Chưa chọn nguồn</b><p>Chọn checkbox một PDF trong Thư viện để ${action}. Nếu không chọn, tài liệu đang mở sẽ được dùng tự động.</p></div>`;
+  return `<div class="empty-panel"><b>Chưa có nguồn theo phạm vi hiện tại</b><p>Hãy tải tài liệu hoặc đổi “Phạm vi hỏi đáp / tìm kiếm”. Mặc định Toàn bộ tài liệu sẽ quét tất cả file đã tải để ${action}.</p></div>`;
 }
 
 function summaryHtml() {
@@ -246,7 +295,7 @@ function summaryHtml() {
       <div class="eyebrow">${esc(doc.standard || 'Tài liệu')}</div>
       <h3>Tóm tắt kỹ sư</h3>
       <p>Đọc cục bộ ngay, hoặc dùng AI để tổng hợp sâu hơn nhưng vẫn khóa theo nguồn PDF.</p>
-      <div class="action-row"><button class="btn primary" id="aiSummary" ${state.busy ? 'disabled' : ''}>${state.settings.provider === 'local' ? 'Tạo tóm tắt cục bộ' : 'Tóm tắt bằng AI'}</button><button class="btn" data-find="nghiệm thu">Mở phần nghiệm thu</button></div>
+      <div class="action-row"><button class="btn primary" id="aiSummary" ${state.busy ? 'disabled' : ''}>Tóm tắt PDF đang mở</button><button class="btn" id="aiSummaryAll" ${state.busy || !sourceDocs().length ? 'disabled' : ''}>Tóm tắt toàn bộ nguồn</button></div><div class="coverage-line"><b>${esc(scopeLabel())}</b><small>Tóm tắt toàn bộ nguồn sẽ quét mọi trang có lớp chữ trong phạm vi hiện tại.</small></div>
     </div>
     ${doc.scannedLikely ? '<div class="notice warning"><b>PDF có ít lớp text.</b> Hình vẫn xem được nhưng tra cứu chữ có thể thiếu. Bản này chưa OCR ảnh scan tự động.</div>' : ''}
     <div class="panel-section"><div class="panel-section-title"><h3>Cấu trúc nhận diện</h3><span>${summary.headings.length} mục</span></div>${summary.headings.slice(0, 18).map(x => sourceLine(x, doc)).join('') || '<div class="muted">Chưa nhận diện được đề mục rõ ràng.</div>'}</div>
@@ -280,8 +329,9 @@ function lookupHtml() {
     : (state.lookup.query ? '<div class="empty-panel compact">Không tìm thấy nội dung phù hợp.</div>' : '');
   return `${docs.length ? '' : noSourceCard('tra cứu')}
     <div class="panel-section">
-      <div class="panel-section-title"><h3>Tìm trong PDF</h3><span>${docs.length} nguồn</span></div>
-      <div class="search-box"><input id="lookupQuery" value="${esc(state.lookup.draft || state.lookup.query)}" placeholder="Ví dụ: sai lệch đường kính, vết nứt, D600 cấp B…"><button id="lookupBtn" ${!docs.length ? 'disabled' : ''}>Tìm</button></div>
+      <div class="panel-section-title"><h3>Tìm trong dữ liệu</h3><span>${docs.length} nguồn</span></div>
+      <div class="coverage-line"><b>${esc(scopeLabel())}</b><small>${state.searchStats ? `Lần tìm gần nhất đã quét ${state.searchStats.textPages}/${state.searchStats.pages} trang · ${state.searchStats.chunks} đoạn.` : 'Mỗi lần tìm sẽ quét toàn bộ trang có lớp chữ trong phạm vi rồi mới xếp hạng.'}</small></div>
+      <div class="search-box"><input id="lookupQuery" value="${esc(state.lookup.draft || state.lookup.query)}" placeholder="Ví dụ: sai lệch đường kính, vết nứt, D600 cấp B…"><button id="lookupBtn" ${!docs.length ? 'disabled' : ''}>Quét tất cả trang</button></div>
       <div class="search-results">${resultHtml}</div>
     </div>
     <div class="panel-section">
@@ -350,21 +400,27 @@ function settingsHtml() {
   const options = Object.entries(PROVIDERS).map(([id, p]) => `<option value="${id}" ${id === state.settings.provider ? 'selected' : ''}>${esc(p.label)}</option>`).join('');
   const directNeedsKey = state.settings.connection === 'direct' && provider?.needsKey;
   const isOllama = state.settings.provider === 'ollama';
+  const githubHttps = location.protocol === 'https:' && !isLocalHost();
   return `<div class="panel-section">
     <div class="panel-section-title"><h3>AI & kết nối</h3><span>${state.connectionStatus?.ok ? 'Sẵn sàng' : 'Chưa kiểm tra'}</span></div>
     <label class="field"><span>Nhà cung cấp</span><select id="providerSelect">${options}</select></label>
-    ${state.settings.provider === 'local' ? '<div class="notice success">Tra cứu cục bộ hoạt động ngay trên GitHub Pages và không cần API.</div>' : `
+    ${state.settings.provider === 'local' ? `<div class="notice success"><b>Tra cứu nhanh không phải AI.</b><br>Chế độ này tìm kiếm cục bộ, không cần mạng nhưng không suy luận như mô hình ngôn ngữ. Muốn AI offline thật, chọn <b>HNL Offline AI · Ollama</b>.</div>` : `
       <div class="segmented"><button data-connection="direct" class="${state.settings.connection === 'direct' ? 'active' : ''}">Trực tiếp</button><button data-connection="bridge" class="${state.settings.connection === 'bridge' ? 'active' : ''}">HNL Bridge</button></div>
-      <label class="field"><span>Model</span><input id="modelInput" value="${esc(providerModel())}" placeholder="Tên model"></label>
-      ${directNeedsKey ? `<label class="field"><span>API key · chỉ lưu trong phiên tab này</span><input id="apiKeyInput" type="password" value="${esc(currentApiKey())}" autocomplete="off" placeholder="Nhập API key của bạn"></label>` : ''}
-      ${isOllama && state.settings.connection === 'direct' ? `<label class="field"><span>Ollama URL</span><input id="ollamaInput" value="${esc(state.settings.ollamaUrl)}"></label><div class="notice warning">Nếu mở từ GitHub Pages (HTTPS), trình duyệt có thể chặn Ollama chạy HTTP trên máy. Khi đó dùng Bridge hoặc chạy app bằng localhost.</div>` : ''}
-      ${state.settings.connection === 'bridge' ? `<label class="field"><span>HNL Bridge URL</span><input id="bridgeInput" value="${esc(state.settings.bridgeUrl)}"></label><div class="notice">Bridge phù hợp khi muốn giữ API key ngoài trình duyệt. GitHub Pages chỉ là frontend tĩnh.</div>` : ''}
+      <label class="field"><span>Model văn bản</span><div class="model-picker"><input id="modelInput" list="modelOptionsList" value="${esc(providerModel())}" placeholder="Chọn hoặc nhập tên model"><button class="btn compact-btn" id="refreshModels" type="button">↻ Model</button></div><datalist id="modelOptionsList">${state.modelOptions.map(m => `<option value="${esc(m)}"></option>`).join('')}</datalist><small>${esc(state.modelStatus || 'Bấm ↻ Model để lấy danh sách model khả dụng của tài khoản/máy.')}</small></label>
+      ${isOllama ? `<label class="field"><span>Model đọc ảnh offline</span><input id="visionModelInput" value="${esc(state.settings.visionModel)}" placeholder="gemma3:4b"></label>` : ''}
+      ${directNeedsKey ? `<label class="field"><span>API key · chỉ lưu trong phiên tab này</span><input id="apiKeyInput" type="password" value="${esc(currentApiKey())}" autocomplete="off" placeholder="Dán API key của bạn"></label>` : ''}
+      ${state.settings.provider === 'gemini' ? `<div class="notice"><b>Gemini API:</b> vào Google AI Studio → API Keys → Create API key → Copy, sau đó dán vào ô trên. Không ghi key vào source GitHub. <a class="inline-link" href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">Mở trang API Keys</a></div>` : ''}
+      ${isOllama && state.settings.connection === 'direct' ? `<label class="field"><span>Ollama URL</span><input id="ollamaInput" value="${esc(state.settings.ollamaUrl)}"></label>` : ''}
+      ${isOllama && githubHttps ? `<div class="notice error"><b>Đây là nguyên nhân Offline AI trong video không chạy.</b><br>GitHub Pages là HTTPS nhưng Ollama trên máy là HTTP. Trình duyệt chặn kết nối này. Hãy chạy <b>START_HNL_OFFLINE_AI.bat</b> trong source và mở app tại <b>http://127.0.0.1:8787</b>.</div>` : ''}
+      ${isOllama && isLocalHost() ? `<div class="notice success"><b>Đang ở chế độ Local.</b> Đây là môi trường đúng để dùng Ollama offline và đọc ảnh bằng model vision.</div>` : ''}
+      ${state.settings.connection === 'bridge' ? `<label class="field"><span>HNL Bridge URL</span><input id="bridgeInput" value="${esc(state.settings.bridgeUrl)}"></label><div class="notice">Khi chạy Local, nên để Bridge cùng địa chỉ app, ví dụ http://127.0.0.1:8787.</div>` : ''}
     `}
-    <label class="switch-row"><input id="strictInput" type="checkbox" ${state.settings.strict ? 'checked' : ''}><span><b>Khóa nguồn PDF</b><small>AI không được tự thêm quy định ngoài tài liệu.</small></span></label>
-    <div class="action-row"><button class="btn primary" id="saveSettings">Lưu cài đặt</button><button class="btn" id="testConnection" ${state.settings.provider === 'local' ? '' : ''}>Kiểm tra kết nối</button></div>
+    <label class="switch-row"><input id="strictInput" type="checkbox" ${state.settings.strict ? 'checked' : ''}><span><b>Khóa nguồn tài liệu</b><small>AI không được tự thêm quy định ngoài PDF/ảnh/text đã chọn.</small></span></label>
+    <div class="action-row"><button class="btn primary" id="saveSettings">Lưu cài đặt</button><button class="btn" id="testConnection">Kiểm tra kết nối</button></div>
     ${state.connectionStatus ? `<div class="notice ${state.connectionStatus.ok ? 'success' : 'error'}"><b>${state.connectionStatus.ok ? 'Kết nối OK' : 'Kết nối lỗi'}</b><br>${esc(state.connectionStatus.message || '')}</div>` : ''}
   </div>
-  <div class="panel-section"><div class="panel-section-title"><h3>Chẩn đoán ứng dụng</h3><span>v1.2</span></div><p class="muted">Kiểm tra nhanh bộ nhớ trình duyệt, PDF, nguồn đang chọn và cấu hình AI.</p><button class="btn" id="runDiagnostics">Chạy chẩn đoán</button>${state.diagnosticHtml}</div>`;
+  <div class="panel-section"><div class="panel-section-title"><h3>Dữ liệu đầu vào</h3><span>v1.4</span></div><div class="capability-grid"><span>✓ PDF nhiều file</span><span>✓ ZIP tự bung</span><span>✓ Đọc cả thư mục</span><span>✓ Ảnh JPG/PNG/WebP</span><span>✓ TXT/CSV/JSON</span><span>✓ RAR/7Z ở HNL Local*</span><span>✓ Quét toàn bộ trang</span><span>✓ Nhiều model AI</span></div></div>
+  <div class="panel-section"><div class="panel-section-title"><h3>Chẩn đoán ứng dụng</h3><span>v1.4</span></div><p class="muted">Kiểm tra bộ nhớ trình duyệt, tài liệu, nguồn đang chọn và cấu hình AI.</p><button class="btn" id="runDiagnostics">Chạy chẩn đoán</button>${state.diagnosticHtml}</div>`;
 }
 
 function sourceChipsHtml(hits = []) {
@@ -392,7 +448,7 @@ function bind() {
       if (el.id === 'sourceBadge') { state.mobile = 'library'; render(); return; }
       if (el.id === 'openSettings') { state.tab = 'settings'; state.mobile = 'assistant'; render(); return; }
       if (el.id === 'selectAll') { state.docs.forEach(d => state.selected.add(d.id)); showToast(`Đã chọn ${state.docs.length} tài liệu làm nguồn.`, 'success'); render(); return; }
-      if (el.id === 'clearSelection') { state.selected.clear(); showToast('Đã bỏ chọn nguồn. Tài liệu đang mở sẽ được dùng mặc định.', 'info'); render(); return; }
+      if (el.id === 'clearSelection') { state.selected.clear(); showToast(state.settings.scope === 'selected' ? 'Đã bỏ chọn nguồn. Phạm vi “Đã chọn” hiện không có tài liệu.' : 'Đã bỏ dấu tick. Phạm vi Toàn thư viện vẫn tra cứu tất cả tài liệu.', 'info'); render(); return; }
       if (el.matches('[data-open]')) { openDoc(el.dataset.open); return; }
       if (el.matches('[data-delete]')) { await removeDoc(el.dataset.delete); return; }
       if (el.id === 'prevPage') { jumpPage(state.page - 1); return; }
@@ -401,6 +457,7 @@ function bind() {
       if (el.id === 'zoomIn') { setZoom(state.zoom + 0.1); return; }
       if (el.id === 'fitWidth') { fitPageWidth(); return; }
       if (el.id === 'aiSummary') { await aiSummary(); return; }
+      if (el.id === 'aiSummaryAll') { await aiSummaryAll(); return; }
       if (el.id === 'askBtn') { await askQuestion(); return; }
       if (el.matches('[data-suggest]')) {
         state.chatDraft = el.dataset.suggest || '';
@@ -425,6 +482,7 @@ function bind() {
       }
       if (el.id === 'saveSettings') { updateSettingsFromForm(); return; }
       if (el.id === 'testConnection') { await testConnection(); return; }
+      if (el.id === 'refreshModels') { await refreshModels(); return; }
       if (el.id === 'runDiagnostics') { await runDiagnostics(); return; }
       if (el.matches('[data-jump]')) {
         if (el.dataset.doc) state.activeDocId = el.dataset.doc;
@@ -447,10 +505,11 @@ function bind() {
 
   app.onchange = event => {
     const el = event.target;
-    if (el.id === 'pdfInput') { uploadPdfs(event); return; }
+    if (el.id === 'dataInput' || el.id === 'folderInput') { uploadInputs(event); return; }
     if (el.matches('[data-select]')) { el.checked ? state.selected.add(el.dataset.select) : state.selected.delete(el.dataset.select); render(); return; }
     if (el.matches('[data-check]')) { updateChecklist(Number(el.dataset.check), el.checked); return; }
     if (el.id === 'strictSide') { state.settings.strict = el.checked; saveSettings(); render(); return; }
+    if (el.id === 'scopeSelect') { state.settings.scope = el.value; state.searchStats = null; saveSettings(); showToast(`Phạm vi: ${scopeLabel()}.`, 'success'); render(); return; }
     if (el.id === 'pageInput') { jumpPage(Number(el.value)); return; }
     if (el.id === 'tableDiameter') { updateTableClassOptions(); return; }
     if (el.id === 'cType' || el.id === 'cClass') { syncCalcDefaults(); return; }
@@ -464,6 +523,7 @@ function bind() {
     else if (el.id === 'lookupQuery') state.lookup.draft = el.value;
     else if (el.id === 'compareQuestion') state.compare.draft = el.value;
     else if (el.id === 'modelInput') state.settings.model = el.value;
+    else if (el.id === 'visionModelInput') state.settings.visionModel = el.value;
     else if (el.id === 'bridgeInput') state.settings.bridgeUrl = el.value;
     else if (el.id === 'ollamaInput') state.settings.ollamaUrl = el.value;
     else if (el.id === 'apiKeyInput') {
@@ -505,46 +565,70 @@ function setZoom(value) {
 function fitPageWidth() {
   const wrap = document.querySelector('.canvas-wrap');
   const canvas = document.querySelector('#pdfCanvas');
-  if (!wrap || !canvas || !activeDoc()) return;
+  if (!wrap || !activeDoc()) return;
+  if (activeDoc().viewerKind !== 'pdf') return setZoom(1.0);
+  if (!canvas) return;
   const renderedWidth = parseFloat(canvas.style.width) || canvas.getBoundingClientRect().width;
   const available = Math.max(240, wrap.clientWidth - 48);
   if (!Number.isFinite(renderedWidth) || renderedWidth <= 0) return setZoom(1.08);
   setZoom(state.zoom * available / renderedWidth);
 }
-async function uploadPdfs(event) {
-  const files = [...(event.target.files || [])].filter(f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
-  if (!files.length) return showToast('Không có file PDF hợp lệ.', 'warning');
-  for (const file of files) {
-    state.progress = { title: `Đang đọc ${file.name}`, detail: 'Khởi tạo PDF…', pct: 2 };
+async function uploadInputs(event) {
+  const raw = [...(event.target.files || [])];
+  if (!raw.length) return showToast('Chưa chọn dữ liệu.', 'warning');
+  const unsupportedArchives = raw.filter(f => /\.(rar|7z)$/i.test(f.name));
+  let items = [];
+  try {
+    state.progress = { title: 'Đang quét dữ liệu', detail: `Đọc ${raw.length} mục…`, pct: 3 };
+    render();
+    items = await expandInputItems(raw.filter(f => !/\.(rar|7z)$/i.test(f.name)));
+    if (unsupportedArchives.length) {
+      if (!isLocalHost()) showToast('RAR/7Z chỉ tự bung trong HNL Local. Trên GitHub Pages hãy giải nén trước hoặc dùng ZIP.', 'warning');
+      else {
+        for (const archive of unsupportedArchives) {
+          state.progress = { title:`Đang giải nén ${archive.name}`, detail:'Dùng tar/7-Zip cục bộ…', pct:5 }; render();
+          const extracted = await extractArchiveViaLocalBridge(archive);
+          const expanded = await expandInputItems(extracted.map(x => x.file));
+          // Giữ đường dẫn archive cho các file không phải ZIP lồng nhau.
+          const pathMap = new Map(extracted.map(x => [x.file.name, x.path]));
+          items.push(...expanded.map(x => ({ ...x, path:pathMap.get(x.file.name) || x.path })));
+        }
+      }
+    }
+  } catch (error) {
+    state.progress = null; render();
+    return showToast(`Không mở được file nén: ${error.message}`, 'error');
+  }
+  if (!items.length) { state.progress = null; render(); return showToast('Không tìm thấy PDF/ảnh/text được hỗ trợ.', 'warning'); }
+  let imported = 0, duplicated = 0, failed = 0;
+  for (let idx = 0; idx < items.length; idx++) {
+    const { file, path } = items[idx];
+    state.progress = { title: `Đang đọc ${file.name}`, detail: `${idx + 1}/${items.length} · ${path}`, pct: Math.round((idx / Math.max(1, items.length)) * 100) };
     render();
     try {
-      const doc = await parsePdf(file, (page, total) => {
-        state.progress = { title: `Đang phân tích ${file.name}`, detail: `Trang ${page}/${total}`, pct: Math.round(page / total * 100) };
-        const detail = document.querySelector('.progress-detail');
-        const bar = document.querySelector('.progress-bar > div');
-        if (detail) detail.textContent = `Trang ${page}/${total}`;
-        if (bar) bar.style.width = `${Math.round(page / total * 100)}%`;
+      const doc = await parseInputFile(file, {
+        sourcePath: path,
+        onPdfProgress: (page, total) => {
+          const overall = ((idx + page / total) / items.length) * 100;
+          state.progress = { title: `Đang phân tích ${file.name}`, detail: `Trang ${page}/${total} · ${idx + 1}/${items.length}`, pct: Math.round(overall) };
+          const detail = document.querySelector('.progress-detail');
+          const bar = document.querySelector('.progress-bar > div');
+          if (detail) detail.textContent = state.progress.detail;
+          if (bar) bar.style.width = `${state.progress.pct}%`;
+        }
       });
       const duplicate = state.docs.find(d => d.fingerprint && d.fingerprint === doc.fingerprint);
-      if (duplicate) {
-        clearPdfCache(doc.id);
-        state.activeDocId = duplicate.id;
-        state.selected.add(duplicate.id);
-        showToast(`PDF “${file.name}” đã có trong thư viện.`, 'warning');
-        continue;
-      }
+      if (duplicate) { clearPdfCache(doc.id); state.selected.add(duplicate.id); duplicated++; continue; }
       await saveDocument(doc);
-      state.docs.push(doc);
-      state.selected.add(doc.id);
-      state.activeDocId = doc.id;
-      state.page = 1;
+      state.docs.push(doc); state.selected.add(doc.id); state.activeDocId = doc.id; state.page = 1; imported++;
     } catch (error) {
-      console.error(error);
-      showToast(`Không đọc được ${file.name}: ${error.message}`, 'error');
+      failed++; console.error('Import failed', path, error);
     }
   }
+  event.target.value = '';
   state.progress = null;
   state.mobile = window.innerWidth <= 880 ? 'assistant' : state.mobile;
+  showToast(`Đã nhập ${imported} tài liệu${duplicated ? ` · ${duplicated} trùng` : ''}${failed ? ` · ${failed} lỗi` : ''}.`, failed ? 'warning' : 'success');
   render();
 }
 async function removeDoc(id) {
@@ -553,6 +637,7 @@ async function removeDoc(id) {
   try {
     await deleteDocument(id);
     clearPdfCache(id);
+    clearSearchCache(id);
     state.docs = state.docs.filter(d => d.id !== id);
     state.selected.delete(id);
     if (state.activeDocId === id) { state.activeDocId = state.docs[0]?.id || null; state.page = 1; }
@@ -562,8 +647,19 @@ async function removeDoc(id) {
 }
 async function drawPage() {
   const doc = activeDoc();
+  if (!doc) return;
+  if (doc.viewerKind === 'image') {
+    const img = document.querySelector('#sourceImage');
+    if (!img) return;
+    const url = URL.createObjectURL(doc.blob);
+    img.onload = () => URL.revokeObjectURL(url);
+    img.src = url;
+    img.style.width = `${Math.max(35, state.zoom * 90)}%`;
+    return;
+  }
+  if (doc.viewerKind === 'text') return;
   const canvas = document.querySelector('#pdfCanvas');
-  if (!doc || !canvas) return;
+  if (!canvas) return;
   try { await renderPdfPage(doc, state.page, canvas, state.zoom); }
   catch (error) { console.error(error); showToast(`Lỗi hiển thị PDF: ${error.message}`, 'error'); }
 }
@@ -594,8 +690,23 @@ function localSummaryText(doc) {
 
 async function getAnswer(question, docsOverride = null) {
   const docs = docsOverride || sourceDocs();
-  if (!docs.length) throw new Error('Hãy chọn ít nhất một PDF làm nguồn.');
-  let hits = searchChunks(question, docs, 12);
+  if (!docs.length) throw new Error('Không có tài liệu trong phạm vi tìm kiếm hiện tại.');
+  const textDocs = docs.filter(d => d.viewerKind !== 'image');
+  const stats = corpusStats(textDocs);
+  state.searchStats = stats;
+
+  // IMPORTANT v1.4: smartSearchChunks scores the COMPLETE corpus first. The final
+  // context limit is applied only after every page/chunk has been checked.
+  const retrievalLimit = isBroadQuery(question) ? 56 : 40;
+  let hits = smartSearchChunks(question, textDocs, retrievalLimit, { perDoc: isBroadQuery(question) ? 7 : 5 });
+
+  const imageDocs = docs.filter(d => d.viewerKind === 'image').slice(0, 8);
+  const images = [];
+  for (const d of imageDocs) {
+    if (d.size > 8 * 1024 * 1024) continue;
+    try { images.push({ data: await fileToBase64(d.blob), mimeType: d.type || 'image/jpeg', name: d.name, docId: d.id }); } catch { /* skip */ }
+  }
+
   const qNorm = String(question).toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
   const dMatch = qNorm.match(/(?:^|\s)d\s*(\d{3,4})(?:\s|$)/);
   const classMatch = qNorm.match(/(?:cap|loai)\s*(ab|a|b|c)(?:\s|$)/);
@@ -608,21 +719,33 @@ async function getAnswer(question, docsOverride = null) {
         docId: doc7888.id, docName: doc7888.name, standard: doc7888.standard, page, score: 999,
         text: `Bảng 1 - cọc PC/PHC: D = ${row.diameter} mm; chiều dày t = ${row.thickness} mm; cấp tải ${row.loadClass}; mômen uốn nứt không nhỏ hơn ${row.crackMoment} kN.m; ứng suất hữu hiệu ${row.effectiveStress} MPa; khả năng bền cắt không nhỏ hơn ${row.shearResistance} kN (chỉ áp dụng cho PHC); chiều dài cọc ${row.lengthRange} m.`
       };
-      hits = [tableHit, ...hits.filter(h => !(h.docId === tableHit.docId && h.page === tableHit.page))].slice(0, 12);
+      hits = [tableHit, ...hits.filter(h => !(h.docId === tableHit.docId && h.page === tableHit.page))].slice(0, retrievalLimit);
     }
   }
-  if (!hits.length) return { text: 'Không tìm thấy nội dung phù hợp trong các tài liệu đang chọn.', hits: [] };
-  if (state.settings.provider === 'local') return { text: localAnswer(question, hits), hits };
 
-  const prompt = buildRagPrompt(question, hits, state.settings.strict);
+  if (images.length) {
+    const imageHits = images.map((img, i) => { const d = imageDocs.find(x => x.id === img.docId); return ({ docId:d.id, docName:d.name, standard:d.standard, page:1, score:100-i, text:`Nguồn hình ảnh: ${d.name}. Đọc trực tiếp nội dung, chữ, bảng và ký hiệu nhìn thấy trong ảnh; không suy đoán phần không nhìn rõ.` }); });
+    hits = [...imageHits, ...hits].slice(0, retrievalLimit + images.length);
+  }
+
+  if (!hits.length) {
+    return { text: `Không tìm thấy nội dung phù hợp. Đã quét toàn bộ ${stats.textPages}/${stats.pages} trang có lớp chữ trong ${stats.docs} tài liệu (${stats.chunks} đoạn).`, hits: [], stats };
+  }
+  if (state.settings.provider === 'local') {
+    if (images.length) return { text: `Tra cứu nhanh đã quét ${stats.textPages}/${stats.pages} trang chữ nhưng không đọc pixel ảnh. Hãy chọn HNL Offline AI (Ollama) hoặc Gemini để đọc ảnh trực tiếp.`, hits, stats };
+    return { text: localAnswer(question, hits, stats), hits, stats };
+  }
+
+  const coverage = `\n\nTHỐNG KÊ PHẠM VI: hệ thống đã quét toàn bộ ${stats.textPages}/${stats.pages} trang có lớp chữ, ${stats.chunks} đoạn thuộc ${stats.docs} tài liệu trước khi chọn ngữ cảnh liên quan. Không được hiểu số đoạn ngữ cảnh bên dưới là số trang đã quét.`;
+  const prompt = buildRagPrompt(question, hits, state.settings.strict) + coverage;
   let text;
   if (state.settings.connection === 'bridge') {
-    text = await callBridge({ bridgeUrl: state.settings.bridgeUrl, provider: state.settings.provider, model: providerModel(), prompt });
+    text = await callBridge({ bridgeUrl: state.settings.bridgeUrl, provider: state.settings.provider, model: providerModel(images.length > 0), prompt, images });
   } else {
-    text = await callDirect({ provider: state.settings.provider, model: providerModel(), apiKey: currentApiKey(), prompt, ollamaUrl: state.settings.ollamaUrl });
+    text = await callDirect({ provider: state.settings.provider, model: providerModel(images.length > 0), apiKey: currentApiKey(), prompt, ollamaUrl: state.settings.ollamaUrl, images });
   }
   if (!text) throw new Error('AI không trả về nội dung.');
-  return { text, hits };
+  return { text, hits, stats };
 }
 
 async function askQuestion(questionOverride = '') {
@@ -670,18 +793,45 @@ async function aiSummary() {
   } finally { state.busy = false; render(); }
 }
 
+async function aiSummaryAll() {
+  const docs = sourceDocs();
+  if (!docs.length || state.busy) return showToast('Không có tài liệu trong phạm vi hiện tại.', 'warning');
+  state.tab = 'chat';
+  state.chat.push({ role:'user', text:`Tóm tắt toàn bộ ${docs.length} tài liệu trong ${scopeLabel()}` });
+  state.chat.push({ role:'ai', text:'Đang quét toàn bộ trang và tổng hợp…', hits:[] });
+  state.busy = true; render();
+  try {
+    if (state.settings.provider === 'local') {
+      const stats = corpusStats(docs.filter(d=>d.viewerKind !== 'image'));
+      const parts = docs.filter(d=>d.viewerKind !== 'image').map(doc => {
+        const sum = localSummary(doc);
+        const pts = [...sum.headings.slice(0,6), ...sum.important.slice(0,8)];
+        return `## ${doc.standard || doc.name}\n${pts.map(x=>`• ${x.text} [Trang ${x.page}]`).join('\n') || 'Không trích được lớp chữ.'}`;
+      });
+      const hits = smartSearchChunks('yêu cầu kỹ thuật nghiệm thu phương pháp thử công thức', docs.filter(d=>d.viewerKind !== 'image'), 50, {perDoc:8});
+      state.chat[state.chat.length-1] = { role:'ai', text:`Đã quét ${stats.textPages}/${stats.pages} trang có chữ trong ${stats.docs} tài liệu.\n\n${parts.join('\n\n')}`, hits };
+    } else {
+      const answer = await getAnswer('Tổng hợp TOÀN BỘ các tài liệu đang chọn theo từng tiêu chuẩn: phạm vi, yêu cầu kỹ thuật, số liệu/bảng quan trọng, công thức, phương pháp thử, nghiệm thu, bảo quản/vận chuyển và các điểm khác nhau. Không bỏ qua tài liệu nào có nội dung liên quan. Mỗi ý phải dẫn tên tài liệu và trang.', docs);
+      state.chat[state.chat.length-1] = { role:'ai', text:answer.text, hits:answer.hits };
+    }
+  } catch (error) { state.chat[state.chat.length-1] = { role:'ai', text:`Lỗi: ${error.message}`, hits:[] }; }
+  finally { state.busy=false; render(); }
+}
+
 function runLookup() {
   const input = document.querySelector('#lookupQuery');
   const query = String(input?.value || state.lookup.draft || '').trim();
   if (!query) return showToast('Nhập nội dung cần tìm trong PDF.', 'warning');
-  if (!sourceDocs().length) return showToast('Chưa có PDF nguồn để tra cứu.', 'warning');
+  const docs = sourceDocs().filter(d => d.viewerKind !== 'image');
+  if (!docs.length) return showToast('Chưa có nguồn dữ liệu chữ để tra cứu.', 'warning');
   state.lookup.query = query;
   state.lookup.draft = query;
-  let hits = query ? searchChunks(query, sourceDocs(), 16) : [];
 
-  // Với câu tra kiểu D600 cấp B, bảng PDF thường bị tách text theo cột nên
-  // search thuần văn bản có thể xếp sai trang. Bổ sung hit có cấu trúc từ
-  // Bảng 1 nhưng chỉ khi chính TCVN 7888:2014 đang là nguồn.
+  // v1.4 page search scans EVERY page first, then ranks the matching pages.
+  const stats = corpusStats(docs);
+  state.searchStats = stats;
+  let hits = searchEveryPage(query, docs, 100);
+
   if (query && sourceHas7888()) {
     const qNorm = query.toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
     const dMatch = qNorm.match(/(?:^|\s)(?:d|phi|ø)?\s*(\d{3,4})(?:\s|$)/);
@@ -695,14 +845,15 @@ function runLookup() {
           docId: doc.id, docName: doc.name, standard: doc.standard, page, score: 999,
           text: `Bảng 1 — D${row.diameter}, cấp ${row.loadClass}: t = ${row.thickness} mm; mômen uốn nứt ≥ ${row.crackMoment} kN·m; ứng suất hữu hiệu ${row.effectiveStress} MPa; bền cắt ≥ ${row.shearResistance} kN (áp dụng PHC); chiều dài ${row.lengthRange} m.`
         };
-        hits = [tableHit, ...hits.filter(h => !(h.docId === tableHit.docId && h.page === tableHit.page))].slice(0, 16);
+        hits = [tableHit, ...hits.filter(h => !(h.docId === tableHit.docId && h.page === tableHit.page))].slice(0, 100);
       }
     }
   }
   state.lookup.hits = hits;
-  showToast(hits.length ? `Tìm thấy ${hits.length} kết quả liên quan.` : 'Không tìm thấy nội dung phù hợp trong nguồn đang chọn.', hits.length ? 'success' : 'warning');
+  showToast(hits.length ? `Đã quét ${stats.textPages}/${stats.pages} trang và tìm thấy ${hits.length} trang liên quan.` : `Đã quét ${stats.textPages}/${stats.pages} trang nhưng chưa tìm thấy nội dung phù hợp.`, hits.length ? 'success' : 'warning');
   render();
 }
+
 function updateTableClassOptions() {
   const D = Number(document.querySelector('#tableDiameter')?.value || 600);
   const select = document.querySelector('#tableClass');
@@ -762,7 +913,7 @@ function localCompareText(question, docs) {
   const parts = [];
   const allHits = [];
   for (const doc of docs) {
-    const hits = searchChunks(question, [doc], 4);
+    const hits = smartSearchChunks(question, [doc], 4);
     allHits.push(...hits);
     parts.push(`${doc.standard || doc.name}\n${hits.length ? hits.slice(0, 3).map(h => `• ${h.text.slice(0, 520).replace(/\n/g, ' ')} [Trang ${h.page}]`).join('\n') : '• Không tìm thấy đoạn phù hợp.'}`);
   }
@@ -843,13 +994,42 @@ function providerChanged(event) {
   const provider = event.target.value;
   state.settings.provider = provider;
   state.settings.model = PROVIDERS[provider]?.model || '';
+  state.modelOptions = [];
+  state.modelStatus = '';
+  if (provider === 'ollama' && isLocalHost()) { state.settings.connection = 'bridge'; state.settings.bridgeUrl = location.origin; }
   state.connectionStatus = null;
   render();
 }
+async function refreshModels() {
+  if (state.settings.provider === 'local') return showToast('Tra cứu nhanh không dùng model AI.', 'info');
+  readSettingsForm();
+  state.modelStatus = 'Đang lấy danh sách model…';
+  render();
+  try {
+    const models = await listAvailableModels({
+      provider: state.settings.provider,
+      connection: state.settings.connection,
+      apiKey: currentApiKey(),
+      bridgeUrl: state.settings.bridgeUrl,
+      ollamaUrl: state.settings.ollamaUrl
+    });
+    state.modelOptions = models;
+    if (models.length && !models.includes(state.settings.model)) state.settings.model = models.includes(PROVIDERS[state.settings.provider]?.model) ? PROVIDERS[state.settings.provider].model : models[0];
+    state.modelStatus = models.length ? `Có ${models.length} model khả dụng. Có thể chọn trong ô phía trên.` : 'Không lấy được danh sách model; vẫn có thể nhập tên model thủ công.';
+    saveSettings();
+    showToast(models.length ? `Đã tải ${models.length} model.` : 'Không lấy được model động.', models.length ? 'success' : 'warning');
+  } catch (error) {
+    state.modelStatus = `Không lấy được danh sách: ${error.message}`;
+    showToast(state.modelStatus, 'warning');
+  }
+  render();
+}
+
 function readSettingsForm() {
   const provider = document.querySelector('#providerSelect')?.value || state.settings.provider;
   state.settings.provider = provider;
   state.settings.model = document.querySelector('#modelInput')?.value.trim() || PROVIDERS[provider]?.model || '';
+  state.settings.visionModel = document.querySelector('#visionModelInput')?.value.trim() || state.settings.visionModel || 'gemma3:4b';
   state.settings.bridgeUrl = document.querySelector('#bridgeInput')?.value.trim() || state.settings.bridgeUrl;
   state.settings.ollamaUrl = document.querySelector('#ollamaInput')?.value.trim() || state.settings.ollamaUrl;
   state.settings.strict = document.querySelector('#strictInput')?.checked ?? state.settings.strict;
@@ -872,7 +1052,10 @@ async function testConnection() {
   render();
   try {
     let result;
-    if (state.settings.provider === 'local') result = { ok: true, message: 'Tra cứu cục bộ sẵn sàng, không cần kết nối AI.' };
+    if (state.settings.provider === 'local') result = { ok: true, message: 'Tra cứu nhanh sẵn sàng. Đây không phải mô hình AI.' };
+    else if (state.settings.provider === 'ollama' && location.protocol === 'https:' && !isLocalHost() && !/^https:\/\//i.test(state.settings.bridgeUrl || '')) {
+      result = { ok: false, message: 'GitHub Pages HTTPS không thể kết nối ổn định tới Ollama/Bridge HTTP trên máy. Hãy chạy START_HNL_OFFLINE_AI.bat rồi mở http://127.0.0.1:8787.' };
+    }
     else if (state.settings.connection === 'bridge') {
       const health = await bridgeHealth(state.settings.bridgeUrl);
       const configured = health.providers?.[state.settings.provider];
@@ -904,7 +1087,7 @@ async function runDiagnostics() {
 (async function init() {
   try {
     state.docs = await getDocuments();
-    state.docs.forEach(d => state.selected.add(d.id));
+    state.docs.forEach(d => { if (!d.viewerKind) d.viewerKind = 'pdf'; state.selected.add(d.id); });
     state.activeDocId = state.docs[0]?.id || null;
   } catch (error) {
     console.warn(error);

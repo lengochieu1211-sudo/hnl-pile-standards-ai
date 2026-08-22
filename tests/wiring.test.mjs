@@ -58,9 +58,42 @@ test('AI citations remain connected to PDF navigation', () => {
   assert.match(source, /state\.activeDocId = el\.dataset\.hitDoc/);
 });
 
-test('service worker uses v1.2 cache and network-first navigation', () => {
+test('service worker uses v1.4 cache and network-first navigation', () => {
   const sw = fs.readFileSync(new URL('../public/sw.js', import.meta.url), 'utf8');
-  assert.match(sw, /hnl-pile-ai-v1\.2\.0/);
+  assert.match(sw, /hnl-pile-ai-v1\.4\.0/);
   assert.match(sw, /req\.mode === 'navigate'/);
   assert.match(sw, /fetch\(req\)/);
+});
+
+test('v1.4 multi-import and folder controls are wired', () => {
+  assert.match(source, /id="dataInput"/);
+  assert.match(source, /id="folderInput"/);
+  assert.match(source, /webkitdirectory/);
+  assert.match(source, /uploadInputs\(event\)/);
+  assert.match(source, /expandInputItems/);
+  assert.match(source, /parseInputFile/);
+});
+
+test('offline Ollama mode explains GitHub HTTPS limitation and local launcher', () => {
+  assert.match(source, /START_HNL_OFFLINE_AI\.bat/);
+  assert.match(source, /http:\/\/127\.0\.0\.1:8787/);
+  assert.match(source, /HNL Offline AI/);
+  const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
+  assert.match(bridge, /express\.static\(dist\)/);
+  assert.match(bridge, /api\/tags/);
+});
+
+
+test('v1.4 full-library scope and all-page lookup are wired', () => {
+  assert.match(source, /scopeSelect/);
+  assert.match(source, /value="all"/);
+  assert.match(source, /searchEveryPage\(query, docs, 100\)/);
+  assert.match(source, /corpusStats\(docs\)/);
+  assert.match(source, /Toàn bộ tài liệu đã tải/);
+});
+
+test('v1.4 dynamic model picker is wired', () => {
+  assert.match(source, /refreshModels/);
+  assert.match(source, /modelOptionsList/);
+  assert.match(source, /listAvailableModels/);
 });

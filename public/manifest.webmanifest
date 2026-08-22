@@ -1,7 +1,7 @@
 {
   "name": "HNL Pile Standards AI",
   "short_name": "HNL Pile AI",
-  "description": "Đọc, tra cứu, hỏi đáp, so sánh và tính toán theo tiêu chuẩn cọc PDF.",
+  "description": "Đọc, tra cứu, hỏi đáp, so sánh và tính toán theo tiêu chuẩn cọc PDF, ZIP, thư mục, hình ảnh và dữ liệu kỹ thuật.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

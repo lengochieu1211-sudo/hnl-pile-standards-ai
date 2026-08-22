@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { annulusAreaMm2, axialResistance } from '../src/calculators.js';
-import { searchChunks, localAnswer, localSummary } from '../src/search.js';
+import { searchChunks, searchEveryPage, smartSearchChunks, localAnswer, localSummary, corpusStats } from '../src/search.js';
 import { lookup7888, classesForDiameter7888 } from '../src/tcvn7888.js';
 
 test('annulus area is computed from D and t', () => {
@@ -51,4 +51,29 @@ test('local summary extracts headings and quantitative requirements', () => {
   const summary = localSummary(doc);
   assert.ok(summary.headings.length >= 1);
   assert.ok(summary.important.length >= 1);
+});
+
+
+test('v1.4 scans late pages instead of stopping at early pages', () => {
+  const pages = Array.from({length: 120}, (_, i) => ({ page: i + 1, text: i === 113 ? 'Điều kiện đặc biệt: tải trọng thử cọc ở trang rất muộn là 1234 kN.' : `Nội dung chung trang ${i + 1}.` }));
+  const docs = [{ id:'late', name:'late.pdf', standard:'TCVN TEST', pageCount:120, textChars: pages.reduce((n,p)=>n+p.text.length,0), pages }];
+  const hits = searchEveryPage('tải trọng thử cọc 1234 kN', docs, 20);
+  assert.ok(hits.some(h => h.page === 114), 'must find relevant content on page 114');
+  const stats = corpusStats(docs);
+  assert.equal(stats.pages, 120);
+  assert.equal(stats.textPages, 120);
+});
+
+test('v1.4 balanced RAG keeps evidence from multiple matching PDFs', () => {
+  const docs = [1,2,3].map(n => ({
+    id:`d${n}`, name:`d${n}.pdf`, standard:`TCVN ${n}`, pageCount:3, textChars:100,
+    pages:[
+      {page:1,text:`Tài liệu ${n} quy định nghiệm thu cọc và hồ sơ chất lượng.`},
+      {page:2,text:`Tài liệu ${n} yêu cầu thí nghiệm cọc trước nghiệm thu.`},
+      {page:3,text:'Nội dung khác.'}
+    ]
+  }));
+  const hits = smartSearchChunks('nghiệm thu cọc thí nghiệm', docs, 9, {perDoc:2});
+  const ids = new Set(hits.map(h=>h.docId));
+  assert.deepEqual([...ids].sort(), ['d1','d2','d3']);
 });

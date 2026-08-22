@@ -39,22 +39,19 @@ async function jsonFetch(url, options) {
 
 async function askOpenAI(model, messages) {
   const key = requireKey('OPENAI_API_KEY');
-  const data = await jsonFetch('https://api.openai.com/v1/responses', {
+  const data = await jsonFetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-    body: JSON.stringify({ model: model || 'gpt-5.6-luna', input: messages })
+    body: JSON.stringify({ model: model || 'gpt-4.1-mini', messages, temperature: 0.1 })
   });
-  if (data.output_text) return data.output_text;
-  const texts = [];
-  for (const item of data.output || []) for (const c of item.content || []) if (c.type === 'output_text' && c.text) texts.push(c.text);
-  return texts.join('\n') || 'OpenAI không trả về nội dung văn bản.';
+  return data.choices?.[0]?.message?.content || 'OpenAI không trả về nội dung văn bản.';
 }
 
 async function askGemini(model, messages) {
   const key = requireKey('GEMINI_API_KEY');
   const system = messages.filter(m=>m.role==='system').map(m=>m.content).join('\n');
   const contents = messages.filter(m=>m.role!=='system').map(m=>({ role: m.role === 'assistant' ? 'model' : 'user', parts:[{text:m.content}] }));
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model || 'gemini-3.6-flash')}:generateContent`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model || 'gemini-2.5-flash')}:generateContent`;
   const data = await jsonFetch(url, {
     method:'POST',
     headers:{'Content-Type':'application/json','x-goog-api-key':key},
@@ -70,7 +67,7 @@ async function askClaude(model, messages) {
   const data = await jsonFetch('https://api.anthropic.com/v1/messages', {
     method:'POST',
     headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
-    body:JSON.stringify({ model:model || 'claude-sonnet-4-5', max_tokens:2200, system, messages:chat })
+    body:JSON.stringify({ model:model || 'claude-3-5-haiku-latest', max_tokens:2200, system, messages:chat })
   });
   return data.content?.filter(x=>x.type==='text').map(x=>x.text).join('\n') || 'Claude không trả về nội dung văn bản.';
 }
@@ -80,7 +77,7 @@ async function askGrok(model, messages) {
   const data = await jsonFetch('https://api.x.ai/v1/chat/completions', {
     method:'POST',
     headers:{'Content-Type':'application/json',Authorization:`Bearer ${key}`},
-    body:JSON.stringify({ model:model || 'grok-4', messages, temperature:0.1 })
+    body:JSON.stringify({ model:model || 'grok-3-mini', messages, temperature:0.1 })
   });
   return data.choices?.[0]?.message?.content || 'Grok không trả về nội dung văn bản.';
 }

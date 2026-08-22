@@ -189,6 +189,35 @@ export async function bridgeHealth(bridgeUrl) {
   return jsonFetch(`${base}/api/health`, { method: 'GET' }, 5000);
 }
 
+
+/** Semantic rerank through the local HNL Bridge + Ollama embedding model. */
+export async function semanticRerank({ bridgeUrl, query, candidates = [], model = 'bge-m3', limit = 44 }) {
+  const base = String(bridgeUrl || '').replace(/\/$/, '');
+  if (!base) throw new Error('Chưa cấu hình HNL Bridge URL cho semantic rerank.');
+  const compact = candidates.slice(0, 160).map((x, i) => ({
+    id: String(i),
+    score: Number(x.score || 0),
+    text: String(x.text || '').slice(0, 2400)
+  }));
+  const data = await jsonFetch(`${base}/api/local/semantic-rerank`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query, model, limit, candidates: compact })
+  }, 90000);
+  const byId = new Map(candidates.slice(0, 160).map((x, i) => [String(i), x]));
+  return (data.results || []).map(r => {
+    const src = byId.get(String(r.id));
+    return src ? { ...src, semanticScore: r.semanticScore, hybridScore: r.hybridScore, score: Number(r.hybridScore || src.score) } : null;
+  }).filter(Boolean);
+}
+
+/** Detailed local-engine diagnostics used by the v1.7 settings panel. */
+export async function localEngineDiagnostics(bridgeUrl) {
+  const base = String(bridgeUrl || '').replace(/\/$/, '');
+  if (!base) throw new Error('Chưa cấu hình HNL Bridge URL.');
+  return jsonFetch(`${base}/api/local/diagnostics`, { method: 'GET' }, 12000);
+}
+
 export async function testDirectProvider({ provider, model, apiKey, ollamaUrl }) {
   if (provider === 'local') return { ok: true, message: 'Tra cứu cục bộ luôn sẵn sàng.' };
   const text = await callDirect({

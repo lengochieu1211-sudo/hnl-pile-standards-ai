@@ -4,6 +4,7 @@ const TEXT_EXT = /\.(txt|md|csv|json|xml|html?|log|ini|cfg|yaml|yml)$/i;
 const IMAGE_EXT = /\.(png|jpe?g|webp|bmp|gif)$/i;
 const PDF_EXT = /\.pdf$/i;
 const ZIP_EXT = /\.zip$/i;
+const LOCAL_ARCHIVE_EXT = /(?:\.rar|\.7z|\.tar|\.tgz|\.tar\.gz|\.gz|\.bz2|\.xz)$/i;
 
 function ext(name='') {
   const m = String(name).toLowerCase().match(/\.[^.\\/]+$/);
@@ -16,7 +17,7 @@ export function inferMime(name='') {
     '.pdf':'application/pdf', '.txt':'text/plain', '.md':'text/markdown', '.csv':'text/csv', '.json':'application/json',
     '.xml':'application/xml', '.html':'text/html', '.htm':'text/html', '.yaml':'text/yaml', '.yml':'text/yaml',
     '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.webp':'image/webp', '.bmp':'image/bmp', '.gif':'image/gif',
-    '.zip':'application/zip'
+    '.zip':'application/zip', '.rar':'application/vnd.rar', '.7z':'application/x-7z-compressed', '.tar':'application/x-tar', '.tgz':'application/gzip', '.gz':'application/gzip', '.bz2':'application/x-bzip2', '.xz':'application/x-xz'
   };
   return map[e] || 'application/octet-stream';
 }
@@ -24,6 +25,9 @@ export function inferMime(name='') {
 export function supportedInput(name='') {
   return PDF_EXT.test(name) || TEXT_EXT.test(name) || IMAGE_EXT.test(name) || ZIP_EXT.test(name);
 }
+
+export function isArchiveFile(name='') { return LOCAL_ARCHIVE_EXT.test(String(name || '')); }
+
 
 async function sha256Hex(buffer) {
   const hash = await crypto.subtle.digest('SHA-256', buffer);
@@ -181,14 +185,14 @@ export async function fileToBase64(file) {
   return btoa(binary);
 }
 
-export async function extractArchiveViaLocalBridge(file) {
+export async function extractArchiveViaLocalBridge(file, password = '') {
   const response = await fetch(`/api/extract-archive?name=${encodeURIComponent(file.name)}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/octet-stream' },
+    headers: { 'Content-Type': 'application/octet-stream', ...(password ? { 'X-HNL-Archive-Password': encodeURIComponent(password) } : {}) },
     body: file
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || `Không giải nén được ${file.name}`);
+  if (!response.ok) { const err = new Error(data.error || `Không giải nén được ${file.name}`); err.code = data.code || `HTTP_${response.status}`; throw err; }
   return (data.entries || []).map(entry => {
     const binary = atob(entry.data || '');
     const bytes = new Uint8Array(binary.length);

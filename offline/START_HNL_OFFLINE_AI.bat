@@ -34,6 +34,22 @@ if errorlevel 1 (
   timeout /t 4 /nobreak >nul
 )
 
+echo [ARCHIVE] Kiem tra ho tro RAR/7Z...
+where 7z >nul 2>&1
+if errorlevel 1 (
+  if exist "C:\Program Files\7-Zip\7z.exe" (
+    echo [OK] Tim thay 7-Zip trong Program Files.
+  ) else if exist "C:\Program Files\WinRAR\UnRAR.exe" (
+    echo [OK] Tim thay WinRAR/UnRAR.
+  ) else (
+    echo [CANH BAO] Chua co 7-Zip/WinRAR. ZIP/TAR van dung duoc; de mo RAR/7Z nen cai 7-Zip mien phi.
+    echo https://www.7-zip.org/
+  )
+) else (
+  echo [OK] 7-Zip san sang cho RAR/7Z.
+)
+echo.
+
 echo [2/4] Kiem tra thu vien Node...
 if not exist node_modules (
   echo Lan dau can Internet de npm install. Sau khi cai xong co the dung offline.

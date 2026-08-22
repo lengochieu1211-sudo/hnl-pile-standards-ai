@@ -108,51 +108,226 @@ async function askOllama(model, messages, images = []) {
 }
 
 
-function walkFiles(dir, base = dir, out = []) {
-  for (const entry of fs.readdirSync(dir, { withFileTypes:true })) {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) walkFiles(full, base, out);
-    else out.push({ full, rel:path.relative(base, full).replaceAll('\\','/') });
+// ---- v1.7 Local Intelligence Engine ---------------------------------------
+const EMBEDDING_CACHE = new Map();
+const EMBEDDING_CACHE_MAX = 4000;
+
+function cacheEmbedding(key, value) {
+  if (EMBEDDING_CACHE.size >= EMBEDDING_CACHE_MAX) {
+    const first = EMBEDDING_CACHE.keys().next().value;
+    if (first) EMBEDDING_CACHE.delete(first);
+  }
+  EMBEDDING_CACHE.set(key, value);
+}
+
+function cosineSimilarity(a=[], b=[]) {
+  const n = Math.min(a.length, b.length);
+  if (!n) return 0;
+  let dot=0, aa=0, bb=0;
+  for (let i=0;i<n;i++) { const x=Number(a[i]||0), y=Number(b[i]||0); dot+=x*y; aa+=x*x; bb+=y*y; }
+  return aa && bb ? dot / Math.sqrt(aa*bb) : 0;
+}
+
+async function ollamaEmbed(model, inputs=[]) {
+  const base = (process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434').replace(/\/$/,'');
+  const clean = inputs.map(x=>String(x||'').slice(0, 12000));
+  if (!clean.length) return [];
+  try {
+    const data = await jsonFetch(`${base}/api/embed`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ model:model || 'bge-m3', input:clean, truncate:true })
+    });
+    if (Array.isArray(data.embeddings) && data.embeddings.length === clean.length) return data.embeddings;
+  } catch (error) {
+    // Compatibility fallback for older Ollama versions exposing /api/embeddings.
+    if (!/404|not found/i.test(String(error.message||''))) throw error;
+  }
+  const out=[];
+  for (const text of clean) {
+    const data = await jsonFetch(`${base}/api/embeddings`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ model:model || 'bge-m3', prompt:text })
+    });
+    if (!Array.isArray(data.embedding)) throw new Error('Ollama không trả embedding hợp lệ.');
+    out.push(data.embedding);
   }
   return out;
 }
 
-// RAR/7Z fallback chỉ dành cho HNL Local. Windows 11 có tar/libarchive trên nhiều máy;
-// nếu tar không đọc được archive, endpoint thử 7z nếu người dùng đã cài 7-Zip.
+async function cachedEmbeddings(model, texts=[]) {
+  const out = new Array(texts.length);
+  const missing=[]; const missingIndex=[];
+  for (let i=0;i<texts.length;i++) {
+    const text=String(texts[i]||'');
+    const key=`${model}:${crypto.createHash('sha1').update(text).digest('hex')}`;
+    if (EMBEDDING_CACHE.has(key)) out[i]=EMBEDDING_CACHE.get(key);
+    else { missing.push(text); missingIndex.push([i,key]); }
+  }
+  const batchSize=24;
+  for (let start=0; start<missing.length; start+=batchSize) {
+    const batch=missing.slice(start,start+batchSize);
+    const vectors=await ollamaEmbed(model,batch);
+    vectors.forEach((vec,j)=>{
+      const [idx,key]=missingIndex[start+j]; out[idx]=vec; cacheEmbedding(key,vec);
+    });
+  }
+  return out;
+}
+
+app.post('/api/local/semantic-rerank', async (req,res)=>{
+  try {
+    const query=String(req.body?.query||'').trim();
+    const model=String(req.body?.model||'bge-m3').trim() || 'bge-m3';
+    const candidates=Array.isArray(req.body?.candidates) ? req.body.candidates.slice(0,160) : [];
+    const limit=Math.max(1,Math.min(Number(req.body?.limit||44), candidates.length || 1));
+    if (!query || !candidates.length) return res.json({ model, results:[] });
+    const vectors=await cachedEmbeddings(model,[query,...candidates.map(x=>String(x.text||''))]);
+    const qv=vectors[0];
+    const maxLex=Math.max(1,...candidates.map(x=>Number(x.score||0)));
+    const results=candidates.map((c,i)=>{
+      const semantic=cosineSimilarity(qv,vectors[i+1]);
+      const lexical=Math.max(0,Number(c.score||0))/maxLex;
+      // Semantic dominates while retaining exact engineering-number matches.
+      const hybrid=semantic*0.72 + lexical*0.28;
+      return { id:String(c.id), semanticScore:semantic, lexicalScore:lexical, hybridScore:hybrid };
+    }).sort((a,b)=>b.hybridScore-a.hybridScore).slice(0,limit);
+    res.json({ model, results, cacheSize:EMBEDDING_CACHE.size });
+  } catch (err) {
+    res.status(500).json({ error:err.message || 'Semantic rerank thất bại.' });
+  }
+});
+
+function gpuInfo() {
+  try {
+    const r=spawnSync('nvidia-smi',['--query-gpu=name,memory.total','--format=csv,noheader,nounits'],{encoding:'utf8',windowsHide:true,timeout:3000});
+    if (r.status!==0 || !r.stdout?.trim()) return [];
+    return r.stdout.trim().split(/\r?\n/).map(line=>{
+      const parts=line.split(',').map(x=>x.trim());
+      return { name:parts[0]||'NVIDIA GPU', vramMB:Number(parts[1]||0) };
+    });
+  } catch { return []; }
+}
+
+app.get('/api/local/diagnostics', async (_req,res)=>{
+  const base=(process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434').replace(/\/$/,'');
+  let ollama=false, version='', models=[];
+  try {
+    const tags=await jsonFetch(`${base}/api/tags`,{method:'GET'}); ollama=true;
+    models=(tags.models||[]).map(x=>x.name||x.model).filter(Boolean);
+    try { const v=await jsonFetch(`${base}/api/version`,{method:'GET'}); version=String(v.version||''); } catch { /* optional */ }
+  } catch { ollama=false; }
+  const ramGB=Math.round(os.totalmem()/1024/1024/1024*10)/10;
+  const gpus=gpuInfo();
+  const maxVram=Math.max(0,...gpus.map(x=>x.vramMB||0));
+  let recommendedText='qwen3:4b';
+  if (maxVram>=12000 || ramGB>=48) recommendedText='qwen3:14b';
+  else if (maxVram>=7000 || ramGB>=24) recommendedText='qwen3:8b';
+  const recommendedEmbedding='bge-m3';
+  const recommendedVision=maxVram>=7000 || ramGB>=24 ? 'gemma3:4b' : 'gemma3:4b';
+  res.json({
+    ok:true, ollama, ollamaVersion:version, ramGB, gpus, models,
+    recommended:{ text:recommendedText, embedding:recommendedEmbedding, vision:recommendedVision },
+    installed:{ text:models.some(x=>x.startsWith(recommendedText)), embedding:models.some(x=>x.startsWith(recommendedEmbedding)), vision:models.some(x=>x.startsWith(recommendedVision)) },
+    embeddingCache:EMBEDDING_CACHE.size
+  });
+});
+
+
+function walkFiles(dir, base = dir, out = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes:true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isSymbolicLink?.()) continue;
+    if (entry.isDirectory()) walkFiles(full, base, out);
+    else if (entry.isFile()) out.push({ full, rel:path.relative(base, full).replaceAll('\\','/') });
+  }
+  return out;
+}
+
+function commandExists(command) {
+  try { return spawnSync(command, ['--help'], { encoding:'utf8', windowsHide:true, timeout:2500 }).error?.code !== 'ENOENT'; }
+  catch { return false; }
+}
+function archiveToolCandidates() {
+  const out = [];
+  if (process.platform === 'win32') {
+    for (const exe of [
+      '7z',
+      'C:\\Program Files\\7-Zip\\7z.exe',
+      'C:\\Program Files (x86)\\7-Zip\\7z.exe',
+      'C:\\Program Files\\WinRAR\\UnRAR.exe',
+      'C:\\Program Files (x86)\\WinRAR\\UnRAR.exe'
+    ]) if (!out.includes(exe)) out.push(exe);
+  } else out.push('7z','7zz','unrar');
+  return out;
+}
+function looksPasswordError(text='') {
+  return /(wrong password|password is incorrect|encrypted|enter password|data error.*password|headers error|can not open encrypted)/i.test(text);
+}
+function extractWithTool(input, output, password='') {
+  const ext = path.basename(input).toLowerCase();
+  if (/\.(?:tar|tgz|tar\.gz|gz|bz2|xz)$/i.test(ext) || !/\.(?:rar|7z)$/i.test(ext)) {
+    const tar = spawnSync('tar', ['-xf', input, '-C', output], { encoding:'utf8', windowsHide:true, timeout:120000 });
+    if (tar.status === 0) return { ok:true, tool:'tar' };
+  }
+  let found = false;
+  let passwordIssue = false;
+  let lastText = '';
+  for (const tool of archiveToolCandidates()) {
+    const isUnrar = /unrar/i.test(path.basename(tool));
+    const args = isUnrar
+      ? ['x','-y', password ? `-p${password}` : '-p-', input, `${output}${path.sep}`]
+      : ['x','-y', password ? `-p${password}` : '-p', `-o${output}`, input];
+    const result = spawnSync(tool, args, { encoding:'utf8', windowsHide:true, timeout:120000 });
+    if (result.error?.code === 'ENOENT') continue;
+    found = true;
+    lastText = `${result.stdout || ''}\n${result.stderr || ''}`;
+    if (result.status === 0) return { ok:true, tool };
+    if (looksPasswordError(lastText)) passwordIssue = true;
+  }
+  if (passwordIssue) return { ok:false, code:password ? 'BAD_PASSWORD':'PASSWORD_REQUIRED', text:lastText };
+  if (!found) return { ok:false, code:'TOOL_MISSING', text:'Không tìm thấy 7-Zip/WinRAR/unrar.' };
+  return { ok:false, code:'ARCHIVE_ERROR', text:lastText };
+}
+
+// Archive extraction is intentionally local-only. ZIP remains browser-capable;
+// RAR/7Z/TAR/GZ/BZ2/XZ use Windows tar/7-Zip/WinRAR when HNL Local is running.
 app.post('/api/extract-archive', express.raw({ type:'application/octet-stream', limit:'500mb' }), async (req, res) => {
   const original = String(req.query.name || 'archive.rar');
-  const safeExt = path.extname(original).slice(0, 8) || '.bin';
+  const passwordHeader = String(req.get('X-HNL-Archive-Password') || '');
+  let password = '';
+  try { password = passwordHeader ? decodeURIComponent(passwordHeader) : ''; } catch { password = passwordHeader; }
+  const safeExt = (original.toLowerCase().endsWith('.tar.gz') ? '.tar.gz' : path.extname(original)).slice(0, 12) || '.bin';
   const root = path.join(os.tmpdir(), `hnl-archive-${crypto.randomUUID()}`);
   const input = path.join(root, `input${safeExt}`);
   const output = path.join(root, 'out');
   try {
     fs.mkdirSync(output, { recursive:true });
     fs.writeFileSync(input, req.body);
-    let ok = false;
-    const tar = spawnSync('tar', ['-xf', input, '-C', output], { encoding:'utf8', windowsHide:true });
-    if (tar.status === 0) ok = true;
-    if (!ok) {
-      const seven = spawnSync('7z', ['x', '-y', `-o${output}`, input], { encoding:'utf8', windowsHide:true });
-      if (seven.status === 0) ok = true;
+    const extracted = extractWithTool(input, output, password);
+    if (!extracted.ok) {
+      const status = ['PASSWORD_REQUIRED','BAD_PASSWORD'].includes(extracted.code) ? 401 : 400;
+      const msg = extracted.code === 'PASSWORD_REQUIRED' ? 'Archive có mật khẩu.'
+        : extracted.code === 'BAD_PASSWORD' ? 'Mật khẩu archive không đúng.'
+        : extracted.code === 'TOOL_MISSING' ? 'Máy chưa có công cụ đọc RAR/7Z. Hãy cài 7-Zip miễn phí; TAR/GZ có thể dùng tar của Windows.'
+        : 'Không giải nén được archive. File có thể hỏng hoặc dùng phương thức nén chưa được công cụ trên máy hỗ trợ.';
+      return res.status(status).json({ error:msg, code:extracted.code });
     }
-    if (!ok) throw new Error('Máy chưa có công cụ đọc RAR/7Z phù hợp. Hãy cài 7-Zip miễn phí hoặc giải nén archive trước.');
     const allowed = /\.(pdf|png|jpe?g|webp|bmp|gif|txt|md|csv|json|xml|html?|yaml|yml|zip)$/i;
-    const files = walkFiles(output).filter(x => allowed.test(x.rel)).slice(0, 800);
+    const files = walkFiles(output).filter(x => allowed.test(x.rel)).slice(0, 1200);
     let total = 0;
     const entries = [];
     for (const f of files) {
       const st = fs.statSync(f.full); total += st.size;
-      if (total > 350 * 1024 * 1024) throw new Error('Dữ liệu sau giải nén vượt giới hạn 350 MB.');
+      if (total > 500 * 1024 * 1024) throw new Error('Dữ liệu sau giải nén vượt giới hạn 500 MB.');
       entries.push({ path:f.rel, data:fs.readFileSync(f.full).toString('base64') });
     }
-    res.json({ entries });
+    res.json({ entries, tool:extracted.tool, passwordUsed:Boolean(password) });
   } catch (err) {
-    res.status(400).json({ error:err.message });
+    res.status(400).json({ error:err.message, code:'ARCHIVE_ERROR' });
   } finally {
     try { fs.rmSync(root, { recursive:true, force:true }); } catch { /* noop */ }
   }
 });
-
 
 
 const BRIDGE_FALLBACK_MODELS = {

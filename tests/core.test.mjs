@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { annulusAreaMm2, axialResistance } from '../src/calculators.js';
-import { searchChunks, searchEveryPage, smartSearchChunks, localAnswer, localSummary, corpusStats } from '../src/search.js';
+import { searchChunks, searchEveryPage, smartSearchChunks, deepSearchChunks, localAnswer, localSummary, corpusStats } from '../src/search.js';
 import { lookup7888, classesForDiameter7888 } from '../src/tcvn7888.js';
+import { extractFormulaCandidates, evaluateExpression } from '../src/formulas.js';
 
 test('annulus area is computed from D and t', () => {
   const area = annulusAreaMm2({ diameterMm: 600, thicknessMm: 90 });
@@ -76,4 +77,30 @@ test('v1.4 balanced RAG keeps evidence from multiple matching PDFs', () => {
   const hits = smartSearchChunks('nghiệm thu cọc thí nghiệm', docs, 9, {perDoc:2});
   const ids = new Set(hits.map(h=>h.docId));
   assert.deepEqual([...ids].sort(), ['d1','d2','d3']);
+});
+
+
+test('v1.6 deep RAG covers engineering sections across late pages', () => {
+  const pages = Array.from({length: 22}, (_, i) => ({ page:i+1, text:`Nội dung chung trang ${i+1}.` }));
+  pages[4].text = '1 Phạm vi áp dụng Tiêu chuẩn này áp dụng cho thiết kế móng cọc.';
+  pages[8].text = '6 Yêu cầu kỹ thuật Cọc phải thỏa mãn các giới hạn thiết kế.';
+  pages[11].text = 'Công thức tính toán sức chịu tải: P = 2Q (6).';
+  pages[14].text = '7 Phương pháp thử Thí nghiệm kiểm tra tải trọng cọc.';
+  pages[17].text = '8 Nghiệm thu Hồ sơ nghiệm thu và điều kiện chấp nhận.';
+  pages[20].text = '9 Bảo quản và vận chuyển Nâng chuyển và xếp cọc.';
+  const docs=[{id:'deep',name:'deep.pdf',standard:'TCVN TEST',pageCount:22,textChars:1000,pages}];
+  const hits=deepSearchChunks('Tổng hợp phạm vi, yêu cầu kỹ thuật, công thức, phương pháp thử, nghiệm thu, bảo quản vận chuyển', docs, 60);
+  const pageSet=new Set(hits.map(h=>h.page));
+  for (const p of [5,9,12,15,18,21]) assert.ok(pageSet.has(p), `missing engineering section page ${p}`);
+});
+
+test('v1.6 formula scanner recognizes Symbol-font equals and calculates safe formula', () => {
+  const doc={id:'f1',name:'formula.pdf',standard:'TCVN TEST',pageCount:2,textChars:100,pages:[
+    {page:1,text:'7.6 Khả năng bền cắt\nP \uf03d 2Q (6)'},
+    {page:2,text:'n = L/1000'}
+  ]};
+  const formulas=extractFormulaCandidates(doc);
+  const p=formulas.find(x=>x.lhs==='P');
+  assert.ok(p?.computable);
+  assert.equal(evaluateExpression(p.rhs,{Q:25}),50);
 });

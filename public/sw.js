@@ -1,4 +1,4 @@
-const CACHE = 'hnl-pile-ai-v1.4.0';
+const CACHE = 'hnl-pile-ai-v1.7.0';
 const SHELL = ['./', './manifest.webmanifest', './hnl-mark-192.png', './hnl-mark-512.png'];
 
 self.addEventListener('install', event => {

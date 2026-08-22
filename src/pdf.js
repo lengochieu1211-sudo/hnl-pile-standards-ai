@@ -126,3 +126,26 @@ export function clearPdfCache(docId) {
   try { pdf?.destroy?.(); } catch { /* noop */ }
   pdfCache.delete(docId);
 }
+
+
+/** Render one PDF page to a compressed JPEG base64 payload for local Vision/OCR. */
+export async function renderPdfPageToBase64(doc, pageNumber, scale = 1.7) {
+  if (!doc?.blob) throw new Error('PDF không còn dữ liệu gốc để OCR.');
+  const pdf = await getPdf(doc);
+  const safePage = Math.min(Math.max(1, Number(pageNumber) || 1), pdf.numPages);
+  const page = await pdf.getPage(safePage);
+  let viewport = page.getViewport({ scale });
+  // Avoid huge images that can exhaust RAM/VRAM on long technical standards.
+  const maxPixels = 4_500_000;
+  const pixels = viewport.width * viewport.height;
+  if (pixels > maxPixels) viewport = page.getViewport({ scale: scale * Math.sqrt(maxPixels / pixels) });
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.floor(viewport.width));
+  canvas.height = Math.max(1, Math.floor(viewport.height));
+  const ctx = canvas.getContext('2d', { alpha:false });
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  await page.render({ canvasContext:ctx, viewport }).promise;
+  const url = canvas.toDataURL('image/jpeg', 0.86);
+  return { page:safePage, mimeType:'image/jpeg', data:url.split(',')[1] || '' };
+}

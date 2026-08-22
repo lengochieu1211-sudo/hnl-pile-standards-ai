@@ -1,11 +1,18 @@
 import './styles.css';
-import { renderPdfPage, clearPdfCache } from './pdf.js';
-import { expandInputItems, parseInputFile, fileToBase64, extractArchiveViaLocalBridge } from './ingest.js';
+import { renderPdfPage, renderPdfPageToBase64, clearPdfCache } from './pdf.js';
+import { expandInputItems, parseInputFile, fileToBase64, extractArchiveViaLocalBridge, isArchiveFile } from './ingest.js';
 import { saveDocument, getDocuments, deleteDocument } from './db.js';
-import { searchChunks, searchEveryPage, smartSearchChunks, localSummary, localAnswer, corpusStats, isBroadQuery, clearSearchCache } from './search.js';
-import { PROVIDERS, buildRagPrompt, callBridge, callDirect, bridgeHealth, testDirectProvider, listAvailableModels } from './ai.js';
+import { searchChunks, searchEveryPage, smartSearchChunks, deepSearchChunks, localSummary, localAnswer, corpusStats, isBroadQuery, planEngineeringQueries, clearSearchCache } from './search.js';
+import { PROVIDERS, buildRagPrompt, callBridge, callDirect, bridgeHealth, testDirectProvider, listAvailableModels, semanticRerank, localEngineDiagnostics } from './ai.js';
 import { annulusAreaMm2, axialResistance, loadClassSigmaCe, tcvn7888Checklist } from './calculators.js';
 import { diameters7888, lookup7888, classesForDiameter7888 } from './tcvn7888.js';
+import { extractFormulaLibrary, formulaStats, verifiedFormulaLibrary, evaluateExpression, clearFormulaCache } from './formulas.js';
+
+const APP_META = Object.freeze({
+  version: '1.7.0',
+  updatedAt: '22/08/2026 22:55 GMT+7',
+  release: 'Local Intelligence Engine · Hybrid Semantic RAG · Auto Offline AI'
+});
 
 const STORAGE = {
   provider: 'hnl.provider.v12',
@@ -16,7 +23,11 @@ const STORAGE = {
   strict: 'hnl.strict.v12',
   checklist: 'hnl.checklist.v12',
   visionModel: 'hnl.visionModel.v14',
-  scope: 'hnl.scope.v14'
+  scope: 'hnl.scope.v16',
+  formulaSelection: 'hnl.formulaSelection.v16',
+  retrievalMode: 'hnl.retrievalMode.v17',
+  embeddingModel: 'hnl.embeddingModel.v17',
+  semanticRerank: 'hnl.semanticRerank.v17'
 };
 
 const state = {
@@ -41,7 +52,10 @@ const state = {
     bridgeUrl: localStorage.getItem(STORAGE.bridge) || (['localhost','127.0.0.1','::1'].includes(location.hostname) ? location.origin : 'http://127.0.0.1:8787'),
     ollamaUrl: localStorage.getItem(STORAGE.ollama) || 'http://127.0.0.1:11434',
     strict: localStorage.getItem(STORAGE.strict) !== 'false',
-    scope: localStorage.getItem(STORAGE.scope) || 'all'
+    scope: localStorage.getItem(STORAGE.scope) || 'all',
+    retrievalMode: localStorage.getItem(STORAGE.retrievalMode) || 'auto',
+    embeddingModel: localStorage.getItem(STORAGE.embeddingModel) || 'bge-m3',
+    semanticRerank: localStorage.getItem(STORAGE.semanticRerank) !== 'false'
   },
   progress: null,
   toast: null,
@@ -50,7 +64,10 @@ const state = {
   diagnosticHtml: '',
   modelOptions: [],
   modelStatus: '',
-  searchStats: null
+  searchStats: null,
+  formulaSelection: localStorage.getItem(STORAGE.formulaSelection) || '',
+  formulaQuery: '',
+  archivePasswordCache: new Map()
 };
 
 if (!PROVIDERS[state.settings.provider]) state.settings.provider = 'local';
@@ -67,6 +84,32 @@ function loadJson(key, fallback) {
 function esc(value = '') {
   return String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c]));
 }
+function inlineMarkup(value = '') {
+  let out = esc(value);
+  out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
+  out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  out = out.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+  return out;
+}
+function richTextHtml(value = '') {
+  const lines = String(value || '').replace(/\r/g, '').split('\n');
+  const out = [];
+  let list = [];
+  const flush = () => { if (list.length) { out.push(`<ul>${list.map(x => `<li>${inlineMarkup(x)}</li>`).join('')}</ul>`); list = []; } };
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) { flush(); continue; }
+    if (/^---+$/.test(line)) { flush(); out.push('<hr>'); continue; }
+    const h = line.match(/^(#{1,4})\s+(.+)$/);
+    if (h) { flush(); const n = Math.min(4, h[1].length); out.push(`<h${n}>${inlineMarkup(h[2])}</h${n}>`); continue; }
+    const bullet = line.match(/^(?:[-*•]|\d+[.)])\s+(.+)$/);
+    if (bullet) { list.push(bullet[1]); continue; }
+    flush(); out.push(`<p>${inlineMarkup(line)}</p>`);
+  }
+  flush();
+  return out.join('');
+}
+
 function fmtBytes(n) {
   if (!n) return '0 B';
   const units = ['B', 'KB', 'MB', 'GB'];
@@ -109,6 +152,9 @@ function saveSettings() {
   localStorage.setItem(STORAGE.ollama, state.settings.ollamaUrl);
   localStorage.setItem(STORAGE.strict, String(state.settings.strict));
   localStorage.setItem(STORAGE.scope, state.settings.scope);
+  localStorage.setItem(STORAGE.retrievalMode, state.settings.retrievalMode);
+  localStorage.setItem(STORAGE.embeddingModel, state.settings.embeddingModel);
+  localStorage.setItem(STORAGE.semanticRerank, String(state.settings.semanticRerank));
 }
 function saveChecklist() { localStorage.setItem(STORAGE.checklist, JSON.stringify(state.checklist)); }
 function showToast(message, type = 'info') {
@@ -138,6 +184,7 @@ function render() {
         <div class="brand-copy">
           <div class="brand-title">HNL Pile Standards AI</div>
           <div class="brand-sub">Tra cứu tiêu chuẩn · kiểm tra kỹ thuật cọc</div>
+          <div class="build-meta"><span class="version-chip">v${APP_META.version}</span><span>Cập nhật ${APP_META.updatedAt}</span></div>
         </div>
       </div>
       <div class="top-actions">
@@ -161,14 +208,14 @@ function render() {
           <label class="upload-box" ${state.busy ? 'aria-disabled="true"' : ''}>
             <span class="upload-icon">＋</span>
             <span><b>Thêm dữ liệu</b><small>PDF · ZIP · ảnh · TXT/CSV/JSON</small></span>
-            <input id="dataInput" type="file" accept=".pdf,.zip,.png,.jpg,.jpeg,.webp,.bmp,.gif,.txt,.md,.csv,.json,.xml,.html,.htm,.yaml,.yml,.rar,.7z" multiple ${state.busy ? 'disabled' : ''}>
+            <input id="dataInput" type="file" accept=".pdf,.zip,.rar,.7z,.tar,.tgz,.gz,.bz2,.xz,.png,.jpg,.jpeg,.webp,.bmp,.gif,.txt,.md,.csv,.json,.xml,.html,.htm,.yaml,.yml" multiple ${state.busy ? 'disabled' : ''}>
           </label>
           <label class="folder-box" ${state.busy ? 'aria-disabled="true"' : ''}>
             <span>▣</span><b>Đọc cả thư mục</b>
             <input id="folderInput" type="file" webkitdirectory directory multiple ${state.busy ? 'disabled' : ''}>
           </label>
         </div>
-        <div class="library-note">Tự quét file trong thư mục/ZIP. Ảnh được giữ làm nguồn thị giác cho Gemini hoặc Offline AI. RAR/7Z tự bung khi chạy HNL Local nếu máy có tar/7-Zip.</div>
+        <div class="library-note">Tự quét PDF/ảnh/text trong thư mục hoặc ZIP. RAR/7Z/TAR/GZ/BZ2/XZ được giải nén ở HNL Local; archive có mật khẩu sẽ hỏi mật khẩu khi cần.</div>
         <div class="doc-list">${state.docs.length ? state.docs.map(docItem).join('') : emptyLibraryHtml()}</div>
         <div class="source-rule">
           <label class="field compact-field"><span>Phạm vi hỏi đáp / tìm kiếm</span><select id="scopeSelect">
@@ -176,7 +223,7 @@ function render() {
             <option value="selected" ${state.settings.scope === 'selected' ? 'selected' : ''}>Chỉ tài liệu đã tick</option>
             <option value="active" ${state.settings.scope === 'active' ? 'selected' : ''}>Chỉ PDF đang mở</option>
           </select></label>
-          <div class="coverage-line"><b>${esc(scopeLabel())}</b><small>Mặc định v1.4 quét tất cả trang có lớp chữ trước khi xếp hạng kết quả.</small></div>
+          <div class="coverage-line"><b>${esc(scopeLabel())}</b><small>Mặc định v${APP_META.version} quét tất cả trang có lớp chữ trước khi xếp hạng kết quả.</small></div>
           <label class="switch-row">
             <input id="strictSide" type="checkbox" ${state.settings.strict ? 'checked' : ''}>
             <span><b>Khóa nguồn</b><small>Không cho AI tự thêm nội dung ngoài PDF</small></span>
@@ -297,7 +344,7 @@ function summaryHtml() {
       <p>Đọc cục bộ ngay, hoặc dùng AI để tổng hợp sâu hơn nhưng vẫn khóa theo nguồn PDF.</p>
       <div class="action-row"><button class="btn primary" id="aiSummary" ${state.busy ? 'disabled' : ''}>Tóm tắt PDF đang mở</button><button class="btn" id="aiSummaryAll" ${state.busy || !sourceDocs().length ? 'disabled' : ''}>Tóm tắt toàn bộ nguồn</button></div><div class="coverage-line"><b>${esc(scopeLabel())}</b><small>Tóm tắt toàn bộ nguồn sẽ quét mọi trang có lớp chữ trong phạm vi hiện tại.</small></div>
     </div>
-    ${doc.scannedLikely ? '<div class="notice warning"><b>PDF có ít lớp text.</b> Hình vẫn xem được nhưng tra cứu chữ có thể thiếu. Bản này chưa OCR ảnh scan tự động.</div>' : ''}
+    ${doc.scannedLikely ? `<div class="notice warning"><b>PDF có ít lớp text.</b> Hình vẫn xem được nhưng tra cứu chữ sẽ thiếu nếu chưa OCR. <button class="btn compact-btn" id="ocrActivePdf" type="button">OCR toàn PDF bằng AI Offline</button></div>` : ''}
     <div class="panel-section"><div class="panel-section-title"><h3>Cấu trúc nhận diện</h3><span>${summary.headings.length} mục</span></div>${summary.headings.slice(0, 18).map(x => sourceLine(x, doc)).join('') || '<div class="muted">Chưa nhận diện được đề mục rõ ràng.</div>'}</div>
     <div class="panel-section"><div class="panel-section-title"><h3>Điểm định lượng đáng chú ý</h3><span>${summary.important.length} điểm</span></div>${summary.important.slice(0, 12).map(x => sourceLine(x, doc)).join('') || '<div class="muted">Chưa nhận diện được nội dung định lượng.</div>'}</div>`;
 }
@@ -306,11 +353,18 @@ function sourceLine(item, doc) {
 }
 
 function messageHtml(message) {
-  const chips = (message.hits || []).slice(0, 8).map(h => `<button class="source-chip" data-hit-doc="${h.docId}" data-hit-page="${h.page}">${esc(h.standard || h.docName)} · P.${h.page}</button>`).join('');
+  const unique = [];
+  const seen = new Set();
+  for (const h of message.hits || []) {
+    const key = `${h.docId}:${h.page}`;
+    if (!seen.has(key)) { seen.add(key); unique.push(h); }
+  }
+  const visible = unique.slice(0, 16);
+  const chips = visible.map(h => `<button class="source-chip" data-hit-doc="${h.docId}" data-hit-page="${h.page}">${esc(h.standard || h.docName)} · P.${h.page}</button>`).join('');
   return `<div class="message ${message.role === 'user' ? 'user' : 'ai'}">
     <div class="message-label">${message.role === 'user' ? 'Bạn' : (state.settings.provider === 'local' ? 'Tra cứu cục bộ' : 'HNL AI')}</div>
-    <div class="answer-text">${esc(message.text)}</div>
-    ${chips ? `<div class="source-chips">${chips}</div>` : ''}
+    <div class="answer-text rich-answer">${richTextHtml(message.text)}</div>
+    ${chips ? `<details class="source-details" ${unique.length <= 6 ? 'open' : ''}><summary>Nguồn đã dùng · ${unique.length} trang</summary><div class="source-chips">${chips}${unique.length > visible.length ? `<span class="source-more">+${unique.length - visible.length} nguồn khác</span>` : ''}</div></details>` : ''}
   </div>`;
 }
 function chatHtml() {
@@ -350,11 +404,54 @@ function quickTableControls() {
 }
 function find7888Doc() { return sourceDocs().find(is7888) || state.docs.find(is7888) || null; }
 
+function formulaLibraryForScope() {
+  const docs = sourceDocs().filter(d => d.viewerKind !== 'image');
+  const verified = verifiedFormulaLibrary(docs);
+  const auto = extractFormulaLibrary(docs);
+  // Keep verified formulas first. Remove obvious auto-detected duplicates by page/label.
+  const verifiedKeys = new Set(verified.map(x => `${x.docId}:${x.page}:${x.label}`));
+  return [...verified, ...auto.filter(x => !verifiedKeys.has(`${x.docId}:${x.page}:${x.label}`))];
+}
+function selectedFormulaItem() {
+  const items = formulaLibraryForScope();
+  let item = items.find(x => x.id === state.formulaSelection);
+  if (!item && items.length) {
+    item = items.find(x => x.computable) || items[0];
+    state.formulaSelection = item.id;
+  }
+  return item || null;
+}
+function formulaLibraryHtml() {
+  const docs = sourceDocs().filter(d => d.viewerKind !== 'image');
+  const stats = formulaStats(docs);
+  const verifiedCount = verifiedFormulaLibrary(docs).length;
+  const items = formulaLibraryForScope();
+  const item = selectedFormulaItem();
+  const options = items.map(x => `<option value="${esc(x.id)}" ${x.id === item?.id ? 'selected' : ''}>${esc(x.standard || x.docName)} · P.${x.page}${x.label ? ` · ${esc(x.label)}` : ''}${x.verified ? ' · Đã xác minh' : (x.computable ? ' · Tính được' : ' · Cần kiểm tra')}</option>`).join('');
+  const varInputs = item?.computable ? item.variables.map(v => `<label class="field"><span>${esc(v)}</span><input type="number" step="any" data-formula-var="${esc(v)}" placeholder="Nhập ${esc(v)}"></label>`).join('') : '';
+  const byDoc = stats.byDoc.map(d => `<span>${esc(d.standard || d.name)}: ${d.total} CT${d.computable ? ` · ${d.computable} tính được` : ''}</span>`).join('');
+  return `<div class="panel-section formula-library">
+    <div class="panel-section-title"><h3>Thư viện công thức toàn bộ PDF</h3><span>${items.length} công thức</span></div>
+    <div class="notice"><b>Quét toàn bộ trang có lớp chữ trong ${docs.length} tài liệu.</b> Công thức đọc rõ được đưa vào thư viện Tính; công thức bị PDF tách dòng/méo ký hiệu vẫn được lưu kèm trang gốc nhưng khóa tính tự động để tránh sai.</div>
+    <div class="formula-stats four"><div><span>Đã xác minh</span><b>${verifiedCount}</b></div><div><span>Tự phát hiện</span><b>${stats.total}</b></div><div><span>Tính tự động</span><b>${verifiedCount + stats.computable}</b></div><div><span>Cần kiểm tra</span><b>${stats.needsReview}</b></div></div>
+    ${byDoc ? `<div class="formula-doc-stats">${byDoc}</div>` : ''}
+    <div class="action-row"><button class="btn" id="formulaScanBtn">↻ Quét lại tất cả công thức</button></div>
+    ${items.length ? `<label class="field"><span>Chọn công thức</span><select id="formulaSelect">${options}</select></label>` : '<div class="notice warning">Chưa phát hiện công thức từ lớp text. Nếu PDF là bản scan, cần OCR/AI Vision trước.</div>'}
+    ${item ? `<div class="formula-source-card">
+      <div class="formula-source-head"><div><b>${esc(item.standard || item.docName)}</b><small>${esc(item.title || 'Công thức nhận diện từ PDF')} · Trang ${item.page}${item.label ? ` · ${esc(item.label)}` : ''}</small></div><button class="source-chip" data-hit-doc="${item.docId}" data-hit-page="${item.page}">Mở trang gốc</button></div>
+      ${item.verified ? '<div class="notice success"><b>Công thức đã xác minh từ PDF gốc.</b></div>' : ''}<div class="formula-raw">${esc(item.raw)}</div>
+      ${item.expression ? `<div class="formula-normalized"><span>Biểu thức chuẩn hóa</span><code>${esc(item.expression)}</code></div>` : ''}
+      ${item.computable ? `<div class="notice success"><b>Có thể tính tự động.</b> Hãy nhập các biến bên dưới và luôn đối chiếu điều kiện/đơn vị tại trang gốc.</div><div class="grid2 formula-vars">${varInputs}</div><button class="btn primary" id="formulaCalcBtn">Tính công thức đã chọn</button><div id="formulaCalcResult"></div>` : `<div class="notice warning"><b>Cần kiểm tra công thức trên PDF gốc.</b> Lớp text chưa đủ rõ để app tự suy diễn thứ tự tử/mẫu, chỉ số hoặc dấu toán học.</div>`}
+      <details class="formula-context"><summary>Ngữ cảnh trích xuất</summary><pre>${esc(item.context)}</pre></details>
+    </div>` : ''}
+  </div>`;
+}
+
 function calcHtml() {
   const r = state.tableResult || lookup7888(600, 'B');
   return `<div class="panel-section">
-    <div class="panel-section-title"><h3>Sức kháng nén theo vật liệu</h3><span>Phụ lục B</span></div>
-    <div class="notice">Công cụ hỗ trợ kiểm tra theo công thức của TCVN 7888:2014. Kết quả không thay thế hồ sơ thiết kế.</div>
+    <div class="panel-section-title"><h3>Máy tính đã xác minh · TCVN 7888:2014</h3><span>Phụ lục B</span></div>
+    <div class="notice">Bộ tính này được khóa theo công thức đã kiểm tra thủ công của TCVN 7888:2014. Kết quả không thay thế hồ sơ thiết kế.</div>
     <div class="grid2">
       <label class="field"><span>Loại cọc</span><select id="cType"><option value="PHC">PHC / NPH</option><option value="PC">PC</option></select></label>
       <label class="field"><span>Cấp tải</span><select id="cClass"><option>A</option><option>AB</option><option selected>B</option><option>C</option></select></label>
@@ -366,7 +463,8 @@ function calcHtml() {
     <div class="action-row"><button class="btn" id="calcFill7888" ${sourceHas7888() ? '' : 'disabled'}>Nạp từ Bảng 1</button><button class="btn primary" id="calcBtn">Tính kết quả</button></div>
     <div id="calcResult"></div>
   </div>
-  <div class="formula-card"><div class="formula">R<sub>aL</sub> = (σ<sub>cu</sub>/α − σ<sub>ce</sub>/4) × A<sub>0</sub></div><p>PC dùng α = 4; PHC/NPH dùng α = 3,5. App đồng thời hiển thị giá trị ngắn hạn và 80% giá trị ngắn hạn.</p><button class="source-chip" data-find="Phụ lục B">Mở nguồn trong PDF</button></div>`;
+  <div class="formula-card"><div class="formula">R<sub>aL</sub> = (σ<sub>cu</sub>/α − σ<sub>ce</sub>/4) × A<sub>0</sub></div><p>PC dùng α = 4; PHC/NPH dùng α = 3,5. App đồng thời hiển thị giá trị ngắn hạn và 80% giá trị ngắn hạn.</p><button class="source-chip" data-find="Phụ lục B">Mở nguồn trong PDF</button></div>
+  ${formulaLibraryHtml()}`;
 }
 
 function compareHtml() {
@@ -375,7 +473,7 @@ function compareHtml() {
     ${docs.length < 2 ? '<div class="notice warning">Hãy tick ít nhất 2 PDF trong Thư viện. Chế độ so sánh chỉ dùng các tài liệu được tick.</div>' : `<div class="selected-source-list">${docs.map(d => `<span>${esc(d.standard || d.name)}</span>`).join('')}</div>`}
     <label class="field"><span>Nội dung cần so sánh</span><textarea id="compareQuestion" placeholder="Ví dụ: So sánh yêu cầu nghiệm thu, giới hạn vết nứt và tần suất thử nghiệm.">${esc(state.compare.draft || state.compare.query)}</textarea></label>
     <button class="btn primary" id="compareBtn" ${docs.length < 2 || state.busy ? 'disabled' : ''}>So sánh nguồn</button>
-    ${state.compare.text ? `<div class="compare-output"><div class="answer-text">${esc(state.compare.text)}</div>${sourceChipsHtml(state.compare.hits)}</div>` : ''}
+    ${state.compare.text ? `<div class="compare-output"><div class="answer-text rich-answer">${richTextHtml(state.compare.text)}</div>${sourceChipsHtml(state.compare.hits)}</div>` : ''}
   </div>`;
 }
 
@@ -412,15 +510,28 @@ function settingsHtml() {
       ${state.settings.provider === 'gemini' ? `<div class="notice"><b>Gemini API:</b> vào Google AI Studio → API Keys → Create API key → Copy, sau đó dán vào ô trên. Không ghi key vào source GitHub. <a class="inline-link" href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">Mở trang API Keys</a></div>` : ''}
       ${isOllama && state.settings.connection === 'direct' ? `<label class="field"><span>Ollama URL</span><input id="ollamaInput" value="${esc(state.settings.ollamaUrl)}"></label>` : ''}
       ${isOllama && githubHttps ? `<div class="notice error"><b>Đây là nguyên nhân Offline AI trong video không chạy.</b><br>GitHub Pages là HTTPS nhưng Ollama trên máy là HTTP. Trình duyệt chặn kết nối này. Hãy chạy <b>START_HNL_OFFLINE_AI.bat</b> trong source và mở app tại <b>http://127.0.0.1:8787</b>.</div>` : ''}
-      ${isOllama && isLocalHost() ? `<div class="notice success"><b>Đang ở chế độ Local.</b> Đây là môi trường đúng để dùng Ollama offline và đọc ảnh bằng model vision.</div>` : ''}
+      ${isOllama && isLocalHost() ? `<div class="notice success"><b>Đang ở chế độ Local.</b> Đây là môi trường đúng để dùng Ollama offline, semantic embedding và đọc ảnh bằng model vision.</div>` : ''}
+      ${isOllama ? `<div class="local-engine-card"><div class="panel-section-title"><h3>HNL Local Intelligence Engine</h3><span>v1.7</span></div>
+        <label class="field"><span>Chế độ tìm kiếm</span><select id="retrievalModeInput">
+          <option value="auto" ${state.settings.retrievalMode === 'auto' ? 'selected' : ''}>Auto · tự chọn nhanh/chuyên sâu/semantic</option>
+          <option value="hybrid" ${state.settings.retrievalMode === 'hybrid' ? 'selected' : ''}>Hybrid Semantic · từ khóa + vector + rerank</option>
+          <option value="deep" ${state.settings.retrievalMode === 'deep' ? 'selected' : ''}>Deep Lexical · quét cấu trúc toàn thư viện</option>
+          <option value="fast" ${state.settings.retrievalMode === 'fast' ? 'selected' : ''}>Nhanh · tra cứu cục bộ</option>
+        </select></label>
+        <label class="field"><span>Model embedding cục bộ</span><input id="embeddingModelInput" value="${esc(state.settings.embeddingModel)}" placeholder="bge-m3"><small>Khuyến nghị tiếng Việt/kỹ thuật: bge-m3. Có thể dùng nomic-embed-text nếu máy nhẹ.</small></label>
+        <label class="switch-row"><input id="semanticRerankInput" type="checkbox" ${state.settings.semanticRerank ? 'checked' : ''}><span><b>Semantic rerank</b><small>Rerank các đoạn ứng viên bằng embedding cục bộ trước khi gửi cho model trả lời.</small></span></label>
+        <div class="notice"><b>Cơ chế v1.7:</b> quét toàn bộ trang → tìm từ khóa/cấu trúc → embedding semantic → cân bằng giữa PDF → thêm trang lân cận → model trả lời có citation.</div>
+        <div class="action-row"><button class="btn" id="autoLocalModels" type="button">⚙ Tự chọn model theo máy</button></div>
+      </div>` : ''}
       ${state.settings.connection === 'bridge' ? `<label class="field"><span>HNL Bridge URL</span><input id="bridgeInput" value="${esc(state.settings.bridgeUrl)}"></label><div class="notice">Khi chạy Local, nên để Bridge cùng địa chỉ app, ví dụ http://127.0.0.1:8787.</div>` : ''}
     `}
     <label class="switch-row"><input id="strictInput" type="checkbox" ${state.settings.strict ? 'checked' : ''}><span><b>Khóa nguồn tài liệu</b><small>AI không được tự thêm quy định ngoài PDF/ảnh/text đã chọn.</small></span></label>
     <div class="action-row"><button class="btn primary" id="saveSettings">Lưu cài đặt</button><button class="btn" id="testConnection">Kiểm tra kết nối</button></div>
     ${state.connectionStatus ? `<div class="notice ${state.connectionStatus.ok ? 'success' : 'error'}"><b>${state.connectionStatus.ok ? 'Kết nối OK' : 'Kết nối lỗi'}</b><br>${esc(state.connectionStatus.message || '')}</div>` : ''}
   </div>
-  <div class="panel-section"><div class="panel-section-title"><h3>Dữ liệu đầu vào</h3><span>v1.4</span></div><div class="capability-grid"><span>✓ PDF nhiều file</span><span>✓ ZIP tự bung</span><span>✓ Đọc cả thư mục</span><span>✓ Ảnh JPG/PNG/WebP</span><span>✓ TXT/CSV/JSON</span><span>✓ RAR/7Z ở HNL Local*</span><span>✓ Quét toàn bộ trang</span><span>✓ Nhiều model AI</span></div></div>
-  <div class="panel-section"><div class="panel-section-title"><h3>Chẩn đoán ứng dụng</h3><span>v1.4</span></div><p class="muted">Kiểm tra bộ nhớ trình duyệt, tài liệu, nguồn đang chọn và cấu hình AI.</p><button class="btn" id="runDiagnostics">Chạy chẩn đoán</button>${state.diagnosticHtml}</div>`;
+  <div class="panel-section app-version-card"><div class="panel-section-title"><h3>Phiên bản ứng dụng</h3><span>Đang chạy</span></div><div class="version-grid"><div><span>Phiên bản</span><b>v${APP_META.version}</b></div><div><span>Cập nhật</span><b>${APP_META.updatedAt}</b></div><div><span>Nhánh tính năng</span><b>${APP_META.release}</b></div></div><p class="muted">Ngày giờ trên là mốc phát hành của source đang chạy, giúp đối chiếu đúng bản sau khi GitHub Pages/PWA cập nhật cache.</p></div>
+  <div class="panel-section"><div class="panel-section-title"><h3>Dữ liệu đầu vào</h3><span>v${APP_META.version}</span></div><div class="capability-grid"><span>✓ PDF nhiều file</span><span>✓ ZIP tự bung</span><span>✓ Đọc cả thư mục</span><span>✓ Ảnh JPG/PNG/WebP</span><span>✓ TXT/CSV/JSON</span><span>✓ RAR/7Z/TAR/GZ ở HNL Local</span><span>✓ Archive có mật khẩu</span><span>✓ Quét toàn bộ trang</span><span>✓ Thư viện công thức tự quét</span><span>✓ Hybrid Semantic RAG</span><span>✓ Local Embedding/Rerank</span><span>✓ Tự chẩn đoán Ollama/RAM/GPU</span><span>✓ Nhiều model AI</span></div></div>
+  <div class="panel-section"><div class="panel-section-title"><h3>Chẩn đoán ứng dụng</h3><span>v${APP_META.version}</span></div><p class="muted">Kiểm tra bộ nhớ trình duyệt, tài liệu, nguồn đang chọn và cấu hình AI.</p><button class="btn" id="runDiagnostics">Chạy chẩn đoán</button>${state.diagnosticHtml}</div>`;
 }
 
 function sourceChipsHtml(hits = []) {
@@ -470,6 +581,8 @@ function bind() {
       if (el.id === 'tableLookupBtn') { runTableLookup(); return; }
       if (el.id === 'calcBtn') { runCalc(); return; }
       if (el.id === 'calcFill7888') { fillCalcFrom7888(); return; }
+      if (el.id === 'formulaScanBtn') { clearFormulaCache(); const fs = formulaStats(sourceDocs().filter(d => d.viewerKind !== 'image')); showToast(`Đã quét ${fs.total} công thức · ${fs.computable} có thể tính tự động.`, fs.total ? 'success' : 'warning'); render(); return; }
+      if (el.id === 'formulaCalcBtn') { runDynamicFormula(); return; }
       if (el.id === 'compareBtn') { await runCompare(); return; }
       if (el.id === 'copyChecklist') { await copyChecklist(); return; }
       if (el.id === 'resetChecklist') { resetChecklist(); return; }
@@ -483,6 +596,8 @@ function bind() {
       if (el.id === 'saveSettings') { updateSettingsFromForm(); return; }
       if (el.id === 'testConnection') { await testConnection(); return; }
       if (el.id === 'refreshModels') { await refreshModels(); return; }
+      if (el.id === 'ocrActivePdf') { await ocrActivePdfLocal(); return; }
+      if (el.id === 'autoLocalModels') { await applyRecommendedLocalModels(); return; }
       if (el.id === 'runDiagnostics') { await runDiagnostics(); return; }
       if (el.matches('[data-jump]')) {
         if (el.dataset.doc) state.activeDocId = el.dataset.doc;
@@ -513,6 +628,7 @@ function bind() {
     if (el.id === 'pageInput') { jumpPage(Number(el.value)); return; }
     if (el.id === 'tableDiameter') { updateTableClassOptions(); return; }
     if (el.id === 'cType' || el.id === 'cClass') { syncCalcDefaults(); return; }
+    if (el.id === 'formulaSelect') { state.formulaSelection = el.value; localStorage.setItem(STORAGE.formulaSelection, el.value); render(); return; }
     if (el.id === 'providerSelect') { providerChanged(event); return; }
     if (el.id === 'strictInput') { state.settings.strict = el.checked; }
   };
@@ -573,23 +689,39 @@ function fitPageWidth() {
   if (!Number.isFinite(renderedWidth) || renderedWidth <= 0) return setZoom(1.08);
   setZoom(state.zoom * available / renderedWidth);
 }
+async function extractArchiveWithPassword(archive) {
+  let password = state.archivePasswordCache.get(archive.name) || '';
+  try {
+    return await extractArchiveViaLocalBridge(archive, password);
+  } catch (error) {
+    if (!['PASSWORD_REQUIRED','BAD_PASSWORD'].includes(error.code)) throw error;
+    const message = error.code === 'BAD_PASSWORD'
+      ? `Mật khẩu của “${archive.name}” chưa đúng. Nhập lại mật khẩu archive:`
+      : `“${archive.name}” có mật khẩu. Nhập mật khẩu archive:`;
+    password = window.prompt(message, password || '') ?? '';
+    if (!password) throw new Error('Đã hủy nhập mật khẩu archive.');
+    const result = await extractArchiveViaLocalBridge(archive, password);
+    state.archivePasswordCache.set(archive.name, password);
+    return result;
+  }
+}
+
 async function uploadInputs(event) {
   const raw = [...(event.target.files || [])];
   if (!raw.length) return showToast('Chưa chọn dữ liệu.', 'warning');
-  const unsupportedArchives = raw.filter(f => /\.(rar|7z)$/i.test(f.name));
+  const localArchives = raw.filter(f => isArchiveFile(f.name));
   let items = [];
   try {
     state.progress = { title: 'Đang quét dữ liệu', detail: `Đọc ${raw.length} mục…`, pct: 3 };
     render();
-    items = await expandInputItems(raw.filter(f => !/\.(rar|7z)$/i.test(f.name)));
-    if (unsupportedArchives.length) {
-      if (!isLocalHost()) showToast('RAR/7Z chỉ tự bung trong HNL Local. Trên GitHub Pages hãy giải nén trước hoặc dùng ZIP.', 'warning');
+    items = await expandInputItems(raw.filter(f => !isArchiveFile(f.name)));
+    if (localArchives.length) {
+      if (!isLocalHost()) showToast('RAR/7Z/TAR/GZ/BZ2/XZ cần HNL Local để giải nén an toàn. ZIP vẫn mở trực tiếp trên GitHub Pages.', 'warning');
       else {
-        for (const archive of unsupportedArchives) {
-          state.progress = { title:`Đang giải nén ${archive.name}`, detail:'Dùng tar/7-Zip cục bộ…', pct:5 }; render();
-          const extracted = await extractArchiveViaLocalBridge(archive);
+        for (const archive of localArchives) {
+          state.progress = { title:`Đang giải nén ${archive.name}`, detail:'Kiểm tra archive, mật khẩu và dữ liệu bên trong…', pct:5 }; render();
+          const extracted = await extractArchiveWithPassword(archive);
           const expanded = await expandInputItems(extracted.map(x => x.file));
-          // Giữ đường dẫn archive cho các file không phải ZIP lồng nhau.
           const pathMap = new Map(extracted.map(x => [x.file.name, x.path]));
           items.push(...expanded.map(x => ({ ...x, path:pathMap.get(x.file.name) || x.path })));
         }
@@ -688,6 +820,65 @@ function localSummaryText(doc) {
   return `TÓM TẮT CỤC BỘ — ${doc.standard || doc.name}\n\nCấu trúc chính:\n${headings || 'Chưa nhận diện được đề mục.'}\n\nCác yêu cầu/giới hạn đáng chú ý:\n${points || 'Chưa nhận diện được câu định lượng.'}\n\nLưu ý: đây là trích xuất tự động từ lớp text PDF, không phải kết luận AI.`;
 }
 
+async function ocrActivePdfLocal() {
+  const doc = activeDoc();
+  if (!doc || doc.viewerKind !== 'pdf') return showToast('Hãy mở một PDF cần OCR.', 'warning');
+  if (state.busy) return showToast('Ứng dụng đang xử lý tác vụ khác.', 'warning');
+  if (state.settings.provider !== 'ollama' || state.settings.connection !== 'bridge') {
+    state.tab = 'settings'; state.mobile = 'assistant'; render();
+    return showToast('OCR toàn PDF cần HNL Offline AI · Ollama + HNL Bridge.', 'warning');
+  }
+  if (!isLocalHost()) return showToast('Hãy chạy START_HNL_OFFLINE_AI.bat và mở bản Local tại 127.0.0.1:8787.', 'warning');
+  const targets = (doc.pages || []).filter(p => String(p.text || '').trim().length < 180 || p.ocrStatus === 'failed');
+  if (!targets.length) return showToast('PDF này đã có lớp chữ đủ để tra cứu; không cần OCR toàn bộ.', 'info');
+  if (!confirm(`OCR ${targets.length}/${doc.pageCount} trang bằng model ${state.settings.visionModel || 'gemma3:4b'}? Tác vụ có thể mất nhiều thời gian nhưng sẽ giúp Hỏi đáp/Tìm kiếm đọc được PDF scan.`)) return;
+  state.busy = true;
+  let ok=0, failed=0;
+  try {
+    for (let i=0;i<targets.length;i++) {
+      const pageObj = targets[i];
+      state.progress = { label:`OCR AI trang ${pageObj.page}/${doc.pageCount}`, current:i+1, total:targets.length };
+      render();
+      try {
+        const image = await renderPdfPageToBase64(doc, pageObj.page, 1.8);
+        const prompt = `Bạn là OCR cho tài liệu tiêu chuẩn kỹ thuật. Hãy CHỈ trích xuất nội dung nhìn thấy trên trang ${pageObj.page}; không giải thích, không tóm tắt, không tự bổ sung. Giữ tiêu đề, điều khoản, bảng, ký hiệu, công thức và đơn vị càng sát trang gốc càng tốt. Nếu ký tự không đọc được ghi [không rõ].`;
+        const text = await callBridge({
+          bridgeUrl: state.settings.bridgeUrl,
+          provider:'ollama',
+          model:state.settings.visionModel || 'gemma3:4b',
+          prompt,
+          images:[{ data:image.data, mimeType:image.mimeType, name:`${doc.name} - trang ${pageObj.page}` }]
+        });
+        const clean=String(text||'').trim();
+        if (clean.length < 20) throw new Error('OCR trả về quá ít nội dung.');
+        const original=String(pageObj.text||'').trim();
+        pageObj.originalText = pageObj.originalText ?? original;
+        pageObj.ocrText = clean;
+        pageObj.ocrStatus = 'ai-vision';
+        pageObj.text = original.length >= 180 ? original : `${original ? `${original}\n` : ''}${clean}`;
+        ok++;
+      } catch (error) {
+        pageObj.ocrStatus = 'failed';
+        pageObj.ocrError = error.message;
+        failed++;
+      }
+      // Persist every few pages so a long OCR job is resumable after interruption.
+      if ((i+1)%4===0 || i===targets.length-1) {
+        doc.textChars = (doc.pages || []).reduce((n,p)=>n+String(p.text||'').length,0);
+        doc.scannedLikely = (doc.pages || []).filter(p=>String(p.text||'').trim().length >= 180).length < Math.max(2, doc.pageCount*0.7);
+        doc.ocrCompletedPages = (doc.pages || []).filter(p=>p.ocrStatus==='ai-vision').length;
+        doc.ocrUpdatedAt = new Date().toISOString();
+        await saveDocument(doc);
+      }
+    }
+    clearSearchCache(doc.id); clearFormulaCache(doc.id);
+    state.searchStats = null;
+    showToast(`OCR hoàn tất: ${ok} trang thành công${failed ? ` · ${failed} trang lỗi` : ''}.`, failed ? 'warning' : 'success');
+  } finally {
+    state.progress = null; state.busy = false; render();
+  }
+}
+
 async function getAnswer(question, docsOverride = null) {
   const docs = docsOverride || sourceDocs();
   if (!docs.length) throw new Error('Không có tài liệu trong phạm vi tìm kiếm hiện tại.');
@@ -695,10 +886,43 @@ async function getAnswer(question, docsOverride = null) {
   const stats = corpusStats(textDocs);
   state.searchStats = stats;
 
-  // IMPORTANT v1.4: smartSearchChunks scores the COMPLETE corpus first. The final
-  // context limit is applied only after every page/chunk has been checked.
-  const retrievalLimit = isBroadQuery(question) ? 56 : 40;
-  let hits = smartSearchChunks(question, textDocs, retrievalLimit, { perDoc: isBroadQuery(question) ? 7 : 5 });
+  // v1.7 Local Intelligence Engine: scan the COMPLETE corpus first, then
+  // combine structural/keyword retrieval with optional local semantic reranking.
+  const queryPlan = planEngineeringQueries(question);
+  const structuredQuery = queryPlan.length > 1;
+  const broadQuery = isBroadQuery(question) || structuredQuery;
+  const mode = state.settings.retrievalMode || 'auto';
+  const semanticRequested = state.settings.provider === 'ollama'
+    && state.settings.connection === 'bridge'
+    && state.settings.semanticRerank
+    && (mode === 'hybrid' || mode === 'auto');
+  const retrievalLimit = mode === 'fast' ? 32 : (broadQuery ? 84 : 44);
+  const candidateLimit = semanticRequested ? (broadQuery ? 140 : 96) : retrievalLimit;
+  const useDeep = mode === 'deep' || mode === 'hybrid' || (mode === 'auto' && broadQuery);
+  let hits = useDeep
+    ? deepSearchChunks(question, textDocs, candidateLimit)
+    : smartSearchChunks(question, textDocs, candidateLimit, { perDoc: mode === 'fast' ? 4 : 7 });
+
+  if (semanticRequested && hits.length > 1) {
+    try {
+      const reranked = await semanticRerank({
+        bridgeUrl: state.settings.bridgeUrl,
+        query: question,
+        candidates: hits,
+        model: state.settings.embeddingModel || 'bge-m3',
+        limit: retrievalLimit
+      });
+      if (reranked.length) hits = reranked;
+      state.searchStats = { ...stats, retrieval: 'Hybrid Semantic RAG', embeddingModel: state.settings.embeddingModel || 'bge-m3' };
+    } catch (error) {
+      console.warn('Semantic rerank unavailable; falling back to lexical RAG.', error);
+      hits = hits.slice(0, retrievalLimit);
+      state.searchStats = { ...stats, retrieval: 'Deep/lexical fallback', semanticError: error.message };
+    }
+  } else {
+    hits = hits.slice(0, retrievalLimit);
+    state.searchStats = { ...stats, retrieval: useDeep ? 'Deep Lexical RAG' : 'Fast Balanced RAG' };
+  }
 
   const imageDocs = docs.filter(d => d.viewerKind === 'image').slice(0, 8);
   const images = [];
@@ -736,7 +960,9 @@ async function getAnswer(question, docsOverride = null) {
     return { text: localAnswer(question, hits, stats), hits, stats };
   }
 
-  const coverage = `\n\nTHỐNG KÊ PHẠM VI: hệ thống đã quét toàn bộ ${stats.textPages}/${stats.pages} trang có lớp chữ, ${stats.chunks} đoạn thuộc ${stats.docs} tài liệu trước khi chọn ngữ cảnh liên quan. Không được hiểu số đoạn ngữ cảnh bên dưới là số trang đã quét.`;
+  const planText = queryPlan.length > 1 ? `\nKẾ HOẠCH TRA CỨU: ${queryPlan.map(x => x.label).join(' → ')}.` : '';
+  const retrievalText = state.searchStats?.retrieval ? ` Chế độ chọn ngữ cảnh: ${state.searchStats.retrieval}${state.searchStats.embeddingModel ? ` (${state.searchStats.embeddingModel})` : ''}.` : '';
+  const coverage = `\n\nTHỐNG KÊ PHẠM VI: hệ thống đã quét toàn bộ ${stats.textPages}/${stats.pages} trang có lớp chữ, ${stats.chunks} đoạn thuộc ${stats.docs} tài liệu trước khi chọn ngữ cảnh liên quan.${retrievalText}${planText} Không được hiểu số đoạn ngữ cảnh bên dưới là số trang đã quét.`;
   const prompt = buildRagPrompt(question, hits, state.settings.strict) + coverage;
   let text;
   if (state.settings.connection === 'bridge') {
@@ -909,6 +1135,27 @@ function runCalc() {
   } catch (error) { output.innerHTML = `<div class="notice error">${esc(error.message)}</div>`; showToast(error.message, 'error'); }
 }
 
+function runDynamicFormula() {
+  const item = selectedFormulaItem();
+  const output = document.querySelector('#formulaCalcResult');
+  if (!output) return;
+  if (!item?.computable) {
+    output.innerHTML = '<div class="notice warning">Công thức này chưa đủ rõ để tính tự động. Hãy mở trang gốc để kiểm tra.</div>';
+    return;
+  }
+  try {
+    const values = {};
+    document.querySelectorAll('[data-formula-var]').forEach(el => { values[el.dataset.formulaVar] = Number(el.value); });
+    for (const v of item.variables) if (!Number.isFinite(values[v])) throw new Error(`Chưa nhập giá trị hợp lệ cho ${v}.`);
+    const result = evaluateExpression(item.rhs, values);
+    output.innerHTML = `<div class="calc-result"><div class="calc-main"><span>${esc(item.lhs || 'Kết quả')}</span><b>${Number(result).toLocaleString('vi-VN', { maximumFractionDigits: 8 })}</b></div><div class="footnote">Kết quả chưa tự gán đơn vị vì đơn vị phụ thuộc định nghĩa biến trong tiêu chuẩn. Đối chiếu ${esc(item.standard || item.docName)} · Trang ${item.page} trước khi sử dụng.</div></div>`;
+    showToast('Đã tính công thức tự quét.', 'success');
+  } catch (error) {
+    output.innerHTML = `<div class="notice error">${esc(error.message)}</div>`;
+    showToast(error.message, 'error');
+  }
+}
+
 function localCompareText(question, docs) {
   const parts = [];
   const allHits = [];
@@ -1025,6 +1272,32 @@ async function refreshModels() {
   render();
 }
 
+async function applyRecommendedLocalModels() {
+  if (state.settings.provider !== 'ollama') return showToast('Hãy chọn HNL Offline AI · Ollama trước.', 'warning');
+  readSettingsForm();
+  try {
+    const d = await localEngineDiagnostics(state.settings.bridgeUrl);
+    if (!d.ollama) throw new Error('Ollama chưa chạy. Hãy mở START_HNL_OFFLINE_AI.bat.');
+    if (d.recommended?.text) state.settings.model = d.recommended.text;
+    if (d.recommended?.vision) state.settings.visionModel = d.recommended.vision;
+    if (d.recommended?.embedding) state.settings.embeddingModel = d.recommended.embedding;
+    state.settings.retrievalMode = 'auto';
+    state.settings.semanticRerank = true;
+    saveSettings();
+    const missing=[];
+    if (!d.installed?.text) missing.push(d.recommended?.text);
+    if (!d.installed?.vision) missing.push(d.recommended?.vision);
+    if (!d.installed?.embedding) missing.push(d.recommended?.embedding);
+    state.modelStatus = missing.length
+      ? `Đã chọn cấu hình phù hợp máy; còn thiếu model: ${[...new Set(missing.filter(Boolean))].join(', ')}.`
+      : `Đã tự chọn ${state.settings.model} + ${state.settings.embeddingModel} + ${state.settings.visionModel}.`;
+    showToast(state.modelStatus, missing.length ? 'warning' : 'success');
+  } catch (error) {
+    showToast(`Không tự chọn được model: ${error.message}`, 'error');
+  }
+  render();
+}
+
 function readSettingsForm() {
   const provider = document.querySelector('#providerSelect')?.value || state.settings.provider;
   state.settings.provider = provider;
@@ -1032,6 +1305,9 @@ function readSettingsForm() {
   state.settings.visionModel = document.querySelector('#visionModelInput')?.value.trim() || state.settings.visionModel || 'gemma3:4b';
   state.settings.bridgeUrl = document.querySelector('#bridgeInput')?.value.trim() || state.settings.bridgeUrl;
   state.settings.ollamaUrl = document.querySelector('#ollamaInput')?.value.trim() || state.settings.ollamaUrl;
+  state.settings.retrievalMode = document.querySelector('#retrievalModeInput')?.value || state.settings.retrievalMode || 'auto';
+  state.settings.embeddingModel = document.querySelector('#embeddingModelInput')?.value.trim() || state.settings.embeddingModel || 'bge-m3';
+  state.settings.semanticRerank = document.querySelector('#semanticRerankInput')?.checked ?? state.settings.semanticRerank;
   state.settings.strict = document.querySelector('#strictInput')?.checked ?? state.settings.strict;
   const apiKeyInput = document.querySelector('#apiKeyInput');
   if (apiKeyInput) {
@@ -1078,6 +1354,17 @@ async function runDiagnostics() {
   if (state.settings.provider !== 'local') {
     const ok = state.settings.connection === 'bridge' ? Boolean(state.settings.bridgeUrl) : (state.settings.provider === 'ollama' ? Boolean(state.settings.ollamaUrl) : Boolean(currentApiKey()));
     tests.push(['Cấu hình AI', ok, state.settings.connection === 'bridge' ? 'Bridge' : 'Trực tiếp']);
+  }
+  if (state.settings.provider === 'ollama' && state.settings.connection === 'bridge' && state.settings.bridgeUrl) {
+    try {
+      const d = await localEngineDiagnostics(state.settings.bridgeUrl);
+      tests.push(['Ollama Local', Boolean(d.ollama), d.ollama ? `v${d.ollamaVersion || '?'} · ${d.models?.length || 0} model` : 'Chưa kết nối Ollama']);
+      tests.push(['Embedding', Boolean(d.installed?.embedding), d.installed?.embedding ? `${d.recommended?.embedding} đã cài` : `Khuyến nghị cài ${d.recommended?.embedding || 'bge-m3'}`]);
+      tests.push(['Cấu hình máy', true, `RAM ${d.ramGB || '?'} GB${d.gpus?.length ? ` · GPU ${d.gpus.map(g=>`${g.name} ${Math.round((g.vramMB||0)/1024)}GB`).join(', ')}` : ' · không đọc thấy NVIDIA GPU'}`]);
+      tests.push(['Model khuyên dùng', Boolean(d.recommended?.text), `${d.recommended?.text || 'qwen3:4b'} · Vision ${d.recommended?.vision || 'gemma3:4b'}`]);
+    } catch (error) {
+      tests.push(['HNL Local Engine', false, error.message]);
+    }
   }
   const passed = tests.filter(t => t[1]).length;
   state.diagnosticHtml = `<div class="diagnostic"><div class="diagnostic-score">${passed}/${tests.length} kiểm tra đạt</div>${tests.map(([name, ok, detail]) => `<div class="diagnostic-row ${ok ? 'ok' : 'bad'}"><span>${ok ? '✓' : '!'}</span><b>${esc(name)}</b><small>${esc(detail)}</small></div>`).join('')}</div>`;

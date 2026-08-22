@@ -20,12 +20,16 @@ const criticalControls = [
   ['tableLookupBtn', 'runTableLookup'],
   ['calcBtn', 'runCalc'],
   ['calcFill7888', 'fillCalcFrom7888'],
+  ['formulaScanBtn', 'formulaStats'],
+  ['formulaCalcBtn', 'runDynamicFormula'],
   ['compareBtn', 'runCompare'],
   ['copyChecklist', 'copyChecklist'],
   ['resetChecklist', 'resetChecklist'],
   ['aiChecklist', 'aiChecklist'],
   ['saveSettings', 'updateSettingsFromForm'],
   ['testConnection', 'testConnection'],
+  ['refreshModels', 'refreshModels'],
+  ['autoLocalModels', 'applyRecommendedLocalModels'],
   ['runDiagnostics', 'runDiagnostics']
 ];
 
@@ -58,9 +62,9 @@ test('AI citations remain connected to PDF navigation', () => {
   assert.match(source, /state\.activeDocId = el\.dataset\.hitDoc/);
 });
 
-test('service worker uses v1.4 cache and network-first navigation', () => {
+test('service worker uses v1.7.0 cache and network-first navigation', () => {
   const sw = fs.readFileSync(new URL('../public/sw.js', import.meta.url), 'utf8');
-  assert.match(sw, /hnl-pile-ai-v1\.4\.0/);
+  assert.match(sw, /hnl-pile-ai-v1\.7\.0/);
   assert.match(sw, /req\.mode === 'navigate'/);
   assert.match(sw, /fetch\(req\)/);
 });
@@ -96,4 +100,71 @@ test('v1.4 dynamic model picker is wired', () => {
   assert.match(source, /refreshModels/);
   assert.match(source, /modelOptionsList/);
   assert.match(source, /listAvailableModels/);
+});
+
+
+test('v1.7 shows version and release update timestamp in the UI', () => {
+  assert.match(source, /version: '1\.7\.0'/);
+  assert.match(source, /22\/08\/2026 22:55 GMT\+7/);
+  assert.match(source, /build-meta/);
+  assert.match(source, /Phiên bản ứng dụng/);
+});
+
+test('v1.6 calculator includes verified and auto-scanned formula libraries', () => {
+  assert.match(source, /Thư viện công thức tự quét/);
+  assert.match(source, /extractFormulaLibrary/);
+  assert.match(source, /evaluateExpression/);
+  assert.match(source, /TCVN 7888:2014/);
+});
+
+test('v1.6 deep RAG and archive password flow are wired', () => {
+  assert.match(source, /deepSearchChunks/);
+  assert.match(source, /planEngineeringQueries/);
+  assert.match(source, /extractArchiveWithPassword/);
+  assert.match(source, /PASSWORD_REQUIRED/);
+  assert.match(source, /BAD_PASSWORD/);
+});
+
+
+test('v1.6 archive formats and password-capable bridge are present', () => {
+  const ingest = fs.readFileSync(new URL('../src/ingest.js', import.meta.url), 'utf8');
+  const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
+  assert.match(ingest, /\.rar/);
+  assert.match(ingest, /\.7z/);
+  assert.match(ingest, /\.tar/);
+  assert.match(ingest, /X-HNL-Archive-Password/);
+  assert.match(bridge, /PASSWORD_REQUIRED/);
+  assert.match(bridge, /BAD_PASSWORD/);
+  assert.match(bridge, /7-Zip/);
+});
+
+
+test('v1.7 local intelligence engine wires hybrid semantic RAG', () => {
+  const ai = fs.readFileSync(new URL('../src/ai.js', import.meta.url), 'utf8');
+  const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
+  assert.match(source, /retrievalModeInput/);
+  assert.match(source, /embeddingModelInput/);
+  assert.match(source, /semanticRerankInput/);
+  assert.match(source, /semanticRerank\(/);
+  assert.match(ai, /api\/local\/semantic-rerank/);
+  assert.match(bridge, /app\.post\('\/api\/local\/semantic-rerank'/);
+  assert.match(bridge, /api\/embed/);
+  assert.match(bridge, /cosineSimilarity/);
+});
+
+test('v1.7 local diagnostics recommends model by hardware', () => {
+  const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
+  const installer = fs.readFileSync(new URL('../offline/INSTALL_OFFLINE_MODELS.bat', import.meta.url), 'utf8');
+  assert.match(source, /localEngineDiagnostics/);
+  assert.match(bridge, /api\/local\/diagnostics/);
+  assert.match(bridge, /nvidia-smi/);
+  assert.match(bridge, /recommendedText/);
+  assert.match(installer, /bge-m3/);
+  assert.match(installer, /qwen3:14b/);
+});
+
+test('v1.7 ingest fileToBase64 declaration is not duplicated', () => {
+  const ingest = fs.readFileSync(new URL('../src/ingest.js', import.meta.url), 'utf8');
+  const count = (ingest.match(/export async function fileToBase64/g) || []).length;
+  assert.equal(count, 1);
 });

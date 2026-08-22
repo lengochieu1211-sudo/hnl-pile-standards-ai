@@ -280,3 +280,65 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .compact-btn { white-space:nowrap; padding:8px 9px !important; }
 .warn-text { color:#a6641f !important; }
 .doc-copy em { display:block; margin-top:2px; color:#718096; font-style:normal; font-size:8.8px; line-height:1.25; }
+
+/* v1.4.1 · visible release metadata */
+.build-meta { margin-top: 3px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--muted); font-size: 9px; font-weight: 700; }
+.version-chip { display: inline-flex; align-items: center; min-height: 19px; border: 1px solid #c6d4e3; border-radius: 999px; padding: 2px 7px; background: #f5f9fd; color: var(--navy-800); font-size: 8.5px; font-weight: 900; letter-spacing: .02em; }
+.app-version-card { border: 1px solid #c9d8e8; border-radius: 12px; padding: 11px; background: linear-gradient(135deg, #f8fbff, #f1f6fb); }
+.version-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-bottom: 8px; }
+.version-grid > div { border: 1px solid #d7e1ec; border-radius: 9px; padding: 8px; background: rgba(255,255,255,.78); }
+.version-grid span { display: block; color: var(--muted); font-size: 8.5px; }
+.version-grid b { display: block; margin-top: 2px; color: var(--navy-900); font-size: 10px; overflow-wrap: anywhere; }
+@media (max-width: 720px) { .build-meta { max-width: 210px; } .version-grid { grid-template-columns: 1fr; } }
+
+/* v1.6 · Deep RAG, readable AI answers, dynamic formula library */
+.rich-answer { overflow-wrap:anywhere; word-break:normal; }
+.rich-answer p { margin:0 0 8px; line-height:1.55; }
+.rich-answer h1,.rich-answer h2,.rich-answer h3,.rich-answer h4 { margin:10px 0 6px; color:var(--navy-900); line-height:1.3; }
+.rich-answer h1 { font-size:15px; }.rich-answer h2 { font-size:14px; }.rich-answer h3,.rich-answer h4 { font-size:12.5px; }
+.rich-answer ul { margin:5px 0 9px; padding-left:18px; }.rich-answer li { margin:3px 0; line-height:1.5; }
+.rich-answer code { padding:1px 4px; border-radius:5px; background:#eef3f8; color:#263c56; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; }
+.rich-answer hr { border:0; border-top:1px solid var(--line); margin:10px 0; }
+.source-details { margin-top:8px; border-top:1px solid #e7edf3; padding-top:6px; }
+.source-details summary { cursor:pointer; color:var(--navy-700); font-size:9.5px; font-weight:850; user-select:none; }
+.source-more { display:inline-flex; align-items:center; padding:4px 6px; color:var(--muted); font-size:9px; font-weight:750; }
+.formula-library { margin-top:10px; }
+.formula-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; margin:9px 0; }
+.formula-stats > div { border:1px solid var(--line); border-radius:9px; padding:8px; background:#f8fbfe; }
+.formula-stats span { display:block; color:var(--muted); font-size:8.8px; }.formula-stats b { display:block; margin-top:2px; color:var(--navy-900); font-size:15px; }
+.formula-doc-stats { display:flex; flex-wrap:wrap; gap:5px; margin:7px 0 9px; }
+.formula-doc-stats span { border:1px solid var(--line); border-radius:999px; padding:4px 7px; background:#fff; color:#53657a; font-size:8.8px; }
+.formula-source-card { margin-top:9px; border:1px solid var(--line-dark); border-radius:11px; padding:10px; background:#fff; }
+.formula-source-head { display:flex; align-items:flex-start; justify-content:space-between; gap:9px; }
+.formula-source-head b { display:block; color:var(--navy-900); font-size:10.5px; }.formula-source-head small { display:block; margin-top:2px; color:var(--muted); font-size:8.8px; }
+.formula-raw { margin:9px 0; border-radius:8px; padding:9px; background:#f4f7fa; color:#24364c; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:10px; line-height:1.5; overflow-wrap:anywhere; }
+.formula-normalized { display:grid; gap:3px; margin-bottom:8px; }.formula-normalized span { color:var(--muted); font-size:8.5px; }.formula-normalized code { overflow-wrap:anywhere; color:var(--navy-900); font-size:10px; }
+.formula-context { margin-top:9px; }.formula-context summary { cursor:pointer; color:var(--navy-700); font-size:9.3px; font-weight:800; }.formula-context pre { white-space:pre-wrap; overflow-wrap:anywhere; max-height:220px; overflow:auto; padding:8px; border-radius:8px; background:#f8fafc; color:#536176; font-size:8.8px; line-height:1.5; }
+
+/* Avoid narrow-panel overlaps seen in v1.4.x */
+.assistant-panel,.panel-body,.message,.chat-shell,.formula-source-card { min-width:0; }
+.action-row { flex-wrap:wrap; }
+.action-row .btn { min-width:0; max-width:100%; white-space:normal; }
+.source-chips { max-width:100%; overflow:hidden; }
+.source-chip { max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+.field select,.field input,.field textarea { min-width:0; max-width:100%; }
+@media (max-width:520px) {
+  .formula-stats { grid-template-columns:1fr 1fr 1fr; }
+  .formula-source-head { display:grid; grid-template-columns:1fr; }
+  .formula-source-head .source-chip { justify-self:start; }
+  .chat-composer { grid-template-columns:minmax(0,1fr) auto; gap:6px; }
+  .send-btn { min-width:58px; padding-left:9px; padding-right:9px; }
+}
+.formula-stats.four { grid-template-columns:repeat(4,minmax(0,1fr)); }
+@media (max-width:520px) { .formula-stats.four { grid-template-columns:1fr 1fr; } }
+
+/* v1.7 Local Intelligence Engine */
+.local-engine-card {
+  margin: 10px 0;
+  padding: 12px;
+  border: 1px solid #d7e1ee;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(244,248,252,.96), rgba(255,255,255,.98));
+}
+.local-engine-card .panel-section-title { margin-bottom: 8px; }
+.local-engine-card .notice { margin-top: 8px; }

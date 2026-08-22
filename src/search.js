@@ -277,3 +277,88 @@ export function isBroadQuery(query='') {
   const q = normalize(query);
   return /(tat ca|toan bo|tong hop|day du|moi quy dinh|cac quy dinh|het cac|so sanh)/.test(q);
 }
+
+const STRUCTURED_INTENTS = [
+  { id:'overview', label:'Thông tin chung', pattern:/(thông tin chung|gioi thieu|tên tiêu chuẩn|ten tieu chuan|phát hành|phat hanh)/i, query:'tên tiêu chuẩn tiêu chuẩn quốc gia lời nói đầu phạm vi ban hành thay thế xuất bản' },
+  { id:'scope', label:'Phạm vi áp dụng', pattern:/(phạm vi|pham vi|đối tượng áp dụng|doi tuong ap dung)/i, query:'phạm vi áp dụng đối tượng áp dụng áp dụng cho không áp dụng' },
+  { id:'requirements', label:'Yêu cầu kỹ thuật', pattern:/(yêu cầu kỹ thuật|yeu cau ky thuat|quy định kỹ thuật|quy dinh ky thuat|thiết kế|thiet ke)/i, query:'yêu cầu kỹ thuật quy định thiết kế điều kiện giới hạn không nhỏ hơn không lớn hơn phải được' },
+  { id:'tables', label:'Bảng & số liệu', pattern:/(bảng|bang|số liệu|so lieu|thông số|thong so|hệ số|he so)/i, query:'bảng số liệu thông số hệ số tải trọng kích thước giá trị giới hạn' },
+  { id:'formula', label:'Công thức', pattern:/(công thức|cong thuc|tính toán|tinh toan|phương trình|phuong trinh)/i, query:'công thức tính toán được tính theo xác định theo trong đó phụ lục hệ số =' },
+  { id:'test', label:'Phương pháp thử', pattern:/(phương pháp thử|phuong phap thu|thí nghiệm|thi nghiem|kiểm tra|kiem tra)/i, query:'phương pháp thử thí nghiệm kiểm tra cách tiến hành thiết bị dụng cụ mẫu thử tải thử' },
+  { id:'acceptance', label:'Nghiệm thu', pattern:/(nghiệm thu|nghiem thu|chấp nhận|chap nhan|hồ sơ|ho so)/i, query:'nghiệm thu chấp nhận hồ sơ chất lượng biên bản chứng chỉ đánh giá kết quả' },
+  { id:'storage', label:'Bảo quản & vận chuyển', pattern:/(bảo quản|bao quan|vận chuyển|van chuyen|nâng chuyển|nang chuyen|xếp|xep)/i, query:'bảo quản vận chuyển nâng chuyển xếp dỡ lưu kho an toàn' }
+];
+
+export function planEngineeringQueries(query='') {
+  const raw = String(query || '').trim();
+  const broad = isBroadQuery(raw) || (/(?:tóm tắt|tom tat|phân tích|phan tich|thông tin chung|pham vi|yêu cầu|cong thuc|phương pháp|nghiem thu)/i.test(raw) && tokenize(raw).length >= 8);
+  const chosen = STRUCTURED_INTENTS.filter(x => x.pattern.test(raw));
+  const intents = broad ? STRUCTURED_INTENTS : (chosen.length ? chosen : []);
+  return [{ id:'question', label:'Câu hỏi', query:raw }, ...intents.map(x => ({ id:x.id, label:x.label, query:`${raw} ${x.query}` }))];
+}
+
+function structuralAnchorHits(intentId, docs, maxPerDoc=5) {
+  const rxMap = {
+    overview: /(lời nói đầu|loi noi dau|tiêu chuẩn quốc gia|tieu chuan quoc gia|thay thế|thay the|xuất bản|xuat ban)/i,
+    scope: /(^|\n)\s*1(?:\.0)?\s+phạm vi|phạm vi áp dụng|pham vi ap dung/i,
+    requirements: /yêu cầu kỹ thuật|yeu cau ky thuat|quy định kỹ thuật|quy dinh ky thuat/i,
+    tables: /(^|\n)\s*bảng\s*\d+|\bBảng\s+\d+/i,
+    formula: /(công thức|cong thuc|được tính theo|duoc tinh theo|xác định theo công thức|xac dinh theo cong thuc|phụ lục|phu luc|[A-Za-zΑ-ω][A-Za-z0-9_Α-ω'′]*\s*=)/i,
+    test: /phương pháp thử|phuong phap thu|thí nghiệm|thi nghiem|cách tiến hành|cach tien hanh/i,
+    acceptance: /nghiệm thu|nghiem thu|đánh giá kết quả|danh gia ket qua|hồ sơ nghiệm thu|ho so nghiem thu/i,
+    storage: /bảo quản|bao quan|vận chuyển|van chuyen|nâng chuyển|nang chuyen|xếp dỡ|xep do/i
+  };
+  const rx = rxMap[intentId];
+  if (!rx) return [];
+  const out=[];
+  for (const doc of docs || []) {
+    let n=0;
+    for (const chunk of buildChunks(doc)) {
+      if (!rx.test(chunk.text)) continue;
+      out.push({ ...chunk, score: 52 - n, intent:intentId, structural:true });
+      if (++n >= maxPerDoc) break;
+    }
+  }
+  return out;
+}
+
+/** Deep full-library RAG for long/structured standards questions. */
+export function deepSearchChunks(query, docs, limit = 72) {
+  if (!String(query || '').trim() || !Array.isArray(docs) || !docs.length) return [];
+  const plan = planEngineeringQueries(query);
+  const merged = new Map();
+  const perIntent = Math.max(8, Math.min(18, Math.ceil(limit / Math.max(2, plan.length)) + 4));
+  for (const item of plan) {
+    const hits = smartSearchChunks(item.query, docs, perIntent, { perDoc: Math.max(2, Math.ceil(perIntent / Math.max(1, Math.min(docs.length, 5)))) });
+    for (const h of hits) {
+      const key = `${h.docId}:${h.page}:${h.chunk ?? 'p'}`;
+      const tagged = { ...h, intent:item.id, intentLabel:item.label };
+      const old = merged.get(key);
+      if (!old || tagged.score > old.score) merged.set(key, tagged);
+    }
+    if (item.id !== 'question') {
+      for (const h of structuralAnchorHits(item.id, docs, 5)) {
+        const key = `${h.docId}:${h.page}:${h.chunk ?? 'p'}`;
+        const tagged = { ...h, intent:item.id, intentLabel:item.label };
+        const old = merged.get(key);
+        if (!old || tagged.score > old.score) merged.set(key, tagged);
+      }
+    }
+  }
+  const all=[...merged.values()];
+  const byIntent = new Map(plan.map(p => [p.id, []]));
+  for (const h of all.sort((a,b)=>b.score-a.score)) byIntent.get(h.intent)?.push(h);
+  const out=[]; const seen=new Set();
+  for (let rank=0; rank<8 && out.length<limit; rank++) {
+    for (const p of plan) {
+      const h=byIntent.get(p.id)?.[rank];
+      if (h) addHit(out, seen, h);
+      if (out.length>=limit) break;
+    }
+  }
+  for (const h of all.sort((a,b)=>b.score-a.score || a.page-b.page)) {
+    if (out.length>=limit) break;
+    addHit(out, seen, h);
+  }
+  return out.slice(0, limit);
+}

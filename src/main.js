@@ -7,13 +7,13 @@ import { annulusAreaMm2, axialResistance, loadClassSigmaCe, tcvn7888Checklist } 
 import { diameters7888, lookup7888, classesForDiameter7888 } from './tcvn7888.js';
 
 const STORAGE = {
-  provider: 'hnl.provider.v11',
-  connection: 'hnl.connection.v11',
-  model: 'hnl.model.v11',
-  bridge: 'hnl.bridge.v11',
-  ollama: 'hnl.ollama.v11',
-  strict: 'hnl.strict.v11',
-  checklist: 'hnl.checklist.v11'
+  provider: 'hnl.provider.v12',
+  connection: 'hnl.connection.v12',
+  model: 'hnl.model.v12',
+  bridge: 'hnl.bridge.v12',
+  ollama: 'hnl.ollama.v12',
+  strict: 'hnl.strict.v12',
+  checklist: 'hnl.checklist.v12'
 };
 
 const state = {
@@ -25,8 +25,9 @@ const state = {
   tab: 'summary',
   mobile: 'library',
   chat: [],
-  lookup: { query: '', hits: [] },
-  compare: { query: '', text: '', hits: [] },
+  chatDraft: '',
+  lookup: { query: '', draft: '', hits: [] },
+  compare: { query: '', draft: '', text: '', hits: [] },
   tableResult: null,
   checklist: loadJson(STORAGE.checklist, {}),
   settings: {
@@ -267,8 +268,8 @@ function chatHtml() {
   const hasSources = sourceDocs().length > 0;
   return `<div class="chat-shell">
     <div class="chat-log">${state.chat.length ? state.chat.map(messageHtml).join('') : `<div class="chat-welcome"><div class="chat-orb">AI</div><h3>Hỏi trực tiếp tiêu chuẩn</h3><p>Câu trả lời luôn kèm các trang PDF đã được dùng làm nguồn.</p><div class="suggestions"><button data-suggest="Cọc PHC D600 cấp B có mômen uốn nứt bao nhiêu?">PHC D600 cấp B</button><button data-suggest="Điều kiện nghiệm thu lô cọc là gì?">Nghiệm thu lô cọc</button><button data-suggest="Giới hạn vết nứt bề mặt cọc là bao nhiêu?">Giới hạn vết nứt</button></div></div>`}</div>
-    <div class="chat-composer"><textarea id="chatQuestion" placeholder="${hasSources ? 'Nhập câu hỏi theo tiêu chuẩn đang chọn…' : 'Chọn PDF làm nguồn trước…'}" ${!hasSources ? 'disabled' : ''}></textarea><button class="send-btn" id="askBtn" ${!hasSources || state.busy ? 'disabled' : ''}>Gửi</button></div>
-    <div class="composer-hint">Ctrl + Enter để gửi · ${state.settings.strict ? 'Khóa nguồn đang bật' : 'Cho phép giải thích ngoài nguồn'}</div>
+    <div class="chat-composer"><textarea id="chatQuestion" placeholder="${hasSources ? 'Nhập câu hỏi theo tiêu chuẩn đang chọn…' : 'Chọn PDF làm nguồn trước…'}" ${!hasSources ? 'disabled' : ''}>${esc(state.chatDraft)}</textarea><button class="send-btn" id="askBtn" ${!hasSources || state.busy ? 'disabled' : ''}>${state.busy ? 'Đang xử lý…' : 'Gửi'}</button></div>
+    <div class="composer-hint">Enter để gửi · Shift + Enter xuống dòng · ${state.settings.strict ? 'Khóa nguồn đang bật' : 'Cho phép giải thích ngoài nguồn'}</div>
   </div>`;
 }
 
@@ -280,7 +281,7 @@ function lookupHtml() {
   return `${docs.length ? '' : noSourceCard('tra cứu')}
     <div class="panel-section">
       <div class="panel-section-title"><h3>Tìm trong PDF</h3><span>${docs.length} nguồn</span></div>
-      <div class="search-box"><input id="lookupQuery" value="${esc(state.lookup.query)}" placeholder="Ví dụ: sai lệch đường kính, vết nứt, D600 cấp B…"><button id="lookupBtn" ${!docs.length ? 'disabled' : ''}>Tìm</button></div>
+      <div class="search-box"><input id="lookupQuery" value="${esc(state.lookup.draft || state.lookup.query)}" placeholder="Ví dụ: sai lệch đường kính, vết nứt, D600 cấp B…"><button id="lookupBtn" ${!docs.length ? 'disabled' : ''}>Tìm</button></div>
       <div class="search-results">${resultHtml}</div>
     </div>
     <div class="panel-section">
@@ -322,7 +323,7 @@ function compareHtml() {
   const docs = selectedDocs();
   return `<div class="panel-section"><div class="panel-section-title"><h3>So sánh nhiều tiêu chuẩn</h3><span>${docs.length} tài liệu</span></div>
     ${docs.length < 2 ? '<div class="notice warning">Hãy tick ít nhất 2 PDF trong Thư viện. Chế độ so sánh chỉ dùng các tài liệu được tick.</div>' : `<div class="selected-source-list">${docs.map(d => `<span>${esc(d.standard || d.name)}</span>`).join('')}</div>`}
-    <label class="field"><span>Nội dung cần so sánh</span><textarea id="compareQuestion" placeholder="Ví dụ: So sánh yêu cầu nghiệm thu, giới hạn vết nứt và tần suất thử nghiệm.">${esc(state.compare.query)}</textarea></label>
+    <label class="field"><span>Nội dung cần so sánh</span><textarea id="compareQuestion" placeholder="Ví dụ: So sánh yêu cầu nghiệm thu, giới hạn vết nứt và tần suất thử nghiệm.">${esc(state.compare.draft || state.compare.query)}</textarea></label>
     <button class="btn primary" id="compareBtn" ${docs.length < 2 || state.busy ? 'disabled' : ''}>So sánh nguồn</button>
     ${state.compare.text ? `<div class="compare-output"><div class="answer-text">${esc(state.compare.text)}</div>${sourceChipsHtml(state.compare.hits)}</div>` : ''}
   </div>`;
@@ -339,7 +340,7 @@ function checklistHtml() {
   return `<div class="panel-section"><div class="panel-section-title"><h3>Checklist hồ sơ nghiệm thu</h3><span>${done}/${tcvn7888Checklist.length}</span></div>
     <div class="progress-mini"><div style="width:${Math.round(done / tcvn7888Checklist.length * 100)}%"></div></div>
     <div class="checklist">${tcvn7888Checklist.map((item, i) => `<label class="check-item"><input type="checkbox" data-check="${i}" ${values[i] ? 'checked' : ''}><span>${esc(item)}</span></label>`).join('')}</div>
-    <div class="action-row"><button class="btn" id="copyChecklist">Sao chép checklist</button><button class="btn" id="resetChecklist">Bỏ đánh dấu</button><button class="btn primary" id="aiChecklist" ${state.busy ? 'disabled' : ''}>Mở rộng bằng AI</button></div>
+    <div class="action-row"><button class="btn" id="copyChecklist">Sao chép checklist</button><button class="btn" id="resetChecklist">Bỏ đánh dấu</button><button class="btn primary" id="aiChecklist" ${state.busy ? 'disabled' : ''}>${state.settings.provider === 'local' ? 'Trích thêm từ PDF' : 'Mở rộng bằng AI'}</button></div>
     <div class="footnote">Nguồn chính: Điều 8.2 và Phụ lục C. <button class="text-link" data-find="8.2 Hồ sơ nghiệm thu">Mở nguồn</button></div>
   </div>`;
 }
@@ -363,7 +364,7 @@ function settingsHtml() {
     <div class="action-row"><button class="btn primary" id="saveSettings">Lưu cài đặt</button><button class="btn" id="testConnection" ${state.settings.provider === 'local' ? '' : ''}>Kiểm tra kết nối</button></div>
     ${state.connectionStatus ? `<div class="notice ${state.connectionStatus.ok ? 'success' : 'error'}"><b>${state.connectionStatus.ok ? 'Kết nối OK' : 'Kết nối lỗi'}</b><br>${esc(state.connectionStatus.message || '')}</div>` : ''}
   </div>
-  <div class="panel-section"><div class="panel-section-title"><h3>Chẩn đoán ứng dụng</h3><span>v1.1</span></div><p class="muted">Kiểm tra nhanh bộ nhớ trình duyệt, PDF, nguồn đang chọn và cấu hình AI.</p><button class="btn" id="runDiagnostics">Chạy chẩn đoán</button>${state.diagnosticHtml}</div>`;
+  <div class="panel-section"><div class="panel-section-title"><h3>Chẩn đoán ứng dụng</h3><span>v1.2</span></div><p class="muted">Kiểm tra nhanh bộ nhớ trình duyệt, PDF, nguồn đang chọn và cấu hình AI.</p><button class="btn" id="runDiagnostics">Chạy chẩn đoán</button>${state.diagnosticHtml}</div>`;
 }
 
 function sourceChipsHtml(hits = []) {
@@ -379,67 +380,117 @@ function sourceChipsHtml(hits = []) {
 }
 
 function bind() {
-  document.querySelector('#pdfInput')?.addEventListener('change', uploadPdfs);
-  document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { state.tab = b.dataset.tab; render(); });
-  document.querySelectorAll('[data-mobile]').forEach(b => b.onclick = () => { state.mobile = b.dataset.mobile; render(); });
-  document.querySelector('#sourceBadge')?.addEventListener('click', () => { state.mobile = 'library'; render(); });
-  document.querySelector('#openSettings')?.addEventListener('click', () => { state.tab = 'settings'; state.mobile = 'assistant'; render(); });
-  document.querySelector('#selectAll')?.addEventListener('click', () => { state.docs.forEach(d => state.selected.add(d.id)); render(); });
-  document.querySelector('#clearSelection')?.addEventListener('click', () => { state.selected.clear(); render(); });
-  document.querySelectorAll('[data-select]').forEach(c => c.onchange = () => { c.checked ? state.selected.add(c.dataset.select) : state.selected.delete(c.dataset.select); render(); });
-  document.querySelectorAll('[data-open]').forEach(b => b.onclick = () => openDoc(b.dataset.open));
-  document.querySelectorAll('[data-delete]').forEach(b => b.onclick = () => removeDoc(b.dataset.delete));
-  bindSourceButtons();
-  document.querySelector('#strictSide')?.addEventListener('change', e => { state.settings.strict = e.target.checked; saveSettings(); render(); });
+  // Event delegation: app.innerHTML is rebuilt frequently. Binding once on the
+  // stable #app root prevents dynamic buttons from losing their handlers.
+  app.onclick = async event => {
+    const el = event.target.closest('button, [role="button"]');
+    if (!el || !app.contains(el) || el.disabled) return;
 
-  document.querySelector('#prevPage')?.addEventListener('click', () => jumpPage(state.page - 1));
-  document.querySelector('#nextPage')?.addEventListener('click', () => jumpPage(state.page + 1));
-  document.querySelector('#pageInput')?.addEventListener('change', e => jumpPage(Number(e.target.value)));
-  document.querySelector('#pageInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') jumpPage(Number(e.target.value)); });
-  document.querySelector('#zoomOut')?.addEventListener('click', () => setZoom(state.zoom - 0.1));
-  document.querySelector('#zoomIn')?.addEventListener('click', () => setZoom(state.zoom + 0.1));
-  document.querySelector('#fitWidth')?.addEventListener('click', fitPageWidth);
+    try {
+      if (el.matches('[data-tab]')) { state.tab = el.dataset.tab; render(); return; }
+      if (el.matches('[data-mobile]')) { state.mobile = el.dataset.mobile; render(); return; }
+      if (el.id === 'sourceBadge') { state.mobile = 'library'; render(); return; }
+      if (el.id === 'openSettings') { state.tab = 'settings'; state.mobile = 'assistant'; render(); return; }
+      if (el.id === 'selectAll') { state.docs.forEach(d => state.selected.add(d.id)); showToast(`Đã chọn ${state.docs.length} tài liệu làm nguồn.`, 'success'); render(); return; }
+      if (el.id === 'clearSelection') { state.selected.clear(); showToast('Đã bỏ chọn nguồn. Tài liệu đang mở sẽ được dùng mặc định.', 'info'); render(); return; }
+      if (el.matches('[data-open]')) { openDoc(el.dataset.open); return; }
+      if (el.matches('[data-delete]')) { await removeDoc(el.dataset.delete); return; }
+      if (el.id === 'prevPage') { jumpPage(state.page - 1); return; }
+      if (el.id === 'nextPage') { jumpPage(state.page + 1); return; }
+      if (el.id === 'zoomOut') { setZoom(state.zoom - 0.1); return; }
+      if (el.id === 'zoomIn') { setZoom(state.zoom + 0.1); return; }
+      if (el.id === 'fitWidth') { fitPageWidth(); return; }
+      if (el.id === 'aiSummary') { await aiSummary(); return; }
+      if (el.id === 'askBtn') { await askQuestion(); return; }
+      if (el.matches('[data-suggest]')) {
+        state.chatDraft = el.dataset.suggest || '';
+        const q = document.querySelector('#chatQuestion');
+        if (q) q.value = state.chatDraft;
+        await askQuestion(state.chatDraft);
+        return;
+      }
+      if (el.id === 'lookupBtn') { runLookup(); return; }
+      if (el.id === 'tableLookupBtn') { runTableLookup(); return; }
+      if (el.id === 'calcBtn') { runCalc(); return; }
+      if (el.id === 'calcFill7888') { fillCalcFrom7888(); return; }
+      if (el.id === 'compareBtn') { await runCompare(); return; }
+      if (el.id === 'copyChecklist') { await copyChecklist(); return; }
+      if (el.id === 'resetChecklist') { resetChecklist(); return; }
+      if (el.id === 'aiChecklist') { await aiChecklist(); return; }
+      if (el.matches('[data-connection]')) {
+        state.settings.connection = el.dataset.connection;
+        state.connectionStatus = null;
+        render();
+        return;
+      }
+      if (el.id === 'saveSettings') { updateSettingsFromForm(); return; }
+      if (el.id === 'testConnection') { await testConnection(); return; }
+      if (el.id === 'runDiagnostics') { await runDiagnostics(); return; }
+      if (el.matches('[data-jump]')) {
+        if (el.dataset.doc) state.activeDocId = el.dataset.doc;
+        jumpPage(Number(el.dataset.jump));
+        return;
+      }
+      if (el.matches('[data-find]')) { findInActive(el.dataset.find); return; }
+      if (el.matches('[data-hit-doc]')) {
+        state.activeDocId = el.dataset.hitDoc;
+        state.page = Number(el.dataset.hitPage) || 1;
+        state.mobile = 'viewer';
+        render();
+        return;
+      }
+    } catch (error) {
+      console.error('HNL action error', error);
+      showToast(`Không thực hiện được thao tác: ${error.message}`, 'error');
+    }
+  };
 
-  document.querySelector('#aiSummary')?.addEventListener('click', aiSummary);
-  document.querySelector('#askBtn')?.addEventListener('click', askQuestion);
-  document.querySelector('#chatQuestion')?.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') askQuestion(); });
-  document.querySelectorAll('[data-suggest]').forEach(b => b.onclick = () => { const q = document.querySelector('#chatQuestion'); if (q) { q.value = b.dataset.suggest; q.focus(); } });
-  document.querySelector('#lookupBtn')?.addEventListener('click', runLookup);
-  document.querySelector('#lookupQuery')?.addEventListener('keydown', e => { if (e.key === 'Enter') runLookup(); });
-  document.querySelector('#tableDiameter')?.addEventListener('change', updateTableClassOptions);
-  document.querySelector('#tableLookupBtn')?.addEventListener('click', runTableLookup);
+  app.onchange = event => {
+    const el = event.target;
+    if (el.id === 'pdfInput') { uploadPdfs(event); return; }
+    if (el.matches('[data-select]')) { el.checked ? state.selected.add(el.dataset.select) : state.selected.delete(el.dataset.select); render(); return; }
+    if (el.matches('[data-check]')) { updateChecklist(Number(el.dataset.check), el.checked); return; }
+    if (el.id === 'strictSide') { state.settings.strict = el.checked; saveSettings(); render(); return; }
+    if (el.id === 'pageInput') { jumpPage(Number(el.value)); return; }
+    if (el.id === 'tableDiameter') { updateTableClassOptions(); return; }
+    if (el.id === 'cType' || el.id === 'cClass') { syncCalcDefaults(); return; }
+    if (el.id === 'providerSelect') { providerChanged(event); return; }
+    if (el.id === 'strictInput') { state.settings.strict = el.checked; }
+  };
 
-  document.querySelector('#calcBtn')?.addEventListener('click', runCalc);
-  document.querySelector('#calcFill7888')?.addEventListener('click', fillCalcFrom7888);
-  document.querySelector('#cType')?.addEventListener('change', syncCalcDefaults);
-  document.querySelector('#cClass')?.addEventListener('change', syncCalcDefaults);
-  document.querySelector('#compareBtn')?.addEventListener('click', runCompare);
+  app.oninput = event => {
+    const el = event.target;
+    if (el.id === 'chatQuestion') state.chatDraft = el.value;
+    else if (el.id === 'lookupQuery') state.lookup.draft = el.value;
+    else if (el.id === 'compareQuestion') state.compare.draft = el.value;
+    else if (el.id === 'modelInput') state.settings.model = el.value;
+    else if (el.id === 'bridgeInput') state.settings.bridgeUrl = el.value;
+    else if (el.id === 'ollamaInput') state.settings.ollamaUrl = el.value;
+    else if (el.id === 'apiKeyInput') {
+      const provider = state.settings.provider;
+      if (el.value.trim()) sessionStorage.setItem(sessionKeyName(provider), el.value.trim());
+      else sessionStorage.removeItem(sessionKeyName(provider));
+    }
+  };
 
-  document.querySelectorAll('[data-check]').forEach(c => c.onchange = () => updateChecklist(Number(c.dataset.check), c.checked));
-  document.querySelector('#copyChecklist')?.addEventListener('click', copyChecklist);
-  document.querySelector('#resetChecklist')?.addEventListener('click', resetChecklist);
-  document.querySelector('#aiChecklist')?.addEventListener('click', aiChecklist);
-
-  document.querySelector('#providerSelect')?.addEventListener('change', providerChanged);
-  document.querySelectorAll('[data-connection]').forEach(b => b.onclick = () => { state.settings.connection = b.dataset.connection; state.connectionStatus = null; render(); });
-  document.querySelector('#saveSettings')?.addEventListener('click', updateSettingsFromForm);
-  document.querySelector('#testConnection')?.addEventListener('click', testConnection);
-  document.querySelector('#runDiagnostics')?.addEventListener('click', runDiagnostics);
+  app.onkeydown = event => {
+    if (event.isComposing) return;
+    const el = event.target;
+    if (el.id === 'pageInput' && event.key === 'Enter') { event.preventDefault(); jumpPage(Number(el.value)); return; }
+    if (el.id === 'lookupQuery' && event.key === 'Enter') { event.preventDefault(); runLookup(); return; }
+    if (el.id === 'chatQuestion' && event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      askQuestion();
+      return;
+    }
+    if (el.id === 'compareQuestion' && event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      runCompare();
+    }
+  };
 }
 
-function bindSourceButtons() {
-  document.querySelectorAll('[data-jump]').forEach(b => b.onclick = () => {
-    if (b.dataset.doc) state.activeDocId = b.dataset.doc;
-    jumpPage(Number(b.dataset.jump));
-  });
-  document.querySelectorAll('[data-find]').forEach(b => b.onclick = () => findInActive(b.dataset.find));
-  document.querySelectorAll('[data-hit-doc]').forEach(b => b.onclick = () => {
-    state.activeDocId = b.dataset.hitDoc;
-    state.page = Number(b.dataset.hitPage) || 1;
-    state.mobile = 'viewer';
-    render();
-  });
-}
+function bindSourceButtons() { /* event delegation handles source buttons */ }
 
 function openDoc(id) {
   state.activeDocId = id;
@@ -574,10 +625,13 @@ async function getAnswer(question, docsOverride = null) {
   return { text, hits };
 }
 
-async function askQuestion() {
+async function askQuestion(questionOverride = '') {
   const input = document.querySelector('#chatQuestion');
-  const question = input?.value.trim();
-  if (!question || state.busy) return;
+  const question = String(questionOverride || input?.value || state.chatDraft || '').trim();
+  if (state.busy) return showToast('Đang xử lý câu hỏi trước.', 'warning');
+  if (!question) return showToast('Hãy nhập câu hỏi trước khi gửi.', 'warning');
+  if (!sourceDocs().length) return showToast('Hãy chọn hoặc mở ít nhất một PDF làm nguồn.', 'warning');
+  state.chatDraft = '';
   state.chat.push({ role: 'user', text: question });
   state.chat.push({ role: 'ai', text: 'Đang tra cứu nguồn PDF…', hits: [] });
   state.busy = true;
@@ -618,8 +672,11 @@ async function aiSummary() {
 
 function runLookup() {
   const input = document.querySelector('#lookupQuery');
-  const query = input?.value.trim();
-  state.lookup.query = query || '';
+  const query = String(input?.value || state.lookup.draft || '').trim();
+  if (!query) return showToast('Nhập nội dung cần tìm trong PDF.', 'warning');
+  if (!sourceDocs().length) return showToast('Chưa có PDF nguồn để tra cứu.', 'warning');
+  state.lookup.query = query;
+  state.lookup.draft = query;
   let hits = query ? searchChunks(query, sourceDocs(), 16) : [];
 
   // Với câu tra kiểu D600 cấp B, bảng PDF thường bị tách text theo cột nên
@@ -643,6 +700,7 @@ function runLookup() {
     }
   }
   state.lookup.hits = hits;
+  showToast(hits.length ? `Tìm thấy ${hits.length} kết quả liên quan.` : 'Không tìm thấy nội dung phù hợp trong nguồn đang chọn.', hits.length ? 'success' : 'warning');
   render();
 }
 function updateTableClassOptions() {
@@ -658,6 +716,7 @@ function runTableLookup() {
   const cls = document.querySelector('#tableClass')?.value;
   state.tableResult = lookup7888(D, cls);
   if (!state.tableResult) showToast('Không có tổ hợp D/cấp tải này trong Bảng 1.', 'warning');
+  else showToast(`Đã tra D${D} · cấp ${cls}.`, 'success');
   render();
 }
 
@@ -694,7 +753,9 @@ function runCalc() {
       alpha
     });
     output.innerHTML = `<div class="calc-result"><div class="calc-main"><span>Sức chịu tải dài hạn</span><b>${result.longTermKn.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} kN</b></div><div class="metric-grid three"><div><span>A₀</span><b>${area.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} mm²</b></div><div><span>Ngắn hạn</span><b>${result.shortTermKn.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} kN</b></div><div><span>80% ngắn hạn</span><b>${result.recommendedMaxKn.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} kN</b></div></div><div class="footnote">α = ${alpha}; ứng suất quy đổi = ${result.stress.toFixed(3)} MPa. Luôn kiểm tra điều kiện áp dụng trong Phụ lục B.</div></div>`;
-  } catch (error) { output.innerHTML = `<div class="notice error">${esc(error.message)}</div>`; }
+    showToast('Đã tính toán xong.', 'success');
+    requestAnimationFrame(() => output.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
+  } catch (error) { output.innerHTML = `<div class="notice error">${esc(error.message)}</div>`; showToast(error.message, 'error'); }
 }
 
 function localCompareText(question, docs) {
@@ -709,9 +770,12 @@ function localCompareText(question, docs) {
 }
 async function runCompare() {
   const docs = selectedDocs();
-  const query = document.querySelector('#compareQuestion')?.value.trim();
-  if (docs.length < 2 || !query || state.busy) return;
+  const query = String(document.querySelector('#compareQuestion')?.value || state.compare.draft || '').trim();
+  if (state.busy) return showToast('Đang xử lý yêu cầu trước.', 'warning');
+  if (docs.length < 2) return showToast('Hãy chọn ít nhất 2 PDF để so sánh.', 'warning');
+  if (!query) return showToast('Nhập nội dung cần so sánh.', 'warning');
   state.compare.query = query;
+  state.compare.draft = query;
   state.compare.text = 'Đang so sánh…';
   state.compare.hits = [];
   state.busy = true;
@@ -727,7 +791,7 @@ async function runCompare() {
       state.compare.hits = answer.hits;
     }
   } catch (error) { state.compare.text = `Lỗi: ${error.message}`; }
-  finally { state.busy = false; render(); }
+  finally { state.busy = false; showToast(state.compare.text.startsWith('Lỗi:') ? 'So sánh gặp lỗi.' : 'Đã so sánh nguồn.', state.compare.text.startsWith('Lỗi:') ? 'error' : 'success'); render(); }
 }
 
 function updateChecklist(index, checked) {
@@ -741,8 +805,18 @@ async function copyChecklist() {
   const key = checklistKey();
   const values = state.checklist[key] || {};
   const text = tcvn7888Checklist.map((item, i) => `${values[i] ? '[x]' : '[ ]'} ${item}`).join('\n');
-  try { await navigator.clipboard.writeText(text); showToast('Đã sao chép checklist.', 'success'); }
-  catch { showToast('Trình duyệt không cho phép sao chép tự động.', 'warning'); }
+  try {
+    if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(text);
+    else throw new Error('Clipboard API unavailable');
+    showToast('Đã sao chép checklist.', 'success');
+  } catch {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+      showToast('Đã sao chép checklist.', 'success');
+    } catch { showToast('Không sao chép tự động được. Hãy dùng Ctrl+C.', 'warning'); }
+  }
 }
 function resetChecklist() {
   const key = checklistKey();

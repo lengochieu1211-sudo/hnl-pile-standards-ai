@@ -240,3 +240,15 @@ button:disabled, input:disabled, textarea:disabled { cursor: not-allowed; opacit
   .metric-grid, .metric-grid.three { grid-template-columns: 1fr 1fr; }
   .panel-body { padding: 11px; }
 }
+
+/* v1.2 interaction polish */
+button { touch-action: manipulation; transition: transform .08s ease, box-shadow .15s ease, border-color .15s ease, background .15s ease; }
+button:active:not(:disabled) { transform: translateY(1px) scale(.995); }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid #7fa3c8; outline-offset: 2px; }
+.send-btn:hover:not(:disabled), .search-box button:hover:not(:disabled), .btn.primary:hover:not(:disabled) { background: var(--navy-800); }
+.send-btn { min-width: 74px; font-size: 11.5px; }
+.suggestions button:hover { border-color: #9fb6cf; background: #f4f8fd; }
+.tab { font-size: 11px; }
+.panel-section-title h3 { font-size: 13px; }
+.field input, .field select, .field textarea, .search-box input { font-size: 11.5px; }
+.check-item, .search-result p { font-size: 11px; }

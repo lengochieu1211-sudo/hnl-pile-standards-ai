@@ -1,8 +1,8 @@
-# HNL Pile Standards AI v1.1 Pro Audit
+# HNL Pile Standards AI v1.2 Pro Audit
 
 Ứng dụng web/PWA cho kỹ sư cọc: tải một hoặc nhiều PDF tiêu chuẩn, đọc PDF, tìm đúng trang, hỏi đáp theo nguồn, tra bảng, tính toán, so sánh tài liệu và tạo checklist nghiệm thu.
 
-## Bản v1.1 đã sửa sâu
+## Bản v1.2 đã sửa sâu
 
 - Sửa lỗi tìm kiếm cốt lõi làm nhiều nút `Tra cứu / Hỏi đáp / So sánh` gần như không hoạt động đúng với tài liệu đầu tiên.
 - Tách rõ `Tra cứu cục bộ` và `AI`, không gọi chế độ tìm kiếm từ khóa là AI offline.
@@ -81,3 +81,14 @@ Workflow: `.github/workflows/pages.yml`.
 - Tra bảng TCVN 7888:2014 chỉ bật khi tài liệu tương ứng đã được nạp.
 - Tên model mặc định là gợi ý; nếu tài khoản API không hỗ trợ, sửa tên model trong Cài đặt.
 - GitHub Pages là frontend tĩnh; Bridge không chạy bên trong GitHub Pages.
+
+## v1.2 — Fix nút nhấn / tương tác
+
+- Chuyển toàn bộ nút động sang event delegation để không mất handler khi giao diện render lại.
+- Nút gợi ý trong Hỏi đáp bấm là gửi câu hỏi ngay.
+- Enter gửi câu hỏi; Shift+Enter xuống dòng.
+- Nút bấm thiếu dữ liệu sẽ hiện cảnh báo thay vì im lặng.
+- Tra bảng, tính toán, so sánh có phản hồi trạng thái rõ ràng.
+- Checklist có fallback sao chép.
+- Cache PWA tăng lên `hnl-pile-ai-v1.2.0` để tránh giữ JS cũ sau khi deploy.
+- Xem `docs/AUDIT_V1.2.md`.

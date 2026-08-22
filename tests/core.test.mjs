@@ -104,3 +104,13 @@ test('v1.6 formula scanner recognizes Symbol-font equals and calculates safe for
   assert.ok(p?.computable);
   assert.equal(evaluateExpression(p.rhs,{Q:25}),50);
 });
+
+test('v1.7.1 formula library includes AI/Vision formulas stored on uploaded documents', async () => {
+  const { extractFormulaLibrary } = await import('../src/formulas.js');
+  const doc={id:'ai1',name:'scan.pdf',standard:'TCVN SCAN',viewerKind:'pdf',pageCount:3,textChars:0,pages:[{page:1,text:''},{page:2,text:''},{page:3,text:''}],aiFormulaItems:[
+    {id:'af1',page:2,label:'(10)',title:'Sức chịu tải',raw:'R = 2 Q',expression:'R=2*Q',variables:['R','Q'],confidence:0.99,verified:false,allowCompute:false}
+  ]};
+  const formulas=extractFormulaLibrary([doc]);
+  assert.ok(formulas.some(x=>x.aiDetected && x.page===2 && x.label==='(10)'));
+  assert.equal(formulas.find(x=>x.id==='af1')?.computable, false);
+});

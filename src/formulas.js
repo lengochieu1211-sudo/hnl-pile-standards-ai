@@ -175,20 +175,70 @@ export function extractFormulaCandidates(doc) {
   return items;
 }
 
+function normalizeAiFormula(doc, item={}, index=0) {
+  const raw = normSpace(item.raw || item.formula || item.equation || item.expression || '');
+  const parsed = item.expression ? guessExpression(item.expression) : guessExpression(raw);
+  const expression = item.expression && String(item.expression).includes('=') ? cleanupEquation(item.expression) : parsed.expression;
+  const reParsed = expression ? guessExpression(expression) : parsed;
+  const variables = Array.isArray(item.variables) && item.variables.length ? item.variables.map(String) : reParsed.variables;
+  const confidence = Number(item.confidence);
+  return {
+    id: item.id || `ai:${doc.id}:${Number(item.page || 1)}:${index}`,
+    docId: doc.id,
+    docName: doc.name,
+    standard: doc.standard || doc.name,
+    page: Math.max(1, Number(item.page || 1)),
+    label: normSpace(item.label || labelFrom(raw)),
+    title: normSpace(item.title || item.section || 'Công thức AI nhận diện'),
+    raw,
+    context: normSpace(item.context || item.conditions || item.note || ''),
+    expression: reParsed.expression || expression || '',
+    lhs: reParsed.lhs || '',
+    rhs: reParsed.rhs || '',
+    variables,
+    units: item.units || '',
+    conditions: item.conditions || '',
+    confidence: Number.isFinite(confidence) ? confidence : null,
+    computable: (Boolean(item.verified) || Boolean(item.allowCompute)) && reParsed.computable,
+    verified: Boolean(item.verified),
+    aiDetected: true,
+    reviewRequired: !Boolean(item.verified)
+  };
+}
+
+export function aiFormulaCandidates(doc) {
+  if (!doc) return [];
+  return (Array.isArray(doc.aiFormulaItems) ? doc.aiFormulaItems : [])
+    .map((x,i) => normalizeAiFormula(doc, x, i))
+    .filter(x => x.raw || x.expression);
+}
+
+function dedupeFormulaItems(items=[]) {
+  const seen = new Set();
+  const out = [];
+  for (const item of items) {
+    const key = `${item.docId}:${item.page}:${String(item.label || '').toLowerCase()}:${asciiMath(item.raw || item.expression || '').toLowerCase().replace(/\s+/g,'')}`;
+    if (seen.has(key)) continue;
+    seen.add(key); out.push(item);
+  }
+  return out;
+}
+
 export function extractFormulaLibrary(docs=[]) {
-  const all = (docs || []).flatMap(extractFormulaCandidates);
-  return all.sort((a,b) => String(a.standard).localeCompare(String(b.standard)) || a.page - b.page || String(a.label).localeCompare(String(b.label)));
+  const all = (docs || []).flatMap(doc => [...aiFormulaCandidates(doc), ...extractFormulaCandidates(doc)]);
+  return dedupeFormulaItems(all).sort((a,b) => String(a.standard).localeCompare(String(b.standard)) || a.page - b.page || String(a.label).localeCompare(String(b.label)));
 }
 
 export function formulaStats(docs=[]) {
   const items = extractFormulaLibrary(docs);
   return {
     total: items.length,
+    aiDetected: items.filter(x => x.aiDetected).length,
     computable: items.filter(x => x.computable).length,
     needsReview: items.filter(x => !x.computable).length,
     byDoc: (docs || []).map(d => {
-      const formulas = extractFormulaCandidates(d);
-      return { docId:d.id, name:d.name, standard:d.standard, total:formulas.length, computable:formulas.filter(x=>x.computable).length };
+      const formulas = dedupeFormulaItems([...aiFormulaCandidates(d), ...extractFormulaCandidates(d)]);
+      return { docId:d.id, name:d.name, standard:d.standard, total:formulas.length, aiDetected:formulas.filter(x=>x.aiDetected).length, computable:formulas.filter(x=>x.computable).length };
     })
   };
 }

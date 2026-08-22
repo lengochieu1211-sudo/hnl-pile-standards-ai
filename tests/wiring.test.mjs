@@ -20,7 +20,7 @@ const criticalControls = [
   ['tableLookupBtn', 'runTableLookup'],
   ['calcBtn', 'runCalc'],
   ['calcFill7888', 'fillCalcFrom7888'],
-  ['formulaScanBtn', 'formulaStats'],
+  ['formulaScanBtn', 'scanAllFormulasSmart'],
   ['formulaCalcBtn', 'runDynamicFormula'],
   ['compareBtn', 'runCompare'],
   ['copyChecklist', 'copyChecklist'],
@@ -62,9 +62,9 @@ test('AI citations remain connected to PDF navigation', () => {
   assert.match(source, /state\.activeDocId = el\.dataset\.hitDoc/);
 });
 
-test('service worker uses v1.7.0 cache and network-first navigation', () => {
+test('service worker uses v1.7.1 cache and network-first navigation', () => {
   const sw = fs.readFileSync(new URL('../public/sw.js', import.meta.url), 'utf8');
-  assert.match(sw, /hnl-pile-ai-v1\.7\.0/);
+  assert.match(sw, /hnl-pile-ai-v1\.7\.1/);
   assert.match(sw, /req\.mode === 'navigate'/);
   assert.match(sw, /fetch\(req\)/);
 });
@@ -103,9 +103,9 @@ test('v1.4 dynamic model picker is wired', () => {
 });
 
 
-test('v1.7 shows version and release update timestamp in the UI', () => {
-  assert.match(source, /version: '1\.7\.0'/);
-  assert.match(source, /22\/08\/2026 22:55 GMT\+7/);
+test('v1.7.1 shows version and release update timestamp in the UI', () => {
+  assert.match(source, /version: '1\.7\.1'/);
+  assert.match(source, /22\/08\/2026 23:26 GMT\+7/);
   assert.match(source, /build-meta/);
   assert.match(source, /Phiên bản ứng dụng/);
 });
@@ -167,4 +167,22 @@ test('v1.7 ingest fileToBase64 declaration is not duplicated', () => {
   const ingest = fs.readFileSync(new URL('../src/ingest.js', import.meta.url), 'utf8');
   const count = (ingest.match(/export async function fileToBase64/g) || []).length;
   assert.equal(count, 1);
+});
+
+
+test('v1.7.1 AI formula scanner is wired for uploaded PDF/image/text sources', () => {
+  const formulas = fs.readFileSync(new URL('../src/formulas.js', import.meta.url), 'utf8');
+  assert.match(source, /formulaScanMode/);
+  assert.match(source, /scanAllFormulasSmart/);
+  assert.match(source, /scanFormulaPageWithAi/);
+  assert.match(source, /renderPdfPageToBase64/);
+  assert.match(source, /AI\/Vision.*nhận diện/s);
+  assert.match(formulas, /aiFormulaCandidates/);
+  assert.match(formulas, /aiFormulaItems/);
+});
+
+test('AI detected formulas require explicit source verification before calculation', () => {
+  assert.match(source, /formulaVerifyBtn/);
+  assert.match(source, /verifySelectedAiFormula/);
+  assert.match(source, /đối chiếu.*trang.*gốc/is);
 });

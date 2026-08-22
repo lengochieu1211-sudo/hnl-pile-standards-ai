@@ -9,9 +9,9 @@ import { diameters7888, lookup7888, classesForDiameter7888 } from './tcvn7888.js
 import { extractFormulaLibrary, formulaStats, verifiedFormulaLibrary, evaluateExpression, clearFormulaCache } from './formulas.js';
 
 const APP_META = Object.freeze({
-  version: '1.7.0',
-  updatedAt: '22/08/2026 22:55 GMT+7',
-  release: 'Local Intelligence Engine · Hybrid Semantic RAG · Auto Offline AI'
+  version: '1.7.1',
+  updatedAt: '22/08/2026 23:26 GMT+7',
+  release: 'AI Formula Scanner · OCR/Vision Formula Extraction · Full Document Scan'
 });
 
 const STORAGE = {
@@ -27,7 +27,8 @@ const STORAGE = {
   formulaSelection: 'hnl.formulaSelection.v16',
   retrievalMode: 'hnl.retrievalMode.v17',
   embeddingModel: 'hnl.embeddingModel.v17',
-  semanticRerank: 'hnl.semanticRerank.v17'
+  semanticRerank: 'hnl.semanticRerank.v17',
+  formulaScanMode: 'hnl.formulaScanMode.v171'
 };
 
 const state = {
@@ -67,6 +68,7 @@ const state = {
   searchStats: null,
   formulaSelection: localStorage.getItem(STORAGE.formulaSelection) || '',
   formulaQuery: '',
+  formulaScanMode: localStorage.getItem(STORAGE.formulaScanMode) || 'auto',
   archivePasswordCache: new Map()
 };
 
@@ -405,7 +407,7 @@ function quickTableControls() {
 function find7888Doc() { return sourceDocs().find(is7888) || state.docs.find(is7888) || null; }
 
 function formulaLibraryForScope() {
-  const docs = sourceDocs().filter(d => d.viewerKind !== 'image');
+  const docs = sourceDocs();
   const verified = verifiedFormulaLibrary(docs);
   const auto = extractFormulaLibrary(docs);
   // Keep verified formulas first. Remove obvious auto-detected duplicates by page/label.
@@ -422,26 +424,28 @@ function selectedFormulaItem() {
   return item || null;
 }
 function formulaLibraryHtml() {
-  const docs = sourceDocs().filter(d => d.viewerKind !== 'image');
+  const docs = sourceDocs();
   const stats = formulaStats(docs);
   const verifiedCount = verifiedFormulaLibrary(docs).length;
   const items = formulaLibraryForScope();
   const item = selectedFormulaItem();
   const options = items.map(x => `<option value="${esc(x.id)}" ${x.id === item?.id ? 'selected' : ''}>${esc(x.standard || x.docName)} · P.${x.page}${x.label ? ` · ${esc(x.label)}` : ''}${x.verified ? ' · Đã xác minh' : (x.computable ? ' · Tính được' : ' · Cần kiểm tra')}</option>`).join('');
   const varInputs = item?.computable ? item.variables.map(v => `<label class="field"><span>${esc(v)}</span><input type="number" step="any" data-formula-var="${esc(v)}" placeholder="Nhập ${esc(v)}"></label>`).join('') : '';
-  const byDoc = stats.byDoc.map(d => `<span>${esc(d.standard || d.name)}: ${d.total} CT${d.computable ? ` · ${d.computable} tính được` : ''}</span>`).join('');
+  const byDoc = stats.byDoc.map(d => `<span>${esc(d.standard || d.name)}: ${d.total} CT${d.aiDetected ? ` · ${d.aiDetected} AI` : ''}${d.computable ? ` · ${d.computable} tính được` : ''}</span>`).join('');
   return `<div class="panel-section formula-library">
     <div class="panel-section-title"><h3>Thư viện công thức toàn bộ PDF</h3><span>${items.length} công thức</span></div>
-    <div class="notice"><b>Quét toàn bộ trang có lớp chữ trong ${docs.length} tài liệu.</b> Công thức đọc rõ được đưa vào thư viện Tính; công thức bị PDF tách dòng/méo ký hiệu vẫn được lưu kèm trang gốc nhưng khóa tính tự động để tránh sai.</div>
-    <div class="formula-stats four"><div><span>Đã xác minh</span><b>${verifiedCount}</b></div><div><span>Tự phát hiện</span><b>${stats.total}</b></div><div><span>Tính tự động</span><b>${verifiedCount + stats.computable}</b></div><div><span>Cần kiểm tra</span><b>${stats.needsReview}</b></div></div>
+    <div class="notice"><b>v1.7.1 quét công thức trực tiếp từ dữ liệu bạn tải lên.</b> Với PDF có lớp chữ, app phân tích cục bộ; với PDF scan/hình hoặc công thức bị vỡ dòng, chế độ Hybrid/AI sẽ đọc trực tiếp ảnh từng trang bằng AI Vision. Công thức AI nhận diện luôn gắn tài liệu + trang gốc và mặc định cần xác minh trước khi cho tính tự động.</div>
+    <div class="formula-stats four"><div><span>Đã xác minh</span><b>${verifiedCount}</b></div><div><span>Tổng phát hiện</span><b>${stats.total}</b></div><div><span>AI/Vision</span><b>${stats.aiDetected || 0}</b></div><div><span>Cần kiểm tra</span><b>${stats.needsReview}</b></div></div>
     ${byDoc ? `<div class="formula-doc-stats">${byDoc}</div>` : ''}
-    <div class="action-row"><button class="btn" id="formulaScanBtn">↻ Quét lại tất cả công thức</button></div>
+    <div class="grid2 formula-scan-controls"><label class="field"><span>Phương pháp quét</span><select id="formulaScanMode"><option value="auto" ${state.formulaScanMode==='auto'?'selected':''}>Tự động Hybrid · khuyên dùng</option><option value="local" ${state.formulaScanMode==='local'?'selected':''}>Cục bộ nhanh · lớp chữ</option><option value="ai" ${state.formulaScanMode==='ai'?'selected':''}>AI/Vision · quét toàn bộ trang</option></select></label><div class="notice compact"><b>AI đang chọn:</b> ${esc(PROVIDERS[state.settings.provider]?.label || 'Local')}${state.settings.provider==='local' ? ' · chưa có AI Vision' : ` · ${esc(providerModel(true))}`}</div></div>
+    <div class="action-row"><button class="btn primary" id="formulaScanBtn" ${state.busy?'disabled':''}>⌁ Quét công thức từ tài liệu</button></div>
     ${items.length ? `<label class="field"><span>Chọn công thức</span><select id="formulaSelect">${options}</select></label>` : '<div class="notice warning">Chưa phát hiện công thức từ lớp text. Nếu PDF là bản scan, cần OCR/AI Vision trước.</div>'}
     ${item ? `<div class="formula-source-card">
       <div class="formula-source-head"><div><b>${esc(item.standard || item.docName)}</b><small>${esc(item.title || 'Công thức nhận diện từ PDF')} · Trang ${item.page}${item.label ? ` · ${esc(item.label)}` : ''}</small></div><button class="source-chip" data-hit-doc="${item.docId}" data-hit-page="${item.page}">Mở trang gốc</button></div>
-      ${item.verified ? '<div class="notice success"><b>Công thức đã xác minh từ PDF gốc.</b></div>' : ''}<div class="formula-raw">${esc(item.raw)}</div>
+      ${item.verified ? '<div class="notice success"><b>Công thức đã xác minh từ trang gốc.</b></div>' : (item.aiDetected ? '<div class="notice warning"><b>AI/Vision đã nhận diện.</b> Hãy mở trang gốc và xác minh trước khi cho phép tính tự động.</div>' : '')}<div class="formula-raw">${esc(item.raw)}</div>
       ${item.expression ? `<div class="formula-normalized"><span>Biểu thức chuẩn hóa</span><code>${esc(item.expression)}</code></div>` : ''}
-      ${item.computable ? `<div class="notice success"><b>Có thể tính tự động.</b> Hãy nhập các biến bên dưới và luôn đối chiếu điều kiện/đơn vị tại trang gốc.</div><div class="grid2 formula-vars">${varInputs}</div><button class="btn primary" id="formulaCalcBtn">Tính công thức đã chọn</button><div id="formulaCalcResult"></div>` : `<div class="notice warning"><b>Cần kiểm tra công thức trên PDF gốc.</b> Lớp text chưa đủ rõ để app tự suy diễn thứ tự tử/mẫu, chỉ số hoặc dấu toán học.</div>`}
+      ${item.units ? `<div class="formula-meta"><b>Đơn vị:</b> ${esc(typeof item.units==='string'?item.units:JSON.stringify(item.units))}</div>` : ''}${item.conditions ? `<div class="formula-meta"><b>Điều kiện:</b> ${esc(item.conditions)}</div>` : ''}
+      ${item.computable ? `<div class="notice success"><b>Có thể tính tự động.</b> Hãy nhập các biến bên dưới và luôn đối chiếu điều kiện/đơn vị tại trang gốc.</div><div class="grid2 formula-vars">${varInputs}</div><button class="btn primary" id="formulaCalcBtn">Tính công thức đã chọn</button><div id="formulaCalcResult"></div>` : `<div class="notice warning"><b>Chưa cho phép tính tự động.</b> Công thức có thể chứa phân số, chỉ số, ký hiệu hoặc điều kiện mà lớp text/OCR dễ đọc sai.</div>${item.aiDetected && item.expression ? '<button class="btn" id="formulaVerifyBtn">✓ Tôi đã đối chiếu trang gốc · Cho phép tính</button>' : ''}`}
       <details class="formula-context"><summary>Ngữ cảnh trích xuất</summary><pre>${esc(item.context)}</pre></details>
     </div>` : ''}
   </div>`;
@@ -581,8 +585,9 @@ function bind() {
       if (el.id === 'tableLookupBtn') { runTableLookup(); return; }
       if (el.id === 'calcBtn') { runCalc(); return; }
       if (el.id === 'calcFill7888') { fillCalcFrom7888(); return; }
-      if (el.id === 'formulaScanBtn') { clearFormulaCache(); const fs = formulaStats(sourceDocs().filter(d => d.viewerKind !== 'image')); showToast(`Đã quét ${fs.total} công thức · ${fs.computable} có thể tính tự động.`, fs.total ? 'success' : 'warning'); render(); return; }
+      if (el.id === 'formulaScanBtn') { await scanAllFormulasSmart(); return; }
       if (el.id === 'formulaCalcBtn') { runDynamicFormula(); return; }
+      if (el.id === 'formulaVerifyBtn') { await verifySelectedAiFormula(); return; }
       if (el.id === 'compareBtn') { await runCompare(); return; }
       if (el.id === 'copyChecklist') { await copyChecklist(); return; }
       if (el.id === 'resetChecklist') { resetChecklist(); return; }
@@ -628,6 +633,7 @@ function bind() {
     if (el.id === 'pageInput') { jumpPage(Number(el.value)); return; }
     if (el.id === 'tableDiameter') { updateTableClassOptions(); return; }
     if (el.id === 'cType' || el.id === 'cClass') { syncCalcDefaults(); return; }
+    if (el.id === 'formulaScanMode') { state.formulaScanMode = el.value || 'auto'; localStorage.setItem(STORAGE.formulaScanMode, state.formulaScanMode); return; }
     if (el.id === 'formulaSelect') { state.formulaSelection = el.value; localStorage.setItem(STORAGE.formulaSelection, el.value); render(); return; }
     if (el.id === 'providerSelect') { providerChanged(event); return; }
     if (el.id === 'strictInput') { state.settings.strict = el.checked; }
@@ -760,7 +766,10 @@ async function uploadInputs(event) {
   event.target.value = '';
   state.progress = null;
   state.mobile = window.innerWidth <= 880 ? 'assistant' : state.mobile;
-  showToast(`Đã nhập ${imported} tài liệu${duplicated ? ` · ${duplicated} trùng` : ''}${failed ? ` · ${failed} lỗi` : ''}.`, failed ? 'warning' : 'success');
+  clearFormulaCache();
+  const importedFormulaStats = formulaStats(state.docs);
+  const scanDocs = state.docs.filter(d => d.viewerKind === 'pdf' && d.scannedLikely).length;
+  showToast(`Đã nhập ${imported} tài liệu${duplicated ? ` · ${duplicated} trùng` : ''}${failed ? ` · ${failed} lỗi` : ''} · phát hiện nhanh ${importedFormulaStats.total} công thức${scanDocs ? ` · ${scanDocs} PDF scan cần AI/Vision để lấy đủ công thức` : ''}.`, failed ? 'warning' : 'success');
   render();
 }
 async function removeDoc(id) {
@@ -877,6 +886,156 @@ async function ocrActivePdfLocal() {
   } finally {
     state.progress = null; state.busy = false; render();
   }
+}
+
+
+function parseAiFormulaPayload(text='') {
+  let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/,'').trim();
+  const firstObj = raw.indexOf('{'), lastObj = raw.lastIndexOf('}');
+  const firstArr = raw.indexOf('['), lastArr = raw.lastIndexOf(']');
+  let data = null;
+  const tries = [];
+  if (firstObj >= 0 && lastObj > firstObj) tries.push(raw.slice(firstObj, lastObj + 1));
+  if (firstArr >= 0 && lastArr > firstArr) tries.push(raw.slice(firstArr, lastArr + 1));
+  tries.push(raw);
+  for (const t of tries) { try { data = JSON.parse(t); break; } catch { /* try next */ } }
+  if (!data) throw new Error('AI không trả JSON công thức hợp lệ.');
+  const formulas = Array.isArray(data) ? data : (Array.isArray(data.formulas) ? data.formulas : []);
+  return formulas.filter(x => x && typeof x === 'object');
+}
+
+function formulaCueText(text='') {
+  const s = String(text || '');
+  return /(?:công thức|cong thuc|được tính|duoc tinh|xác định theo|xac dinh theo|tính theo|tinh theo|[=≤≥≈]|\([A-Z]?\.?\d+(?:\.\d+)?\))/i.test(s);
+}
+
+function formulaAiTargets(doc, mode, localItems=[]) {
+  if (!doc) return [];
+  if (doc.viewerKind === 'image') return [{ page:1, text:String(doc.pages?.[0]?.text || ''), imageDoc:true }];
+  const pages = doc.pages || [];
+  if (mode === 'ai') return pages.map(p => ({ ...p }));
+  if (mode !== 'auto') return [];
+  const localPages = new Set(localItems.filter(x => x.docId === doc.id).map(x => Number(x.page)));
+  const textPages = pages.filter(p => String(p.text || '').trim().length >= 180).length;
+  const scanHeavy = Boolean(doc.scannedLikely) || textPages < Math.max(2, pages.length * 0.55);
+  if (scanHeavy) return pages.map(p => ({ ...p }));
+  return pages.filter(p => formulaCueText(p.text) || (!localPages.has(Number(p.page)) && /\b(?:Ra|Rd|Nc|Ns|Q|P|M|N|sigma|alpha|beta|gamma)\b/i.test(String(p.text || ''))));
+}
+
+async function callFormulaAi(prompt, images=[]) {
+  if (state.settings.provider === 'local') throw new Error('Chế độ Tra cứu nhanh không có mô hình AI. Hãy chọn HNL Offline AI, Gemini, ChatGPT, Claude hoặc Grok.');
+  if (state.settings.connection === 'bridge') {
+    return callBridge({ bridgeUrl:state.settings.bridgeUrl, provider:state.settings.provider, model:providerModel(images.length > 0), prompt, images });
+  }
+  return callDirect({ provider:state.settings.provider, model:providerModel(images.length > 0), apiKey:currentApiKey(), prompt, ollamaUrl:state.settings.ollamaUrl, images });
+}
+
+async function scanFormulaPageWithAi(doc, pageObj) {
+  const pageNo = Number(pageObj.page || 1);
+  const visibleText = String(pageObj.text || '').slice(0, 9000);
+  const prompt = `Bạn là bộ nhận dạng CÔNG THỨC KỸ THUẬT cho tiêu chuẩn xây dựng.\nNguồn: ${doc.standard || doc.name}; trang ${pageNo}.\n\nNHIỆM VỤ:\n1) Đọc đúng nội dung trang được cung cấp, ưu tiên ảnh trang gốc nếu có.\n2) Liệt kê TẤT CẢ công thức/toán thức dùng để tính toán trên trang. Không lấy số liệu bảng đơn thuần nếu không phải công thức.\n3) Không tự suy diễn công thức bị khuất/không rõ.\n4) Giữ nguyên ký hiệu gốc trong trường raw.\n5) expression chỉ ghi khi chắc chắn có thể chuẩn hóa về ASCII: lhs=rhs, dùng *, /, ^, (), pi; ví dụ P=2*Q. Nếu không chắc thứ tự tử/mẫu/chỉ số thì để expression rỗng.\n6) variables là danh sách tên biến; units và conditions ghi theo nội dung trang nếu nhìn thấy.\n7) confidence từ 0 đến 1.\n\nCHỈ TRẢ JSON, KHÔNG markdown:\n{"formulas":[{"label":"(6)","title":"Tên công thức/điều","raw":"P = 2Q","expression":"P=2*Q","variables":["P","Q"],"units":"kN","conditions":"...","confidence":0.99}]}\nNếu không có công thức: {"formulas":[]}\n\nLớp chữ PDF tham khảo (có thể sai hoặc thiếu):\n${visibleText || '[không có lớp chữ]'}`;
+  const images = [];
+  if (doc.viewerKind === 'pdf') {
+    const image = await renderPdfPageToBase64(doc, pageNo, 1.9);
+    images.push({ data:image.data, mimeType:image.mimeType, name:`${doc.name} - trang ${pageNo}` });
+  } else if (doc.viewerKind === 'image' && doc.blob) {
+    images.push({ data:await fileToBase64(doc.blob), mimeType:doc.type || 'image/jpeg', name:doc.name });
+  }
+  const answer = await callFormulaAi(prompt, images);
+  return parseAiFormulaPayload(answer).map((x, i) => ({
+    id: crypto.randomUUID(),
+    page: pageNo,
+    label: String(x.label || '').trim(),
+    title: String(x.title || x.section || 'Công thức AI nhận diện').trim(),
+    raw: String(x.raw || x.formula || x.equation || '').trim(),
+    expression: String(x.expression || '').trim(),
+    variables: Array.isArray(x.variables) ? x.variables.map(String) : [],
+    units: typeof x.units === 'string' ? x.units : (x.units ? JSON.stringify(x.units) : ''),
+    conditions: String(x.conditions || '').trim(),
+    context: String(x.context || '').trim(),
+    confidence: Number.isFinite(Number(x.confidence)) ? Number(x.confidence) : null,
+    verified: false,
+    allowCompute: false,
+    aiProvider: state.settings.provider,
+    aiModel: providerModel(images.length > 0),
+    detectedAt: new Date().toISOString(),
+    order: i
+  })).filter(x => x.raw || x.expression);
+}
+
+async function scanAllFormulasSmart() {
+  if (state.busy) return showToast('Ứng dụng đang xử lý tác vụ khác.', 'warning');
+  const docs = sourceDocs();
+  if (!docs.length) return showToast('Hãy tải/chọn tài liệu trước khi quét công thức.', 'warning');
+  const mode = state.formulaScanMode || 'auto';
+  clearFormulaCache();
+  const localBefore = extractFormulaLibrary(docs).filter(x => !x.aiDetected);
+  if (mode === 'local') {
+    const fs = formulaStats(docs);
+    showToast(`Quét cục bộ xong: ${fs.total} công thức từ lớp chữ · ${fs.computable} tính được.`, fs.total ? 'success' : 'warning');
+    render(); return;
+  }
+  if (state.settings.provider === 'local') {
+    const fs = formulaStats(docs);
+    state.tab = 'settings'; state.mobile = 'assistant'; render();
+    return showToast(`Cục bộ đã thấy ${fs.total} công thức. Muốn đọc công thức trong PDF scan/hình, hãy chọn HNL Offline AI hoặc AI online rồi quay lại Tính → Quét công thức.`, 'warning');
+  }
+  const plan = docs.map(doc => ({ doc, targets:formulaAiTargets(doc, mode, localBefore) })).filter(x => x.targets.length);
+  const totalPages = plan.reduce((n,x)=>n+x.targets.length,0);
+  if (!totalPages) {
+    const fs = formulaStats(docs); showToast(`Không có trang nào cần AI quét thêm. Đang có ${fs.total} công thức.`, 'info'); render(); return;
+  }
+  const costNote = state.settings.provider === 'ollama' ? 'AI Offline có thể chạy khá lâu nhưng không tốn API.' : 'AI online có thể phát sinh quota/token theo nhà cung cấp.';
+  if (!confirm(`Quét AI/Vision ${totalPages} trang trong ${plan.length} tài liệu để lấy công thức?\n\n${costNote}\nMỗi công thức sẽ lưu kèm trang nguồn và KHÔNG tự cho phép tính cho tới khi bạn xác minh.`)) return;
+  state.busy = true;
+  let done=0, found=0, failed=0;
+  try {
+    for (const {doc, targets} of plan) {
+      const existing = Array.isArray(doc.aiFormulaItems) ? doc.aiFormulaItems : [];
+      const targetPages = new Set(targets.map(x=>Number(x.page || 1)));
+      let merged = existing.filter(x => !targetPages.has(Number(x.page || 1)));
+      for (const pageObj of targets) {
+        done++;
+        state.progress = { label:`AI quét công thức · ${doc.standard || doc.name} · trang ${pageObj.page}`, current:done, total:totalPages };
+        render();
+        try {
+          const items = await scanFormulaPageWithAi(doc, pageObj);
+          merged.push(...items); found += items.length;
+          pageObj.formulaAiStatus = 'done';
+        } catch (error) {
+          failed++; pageObj.formulaAiStatus = 'failed'; pageObj.formulaAiError = error.message;
+        }
+        if (done % 4 === 0) {
+          doc.aiFormulaItems = merged;
+          doc.aiFormulaUpdatedAt = new Date().toISOString();
+          doc.aiFormulaScannedPages = [...new Set([...(doc.aiFormulaScannedPages || []), ...targets.filter(t=>t.formulaAiStatus==='done').map(t=>Number(t.page))])].sort((a,b)=>a-b);
+          await saveDocument(doc);
+        }
+      }
+      doc.aiFormulaItems = merged;
+      doc.aiFormulaUpdatedAt = new Date().toISOString();
+      doc.aiFormulaScannedPages = [...new Set([...(doc.aiFormulaScannedPages || []), ...targets.filter(t=>t.formulaAiStatus==='done').map(t=>Number(t.page))])].sort((a,b)=>a-b);
+      await saveDocument(doc);
+      clearFormulaCache(doc.id);
+    }
+    const fs = formulaStats(docs);
+    showToast(`Quét xong ${totalPages} trang · AI lấy ${found} công thức${failed ? ` · ${failed} trang lỗi` : ''} · Thư viện hiện có ${fs.total} công thức.`, failed ? 'warning' : 'success');
+  } finally {
+    state.progress = null; state.busy = false; render();
+  }
+}
+
+async function verifySelectedAiFormula() {
+  const item = selectedFormulaItem();
+  if (!item?.aiDetected) return showToast('Công thức này không phải mục AI cần xác minh.', 'info');
+  const doc = state.docs.find(d => d.id === item.docId);
+  if (!doc) return showToast('Không tìm thấy tài liệu nguồn.', 'error');
+  const src = (doc.aiFormulaItems || []).find(x => x.id === item.id);
+  if (!src) return showToast('Không tìm thấy bản ghi công thức AI.', 'error');
+  if (!item.expression) return showToast('Công thức chưa có biểu thức chuẩn hóa an toàn nên chưa thể bật tính tự động.', 'warning');
+  if (!confirm(`Xác nhận bạn đã đối chiếu công thức ${item.label || ''} tại trang ${item.page} với PDF gốc và biểu thức chuẩn hóa là đúng?`)) return;
+  src.verified = true; src.allowCompute = true; src.verifiedAt = new Date().toISOString();
+  await saveDocument(doc); clearFormulaCache(doc.id); render(); showToast('Đã xác minh công thức và bật tính tự động.', 'success');
 }
 
 async function getAnswer(question, docsOverride = null) {

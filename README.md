@@ -1,3 +1,17 @@
+# HNL Pile Standards AI v1.7.1 — AI Formula Scanner
+
+## Điểm sửa trọng tâm
+- Nút **Tính → Quét công thức từ tài liệu** nay có 3 chế độ: **Hybrid**, **Cục bộ**, **AI/Vision toàn bộ trang**.
+- PDF scan/hình ảnh không còn phụ thuộc lớp text: AI Vision có thể đọc trực tiếp từng trang để lấy công thức.
+- Hỗ trợ AI đang cấu hình: **HNL Offline/Ollama, Gemini, OpenAI, Claude, Grok**.
+- Công thức AI nhận diện được lưu trong chính tài liệu cục bộ với **file + trang + nhãn + biến + đơn vị + điều kiện + độ tin cậy**.
+- Công thức AI **không tự được phép tính**. Người dùng phải mở trang gốc và bấm xác minh; sau đó parser an toàn mới bật calculator.
+- Công thức từ PDF có lớp chữ vẫn được quét cục bộ trước, sau đó Hybrid chỉ dùng AI cho trang scan/trang nghi có công thức để giảm thời gian.
+
+> Lưu ý: AI online có thể dùng quota/token. HNL Offline AI chạy cục bộ nhưng quét hàng trăm trang sẽ mất thời gian tùy CPU/GPU.
+
+---
+
 # HNL Pile Standards AI v1.7.0 — Local Intelligence Engine
 
 **Cập nhật ứng dụng:** 22/08/2026 22:55 GMT+7  

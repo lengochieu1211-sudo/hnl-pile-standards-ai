@@ -1,0 +1,8 @@
+node_modules/
+dist/
+bridge/.env
+.env
+.DS_Store
+*.log
+# Không commit thư viện tiêu chuẩn có bản quyền nếu chưa có quyền phân phối
+private-pdfs/

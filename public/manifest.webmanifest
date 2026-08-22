@@ -1,0 +1,12 @@
+{
+  "name": "HNL Pile Standards AI",
+  "short_name": "HNL Pile AI",
+  "description": "Đọc, tra cứu, hỏi đáp và tính toán theo tiêu chuẩn cọc PDF.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f7fb",
+  "theme_color": "#102a4c",
+  "icons": [
+    { "src": "./hnl-logo.png", "sizes": "any", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

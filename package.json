@@ -1,0 +1,22 @@
+{
+  "name": "hnl-pile-standards-ai",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "bridge": "node bridge/server.mjs",
+    "start": "node bridge/server.mjs"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "pdfjs-dist": "^5.4.149"
+  },
+  "devDependencies": {
+    "vite": "^7.1.3"
+  }
+}

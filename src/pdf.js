@@ -157,6 +157,48 @@ export async function reindexPdfText(doc, onProgress = () => {}) {
   return { doc, changed:true, usablePages:pages.filter(p => p.textQuality?.usable).length, totalPages:pdf.numPages };
 }
 
+
+function probeNormalize(text = '') {
+  return String(text || '').toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9.%+/-]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Fresh page-text probe used only when the persisted RAG index misses an exact
+ * technical phrase. It reads PDF.js text items again from the original Blob and
+ * compares three representations (geometry rows / spaced items / compact glyphs).
+ * This bypasses stale IndexedDB indexes and unusual one-glyph-per-item PDFs.
+ */
+export async function scanPdfTextForPhrase(doc, phrase, { maxHits = 12, onProgress = () => {} } = {}) {
+  if (!doc?.blob || doc.viewerKind !== 'pdf') return [];
+  const core = probeNormalize(phrase);
+  const compactCore = core.replace(/\s+/g, '');
+  if (compactCore.length < 4) return [];
+  const terms = core.split(/\s+/).filter(Boolean);
+  const pdf = await getPdf(doc);
+  const hits = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const items = (content.items || []).map(x => String(x?.str || '')).filter(Boolean);
+    const structured = normalizeText(content.items || []);
+    const spaced = items.join(' ');
+    const joined = items.join('');
+    const variants = [structured, spaced, joined].filter(Boolean);
+    let matched = false;
+    for (const variant of variants) {
+      const flat = probeNormalize(variant);
+      const compact = flat.replace(/\s+/g, '');
+      if (flat.includes(core) || (terms.length > 1 && terms.every(t => flat.includes(t))) || compact.includes(compactCore)) { matched = true; break; }
+    }
+    if (matched) {
+      hits.push({ page:i, text:(structured || spaced).slice(0, 16000), source:'fresh-pdfjs' });
+      if (hits.length >= maxHits) break;
+    }
+    onProgress(i, pdf.numPages);
+  }
+  return hits;
+}
+
 async function getPdf(doc) {
   if (pdfCache.has(doc.id)) return pdfCache.get(doc.id);
   const data = await doc.blob.arrayBuffer();

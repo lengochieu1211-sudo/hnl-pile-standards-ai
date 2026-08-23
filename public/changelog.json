@@ -1,6 +1,18 @@
 {
-  "current": "1.9.22",
+  "current": "1.9.23",
   "releases": [
+    {
+      "version": "1.9.23",
+      "date": "2026-08-23",
+      "title": "Runtime RAG Rescue · Stable Native Mode · Compact AI Settings",
+      "changes": [
+        "Sửa Đọc PDF native: đổi Tiết kiệm/Cân bằng/Toàn tài liệu commit ngay và không tự quay về Cân bằng sau render.",
+        "PDF vượt giới hạn native không làm đổi mode: báo rõ và fallback sang RAG + OCR/Vision trang mục tiêu.",
+        "Thêm Fresh PDF.js phrase rescue đọc lại text items trực tiếp từ Blob gốc khi index không tìm thấy cụm kỹ thuật như ‘cọc chống’.",
+        "Gộp AI/Model/Kết nối về một nguồn điều khiển duy nhất trong Cài đặt; đầu panel chỉ còn summary compact.",
+        "Thu gọn Đọc PDF native thành tóm tắt + Xem chi tiết, giữ trạng thái mở qua UI State Guard."
+      ]
+    },
     {
       "version": "1.9.22",
       "title": "Full Runtime Audit · Upstream Error Fidelity · Bridge Request Guard",

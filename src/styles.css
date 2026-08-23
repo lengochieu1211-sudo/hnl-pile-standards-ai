@@ -1372,3 +1372,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .history-open{min-width:0;text-align:left;border:0;background:transparent;padding:8px 9px;display:flex;flex-direction:column;cursor:pointer}.history-open b,.history-open small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.history-open small{color:var(--muted,#667085);font-size:11px}.history-empty{padding:14px}
 .calc-history{margin-top:12px;border:1px solid var(--line,#d9e0e8);border-radius:12px;background:var(--panel,#fff)}.calc-history>summary{cursor:pointer;padding:10px 12px;font-weight:700}.calc-history .history-list{max-height:280px}
 @media(max-width:560px){.chat-toolbar{align-items:flex-start;flex-direction:column}.chat-toolbar>div:last-child{width:100%}.chat-toolbar>div:last-child .btn{flex:1}.history-drawer{max-height:42vh}.native-pdf-card{padding:10px}}
+
+/* v1.9.23: one AI control surface + compact Native PDF disclosure */
+.ai-control-summary{margin:0 10px 8px;width:calc(100% - 20px);display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2,#f7f9fc);color:inherit;text-align:left;cursor:pointer;min-width:0}
+.ai-control-summary:hover{border-color:var(--accent,#0a78d1)}
+.ai-control-summary .dot{width:8px;height:8px;border-radius:50%;background:#a0a8b3}.ai-control-summary .dot.ok{background:#2e9f62}
+.ai-control-summary b{font-weight:700}.ai-control-summary small{font-size:11px;color:var(--muted);white-space:nowrap}
+.compact-native-card{padding:10px 0 0;margin-top:10px;border-top:1px solid var(--line)}
+.native-pdf-overview{margin-bottom:4px}.native-pdf-overview small{display:block;margin-top:2px}
+@container assistant (max-width:420px){.ai-control-summary{grid-template-columns:auto minmax(0,1fr)}.ai-control-summary small{grid-column:2;white-space:normal}.native-pdf-overview{align-items:flex-start}}

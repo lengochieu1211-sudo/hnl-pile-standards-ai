@@ -1,5 +1,5 @@
 import './styles.css';
-import { renderPdfPage, renderPdfPageToBase64, renderPdfTextLayer, cropCanvasRegionToBase64, extractTextFromLayerRegion, ocrImageBase64Locally, clearPdfCache, reindexPdfText, TEXT_INDEX_VERSION } from './pdf.js';
+import { renderPdfPage, renderPdfPageToBase64, renderPdfTextLayer, cropCanvasRegionToBase64, extractTextFromLayerRegion, ocrImageBase64Locally, clearPdfCache, reindexPdfText, scanPdfTextForPhrase, TEXT_INDEX_VERSION } from './pdf.js';
 import { expandInputItems, parseInputFile, fileToBase64, extractArchiveViaLocalBridge, isArchiveFile } from './ingest.js';
 import { saveDocument, getDocuments, deleteDocument, saveChatSession, getChatSessions, deleteChatSession, saveCalculation, getCalculations, deleteCalculation } from './db.js';
 import { searchChunks, searchEveryPage, smartSearchChunks, deepSearchChunks, localSummary, localAnswer, corpusStats, isBroadQuery, planEngineeringQueries, clearSearchCache, coreSearchPhrase, findTocPageTargets, findExactPhrasePages, compactNormalize } from './search.js';
@@ -10,7 +10,7 @@ import { extractFormulaLibrary, formulaStats, verifiedFormulaLibrary, evaluateEx
 
 const SOURCE_META = Object.freeze({
   version: typeof __HNL_APP_VERSION__ !== 'undefined' ? __HNL_APP_VERSION__ : '0.0.0',
-  release: 'Native PDF AI · Persistent History · Hybrid RAG Citation'
+  release: 'Runtime RAG Rescue · Stable Native Mode · Compact AI Settings'
 });
 
 let APP_META = {
@@ -758,12 +758,11 @@ function render() {
           <div><div class="section-kicker">Kỹ thuật</div><h2>Trợ lý tiêu chuẩn</h2></div>
           <div class="assistant-head-actions"><span class="mode-chip">${state.settings.provider === 'local' ? 'Tra nhanh' : esc(PROVIDERS[state.settings.provider]?.short)}</span><button class="icon-btn quick-settings-btn" id="assistantSettingsQuick" title="Mở Cài đặt" aria-label="Mở Cài đặt">⚙</button><button class="icon-btn" id="toggleAssistant" title="Thu gọn trợ lý">▶</button></div>
         </div>
-        <div class="ai-quickbar">
-          <label><span>AI</span><select id="quickProviderSelect">${availableProviderEntries().map(([id,p]) => `<option value="${id}" ${id===state.settings.provider?'selected':''}>${esc(p.short)}</option>`).join('')}</select></label>
-          <label class="quick-model-field"><span>Model</span><button type="button" class="quick-model-trigger" id="openQuickModelPicker" ${state.settings.provider==='local'?'disabled':''} title="Chọn model AI"><span class="quick-model-name">${esc(providerModel() || 'Không dùng AI')}</span><span class="quick-model-caret">⌄</span></button></label>
-          <button class="icon-btn quick-model-refresh" id="refreshModelsQuick" title="Lấy danh sách model khả dụng">↻</button>
-          <small class="quick-model-note"><span class="model-approval-lock">🔒 Đổi model cần OK</span>${state.modelOptions.length ? ` · ${state.modelOptionsVerified ? `${state.modelOptions.length} model đã xác minh` : `${state.modelOptions.length} model trong catalog`}` : ''}</small>
-        </div>
+        <button type="button" class="ai-control-summary" id="assistantSettingsSummary" title="Mở AI & kết nối">
+          <span class="dot ${state.connectionStatus?.ok ? 'ok' : ''}"></span>
+          <span><b>${esc(PROVIDERS[state.settings.provider]?.short || state.settings.provider)}</b>${state.settings.provider === 'local' ? '' : ` · ${esc(providerModel() || 'Chưa chọn model')}`}</span>
+          <small>${state.connectionStatus?.ok ? 'Đã kết nối' : (state.connectionStatus ? 'Cần kiểm tra' : 'AI & kết nối')}</small>
+        </button>
         <div class="tabs">${[
           ['summary', 'Tóm tắt'], ['chat', 'Hỏi đáp'], ['lookup', 'Tra cứu'], ['calc', 'Tính'], ['compare', 'So sánh'], ['checklist', 'Nghiệm thu'], ['settings', 'Cài đặt']
         ].map(([id, label]) => `<button class="tab ${state.tab === id ? 'active' : ''}" data-tab="${id}">${label}</button>`).join('')}</div>
@@ -1220,7 +1219,7 @@ function settingsHtml() {
     <label class="field"><span>Nhà cung cấp</span><select id="providerSelect">${options}</select></label>
     ${state.settings.provider === 'local' ? `<div class="notice success"><b>Tra cứu nhanh không phải AI.</b><br>${IS_DESKTOP_EDITION ? 'Chế độ này tìm kiếm cục bộ, không cần mạng. Muốn AI offline suy luận, chọn <b>HNL Offline AI · Ollama</b>.' : 'Chế độ này tìm ngay trong dữ liệu đã nạp, không cần API. Muốn AI suy luận trên bản Web, chọn <b>Gemini / ChatGPT / Claude / Grok</b>.'}</div>` : `
       <div class="segmented"><button data-connection="direct" class="${state.settings.connection === 'direct' ? 'active' : ''}">Trực tiếp</button><button data-connection="bridge" class="${state.settings.connection === 'bridge' ? 'active' : ''}">HNL Bridge</button></div>
-      <label class="field"><span>Model văn bản · đồng bộ với thanh AI phía trên</span><div class="model-picker shared-model-setting"><input id="modelInput" value="${esc(providerModel())}" readonly aria-readonly="true" title="Model hiện tại dùng chung toàn ứng dụng"><button class="btn compact-btn" id="openSettingsModelPicker" type="button">Chọn model</button><button class="btn compact-btn" id="refreshModels" type="button">↻</button></div><small class="${state.modelOptions.length ? (state.modelOptionsVerified ? 'model-status-verified' : 'model-status-suggested') : ''}">${esc(state.modelStatus || 'Model này dùng chung với thanh AI phía trên. Bấm Chọn model để đổi; HNL luôn hỏi OK trước khi áp dụng.')}</small></label><datalist id="modelOptionsList">${state.modelOptions.map(m => `<option value="${esc(m)}"></option>`).join('')}</datalist>
+      <label class="field"><span>Model văn bản · nguồn điều khiển duy nhất</span><div class="model-picker shared-model-setting"><input id="modelInput" value="${esc(providerModel())}" readonly aria-readonly="true" title="Model hiện tại dùng chung toàn ứng dụng"><button class="btn compact-btn" id="openSettingsModelPicker" type="button">Chọn model</button><button class="btn compact-btn" id="refreshModels" type="button">↻</button></div><small class="${state.modelOptions.length ? (state.modelOptionsVerified ? 'model-status-verified' : 'model-status-suggested') : ''}">${esc(state.modelStatus || 'Bấm Chọn model để đổi; HNL luôn hỏi OK trước khi áp dụng. Không còn dropdown model trùng ở đầu panel.')}</small></label><datalist id="modelOptionsList">${state.modelOptions.map(m => `<option value="${esc(m)}"></option>`).join('')}</datalist>
       ${isOllama ? `<label class="field"><span>Model đọc ảnh offline</span><input id="visionModelInput" value="${esc(draftSetting('visionModel', state.settings.visionModel))}" placeholder="gemma3:4b"></label>` : ''}
       ${needsSessionKey ? `<label class="field"><span>API key · dùng chung Kiểm tra kết nối / Model / Chat trong phiên này</span><input id="apiKeyInput" type="password" value="${esc(draftSetting('apiKey', currentApiKey()))}" autocomplete="off" placeholder="Dán API key của bạn"><small>${state.settings.connection === 'bridge' ? 'Bridge sẽ ưu tiên key phiên này; nếu để trống mới dùng key cấu hình sẵn trên Bridge.' : 'Key chỉ giữ trong phiên ứng dụng/tab, không ghi vào source hay log.'}</small></label>` : ''}
       ${state.settings.provider === 'gemini' ? `<div class="notice"><b>Gemini API:</b> vào Google AI Studio → API Keys → Create API key → Copy, sau đó dán vào ô trên. Không ghi key vào source GitHub. <a class="inline-link" href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">Mở trang API Keys</a></div>` : ''}
@@ -1242,14 +1241,21 @@ function settingsHtml() {
       </div>` : ''}
       ${state.settings.connection === 'bridge' ? `<label class="field"><span>HNL Bridge URL</span><input id="bridgeInput" value="${esc(draftSetting('bridgeUrl', state.settings.bridgeUrl))}"></label><div class="notice">Khi chạy Local, nên để Bridge cùng địa chỉ app, ví dụ http://127.0.0.1:8787.</div>` : ''}
     `}
-    ${nativePdfProvider ? `<div class="native-pdf-card"><div class="panel-section-title"><h3>Đọc PDF native</h3><span>${state.settings.nativePdfMode === 'economy' ? 'Tiết kiệm' : state.settings.nativePdfMode === 'native' ? 'Toàn tài liệu' : 'Cân bằng'}</span></div>
-      <label class="field"><span>Cách gửi PDF cho ${state.settings.provider === 'gemini' ? 'Gemini' : 'OpenAI'}</span><select id="nativePdfModeInput">
-        <option value="economy" ${state.settings.nativePdfMode === 'economy' ? 'selected' : ''}>Tiết kiệm · RAG trước, chỉ gửi trang/ảnh cần thiết</option>
-        <option value="balanced" ${state.settings.nativePdfMode === 'balanced' ? 'selected' : ''}>Cân bằng · RAG trước, tự dùng PDF native khi cần</option>
-        <option value="native" ${state.settings.nativePdfMode === 'native' ? 'selected' : ''}>Toàn tài liệu · gửi các PDF đủ điều kiện trực tiếp cho AI</option>
-      </select><small>PDF native giúp AI đọc cả chữ, ảnh, bảng, sơ đồ và công thức giống thao tác đính PDF trực tiếp. Ở Cân bằng, HNL RAG chạy trước và chỉ gửi PDF native khi câu hỏi rộng, căn cứ text yếu hoặc cần đọc hình/scan; Toàn tài liệu luôn gửi các PDF đủ điều kiện và có thể dùng nhiều token hơn.</small></label>
-      ${state.settings.provider === 'openai' ? `<label class="field"><span>Chi tiết ảnh trang PDF · OpenAI</span><select id="openaiPdfDetailInput"><option value="low" ${state.settings.openaiPdfDetail === 'low' ? 'selected' : ''}>Low · tiết kiệm token hình</option><option value="auto" ${state.settings.openaiPdfDetail === 'auto' ? 'selected' : ''}>Auto · khuyến nghị</option><option value="high" ${state.settings.openaiPdfDetail === 'high' ? 'selected' : ''}>High · bảng/sơ đồ/chữ nhỏ</option></select></label>` : ''}
-      <div class="notice"><b>Giới hạn an toàn HNL:</b> mỗi PDF native phải dưới 50 MB; OpenAI giới hạn tổng file trong một request 50 MB. Gemini hỗ trợ PDF native dài nhưng HNL vẫn giới hạn để tránh payload quá lớn. API key không được lưu cùng PDF/lịch sử.</div>
+    ${nativePdfProvider ? `<div class="native-pdf-card compact-native-card">
+      <div class="compact-overview-line native-pdf-overview"><div><b>Đọc PDF native · <span id="nativePdfModeBadge">${state.settings.nativePdfMode === 'economy' ? 'Tiết kiệm' : state.settings.nativePdfMode === 'native' ? 'Toàn tài liệu' : 'Cân bằng'}</span></b><small id="nativePdfModeSummary">${state.settings.nativePdfMode === 'economy' ? 'RAG trước · chỉ gửi trang/ảnh cần thiết' : state.settings.nativePdfMode === 'native' ? 'Giữ chế độ Toàn tài liệu; PDF quá giới hạn sẽ dùng fallback trang mục tiêu và báo rõ' : 'RAG trước · tự dùng PDF native khi thật sự cần'}</small></div><span class="compact-status">${state.settings.provider === 'gemini' ? 'Gemini' : 'OpenAI'}</span></div>
+      <details id="settingsNativePdfDetails" class="compact-disclosure" data-persist-detail>
+        <summary><span>Xem chi tiết PDF native</span><span class="disclosure-chevron">⌄</span></summary>
+        <div class="disclosure-body">
+          <label class="field"><span>Cách gửi PDF cho ${state.settings.provider === 'gemini' ? 'Gemini' : 'OpenAI'}</span><select id="nativePdfModeInput">
+            <option value="economy" ${state.settings.nativePdfMode === 'economy' ? 'selected' : ''}>Tiết kiệm · RAG trước, chỉ gửi trang/ảnh cần thiết</option>
+            <option value="balanced" ${state.settings.nativePdfMode === 'balanced' ? 'selected' : ''}>Cân bằng · RAG trước, tự dùng PDF native khi cần</option>
+            <option value="native" ${state.settings.nativePdfMode === 'native' ? 'selected' : ''}>Toàn tài liệu · gửi PDF đủ điều kiện trực tiếp cho AI</option>
+          </select><small>Chế độ được lưu ngay khi đổi và không tự quay về Cân bằng khi giao diện render lại.</small></label>
+          ${state.settings.provider === 'openai' ? `<label class="field"><span>Chi tiết ảnh trang PDF · OpenAI</span><select id="openaiPdfDetailInput"><option value="low" ${state.settings.openaiPdfDetail === 'low' ? 'selected' : ''}>Low · tiết kiệm token hình</option><option value="auto" ${state.settings.openaiPdfDetail === 'auto' ? 'selected' : ''}>Auto · khuyến nghị</option><option value="high" ${state.settings.openaiPdfDetail === 'high' ? 'selected' : ''}>High · bảng/sơ đồ/chữ nhỏ</option></select></label>` : ''}
+          <div class="notice"><b>Giới hạn xử lý:</b> PDF native Gemini tối đa 50 MB/1.000 trang. OpenAI cũng giới hạn tổng file trong request. Nếu PDF vượt giới hạn, HNL giữ nguyên lựa chọn của bạn và chuyển sang tìm trực tiếp lớp chữ PDF gốc + OCR/Vision đúng trang mục tiêu; không âm thầm đổi chế độ.</div>
+          <div class="notice"><b>Riêng tư:</b> API key không được lưu cùng PDF hoặc lịch sử.</div>
+        </div>
+      </details>
     </div>` : ''}
     <label class="field"><span>Lưu lịch sử cục bộ</span><select id="historyRetentionDaysInput"><option value="30" ${state.settings.historyRetentionDays === 30 ? 'selected' : ''}>30 ngày</option><option value="90" ${state.settings.historyRetentionDays === 90 ? 'selected' : ''}>90 ngày</option><option value="365" ${state.settings.historyRetentionDays === 365 ? 'selected' : ''}>365 ngày</option><option value="0" ${state.settings.historyRetentionDays === 0 ? 'selected' : ''}>Không tự xóa</option></select><small>Hỏi đáp và tính toán lưu Local-first trong IndexedDB. Không lưu API key.</small></label>
     <label class="switch-row"><input id="strictInput" type="checkbox" ${state.settings.strict ? 'checked' : ''}><span><b>Khóa nguồn tài liệu</b><small>AI không được tự thêm quy định ngoài PDF/ảnh/text đã chọn.</small></span></label>
@@ -1295,7 +1301,7 @@ function bind() {
       if (el.matches('[data-tab]')) { state.tab = el.dataset.tab; render(); return; }
       if (el.matches('[data-mobile]')) { state.mobile = el.dataset.mobile; render(); return; }
       if (el.id === 'sourceBadge') { if (window.innerWidth > 880) { state.focusReader=false; state.leftCollapsed=false; localStorage.setItem(STORAGE.leftCollapsed, 'false'); } else state.mobile = 'library'; render(); return; }
-      if (el.id === 'openSettings') { state.tab = 'settings'; if (window.innerWidth > 880) { state.focusReader=false; state.rightCollapsed=false; localStorage.setItem(STORAGE.rightCollapsed, 'false'); } else state.mobile = 'assistant'; render(); return; }
+      if (el.id === 'openSettings' || el.id === 'assistantSettingsSummary') { state.tab = 'settings'; if (window.innerWidth > 880) { state.focusReader=false; state.rightCollapsed=false; localStorage.setItem(STORAGE.rightCollapsed, 'false'); } else state.mobile = 'assistant'; render(); return; }
       if (el.id === 'assistantSettingsQuick') { state.tab = 'settings'; state.focusReader=false; state.rightCollapsed=false; localStorage.setItem(STORAGE.rightCollapsed, 'false'); if (window.innerWidth <= 880) state.mobile='assistant'; render(); return; }
       if (el.id === 'selectAll') { state.docs.forEach(d => state.selected.add(d.id)); showToast(`Đã chọn ${state.docs.length} tài liệu làm nguồn.`, 'success'); render(); return; }
       if (el.id === 'clearSelection') { state.selected.clear(); showToast(state.settings.scope === 'selected' ? 'Đã bỏ chọn nguồn. Phạm vi “Đã chọn” hiện không có tài liệu.' : 'Đã bỏ dấu tick. Phạm vi Toàn thư viện vẫn tra cứu tất cả tài liệu.', 'info'); render(); return; }
@@ -1355,7 +1361,7 @@ function bind() {
       }
       if (el.id === 'saveSettings') { updateSettingsFromForm(); return; }
       if (el.id === 'testConnection') { await testConnection(); return; }
-      if (el.closest?.('#openQuickModelPicker, #openSettingsModelPicker')) { state.modelPickerOpen = true; render(); queueMicrotask(() => document.querySelector('#modelPickerSearch')?.focus()); return; }
+      if (el.closest?.('#openSettingsModelPicker')) { state.modelPickerOpen = true; render(); queueMicrotask(() => document.querySelector('#modelPickerSearch')?.focus()); return; }
       if (el.id === 'closeModelPicker' || (el.id === 'modelPickerOverlay' && event.target === el)) { state.modelPickerOpen = false; render(); return; }
       const modelChoice = el.closest?.('[data-model-choice]');
       if (modelChoice) {
@@ -1372,7 +1378,7 @@ function bind() {
         return;
       }
       if (el.id === 'refreshModelsFromPicker') { await refreshModels(); return; }
-      if (el.id === 'refreshModels' || el.id === 'refreshModelsQuick') { await refreshModels(); return; }
+      if (el.id === 'refreshModels') { await refreshModels(); return; }
       if (el.id === 'ocrActivePdf') { await ocrActivePdfLocal(); return; }
       if (el.id === 'autoLocalModels') { await applyRecommendedLocalModels(); return; }
       if (el.id === 'installOllamaNow') { await installOllamaAutomatically(); return; }
@@ -1420,7 +1426,21 @@ function bind() {
     if (el.id === 'cType' || el.id === 'cClass') { syncCalcDefaults(); return; }
     if (el.id === 'formulaScanMode') { state.formulaScanMode = el.value || 'auto'; localStorage.setItem(STORAGE.formulaScanMode, state.formulaScanMode); return; }
     if (el.id === 'formulaSelect') { state.formulaSelection = el.value; localStorage.setItem(STORAGE.formulaSelection, el.value); render(); return; }
-    if (el.id === 'providerSelect' || el.id === 'quickProviderSelect') { providerChanged(event); return; }
+    if (el.id === 'providerSelect') { providerChanged(event); return; }
+    if (el.id === 'nativePdfModeInput') {
+      const next = ['economy','balanced','native'].includes(el.value) ? el.value : 'balanced';
+      state.settings.nativePdfMode = next;
+      state.settingsDraft = { ...(state.settingsDraft || {}), nativePdfMode:next };
+      saveSettings();
+      const badge = document.querySelector('#nativePdfModeBadge');
+      const summary = document.querySelector('#nativePdfModeSummary');
+      if (badge) badge.textContent = next === 'economy' ? 'Tiết kiệm' : next === 'native' ? 'Toàn tài liệu' : 'Cân bằng';
+      if (summary) summary.textContent = next === 'economy' ? 'RAG trước · chỉ gửi trang/ảnh cần thiết' : next === 'native' ? 'Giữ chế độ Toàn tài liệu; PDF quá giới hạn sẽ dùng fallback trang mục tiêu và báo rõ' : 'RAG trước · tự dùng PDF native khi thật sự cần';
+      state.nativePdfStatus = '';
+      showToast(`Đã giữ chế độ PDF: ${badge?.textContent || next}.`, 'success');
+      return;
+    }
+    if (el.id === 'openaiPdfDetailInput') { state.settings.openaiPdfDetail = ['low','auto','high'].includes(el.value) ? el.value : 'auto'; state.settingsDraft = { ...(state.settingsDraft || {}), openaiPdfDetail:state.settings.openaiPdfDetail }; saveSettings(); return; }
     if (el.id === 'strictInput') { state.settings.strict = el.checked; }
   };
 
@@ -2341,7 +2361,8 @@ async function collectTargetedPdfEvidence(question, docs, tocTargets = [], exist
     const p = Number(page || 0);
     if (!doc || doc.viewerKind !== 'pdf' || p < 1 || p > Number(doc.pageCount || doc.pages?.length || 0)) return;
     const key = `${docId}:${p}`;
-    if (seen.has(key) || refs.length >= 4) return;
+    const maxRefs = target?.visualDiscovered ? 6 : 4;
+    if (seen.has(key) || refs.length >= maxRefs) return;
     seen.add(key); refs.push({ doc, page:p, reason, target });
   };
 
@@ -2349,7 +2370,7 @@ async function collectTargetedPdfEvidence(question, docs, tocTargets = [], exist
     // The resolved target page gets first priority, then one neighboring page.
     pushRef(target.docId, target.targetPage, 'toc-target', target);
     for (const p of target.candidatePages || []) {
-      if (refs.length >= 4) break;
+      if (refs.length >= (target.visualDiscovered ? 6 : 4)) break;
       if (p !== target.targetPage) pushRef(target.docId, p, 'toc-neighbor', target);
     }
   }
@@ -2414,6 +2435,50 @@ async function collectTargetedPdfEvidence(question, docs, tocTargets = [], exist
 }
 
 
+
+/**
+ * Last-resort visual TOC locator for image-heavy PDFs whose text layer cannot
+ * expose the requested technical phrase and whose full PDF cannot be sent
+ * natively (for example a >50 MB Gemini PDF). It inspects only the first TOC
+ * pages, then lets the normal targeted-page OCR/Vision pipeline read the body.
+ */
+async function discoverVisualTocTarget(question, docs = []) {
+  if (state.settings.provider === 'local') return [];
+  const pdfDocs = (docs || []).filter(d => d.viewerKind === 'pdf' && d.blob && Number(d.pageCount || 0) > 0)
+    .sort((a,b) => (b.id === state.activeDocId) - (a.id === state.activeDocId));
+  const doc = pdfDocs[0];
+  const core = coreSearchPhrase(question);
+  if (!doc || compactNormalize(core).length < 5) return [];
+  const scanPages = Math.min(10, Number(doc.pageCount || 0));
+  const images = [];
+  for (let page = 1; page <= scanPages; page++) {
+    try {
+      const img = await renderPdfPageToBase64(doc, page, 1.15);
+      if (img?.data) images.push({ ...img, docId:doc.id, name:`${doc.name} · PDF page ${page}` });
+    } catch { /* skip a broken preview page */ }
+  }
+  if (!images.length) return [];
+  const map = images.map((x,i) => `Ảnh #${i+1} = trang PDF ${x.page}`).join('; ');
+  const prompt = `HNL VISUAL TOC LOCATOR. Đây chỉ là bước ĐỊNH VỊ, chưa trả lời câu hỏi kỹ thuật.\nCụm cần tìm chính xác: "${core}".\n${map}.\nHãy nhìn các ảnh mục lục/đầu tài liệu và tìm dòng mục lục chứa đúng cụm này (không suy đoán). Nếu thấy, trả về DUY NHẤT một dòng theo mẫu:\nHNL_TOC_TARGET|printed=<số trang in được ghi ở cuối dòng>|source=<trang PDF của ảnh chứa dòng>|heading=<nguyên dòng tiêu đề>\nNếu không thấy, trả đúng: HNL_TOC_TARGET|NONE`;
+  let raw = '';
+  try { raw = await callConfiguredAiWithApproval({ prompt, images, documents:[] }); }
+  catch (error) { console.warn('Visual TOC locator unavailable:', error); return []; }
+  const m = String(raw || '').match(/HNL_TOC_TARGET\|printed\s*=\s*(\d+)\|source\s*=\s*(\d+)\|heading\s*=\s*([^\n\r]+)/i);
+  if (!m) return [];
+  const printedPage = Number(m[1]);
+  const sourcePage = Number(m[2]);
+  if (!printedPage || !sourcePage) return [];
+  const estimatedOffset = Math.max(0, sourcePage - 1);
+  const center = Math.min(Number(doc.pageCount || printedPage), printedPage + estimatedOffset);
+  const candidatePages = [...new Set([center, center-2, center-1, center+1, center+2, center+3])]
+    .filter(x => x >= 1 && x <= Number(doc.pageCount || x));
+  return [{
+    docId:doc.id, docName:doc.name, standard:doc.standard, sourcePage, printedPage,
+    targetPage:center, candidatePages, section:'', heading:String(m[3] || core).trim(), line:String(m[3] || '').trim(),
+    offset:estimatedOffset, offsetVotes:0, directActual:false, score:82, visualDiscovered:true
+  }];
+}
+
 const nativePdfConsent = new Set();
 function nativePdfCandidates(docs = []) {
   return docs.filter(d => d.viewerKind === 'pdf' && d.blob && String(d.type || 'application/pdf').includes('pdf'));
@@ -2423,8 +2488,8 @@ function nativePdfPlan(docs = []) {
   const mode = state.settings.nativePdfMode || 'balanced';
   if (!supportsNativePdf(provider) || mode === 'economy') return { docs:[], skipped:[], mode, provider, bytes:0, pages:0 };
   const candidates = nativePdfCandidates(docs);
-  const maxRawBytes = 42 * 1024 * 1024; // leaves room for base64 + prompt inside Bridge/request limits
-  const maxEachBytes = 48 * 1024 * 1024;
+  const maxRawBytes = provider === 'gemini' ? 49 * 1024 * 1024 : 48 * 1024 * 1024; // provider request/file safety
+  const maxEachBytes = provider === 'gemini' ? 50 * 1024 * 1024 : 48 * 1024 * 1024;
   const eligible = candidates.filter(d => Number(d.size || d.blob?.size || 0) <= maxEachBytes && (provider !== 'gemini' || Number(d.pageCount || 0) <= 1000));
   const skipped = candidates.filter(d => !eligible.includes(d));
   let ordered = eligible;
@@ -2453,7 +2518,7 @@ async function prepareNativePdfDocuments(docs = [], { needed = true } = {}) {
     return { payloads:[], plan:{ ...plan, deferred:true } };
   }
   if (!plan.docs.length) {
-    state.nativePdfStatus = plan.mode === 'economy' || !supportsNativePdf(plan.provider) ? '' : 'PDF native không đủ điều kiện · dùng HNL RAG';
+    state.nativePdfStatus = plan.mode === 'economy' || !supportsNativePdf(plan.provider) ? '' : (plan.skipped?.length ? `Giữ ${plan.mode === 'native' ? 'Toàn tài liệu' : 'Cân bằng'} · ${plan.skipped.length} PDF vượt giới hạn native → fallback trang mục tiêu` : 'PDF native không đủ điều kiện · dùng HNL RAG');
     return { payloads:[], plan };
   }
   const key = `${state.activeChatSessionId || 'session'}:${plan.provider}:${plan.mode}:${plan.docs.map(d=>d.id).join(',')}`;
@@ -2561,9 +2626,33 @@ async function getAnswer(question, docsOverride = null) {
   // Exact phrase scan is independent of top-k/embedding rank. This is crucial
   // for technical questions such as “cọc chống là gì”: the definition in mục 6
   // must outrank a TOC-only occurrence in mục 7.2.1.
-  const exactPhraseHits = findExactPhrasePages(question, textDocs, 18);
-  const exactBodyHits = exactPhraseHits.filter(h => !h.tocAnchor);
-  const exactTocHits = exactPhraseHits.filter(h => h.tocAnchor);
+  let searchDocs = textDocs;
+  let freshPdfjsPages = 0;
+  let exactPhraseHits = findExactPhrasePages(question, searchDocs, 18);
+  if (!exactPhraseHits.length) {
+    const core = coreSearchPhrase(question);
+    const freshByDoc = new Map();
+    if (compactNormalize(core).length >= 5) {
+      const orderedPdfDocs = [...textDocs.filter(d => d.viewerKind === 'pdf' && d.blob)].sort((a,b) => (b.id === state.activeDocId) - (a.id === state.activeDocId));
+      for (const doc of orderedPdfDocs.slice(0, 4)) {
+        try {
+          const fresh = await scanPdfTextForPhrase(doc, core, { maxHits:10 });
+          if (fresh.length) { freshByDoc.set(doc.id, fresh); freshPdfjsPages += fresh.length; }
+        } catch (error) { console.warn(`Fresh PDF.js phrase scan failed for ${doc.name}:`, error); }
+      }
+    }
+    if (freshByDoc.size) {
+      searchDocs = textDocs.map(doc => {
+        const fresh = freshByDoc.get(doc.id);
+        if (!fresh?.length) return doc;
+        const replace = new Map(fresh.map(x => [Number(x.page), x.text]));
+        return { ...doc, pages:(doc.pages || []).map(p => replace.has(Number(p.page)) ? { ...p, text:replace.get(Number(p.page)), freshPdfjs:true } : p) };
+      });
+      exactPhraseHits = findExactPhrasePages(question, searchDocs, 18);
+    }
+  }
+  let exactBodyHits = exactPhraseHits.filter(h => !h.tocAnchor);
+  let exactTocHits = exactPhraseHits.filter(h => h.tocAnchor);
 
   if (semanticRequested && hits.length > 1) {
     let embeddingModel = state.settings.embeddingModel || 'bge-m3';
@@ -2608,8 +2697,13 @@ async function getAnswer(question, docsOverride = null) {
 
   // Hybrid Visual RAG: searchable TOC text can point to a content page whose
   // actual body is image/scan. Inspect only those target pages.
-  const tocTargets = findTocPageTargets(question, textDocs, 6);
-  const targeted = await collectTargetedPdfEvidence(question, textDocs, tocTargets, hits);
+  let tocTargets = findTocPageTargets(question, searchDocs, 6);
+  let visualTocLocatorUsed = false;
+  if (!tocTargets.length && !exactPhraseHits.length && state.settings.provider !== 'local' && !nativePdfAvailable) {
+    const visualTargets = await discoverVisualTocTarget(question, searchDocs);
+    if (visualTargets.length) { tocTargets = visualTargets; visualTocLocatorUsed = true; }
+  }
+  const targeted = await collectTargetedPdfEvidence(question, searchDocs, tocTargets, hits);
   const tocAnchorHits = tocTargets.map((t, i) => ({
     docId:t.docId, docName:t.docName, standard:t.standard, page:t.sourcePage, chunk:`toc-${i}`,
     score:210 - i, tocAnchor:true, targeted:true,
@@ -2632,7 +2726,9 @@ async function getAnswer(question, docsOverride = null) {
     targetedVisionPages:targeted.images.length,
     textIndexVersion:TEXT_INDEX_VERSION,
     reindexedDocs:indexMigration.reindexed,
-    reindexFailed:indexMigration.failed
+    reindexFailed:indexMigration.failed,
+    freshPdfjsPages,
+    visualTocLocatorUsed
   };
 
   const docIds = new Set(docs.map(d => d.id));
@@ -2677,7 +2773,8 @@ async function getAnswer(question, docsOverride = null) {
   const substantiveHits = hits.filter(h => !h.tocAnchor && !h.visualLocator);
   if (!substantiveHits.length && !images.length && !nativePdfAvailable) {
     const tocHint = tocTargets.length ? ` Hệ thống có tìm thấy mục “${tocTargets[0].heading}” trong mục lục và đã định vị trang đích, nhưng chưa đọc được nội dung pixel ở trang đó.` : '';
-    return { text: `Không tìm thấy đủ căn cứ trong các tài liệu đang chọn.${tocHint} Đã quét toàn bộ ${stats.textPages}/${stats.pages} trang có lớp chữ trong ${stats.docs} tài liệu (${stats.chunks} đoạn).`, hits: tocAnchorHits, stats };
+    const oversizeHint = nativePlanPreview.skipped?.length ? ` ${nativePlanPreview.skipped.length} PDF vượt giới hạn native của nhà cung cấp; HNL đã giữ nguyên chế độ và chuyển sang fallback RAG/OCR/Vision trang mục tiêu.` : '';
+    return { text: `Không tìm thấy đủ căn cứ trong các tài liệu đang chọn.${tocHint}${oversizeHint} Đã quét toàn bộ ${stats.textPages}/${stats.pages} trang có lớp chữ trong ${stats.docs} tài liệu (${stats.chunks} đoạn).`, hits: tocAnchorHits, stats };
   }
   if (state.settings.provider === 'local') {
     if (!substantiveHits.length && tocTargets.length) return { text: `Đã tìm thấy mục “${tocTargets[0].heading}” trong mục lục và định vị trang PDF khoảng ${tocTargets[0].targetPage}, nhưng trang đích là ảnh/scan và OCR cục bộ trên máy chưa đọc đủ rõ. Hãy chọn HNL Offline AI (Ollama) hoặc Gemini để đọc đúng trang đích bằng Vision; HNL không cần OCR toàn bộ PDF.`, hits: tocAnchorHits, stats };

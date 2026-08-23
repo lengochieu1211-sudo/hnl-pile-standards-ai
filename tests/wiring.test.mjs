@@ -349,10 +349,11 @@ test('Windows workflow verifies both Setup and Portable EXEs', () => {
 });
 
 
-test('model picker is visible in assistant and refresh never silently switches model', () => {
-  assert.match(source, /quickProviderSelect/);
-  assert.match(source, /openQuickModelPicker/);
-  assert.match(source, /refreshModelsQuick/);
+test('model picker is available from the single Settings control surface and refresh never silently switches model', () => {
+  assert.match(source, /id="providerSelect"/);
+  assert.match(source, /id="openSettingsModelPicker"/);
+  assert.match(source, /id="refreshModels"/);
+  assert.doesNotMatch(source, /quickProviderSelect|openQuickModelPicker|refreshModelsQuick/);
   assert.match(source, /HNL không tự đổi model/);
   assert.doesNotMatch(source, /models\.length && !models\.includes\(state\.settings\.model\)\) state\.settings\.model =/);
 });
@@ -418,7 +419,7 @@ test('all current model-changing paths require explicit user confirmation', () =
 
 test('v1.9.11 assistant model picker avoids native dropdown overlap', () => {
   const css = fs.readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
-  assert.match(source, /openQuickModelPicker/);
+  assert.match(source, /openSettingsModelPicker/);
   assert.match(source, /model-picker-dialog/);
   assert.match(source, /modelPickerSearch/);
   assert.doesNotMatch(source, /id="quickModelSelect"/);
@@ -491,7 +492,7 @@ test('v1.9.12 provider defaults remain aligned across direct and bridge paths', 
 
 test('v1.9.13 top and settings text model are a single synchronized source', () => {
   assert.match(source, /function syncCommittedModelEverywhere/);
-  assert.match(source, /#openQuickModelPicker, #openSettingsModelPicker/);
+  assert.match(source, /#openSettingsModelPicker/);
   assert.match(source, /id="modelInput"[^>]*readonly/);
   assert.match(source, /syncCommittedModelEverywhere\(next\)/);
   assert.doesNotMatch(source, /else if \(el\.id === 'modelInput'\) state\.settingsDraft\.model/);
@@ -826,7 +827,7 @@ test('v1.9.20 legacy PDF text index is automatically rebuilt before RAG', () => 
 });
 
 test('v1.9.20 RAG uses exact body phrase guard and narrow retry on false not-found', () => {
-  assert.match(source, /findExactPhrasePages\(question, textDocs, 18\)/);
+  assert.match(source, /findExactPhrasePages\(question, searchDocs, 18\)/);
   assert.match(source, /exactBodyHits = exactPhraseHits\.filter\(h => !h\.tocAnchor\)/);
   assert.match(source, /hits = \[\.\.\.exactBodyHits, \.\.\.hits, \.\.\.exactTocHits\]/);
   assert.match(source, /provider still emits the strict “not found” sentence/);
@@ -853,7 +854,7 @@ test('v1.9.21 native PDF modes enforce cost guard and Gemini combined page safet
   assert.match(source, /mode === 'economy'/);
   assert.match(source, /mode === 'balanced'/);
   assert.match(source, /mode === 'native'/);
-  assert.match(source, /maxRawBytes = 42 \* 1024 \* 1024/);
+  assert.match(source, /maxRawBytes = provider === 'gemini' \? 49 \* 1024 \* 1024 : 48 \* 1024 \* 1024/);
   assert.match(source, /provider === 'gemini' && pages \+ docPages > 1000/);
   assert.match(source, /window\.confirm\(`Cho \$\{PROVIDERS\[plan\.provider\]/);
   assert.match(source, /nativePdfConsent/);
@@ -911,4 +912,40 @@ test('v1.9.22 Bridge rejects oversized or malformed AI payloads', () => {
 test('v1.9.22 reopened history warns when PDF sources are missing', () => {
   assert.match(source, /missingCount = Math\.max\(0, savedIds\.size - availableIds\.length\)/);
   assert.match(source, /thiếu \$\{missingCount\} PDF nguồn trên máy/);
+});
+
+
+test('v1.9.23 native PDF mode commits immediately and never silently resets to balanced', () => {
+  assert.match(source, /if \(el\.id === 'nativePdfModeInput'\)/);
+  assert.match(source, /state\.settings\.nativePdfMode = next/);
+  assert.match(source, /state\.settingsDraft = \{ \.\.\.\(state\.settingsDraft \|\| \{\}\), nativePdfMode:next \}/);
+  assert.match(source, /saveSettings\(\)/);
+  assert.match(source, /Giữ \$\{plan\.mode === 'native' \? 'Toàn tài liệu' : 'Cân bằng'\}/);
+});
+
+test('v1.9.23 uses one AI control surface and compact native PDF details', () => {
+  assert.doesNotMatch(source, /class="ai-quickbar"/);
+  assert.match(source, /id="assistantSettingsSummary"/);
+  assert.match(source, /Model văn bản · nguồn điều khiển duy nhất/);
+  assert.match(source, /id="settingsNativePdfDetails" class="compact-disclosure" data-persist-detail/);
+  assert.match(source, /Xem chi tiết PDF native/);
+});
+
+test('v1.9.23 fresh PDF.js phrase rescue bypasses stale indexes before not-found', () => {
+  const pdf = fs.readFileSync(new URL('../src/pdf.js', import.meta.url), 'utf8');
+  assert.match(pdf, /export async function scanPdfTextForPhrase/);
+  assert.match(pdf, /const variants = \[structured, spaced, joined\]/);
+  assert.match(source, /await scanPdfTextForPhrase\(doc, core, \{ maxHits:10 \}\)/);
+  assert.match(source, /freshPdfjsPages/);
+  assert.match(source, /findTocPageTargets\(question, searchDocs, 6\)/);
+});
+
+
+test('v1.9.23 oversized image PDF can visually locate TOC before targeted page Vision', () => {
+  assert.match(source, /async function discoverVisualTocTarget/);
+  assert.match(source, /HNL VISUAL TOC LOCATOR/);
+  assert.match(source, /HNL_TOC_TARGET\|printed/);
+  assert.match(source, /!nativePdfAvailable/);
+  assert.match(source, /visualTocLocatorUsed/);
+  assert.match(source, /target\?\.visualDiscovered \? 6 : 4/);
 });

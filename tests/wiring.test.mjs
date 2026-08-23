@@ -486,3 +486,33 @@ test('v1.9.12 provider defaults remain aligned across direct and bridge paths', 
   assert.match(ai, /model:\s*'grok-3-mini'/);
   assert.match(bridge, /model:model \|\| 'grok-3-mini'/);
 });
+
+
+test('v1.9.13 top and settings text model are a single synchronized source', () => {
+  assert.match(source, /function syncCommittedModelEverywhere/);
+  assert.match(source, /#openQuickModelPicker, #openSettingsModelPicker/);
+  assert.match(source, /id="modelInput"[^>]*readonly/);
+  assert.match(source, /syncCommittedModelEverywhere\(next\)/);
+  assert.doesNotMatch(source, /else if \(el\.id === 'modelInput'\) state\.settingsDraft\.model/);
+});
+
+test('v1.9.13 Settings tab stays visible using assistant container queries', () => {
+  const css = fs.readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  assert.match(css, /container-name:assistant/);
+  assert.match(css, /@container assistant \(max-width:390px\)/);
+  assert.match(css, /grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(css, /@container assistant \(max-width:315px\)/);
+  assert.match(css, /grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+});
+
+test('v1.9.13 Desktop startup fits Windows work area and does not block on Ollama', () => {
+  const electron = fs.readFileSync(new URL('../electron/main.cjs', import.meta.url), 'utf8');
+  const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
+  assert.match(electron, /screen\.getPrimaryDisplay\(\)\.workAreaSize/);
+  assert.match(electron, /checkHnlBridge/);
+  assert.match(electron, /8787, 8788, 8789, 8790, 8791/);
+  assert.match(electron, /await win\.loadURL\(localUrl\(\)\)/);
+  assert.match(electron, /ensureOllama\(\)\.catch/);
+  assert.match(electron, /child\.once\('error'/);
+  assert.match(bridge, /AbortSignal\.timeout\(450\)/);
+});

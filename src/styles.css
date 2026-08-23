@@ -1127,3 +1127,52 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .ai-quickbar > * { min-width:0; }
 .quick-model-trigger { max-width:100%; overflow:hidden; }
 .quick-model-name { max-width:100%; }
+
+
+/* =========================================================
+   HNL v1.9.13 — assistant container responsive + single model source
+   ========================================================= */
+.assistant-panel { container-type:inline-size; container-name:assistant; }
+.tabs {
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  flex-wrap:initial !important;
+  overflow:visible !important;
+  min-height:0 !important;
+  gap:2px !important;
+  padding:5px 6px !important;
+  scroll-snap-type:none !important;
+}
+.tab,
+.tab[data-tab="checklist"],
+.tab[data-tab="settings"] {
+  min-width:0 !important;
+  width:auto !important;
+  max-width:none !important;
+  padding:7px 3px !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+  font-size:9.4px !important;
+}
+@container assistant (max-width:390px) {
+  .tabs { grid-template-columns:repeat(3,minmax(0,1fr)) !important; }
+  .tab { font-size:9.1px !important; }
+}
+@container assistant (max-width:315px) {
+  .tabs { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+}
+.shared-model-setting {
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) auto auto !important;
+  gap:6px !important;
+  align-items:center;
+}
+.shared-model-setting #modelInput {
+  min-width:0; width:100%; background:#f7f9fc; color:var(--navy-900); text-overflow:ellipsis;
+}
+@container assistant (max-width:360px) {
+  .shared-model-setting { grid-template-columns:minmax(0,1fr) auto !important; }
+  .shared-model-setting #refreshModels { grid-column:2; }
+  .shared-model-setting #openSettingsModelPicker { grid-column:1 / -1; width:100%; }
+}

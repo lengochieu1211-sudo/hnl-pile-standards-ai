@@ -1,4 +1,14 @@
-# HNL Pile Standards AI v1.9.12
+# HNL Pile Standards AI v1.9.13
+
+## v1.9.13 — Desktop Fit, Model Sync & Always-visible Settings
+
+- Một nguồn model văn bản duy nhất: thanh AI phía trên và Cài đặt luôn hiển thị cùng model; đổi ở bất kỳ vị trí nào đều dùng chung hộp chọn và vẫn hỏi OK.
+- Bỏ ô model độc lập trong Cài đặt; nhập model thủ công vẫn thực hiện trong hộp Chọn model chung.
+- Tabs Trợ lý dùng container query 4/3/2 cột theo đúng chiều rộng panel, vì vậy `Cài đặt` không còn bị giấu ngoài vùng cuộn ngang.
+- Desktop EXE tự lấy kích thước theo vùng làm việc màn hình thay vì cố mở 1500×940; phù hợp laptop 1366×768 và Windows scale 125–150%.
+- Sửa lỗi Local Engine trên máy không có Ollama: health phản hồi nhanh, Electron xác minh đúng HNL Bridge, thử cổng 8787–8791 và không chờ Ollama trước khi mở UI.
+- Ollama chạy nền tùy chọn sau khi giao diện mở; AI Online và tra cứu PDF không bị chặn khi máy chưa cài Ollama.
+
 
 ## v1.9.12 — Collision-proof Reader Toolbar & Gemini Model Sync
 

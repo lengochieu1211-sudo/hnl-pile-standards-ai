@@ -25,7 +25,7 @@ app.get('/api/health', async (_req, res) => {
   let ollamaReady = false;
   try {
     const base = (process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434').replace(/\/$/,'');
-    const r = await fetch(`${base}/api/tags`, { signal: AbortSignal.timeout(2500) });
+    const r = await fetch(`${base}/api/tags`, { signal: AbortSignal.timeout(450) });
     ollamaReady = r.ok;
   } catch { ollamaReady = false; }
   res.json({ ok: true, service: 'HNL AI Bridge', providers: configured(ollamaReady), localUrl:`http://127.0.0.1:${PORT}` });

@@ -1,6 +1,18 @@
 {
-  "current": "1.9.12",
+  "current": "1.9.13",
   "releases": [
+    {
+      "version": "1.9.13",
+      "title": "Desktop Fit, Single Model Source & Always-visible Settings",
+      "changes": [
+        "Model văn bản dùng một nguồn trạng thái duy nhất; thanh AI và Cài đặt luôn đồng bộ sau mọi chuyển model được xác nhận.",
+        "Cài đặt dùng cùng hộp chọn model với quickbar, loại bỏ ô model độc lập gây lệch trên/dưới.",
+        "Tabs Trợ lý dùng container query 4/3/2 cột nên Cài đặt luôn hiện, không phụ thuộc cuộn ngang.",
+        "Electron tự co cửa sổ theo work area của Windows, tránh mở 1500x940 vượt màn laptop/scale cao.",
+        "Bridge health không còn chờ Ollama 2.5 giây; Desktop xác minh HNL Bridge, thử cổng 8787-8791 và mở UI trước khi kiểm tra Ollama.",
+        "Ollama chạy nền tùy chọn, không chặn AI Online/PDF khi máy chưa cài Ollama."
+      ]
+    },
     {
       "version": "1.9.12",
       "title": "Collision-proof Reader Toolbar & Gemini Model Sync",

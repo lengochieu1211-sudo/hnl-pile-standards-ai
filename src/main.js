@@ -244,13 +244,28 @@ function modelPickerHtml() {
       </section>
     </div>`;
 }
+function syncCommittedModelEverywhere(nextModel = state.settings.model) {
+  const next = String(nextModel || '').trim();
+  state.settings.model = next;
+  state.settingsDraft = { ...(state.settingsDraft || {}), model: next };
+  const input = document.querySelector('#modelInput');
+  if (input && input.value !== next) input.value = next;
+}
 function confirmModelSwitch(nextModel, reason = 'Yêu cầu đổi model') {
   const oldModel = providerModel();
   const next = String(nextModel || '').trim();
-  if (!next || next === oldModel) return true;
-  const ok = window.confirm(`${reason}\n\nModel hiện tại: ${oldModel || '(chưa chọn)'}\nModel đề nghị: ${next}\n\nHNL sẽ CHỈ chuyển model khi bạn bấm OK.`);
+  if (!next || next === oldModel) {
+    syncCommittedModelEverywhere(oldModel);
+    return true;
+  }
+  const ok = window.confirm(`${reason}
+
+Model hiện tại: ${oldModel || '(chưa chọn)'}
+Model đề nghị: ${next}
+
+HNL sẽ CHỈ chuyển model khi bạn bấm OK.`);
   if (!ok) return false;
-  state.settings.model = next;
+  syncCommittedModelEverywhere(next);
   state.connectionStatus = null;
   saveSettings();
   state.modelStatus = `Đã chuyển sang ${next} sau khi người dùng xác nhận.`;
@@ -891,7 +906,7 @@ function settingsHtml() {
     <label class="field"><span>Nhà cung cấp</span><select id="providerSelect">${options}</select></label>
     ${state.settings.provider === 'local' ? `<div class="notice success"><b>Tra cứu nhanh không phải AI.</b><br>${IS_DESKTOP_EDITION ? 'Chế độ này tìm kiếm cục bộ, không cần mạng. Muốn AI offline suy luận, chọn <b>HNL Offline AI · Ollama</b>.' : 'Chế độ này tìm ngay trong dữ liệu đã nạp, không cần API. Muốn AI suy luận trên bản Web, chọn <b>Gemini / ChatGPT / Claude / Grok</b>.'}</div>` : `
       <div class="segmented"><button data-connection="direct" class="${state.settings.connection === 'direct' ? 'active' : ''}">Trực tiếp</button><button data-connection="bridge" class="${state.settings.connection === 'bridge' ? 'active' : ''}">HNL Bridge</button></div>
-      <label class="field"><span>Model văn bản</span><div class="model-picker"><input id="modelInput" list="modelOptionsList" value="${esc(draftSetting('model', providerModel()))}" placeholder="Chọn hoặc nhập tên model"><button class="btn compact-btn" id="refreshModels" type="button">↻ Model</button></div><datalist id="modelOptionsList">${state.modelOptions.map(m => `<option value="${esc(m)}"></option>`).join('')}</datalist><small class="${state.modelOptions.length ? (state.modelOptionsVerified ? 'model-status-verified' : 'model-status-suggested') : ''}">${esc(state.modelStatus || 'Bấm ↻ Model để kiểm tra danh sách. Catalog gợi ý không được dùng làm fallback nếu chưa xác minh.')}</small></label>
+      <label class="field"><span>Model văn bản · đồng bộ với thanh AI phía trên</span><div class="model-picker shared-model-setting"><input id="modelInput" value="${esc(providerModel())}" readonly aria-readonly="true" title="Model hiện tại dùng chung toàn ứng dụng"><button class="btn compact-btn" id="openSettingsModelPicker" type="button">Chọn model</button><button class="btn compact-btn" id="refreshModels" type="button">↻</button></div><small class="${state.modelOptions.length ? (state.modelOptionsVerified ? 'model-status-verified' : 'model-status-suggested') : ''}">${esc(state.modelStatus || 'Model này dùng chung với thanh AI phía trên. Bấm Chọn model để đổi; HNL luôn hỏi OK trước khi áp dụng.')}</small></label><datalist id="modelOptionsList">${state.modelOptions.map(m => `<option value="${esc(m)}"></option>`).join('')}</datalist>
       ${isOllama ? `<label class="field"><span>Model đọc ảnh offline</span><input id="visionModelInput" value="${esc(draftSetting('visionModel', state.settings.visionModel))}" placeholder="gemma3:4b"></label>` : ''}
       ${directNeedsKey ? `<label class="field"><span>API key · chỉ lưu trong phiên tab này</span><input id="apiKeyInput" type="password" value="${esc(draftSetting('apiKey', currentApiKey()))}" autocomplete="off" placeholder="Dán API key của bạn"></label>` : ''}
       ${state.settings.provider === 'gemini' ? `<div class="notice"><b>Gemini API:</b> vào Google AI Studio → API Keys → Create API key → Copy, sau đó dán vào ô trên. Không ghi key vào source GitHub. <a class="inline-link" href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">Mở trang API Keys</a></div>` : ''}
@@ -995,7 +1010,7 @@ function bind() {
       }
       if (el.id === 'saveSettings') { updateSettingsFromForm(); return; }
       if (el.id === 'testConnection') { await testConnection(); return; }
-      if (el.closest?.('#openQuickModelPicker')) { state.modelPickerOpen = true; render(); queueMicrotask(() => document.querySelector('#modelPickerSearch')?.focus()); return; }
+      if (el.closest?.('#openQuickModelPicker, #openSettingsModelPicker')) { state.modelPickerOpen = true; render(); queueMicrotask(() => document.querySelector('#modelPickerSearch')?.focus()); return; }
       if (el.id === 'closeModelPicker' || (el.id === 'modelPickerOverlay' && event.target === el)) { state.modelPickerOpen = false; render(); return; }
       const modelChoice = el.closest?.('[data-model-choice]');
       if (modelChoice) {
@@ -1081,7 +1096,6 @@ function bind() {
     }
     else if (el.id === 'lookupQuery') state.lookup.draft = el.value;
     else if (el.id === 'compareQuestion') state.compare.draft = el.value;
-    else if (el.id === 'modelInput') state.settingsDraft.model = el.value;
     else if (el.id === 'visionModelInput') state.settingsDraft.visionModel = el.value;
     else if (el.id === 'embeddingModelInput') state.settingsDraft.embeddingModel = el.value;
     else if (el.id === 'bridgeInput') state.settingsDraft.bridgeUrl = el.value;
@@ -1977,9 +1991,9 @@ Mới: ${PROVIDERS[provider]?.label || provider}${nextModel ? ` · ${nextModel}`
 HNL chỉ chuyển khi bạn bấm OK.`);
   if (!ok) { render(); return; }
   state.settings.provider = provider;
-  state.settings.model = nextModel;
   state.modelPickerOpen = false;
   state.settingsDraft = {};
+  syncCommittedModelEverywhere(nextModel);
   state.modelOptions = [];
   state.modelOptionsVerified = false;
   state.modelCatalogSource = '';
@@ -2142,7 +2156,7 @@ function readSettingsForm({ askBeforeModelChange = false } = {}) {
   if (provider !== state.settings.provider) return false; // providerChanged owns provider switches.
   const draft = rememberSettingsDraft();
   const next = {
-    model: String(draft.model || PROVIDERS[provider]?.model || '').trim(),
+    model: String(state.settings.model || PROVIDERS[provider]?.model || '').trim(),
     visionModel: String(draft.visionModel || state.settings.visionModel || 'gemma3:4b').trim(),
     embeddingModel: String(draft.embeddingModel || state.settings.embeddingModel || 'bge-m3').trim()
   };
@@ -2158,7 +2172,7 @@ function readSettingsForm({ askBeforeModelChange = false } = {}) {
       return false;
     }
   }
-  state.settings.model = next.model;
+  syncCommittedModelEverywhere(next.model);
   state.settings.visionModel = next.visionModel;
   state.settings.embeddingModel = next.embeddingModel;
   state.settings.bridgeUrl = String(draft.bridgeUrl || state.settings.bridgeUrl).trim();

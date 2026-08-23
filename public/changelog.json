@@ -1,6 +1,17 @@
 {
-  "current": "1.9.4",
+  "current": "1.9.5",
   "releases": [
+    {
+      "version": "1.9.5",
+      "title": "UI Settings Visibility & Automatic Windows EXE Build",
+      "changes": [
+        "Sửa tab Trợ lý thành lưới 2 hàng/3-4 cột để Cài đặt luôn nhìn thấy, không còn bị cắt khỏi mép phải.",
+        "Thêm nút bánh răng Cài đặt ngay trên header Trợ lý làm đường truy cập dự phòng.",
+        "Cố định header + tabs của Trợ lý; chỉ phần nội dung bên dưới cuộn, tránh tab biến mất khi cuộn dài.",
+        "Workflow Windows tự chạy khi push lên main, ngoài Run workflow/tag, nên mỗi lần cập nhật GitHub đều tạo artifact Setup/Portable EXE.",
+        "Giữ nút phục hồi panel và toolbar PDF chống chồng lấn từ v1.9.4."
+      ]
+    },
     {
       "version": "1.9.4",
       "title": "UI Responsive & Panel Recovery",

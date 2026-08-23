@@ -3,6 +3,8 @@ name: Build HNL Desktop AI for Windows
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     tags:
       - "v*"
 
@@ -49,3 +51,4 @@ jobs:
           name: HNL-Pile-Standards-AI-Windows-v${{ env.APP_VERSION }}-build-${{ github.run_number }}
           path: release/*.exe
           if-no-files-found: error
+          retention-days: 14

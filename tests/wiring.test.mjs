@@ -251,7 +251,7 @@ test('v1.9.4 build generator and workflows stamp GitHub build identity', () => {
   const pages = fs.readFileSync(new URL('../.github/workflows/pages.yml', import.meta.url), 'utf8');
   const desktop = fs.readFileSync(new URL('../.github/workflows/desktop-win.yml', import.meta.url), 'utf8');
   const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
-  assert.equal(pkg.version, '1.9.4');
+  assert.equal(pkg.version, '1.9.5');
   assert.match(gen, /GITHUB_RUN_NUMBER/);
   assert.match(gen, /GITHUB_SHA/);
   assert.match(gen, /builtAt/);
@@ -293,4 +293,17 @@ test('v1.9.4 medium desktop toolbar has anti-overlap responsive CSS', () => {
   assert.match(css, /grid-template-areas:"title controls" "search search"/);
   assert.match(css, /panel-recovery-left/);
   assert.match(css, /max-width:1366px/);
+});
+
+
+test('v1.9.5 settings tab is always reachable and Windows EXE autobuilds on main', () => {
+  const css = fs.readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  const desktop = fs.readFileSync(new URL('../.github/workflows/desktop-win.yml', import.meta.url), 'utf8');
+  assert.match(source, /assistantSettingsQuick/);
+  assert.match(source, /data-tab=\"\$\{id\}\"/);
+  assert.match(css, /grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+  assert.match(css, /panel-body.*overflow:auto/s);
+  assert.match(desktop, /branches:\s*\n\s*- main/);
+  assert.match(desktop, /Build NSIS and Portable EXE/);
+  assert.match(desktop, /release\/\*\.exe/);
 });

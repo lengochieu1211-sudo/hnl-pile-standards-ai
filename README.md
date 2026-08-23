@@ -1,8 +1,8 @@
-# HNL Pile Standards AI v1.9.4
+# HNL Pile Standards AI v1.9.5
 
 **Dual Edition:** HNL Web + HNL Desktop AI.
 
-## v1.9.4 — Icon Pro & Windows Identity
+## v1.9.5 — Icon Pro & Windows Identity
 
 - Giữ nguyên nhận diện HNL: **HN xanh navy + L bạc**, nền sáng bo góc.
 - Tối ưu riêng cho Windows: icon nhỏ rõ hơn, giảm khoảng trống và tăng nét nhẹ.
@@ -55,7 +55,7 @@
 npm test
 ```
 
-v1.9.4 hiện có **38/38 bài test PASS**, gồm kiểm tra asset/icon Windows đa kích thước.
+v1.9.5 hiện có **38/38 bài test PASS**, gồm kiểm tra asset/icon Windows đa kích thước.
 
 ## Build Web
 
@@ -88,3 +88,8 @@ Hoặc dùng GitHub Actions → **Build HNL Desktop AI for Windows**.
 - `docs/BUILD_METADATA.md`
 - `docs/BUILD_DESKTOP.md`
 - `docs/DUAL_EDITION.md`
+
+
+## v1.9.5
+- Cài đặt trong panel Trợ lý luôn hiển thị bằng tab grid; có thêm nút ⚙ truy cập nhanh.
+- Workflow Windows tự build trên mỗi push vào `main`; artifact chứa Setup + Portable EXE nằm ở Actions > lần chạy `Build HNL Desktop AI for Windows` > Artifacts.

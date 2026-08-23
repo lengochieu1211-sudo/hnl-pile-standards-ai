@@ -410,7 +410,7 @@ function render() {
       <aside class="assistant-panel">
         <div class="assistant-head">
           <div><div class="section-kicker">Kỹ thuật</div><h2>Trợ lý tiêu chuẩn</h2></div>
-          <div class="assistant-head-actions"><span class="mode-chip">${state.settings.provider === 'local' ? 'Tra nhanh' : esc(PROVIDERS[state.settings.provider]?.short)}</span><button class="icon-btn" id="toggleAssistant" title="Thu gọn trợ lý">▶</button></div>
+          <div class="assistant-head-actions"><span class="mode-chip">${state.settings.provider === 'local' ? 'Tra nhanh' : esc(PROVIDERS[state.settings.provider]?.short)}</span><button class="icon-btn quick-settings-btn" id="assistantSettingsQuick" title="Mở Cài đặt" aria-label="Mở Cài đặt">⚙</button><button class="icon-btn" id="toggleAssistant" title="Thu gọn trợ lý">▶</button></div>
         </div>
         <div class="tabs">${[
           ['summary', 'Tóm tắt'], ['chat', 'Hỏi đáp'], ['lookup', 'Tra cứu'], ['calc', 'Tính'], ['compare', 'So sánh'], ['checklist', 'Nghiệm thu'], ['settings', 'Cài đặt']
@@ -764,6 +764,7 @@ function bind() {
       if (el.matches('[data-mobile]')) { state.mobile = el.dataset.mobile; render(); return; }
       if (el.id === 'sourceBadge') { if (window.innerWidth > 880) { state.focusReader=false; state.leftCollapsed=false; localStorage.setItem(STORAGE.leftCollapsed, 'false'); } else state.mobile = 'library'; render(); return; }
       if (el.id === 'openSettings') { state.tab = 'settings'; if (window.innerWidth > 880) { state.focusReader=false; state.rightCollapsed=false; localStorage.setItem(STORAGE.rightCollapsed, 'false'); } else state.mobile = 'assistant'; render(); return; }
+      if (el.id === 'assistantSettingsQuick') { state.tab = 'settings'; state.focusReader=false; state.rightCollapsed=false; localStorage.setItem(STORAGE.rightCollapsed, 'false'); if (window.innerWidth <= 880) state.mobile='assistant'; render(); return; }
       if (el.id === 'selectAll') { state.docs.forEach(d => state.selected.add(d.id)); showToast(`Đã chọn ${state.docs.length} tài liệu làm nguồn.`, 'success'); render(); return; }
       if (el.id === 'clearSelection') { state.selected.clear(); showToast(state.settings.scope === 'selected' ? 'Đã bỏ chọn nguồn. Phạm vi “Đã chọn” hiện không có tài liệu.' : 'Đã bỏ dấu tick. Phạm vi Toàn thư viện vẫn tra cứu tất cả tài liệu.', 'info'); render(); return; }
       if (el.id === 'toggleLibrary' || el.id === 'viewerToggleLibrary') { state.focusReader=false; state.leftCollapsed = !state.leftCollapsed; localStorage.setItem(STORAGE.leftCollapsed, String(state.leftCollapsed)); state.pendingPageScroll=true; render(); return; }

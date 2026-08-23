@@ -40,7 +40,8 @@ button:disabled, input:disabled, textarea:disabled { cursor: not-allowed; opacit
 .ai-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: #a6b0bd; }
 .ai-badge.ok .dot { background: var(--success); box-shadow: 0 0 0 3px #dff2e7; }
 .workspace { min-height: 0; display: grid; grid-template-columns: 290px minmax(420px, 1fr) minmax(390px, 470px); }
-.sidebar, .assistant-panel { background: var(--surface); min-height: 0; overflow: auto; }
+.sidebar { background: var(--surface); min-height: 0; overflow: auto; }
+.assistant-panel { background: var(--surface); min-height: 0; overflow: hidden; display:flex; flex-direction:column; }
 .sidebar { border-right: 1px solid var(--line); padding: 16px 14px 18px; }
 .assistant-panel { border-left: 1px solid var(--line); }
 .viewer { min-width: 0; min-height: 0; display: flex; flex-direction: column; background: #e8edf4; }
@@ -98,13 +99,14 @@ button:disabled, input:disabled, textarea:disabled { cursor: not-allowed; opacit
 .feature-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; margin-top: 18px; }
 .feature-row span { border: 1px solid var(--line); border-radius: 999px; padding: 6px 9px; background: rgba(255,255,255,.75); color: var(--navy-700); font-size: 10px; font-weight: 700; }
 .assistant-head { min-height: 54px; margin: 0; padding: 10px 14px 8px; border-bottom: 1px solid var(--line); }
-.tabs { display: flex; overflow-x: auto; gap: 2px; padding: 0 8px; border-bottom: 1px solid var(--line); background: #fff; scrollbar-width: none; }
-.tabs::-webkit-scrollbar { display: none; }
-.tab { position: relative; border: 0; background: transparent; padding: 11px 9px; color: var(--muted); font-size: 10.5px; font-weight: 800; white-space: nowrap; }
+.tabs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:3px; padding:6px 8px; border-bottom:1px solid var(--line); background:#fff; flex:0 0 auto; overflow:visible; }
+.tabs::-webkit-scrollbar { display:none; }
+.tab { position:relative; min-width:0; border:0; border-radius:7px; background:transparent; padding:8px 4px; color:var(--muted); font-size:10px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tab:hover { background:var(--blue-50); color:var(--navy-700); }
 .tab::after { content: ''; position: absolute; left: 10px; right: 10px; bottom: 0; height: 2px; border-radius: 99px; background: transparent; }
 .tab.active { color: var(--navy-900); }
 .tab.active::after { background: var(--navy-800); }
-.panel-body { padding: 13px; }
+.panel-body { padding:13px; flex:1 1 auto; min-height:0; overflow:auto; }
 .hero-card { margin-bottom: 12px; border: 1px solid #cad9e8; border-radius: 14px; padding: 15px; background: linear-gradient(135deg, #f8fbff, #edf4fb); }
 .hero-card h3 { margin: 4px 0 7px; color: var(--navy-900); font-size: 17px; letter-spacing: -.02em; }
 .hero-card p { margin: 0 0 12px; color: #5e6e81; font-size: 11.5px; line-height: 1.55; }
@@ -663,4 +665,21 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 @media (max-width:880px) {
   .panel-recovery { display:none !important; }
   .viewer-side-toggle { display:inline-grid !important; }
+}
+
+
+/* v1.9.5 - Settings/tab visibility hardening */
+.assistant-head { flex:0 0 auto; }
+.quick-settings-btn { flex:0 0 auto; }
+@media (max-width:1366px) and (min-width:881px) {
+  .tabs { grid-template-columns:repeat(4,minmax(0,1fr)); gap:2px; padding:5px 6px; }
+  .tab { font-size:9.6px; padding:7px 3px; }
+}
+@media (max-width:1040px) and (min-width:881px) {
+  .tabs { grid-template-columns:repeat(3,minmax(0,1fr)); }
+}
+@media (max-width:880px) {
+  .assistant-panel { overflow:hidden; }
+  .tabs { grid-template-columns:repeat(4,minmax(0,1fr)); position:sticky; top:0; z-index:3; }
+  .panel-body { overflow:visible; }
 }

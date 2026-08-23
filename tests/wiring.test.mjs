@@ -349,9 +349,9 @@ test('Windows workflow verifies both Setup and Portable EXEs', () => {
 });
 
 
-test('v1.9.8 model picker is visible in assistant and refresh never silently switches model', () => {
+test('model picker is visible in assistant and refresh never silently switches model', () => {
   assert.match(source, /quickProviderSelect/);
-  assert.match(source, /quickModelSelect/);
+  assert.match(source, /openQuickModelPicker/);
   assert.match(source, /refreshModelsQuick/);
   assert.match(source, /HNL không tự đổi model/);
   assert.doesNotMatch(source, /models\.length && !models\.includes\(state\.settings\.model\)\) state\.settings\.model =/);
@@ -412,4 +412,77 @@ test('all current model-changing paths require explicit user confirmation', () =
   assert.match(source, /HNL đề xuất cấu hình theo máy/);
   assert.match(source, /Cài và đặt bộ AI Offline/);
   assert.match(source, /Bấm OK để chuyển sang model này và thử lại/);
+});
+
+
+test('v1.9.11 assistant model picker avoids native dropdown overlap', () => {
+  const css = fs.readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  assert.match(source, /openQuickModelPicker/);
+  assert.match(source, /model-picker-dialog/);
+  assert.match(source, /modelPickerSearch/);
+  assert.doesNotMatch(source, /id="quickModelSelect"/);
+  assert.match(css, /\.tabs\s*\{[\s\S]*display:flex\s*!important[\s\S]*overflow-x:auto\s*!important/);
+  assert.match(css, /\.model-picker-overlay\s*\{/);
+});
+
+test('v1.9.11 Gemini catalog and API discovery cover current model families and pagination', () => {
+  const ai = fs.readFileSync(new URL('../src/ai.js', import.meta.url), 'utf8');
+  assert.match(ai, /gemini-3\.7-flash/);
+  assert.match(ai, /gemini-3\.1-flash-lite/);
+  assert.match(ai, /gemini-2\.5-pro/);
+  assert.match(ai, /gemini-flash-latest/);
+  assert.match(ai, /nextPageToken/);
+  assert.match(ai, /pageToken/);
+  assert.match(ai, /supportedGenerationMethods\.includes\('generateContent'\)/);
+});
+
+test('v1.9.11 Windows validation is PowerShell-safe and does not inline target macro in node -e', () => {
+  const workflow = fs.readFileSync(new URL('../.github/workflows/desktop-win.yml', import.meta.url), 'utf8');
+  assert.match(workflow, /ConvertFrom-Json/);
+  assert.match(workflow, /\$targetMacro = '\$' \+ '\{target\}'/);
+  assert.doesNotMatch(workflow, /node -e .*target macro/);
+});
+
+test('v1.9.12 PDF toolbar uses viewer container queries and grouped controls to prevent overlap', () => {
+  const css = fs.readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  assert.match(source, /toolbar-mode-group/);
+  assert.match(source, /toolbar-zoom-group/);
+  assert.match(source, /toolbar-page-group/);
+  assert.match(source, /toolbar-layout-group/);
+  assert.match(css, /container-name:viewer/);
+  assert.match(css, /@container viewer \(max-width:1050px\)/);
+  assert.match(css, /grid-template-areas:"title search" "controls controls"/);
+  assert.match(css, /@container viewer \(max-width:620px\)/);
+  assert.match(css, /grid-template-areas:"title" "search" "controls"/);
+});
+
+test('v1.9.12 desktop panel budget preserves both panels while guaranteeing PDF space', () => {
+  const css = fs.readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  assert.match(css, /--left-effective:max\(235px, min\(var\(--left-user-w, 290px\), 21vw\)\)/);
+  assert.match(css, /--right-effective:max\(350px, min\(var\(--right-user-w, 440px\), 30vw\)\)/);
+  assert.match(css, /grid-template-columns:var\(--left-effective\) minmax\(360px,1fr\) var\(--right-effective\)/);
+  assert.doesNotMatch(source, /resize[\s\S]{0,240}leftCollapsed\s*=\s*true/i);
+  assert.doesNotMatch(source, /resize[\s\S]{0,240}rightCollapsed\s*=\s*true/i);
+});
+
+test('v1.9.12 Gemini defaults and catalog are synchronized between Web and Bridge', () => {
+  const ai = fs.readFileSync(new URL('../src/ai.js', import.meta.url), 'utf8');
+  const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
+  for (const id of ['gemini-3.7-flash','gemini-3.6-flash','gemini-3.5-flash','gemini-3.5-flash-lite','gemini-3.1-pro-preview','gemini-3.1-flash-lite','gemini-2.5-pro','gemini-2.5-flash','gemini-2.5-flash-lite']) {
+    assert.match(ai, new RegExp(id.replaceAll('.', '\\.')));
+    assert.match(bridge, new RegExp(id.replaceAll('.', '\\.')));
+  }
+  assert.match(ai, /model:\s*'gemini-3\.7-flash'/);
+  assert.match(bridge, /model \|\| 'gemini-3\.7-flash'/);
+  assert.match(bridge, /nextPageToken/);
+  assert.match(bridge, /isGeminiChatModel/);
+});
+
+test('v1.9.12 provider defaults remain aligned across direct and bridge paths', () => {
+  const ai = fs.readFileSync(new URL('../src/ai.js', import.meta.url), 'utf8');
+  const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
+  assert.match(ai, /model:\s*'claude-haiku-4-5'/);
+  assert.match(bridge, /model:model \|\| 'claude-haiku-4-5'/);
+  assert.match(ai, /model:\s*'grok-3-mini'/);
+  assert.match(bridge, /model:model \|\| 'grok-3-mini'/);
 });

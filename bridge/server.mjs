@@ -70,7 +70,7 @@ async function askGemini(model, messages, images = []) {
   const system = messages.filter(m=>m.role==='system').map(m=>m.content).join('\n');
   const nonSystem = messages.filter(m=>m.role!=='system');
   const contents = nonSystem.map((m, i)=>({ role: m.role === 'assistant' ? 'model' : 'user', parts:[{text:m.content}, ...(images.length && i === nonSystem.length - 1 && m.role !== 'assistant' ? images.map(x => ({ inlineData:{ mimeType:x.mimeType || 'image/jpeg', data:x.data } })) : [])] }));
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model || 'gemini-3.6-flash')}:generateContent`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model || 'gemini-3.7-flash')}:generateContent`;
   const data = await jsonFetch(url, {
     method:'POST',
     headers:{'Content-Type':'application/json','x-goog-api-key':key},
@@ -87,7 +87,7 @@ async function askClaude(model, messages, images = []) {
   const data = await jsonFetch('https://api.anthropic.com/v1/messages', {
     method:'POST',
     headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
-    body:JSON.stringify({ model:model || 'claude-3-5-haiku-latest', max_tokens:2200, system, messages:chat })
+    body:JSON.stringify({ model:model || 'claude-haiku-4-5', max_tokens:2200, system, messages:chat })
   });
   return data.content?.filter(x=>x.type==='text').map(x=>x.text).join('\n') || 'Claude không trả về nội dung văn bản.';
 }
@@ -400,13 +400,22 @@ app.post('/api/local/open-model-directory',(_req,res)=>{
 
 const BRIDGE_FALLBACK_MODELS = {
   ollama: [],
-  gemini: ['gemini-3.6-flash','gemini-3.5-flash','gemini-3.5-flash-lite','gemini-3.1-pro-preview'],
+  gemini: ['gemini-3.7-flash','gemini-3.6-flash','gemini-3.5-flash','gemini-3.5-flash-lite','gemini-3.1-pro-preview','gemini-3.1-flash-lite','gemini-3-flash-preview','gemini-2.5-pro','gemini-2.5-flash','gemini-2.5-flash-lite','gemini-flash-latest'],
   openai: ['gpt-5.6-sol','gpt-5.6-terra','gpt-5.6-luna','gpt-5.4-mini','gpt-4.1-mini'],
   claude: ['claude-opus-4-1','claude-sonnet-4-5','claude-haiku-4-5'],
   grok: ['grok-4-1-fast-reasoning','grok-4-1-fast-non-reasoning','grok-4','grok-3-mini']
 };
 
 function uniqueModels(list=[]) { return [...new Set(list.map(x=>String(x||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b)); }
+function isGeminiChatModel(model) {
+  const id=String(model||'').toLowerCase();
+  return id.startsWith('gemini-') && !/(?:embedding|image|imagen|veo|lyria|tts|live|robotics|omni|aqa)/.test(id);
+}
+function sortGeminiModels(list=[]) {
+  const clean=[...new Set(list.map(x=>String(x||'').trim()).filter(Boolean))];
+  const score=id=>{const x=id.toLowerCase();const m=x.match(/^gemini-(\d+)(?:\.(\d+))?/);let n=m?Number(m[1])*10000+Number(m[2]||0)*1000:0;if(x==='gemini-3.7-flash')n+=900;if(x==='gemini-3.6-flash')n+=850;if(x.includes('pro'))n+=70;if(x.includes('flash'))n+=50;if(x.includes('lite'))n-=10;if(x.includes('preview'))n-=20;if(x.includes('latest'))n-=30;return n;};
+  return clean.sort((a,b)=>score(b)-score(a)||a.localeCompare(b));
+}
 
 async function providerModels(provider) {
   try {
@@ -417,8 +426,18 @@ async function providerModels(provider) {
     }
     if (provider === 'gemini') {
       const key = requireKey('GEMINI_API_KEY');
-      const data = await jsonFetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000', { headers:{'x-goog-api-key':key} });
-      return { models:uniqueModels((data.models || []).filter(m=>!m.supportedGenerationMethods || m.supportedGenerationMethods.includes('generateContent')).map(m=>String(m.name||'').replace(/^models\//,''))), verified:true, source:'gemini-api', warning:'' };
+      const all=[]; let pageToken='';
+      for (let page=0; page<20; page++) {
+        const params=new URLSearchParams({pageSize:'100'});
+        if(pageToken) params.set('pageToken',pageToken);
+        const data=await jsonFetch(`https://generativelanguage.googleapis.com/v1beta/models?${params.toString()}`, {headers:{'x-goog-api-key':key}});
+        all.push(...(data.models||[]));
+        pageToken=String(data.nextPageToken||'');
+        if(!pageToken) break;
+      }
+      const generationModels=all.filter(m=>!m.supportedGenerationMethods||m.supportedGenerationMethods.includes('generateContent')).map(m=>String(m.name||'').replace(/^models\//,''));
+      const chatModels=generationModels.filter(isGeminiChatModel);
+      return {models:sortGeminiModels(chatModels),verified:true,source:'gemini-api',warning:'',discoveredCount:uniqueModels(generationModels).length,compatibleCount:uniqueModels(chatModels).length,filteredCount:Math.max(0,uniqueModels(generationModels).length-uniqueModels(chatModels).length)};
     }
     if (provider === 'openai') {
       const key = requireKey('OPENAI_API_KEY');

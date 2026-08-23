@@ -16,7 +16,7 @@ export const PROVIDERS = {
   gemini: {
     label: 'Google Gemini',
     short: 'Gemini',
-    model: 'gemini-3.6-flash',
+    model: 'gemini-3.7-flash',
     needsKey: true,
     description: 'Có thể gọi trực tiếp bằng API key của chính người dùng hoặc qua HNL Bridge.'
   },
@@ -119,7 +119,7 @@ export async function callDirect({ provider, model, apiKey, prompt, ollamaUrl = 
   if (!apiKey) throw new Error('Chưa nhập API key cho nhà cung cấp AI này.');
 
   if (provider === 'gemini') {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model || 'gemini-3.6-flash')}:generateContent`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model || 'gemini-3.7-flash')}:generateContent`;
     const data = await jsonFetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
@@ -237,7 +237,7 @@ export async function testDirectProvider({ provider, model, apiKey, ollamaUrl })
 
 const SUGGESTED_MODELS = {
   ollama: [],
-  gemini: ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-pro-preview'],
+  gemini: ['gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite', 'gemini-3-flash-preview', 'gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-flash-latest'],
   openai: ['gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.4-mini', 'gpt-4.1-mini'],
   claude: ['claude-opus-4-1', 'claude-sonnet-4-5', 'claude-haiku-4-5'],
   grok: ['grok-4-1-fast-reasoning', 'grok-4-1-fast-non-reasoning', 'grok-4', 'grok-3-mini']
@@ -248,7 +248,36 @@ function uniqueModels(list = []) {
 }
 
 export function suggestedModels(provider) {
-  return uniqueModels(SUGGESTED_MODELS[provider] || []);
+  // Keep curated order so the newest/recommended model appears first in fallback catalog.
+  return [...new Set((SUGGESTED_MODELS[provider] || []).map(x => String(x || '').trim()).filter(Boolean))];
+}
+
+function isGeminiChatModel(model) {
+  const id = String(model || '').toLowerCase();
+  // HNL quick model picker is for text/vision -> text engineering answers.
+  // Keep specialist output endpoints out of this picker; they remain discoverable
+  // through their dedicated feature when HNL adds image/TTS/video output tools.
+  return id.startsWith('gemini-')
+    && !/(?:embedding|image|imagen|veo|lyria|tts|live|robotics|omni|aqa)/.test(id);
+}
+
+function sortModelsForProvider(provider, list = []) {
+  const clean = [...new Set(list.map(x => String(x || '').trim()).filter(Boolean))];
+  if (provider !== 'gemini') return clean.sort((a,b) => a.localeCompare(b));
+  const score = id => {
+    const x = id.toLowerCase();
+    const m = x.match(/^gemini-(\d+)(?:\.(\d+))?/);
+    let n = m ? Number(m[1]) * 10000 + Number(m[2] || 0) * 1000 : 0;
+    if (x === 'gemini-3.7-flash') n += 900;
+    if (x === 'gemini-3.6-flash') n += 850;
+    if (x.includes('pro')) n += 70;
+    if (x.includes('flash')) n += 50;
+    if (x.includes('lite')) n -= 10;
+    if (x.includes('preview')) n -= 20;
+    if (x.includes('latest')) n -= 30;
+    return n;
+  };
+  return clean.sort((a,b) => score(b) - score(a) || a.localeCompare(b));
 }
 
 /**
@@ -278,9 +307,31 @@ export async function listAvailableModelsDetailed({ provider, connection = 'dire
       return { models:suggestedModels(provider), verified:false, source:'catalog', warning:'Chưa có API key để xác minh model thực tế của tài khoản.' };
     }
     if (provider === 'gemini') {
-      const data = await jsonFetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000', { headers:{ 'x-goog-api-key':apiKey } }, 12000);
-      const models = (data.models || []).filter(m => !m.supportedGenerationMethods || m.supportedGenerationMethods.includes('generateContent')).map(m => String(m.name || '').replace(/^models\//,''));
-      return { models:uniqueModels(models), verified:true, source:'gemini-api', warning:'' };
+      // Gemini Models.list is paginated. Read every page instead of assuming one
+      // page contains the complete account-visible catalog.
+      const all = [];
+      let pageToken = '';
+      for (let page = 0; page < 20; page++) {
+        const params = new URLSearchParams({ pageSize:'100' });
+        if (pageToken) params.set('pageToken', pageToken);
+        const data = await jsonFetch(`https://generativelanguage.googleapis.com/v1beta/models?${params.toString()}`, { headers:{ 'x-goog-api-key':apiKey } }, 12000);
+        all.push(...(data.models || []));
+        pageToken = String(data.nextPageToken || '');
+        if (!pageToken) break;
+      }
+      const generationModels = all
+        .filter(m => !m.supportedGenerationMethods || m.supportedGenerationMethods.includes('generateContent'))
+        .map(m => String(m.name || '').replace(/^models\//,''));
+      const chatModels = generationModels.filter(isGeminiChatModel);
+      return {
+        models:sortModelsForProvider('gemini', chatModels),
+        verified:true,
+        source:'gemini-api',
+        warning:'',
+        discoveredCount:uniqueModels(generationModels).length,
+        compatibleCount:uniqueModels(chatModels).length,
+        filteredCount:Math.max(0, uniqueModels(generationModels).length - uniqueModels(chatModels).length)
+      };
     }
     if (provider === 'openai') {
       const data = await jsonFetch('https://api.openai.com/v1/models', { headers:{ Authorization:`Bearer ${apiKey}` } }, 12000);

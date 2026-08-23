@@ -1,7 +1,7 @@
 {
   "name": "hnl-pile-standards-ai",
   "private": true,
-  "version": "1.9.10",
+  "version": "1.9.12",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -80,6 +80,6 @@
       "artifactName": "HNL-Pile-Standards-AI-Portable-${version}-${arch}.${ext}"
     }
   },
-  "description": "HNL Pile Standards AI - Web + Desktop engineering AI with version-gated builds, explicit model-change approval, PDF RAG, formulas, OCR/Vision and offline/online AI.",
+  "description": "HNL Pile Standards AI - Web + Desktop engineering AI with collision-proof responsive PDF toolbar, complete Gemini model discovery, approval-gated model switching, version-gated Windows builds, PDF RAG, formulas, OCR/Vision and offline/online AI.",
   "author": "HNL"
 }

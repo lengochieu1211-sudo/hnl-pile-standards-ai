@@ -835,3 +835,295 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .model-status-verified { color:var(--success); }
 .model-status-suggested { color:var(--warning); }
 .model-approval-lock { display:inline-flex; align-items:center; gap:4px; font-weight:750; }
+
+
+/* =========================================================
+   HNL v1.9.11 — overlap-free assistant + custom model picker
+   Final canonical UI block. Native model <select> was removed because the
+   browser popup can cover the tabs below; model choice now uses a dialog.
+   ========================================================= */
+.assistant-panel { position:relative; overflow:hidden; min-width:0; }
+.assistant-head { min-width:0; }
+.assistant-head-actions { min-width:0; display:flex; align-items:center; gap:5px; }
+.ai-quickbar {
+  display:grid !important;
+  grid-template-columns:minmax(88px,.62fr) minmax(0,1.65fr) 32px !important;
+  grid-template-rows:auto auto;
+  align-items:end;
+  gap:6px;
+  padding:7px 9px 6px;
+  overflow:hidden;
+}
+.ai-quickbar label { min-width:0; }
+.ai-quickbar select { min-width:0; max-width:100%; }
+.quick-model-field { min-width:0; }
+.quick-model-trigger {
+  width:100%; min-width:0; height:30px;
+  display:flex; align-items:center; justify-content:space-between; gap:7px;
+  border:1px solid var(--line); border-radius:8px; padding:0 8px;
+  background:#fff; color:var(--navy-900); font-size:10.5px; font-weight:700;
+  text-align:left;
+}
+.quick-model-trigger:hover:not(:disabled) { border-color:#9bb5d1; background:#f8fbff; }
+.quick-model-trigger:focus-visible { outline:2px solid rgba(37,99,235,.18); border-color:#7aa7ea; }
+.quick-model-trigger:disabled { opacity:.55; cursor:not-allowed; }
+.quick-model-name { min-width:0; flex:1 1 auto; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.quick-model-caret { flex:0 0 auto; color:var(--muted); font-size:12px; }
+.quick-model-refresh { align-self:end; }
+.quick-model-note {
+  grid-column:1 / -1; min-width:0; margin:0;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* Always one tab row. If the assistant is narrower, scroll horizontally
+   instead of creating a second row that competes with content below. */
+.tabs {
+  display:flex !important; flex-wrap:nowrap !important; align-items:stretch;
+  gap:2px !important; min-height:38px; padding:4px 6px !important;
+  overflow-x:auto !important; overflow-y:hidden !important;
+  scrollbar-width:none; scroll-snap-type:x proximity;
+}
+.tabs::-webkit-scrollbar { display:none; }
+.tab {
+  flex:0 0 auto !important; min-width:54px; max-width:none;
+  padding:7px 7px !important; font-size:9.5px !important;
+  overflow:visible; text-overflow:clip; scroll-snap-align:nearest;
+}
+.tab[data-tab="checklist"] { min-width:72px; }
+.tab[data-tab="settings"] { min-width:58px; }
+
+/* Model chooser is a deliberate modal layer, not a native select popup that
+   visually collides with the assistant tabs. */
+.model-picker-overlay {
+  position:fixed; inset:0; z-index:260;
+  display:grid; place-items:center; padding:16px;
+  background:rgba(9,24,43,.38); backdrop-filter:blur(3px);
+}
+.model-picker-dialog {
+  width:min(640px, calc(100vw - 28px));
+  max-height:min(720px, calc(100vh - 28px));
+  min-height:320px;
+  display:flex; flex-direction:column; min-width:0; overflow:hidden;
+  border:1px solid #bdcad9; border-radius:16px; background:#fff;
+  box-shadow:0 24px 70px rgba(9,24,43,.28);
+}
+.model-picker-head {
+  display:flex; justify-content:space-between; align-items:center; gap:12px;
+  padding:14px 15px 10px; border-bottom:1px solid var(--line);
+}
+.model-picker-head > div { min-width:0; }
+.model-picker-head h3 { margin:2px 0 0; color:var(--navy-900); font-size:17px; }
+.model-picker-tools {
+  display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px;
+  padding:10px 12px 7px;
+}
+.model-picker-tools input, .model-manual-row input {
+  min-width:0; height:34px; border:1px solid var(--line); border-radius:9px;
+  padding:0 10px; background:#fff; color:var(--text); font-size:11px;
+}
+.model-picker-tools input:focus, .model-manual-row input:focus { outline:2px solid rgba(37,99,235,.14); border-color:#7aa7ea; }
+.model-picker-status {
+  margin:0 12px 7px; padding:7px 9px; border-radius:8px;
+  font-size:9.5px; line-height:1.35; overflow-wrap:anywhere;
+}
+.model-picker-status.verified { background:var(--success-bg); color:var(--success); border:1px solid #cbe8d9; }
+.model-picker-status.suggested { background:var(--warning-bg); color:#7b5a18; border:1px solid #efdfba; }
+.model-picker-list {
+  flex:1 1 auto; min-height:0; overflow:auto; display:grid; gap:5px;
+  padding:4px 12px 10px; align-content:start;
+}
+.model-option-row {
+  width:100%; min-width:0; min-height:42px;
+  display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:10px;
+  border:1px solid var(--line); border-radius:9px; padding:8px 10px;
+  background:#fff; color:var(--text); text-align:left;
+}
+.model-option-row:hover { border-color:#9bb5d1; background:#f7fbff; }
+.model-option-row.active { border-color:#7f9fbe; background:#edf5fd; box-shadow:inset 3px 0 var(--navy-700); }
+.model-option-row[hidden] { display:none !important; }
+.model-option-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--navy-900); font-size:11px; font-weight:800; }
+.model-option-state { color:var(--muted); font-size:9px; font-weight:700; white-space:nowrap; }
+.model-option-row.active .model-option-state { color:var(--navy-700); }
+.model-manual-row {
+  display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px;
+  padding:10px 12px; border-top:1px solid var(--line); background:#fbfcfe;
+}
+.model-picker-foot {
+  display:flex; justify-content:space-between; align-items:center; gap:12px;
+  padding:8px 12px 10px; color:var(--muted); font-size:9px;
+}
+.model-picker-foot span:first-child { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.model-picker-foot span:last-child { flex:0 0 auto; font-weight:800; }
+
+/* 1366px / Windows 125%: dedicate enough width to assistant while keeping PDF usable. */
+@media (max-width:1500px) and (min-width:1181px) {
+  .workspace {
+    --right-effective:max(360px, min(var(--right-user-w, 440px), 34vw));
+    grid-template-columns:var(--left-effective) minmax(340px,1fr) var(--right-effective);
+  }
+  .workspace.left-collapsed { grid-template-columns:0 minmax(340px,1fr) var(--right-effective); }
+  .workspace.right-collapsed { grid-template-columns:var(--left-effective) minmax(340px,1fr) 0; }
+}
+@media (max-width:1180px) and (min-width:981px) {
+  .ai-quickbar { grid-template-columns:minmax(80px,.58fr) minmax(0,1.55fr) 30px !important; padding-left:7px; padding-right:7px; }
+  .quick-model-trigger { font-size:9.8px; padding-left:6px; padding-right:6px; }
+  .tab { min-width:50px; padding-left:6px !important; padding-right:6px !important; font-size:9.2px !important; }
+  .tab[data-tab="checklist"] { min-width:68px; }
+}
+@media (max-width:980px) and (min-width:881px) {
+  .ai-quickbar { grid-template-columns:minmax(72px,.55fr) minmax(0,1.45fr) 30px !important; }
+  .quick-model-note { display:none; }
+  .tabs { min-height:36px; }
+  .tab { min-width:48px; font-size:9px !important; }
+}
+@media (max-width:640px) {
+  .model-picker-overlay { padding:8px; align-items:end; }
+  .model-picker-dialog { width:100%; max-height:88vh; border-radius:16px 16px 10px 10px; }
+  .model-picker-tools, .model-manual-row { grid-template-columns:1fr; }
+  .model-picker-tools .btn, .model-manual-row .btn { width:100%; }
+  .model-picker-foot span:first-child { white-space:normal; }
+}
+
+/* =========================================================
+   HNL v1.9.12 — collision-proof PDF toolbar
+   The toolbar reacts to the REAL viewer width via container queries.
+   This prevents "1 trang" / zoom / page controls from entering the title area
+   when both side panels are open at 1366x768 or Windows 125–150% scaling.
+   ========================================================= */
+.viewer {
+  container-type:inline-size;
+  container-name:viewer;
+}
+.viewer-toolbar {
+  display:grid !important;
+  grid-template-columns:minmax(150px,1fr) minmax(190px,290px) auto !important;
+  grid-template-areas:"title search controls" !important;
+  align-items:center;
+  gap:7px 10px !important;
+  min-width:0;
+  overflow:hidden;
+  padding:7px 10px !important;
+}
+.viewer-title-wrap {
+  grid-area:title !important;
+  min-width:0;
+  width:100%;
+  overflow:hidden;
+}
+.viewer-title {
+  min-width:0;
+  max-width:none !important;
+  flex:1 1 auto;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.reader-search {
+  grid-area:search !important;
+  min-width:0 !important;
+  max-width:none !important;
+  width:100% !important;
+  margin:0 !important;
+  flex-basis:auto !important;
+}
+.reader-search input { min-width:0; width:100%; }
+.viewer-controls {
+  grid-area:controls !important;
+  min-width:0;
+  width:auto;
+  max-width:100%;
+  margin:0 !important;
+  display:flex !important;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:nowrap;
+  gap:5px !important;
+  overflow:visible !important;
+}
+.toolbar-group {
+  min-width:0;
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  padding:2px;
+  border:1px solid #e3e9f0;
+  border-radius:9px;
+  background:#fbfcfe;
+}
+.toolbar-mode-group { padding:2px; }
+.toolbar-layout-group { margin-left:1px; }
+.viewer-controls .toolbar-divider { display:none !important; }
+.toolbar-group .icon-btn { flex:0 0 auto; }
+.toolbar-page-group .page-total { min-width:max-content; }
+
+/* Medium viewer: title + search share row 1; all controls get their own row 2. */
+@container viewer (max-width:1050px) {
+  .viewer-toolbar {
+    grid-template-columns:minmax(130px,.8fr) minmax(190px,1.2fr) !important;
+    grid-template-areas:"title search" "controls controls" !important;
+  }
+  .viewer-controls {
+    width:100%;
+    justify-content:flex-start;
+    flex-wrap:wrap;
+    row-gap:5px !important;
+  }
+  .toolbar-layout-group { margin-left:auto; }
+}
+
+/* Narrow viewer: every functional band gets a separate row. */
+@container viewer (max-width:620px) {
+  .viewer-toolbar {
+    grid-template-columns:minmax(0,1fr) !important;
+    grid-template-areas:"title" "search" "controls" !important;
+    gap:6px !important;
+  }
+  .viewer-controls { justify-content:flex-start; }
+  .toolbar-layout-group { margin-left:0; }
+  .viewer-title { font-size:11px; }
+}
+
+/* Very narrow viewer: groups stay intact and wrap as groups, never overlap. */
+@container viewer (max-width:470px) {
+  .viewer-controls { align-items:stretch; }
+  .toolbar-group { flex:0 0 auto; }
+  .toolbar-mode-group { order:1; }
+  .toolbar-page-group { order:2; }
+  .toolbar-zoom-group { order:3; }
+  .toolbar-layout-group { order:4; }
+  .reader-mode-switch button { padding-left:6px; padding-right:6px; }
+  .zoom-value { min-width:46px; }
+}
+
+/* Desktop panel budget: shrink panels before starving the PDF viewer, but never
+   auto-hide them. Explicit collapse/focus remains the only hide path. */
+@media (max-width:1500px) and (min-width:1181px) {
+  .workspace {
+    --left-effective:max(235px, min(var(--left-user-w, 290px), 21vw)) !important;
+    --right-effective:max(350px, min(var(--right-user-w, 440px), 30vw)) !important;
+    grid-template-columns:var(--left-effective) minmax(360px,1fr) var(--right-effective) !important;
+  }
+  .workspace.left-collapsed { grid-template-columns:0 minmax(360px,1fr) var(--right-effective) !important; }
+  .workspace.right-collapsed { grid-template-columns:var(--left-effective) minmax(360px,1fr) 0 !important; }
+  .workspace.left-collapsed.right-collapsed,
+  .workspace.reader-focus { grid-template-columns:0 minmax(360px,1fr) 0 !important; }
+}
+@media (max-width:1180px) and (min-width:981px) {
+  .workspace {
+    --left-effective:max(220px, min(var(--left-user-w, 290px), 22vw)) !important;
+    --right-effective:max(310px, min(var(--right-user-w, 440px), 31vw)) !important;
+    grid-template-columns:var(--left-effective) minmax(320px,1fr) var(--right-effective) !important;
+  }
+  .workspace.left-collapsed { grid-template-columns:0 minmax(320px,1fr) var(--right-effective) !important; }
+  .workspace.right-collapsed { grid-template-columns:var(--left-effective) minmax(320px,1fr) 0 !important; }
+  .workspace.left-collapsed.right-collapsed,
+  .workspace.reader-focus { grid-template-columns:0 minmax(320px,1fr) 0 !important; }
+}
+
+/* AI quickbar stays inside the assistant width; long provider/model names may
+   ellipsize but can never push the refresh/settings controls out of bounds. */
+.ai-quickbar { min-width:0; max-width:100%; }
+.ai-quickbar > * { min-width:0; }
+.quick-model-trigger { max-width:100%; overflow:hidden; }
+.quick-model-name { max-width:100%; }

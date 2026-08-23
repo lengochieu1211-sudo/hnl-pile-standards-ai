@@ -1,6 +1,28 @@
 {
-  "current": "1.9.10",
+  "current": "1.9.12",
   "releases": [
+    {
+      "version": "1.9.12",
+      "title": "Collision-proof Reader Toolbar & Gemini Model Sync",
+      "changes": [
+        "Toolbar PDF dùng container query theo chiều rộng thực của vùng đọc và tự chuyển 1/2/3 hàng, loại bỏ lỗi nút 1 trang đè lên tên tài liệu.",
+        "Chia điều khiển PDF thành nhóm chế độ đọc, zoom, trang và bố cục; panel desktop co có giới hạn nhưng không tự biến mất.",
+        "Đồng bộ Gemini Web + Bridge với gemini-3.7-flash, catalog đầy đủ hơn và Models.list phân trang; trạng thái nêu rõ model API tìm thấy và model chat phù hợp.",
+        "Catalog dự phòng luôn được đánh dấu chưa xác minh; mọi chuyển provider/model tiếp tục bắt buộc người dùng bấm OK.",
+        "Đồng bộ default Claude giữa Web và Bridge; thêm test chống overlap toolbar và lệch default/model catalog."
+      ]
+    },
+    {
+      "version": "1.9.11",
+      "title": "Responsive Model Picker, Gemini Catalog & Windows Build Fix",
+      "changes": [
+        "Thay native model select bằng modal chọn model có tìm kiếm, trạng thái xác minh và nhập model thủ công để không che tab Trợ lý.",
+        "Tabs Trợ lý dùng một hàng cuộn ngang, chống chồng lấn ở 1366x768 và Windows scale 125%.",
+        "Cập nhật Gemini catalog hiện hành và Models.list đọc đủ phân trang; khi không có API key hiển thị rõ catalog gợi ý, khi có key hiển thị danh sách đã xác minh.",
+        "Giữ bắt buộc xác nhận OK cho mọi chuyển provider/model và fallback.",
+        "Sửa PowerShell Validate Windows builder config bị nội suy ${target} làm hỏng lệnh Node trước khi build EXE."
+      ]
+    },
     {
       "version": "1.9.10",
       "title": "Full Version Sync, Logic & UI Hardening",

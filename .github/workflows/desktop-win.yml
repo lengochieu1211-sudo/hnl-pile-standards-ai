@@ -44,7 +44,17 @@ jobs:
       - name: Validate Windows builder config
         shell: pwsh
         run: |
-          node -e "const p=require('./package.json'); const w=p.build?.win||{}; const n=p.build?.nsis?.artifactName||''; const q=p.build?.portable?.artifactName||''; if(String(w.artifactName||'').includes('\${target}')) throw new Error('win.artifactName still contains unsupported target macro'); if(!/Setup/.test(n)||!/Portable/.test(q)) throw new Error('NSIS/Portable artifact names are not separated'); console.log('electron-builder artifact names OK')"
+          $pkg = Get-Content package.json -Raw | ConvertFrom-Json
+          $setupName = [string]$pkg.build.nsis.artifactName
+          $portableName = [string]$pkg.build.portable.artifactName
+          $winName = [string]$pkg.build.win.artifactName
+          $targetMacro = '$' + '{target}'
+          if ($winName -and $winName.Contains($targetMacro)) { throw "win.artifactName still contains unsupported target macro" }
+          if ($setupName -notmatch 'Setup') { throw "NSIS artifact name is invalid: $setupName" }
+          if ($portableName -notmatch 'Portable') { throw "Portable artifact name is invalid: $portableName" }
+          Write-Host "electron-builder artifact names OK"
+          Write-Host "Setup: $setupName"
+          Write-Host "Portable: $portableName"
 
       - name: Build NSIS and Portable EXE
         run: npm run dist:win

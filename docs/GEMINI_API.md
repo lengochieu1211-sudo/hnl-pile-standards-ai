@@ -8,7 +8,7 @@
 4. Chọn/tạo project nếu được hỏi.
 5. Copy API key mới.
 6. Trong HNL: **Cài đặt → Google Gemini → Trực tiếp**.
-7. Model mặc định: `gemini-3.6-flash` (có thể thay đổi theo thời điểm/tài khoản). Bấm **↻ Model** để lấy danh sách model mà API key thực tế đang dùng được.
+7. Model mặc định: `gemini-3.7-flash` (có thể thay đổi theo thời điểm/tài khoản). Bấm **↻ Model** để lấy danh sách model mà API key thực tế đang dùng được.
 8. Dán key vào ô API key → **Kiểm tra kết nối**.
 
 HNL chỉ giữ key trong `sessionStorage` của tab hiện tại. Không đưa API key vào GitHub, file `.js`, `README`, commit hoặc ảnh chụp màn hình.

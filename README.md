@@ -1,5 +1,26 @@
-# HNL Pile Standards AI v1.9.10
+# HNL Pile Standards AI v1.9.12
 
+## v1.9.12 — Collision-proof Reader Toolbar & Gemini Model Sync
+
+- Sửa dứt điểm vùng khoanh đỏ: tên PDF, `Liên tục / 1 trang`, zoom và điều hướng trang không còn đè lên nhau khi 2 panel đang mở.
+- Toolbar PDF dùng **container query theo đúng chiều rộng vùng PDF**, không chỉ dựa vào chiều rộng toàn màn hình; tự chuyển 1 → 2 → 3 hàng khi thiếu chỗ.
+- Chia toolbar thành 4 nhóm độc lập (chế độ đọc / zoom / trang / bố cục) để wrap có kiểm soát, không cắt chữ và không chui vào vùng tiêu đề.
+- Giới hạn panel trái/phải ở desktop hẹp để luôn chừa vùng PDF tối thiểu; panel chỉ ẩn khi người dùng chủ động thu gọn hoặc bật Focus Reader.
+- Đồng bộ Gemini Web + Bridge: mặc định `gemini-3.7-flash`, catalog dự phòng đầy đủ hơn, `Models.list` đọc toàn bộ phân trang và chỉ liệt kê model phù hợp cho chat văn bản.
+- Trạng thái model hiển thị rõ số model API tìm thấy / số model chat phù hợp; catalog dự phòng luôn ghi rõ **chưa xác minh**.
+- Đồng bộ lại default Claude giữa Web và Bridge; giữ nguyên quy tắc mọi đổi model/provider đều phải bấm OK.
+- Thêm test chống tái phát overlap toolbar, lệch default AI và lệch danh sách Gemini giữa Web/Bridge.
+
+
+
+## v1.9.11 — Responsive Model Picker, Gemini Catalog & Windows Build Fix
+
+- Thay dropdown model native bằng hộp chọn model riêng có tìm kiếm, trạng thái xác minh và nhập model thủ công; không còn popup model che tab Trợ lý.
+- Tab Trợ lý chuyển thành một hàng cuộn ngang an toàn, không tạo hàng thứ hai đè nội dung khi panel hẹp.
+- Gemini catalog gợi ý cập nhật theo tài liệu Google tháng 08/2026, gồm Gemini 3.7/3.6/3.5/3.1/3 và dòng 2.5; khi có API key, HNL đọc toàn bộ trang `Models.list` bằng phân trang.
+- Giữ nguyên quy tắc: mọi đổi provider/model đều hỏi OK trước khi áp dụng; refresh model không tự chuyển.
+- Sửa bước `Validate Windows builder config` trên PowerShell: không còn lỗi `${target}` bị PowerShell nội suy thành chuỗi JavaScript hỏng.
+- Tối ưu panel phải ở 1366px/Windows 125% và thêm test chống tái phát overlap/model/build.
 
 ## v1.9.10 — Full Sync, Logic & UI Hardening
 
@@ -144,3 +165,9 @@ Hoặc dùng GitHub Actions → **Build HNL Desktop AI for Windows**.
 - 881–980 px vẫn giữ 3 cột ở kích thước tối thiểu hợp lý.
 - <=880 px chuyển sang 3 tab Thư viện/PDF/Trợ lý.
 - Splitter và kích thước panel đã lưu vẫn hoạt động sau khi resize.
+
+## Kiểm tra v1.9.12
+- `npm test`: **58/58 PASS**.
+- Version Gate: **PASS**.
+- Syntax critical JS/MJS/CJS: **PASS**.
+- Xem `docs/FULL_UI_MODEL_AUDIT_V1.9.12.md`.

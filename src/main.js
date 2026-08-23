@@ -10,7 +10,7 @@ import { extractFormulaLibrary, formulaStats, verifiedFormulaLibrary, evaluateEx
 
 const SOURCE_META = Object.freeze({
   version: typeof __HNL_APP_VERSION__ !== 'undefined' ? __HNL_APP_VERSION__ : '0.0.0',
-  release: 'Full Sync · Logic · UI Hardening'
+  release: 'Responsive Model Picker · Gemini Catalog · Windows Build Fix'
 });
 
 let APP_META = {
@@ -98,6 +98,7 @@ const state = {
   modelOptionsVerified: false,
   modelCatalogSource: '',
   modelStatus: '',
+  modelPickerOpen: false,
   settingsDraft: {},
   localModelManager: { loading:false, data:null, error:'', pollTimer:null },
   searchStats: null,
@@ -212,6 +213,36 @@ function quickModelOptionsHtml() {
   const models = modelOptionsForCurrentProvider();
   if (!models.length) return `<option value="${esc(current)}">${esc(current || 'Chưa có model')}</option>`;
   return models.map(m => `<option value="${esc(m)}" ${m === current ? 'selected' : ''}>${esc(m)}</option>`).join('');
+}
+function modelPickerHtml() {
+  const current = providerModel();
+  const models = modelOptionsForCurrentProvider();
+  const verifiedText = state.modelOptionsVerified ? 'Đã xác minh trực tiếp qua API/Ollama' : 'Catalog gợi ý · bấm Làm mới để xác minh theo tài khoản';
+  const rows = models.length ? models.map(m => `
+    <button type="button" class="model-option-row ${m === current ? 'active' : ''}" data-model-choice="${esc(m)}" data-model-filter="${esc(m.toLowerCase())}">
+      <span class="model-option-name">${esc(m)}</span>
+      <span class="model-option-state">${m === current ? 'Đang dùng' : (state.modelOptionsVerified ? 'Khả dụng' : 'Gợi ý')}</span>
+    </button>`).join('') : '<div class="empty-models">Chưa có model. Bấm “Làm mới từ API”.</div>';
+  return `
+    <div class="model-picker-overlay" id="modelPickerOverlay" role="presentation">
+      <section class="model-picker-dialog" role="dialog" aria-modal="true" aria-labelledby="modelPickerTitle">
+        <div class="model-picker-head">
+          <div><div class="section-kicker">AI · ${esc(PROVIDERS[state.settings.provider]?.short || state.settings.provider)}</div><h3 id="modelPickerTitle">Chọn model</h3></div>
+          <button type="button" class="icon-btn" id="closeModelPicker" aria-label="Đóng">×</button>
+        </div>
+        <div class="model-picker-tools">
+          <input id="modelPickerSearch" autocomplete="off" placeholder="Tìm model…" aria-label="Tìm model">
+          <button type="button" class="btn" id="refreshModelsFromPicker">↻ Làm mới từ API</button>
+        </div>
+        <div class="model-picker-status ${state.modelOptionsVerified ? 'verified' : 'suggested'}">${esc(verifiedText)}${state.modelStatus ? ` · ${esc(state.modelStatus)}` : ''}</div>
+        <div class="model-picker-list" id="modelPickerList">${rows}</div>
+        <div class="model-manual-row">
+          <input id="manualModelInput" autocomplete="off" value="" placeholder="Hoặc nhập chính xác model ID…">
+          <button type="button" class="btn" id="applyManualModel">Dùng model này</button>
+        </div>
+        <div class="model-picker-foot"><span>🔒 Mọi thay đổi model đều hỏi OK trước khi áp dụng.</span><span id="modelPickerCount">${models.length} model</span></div>
+      </section>
+    </div>`;
 }
 function confirmModelSwitch(nextModel, reason = 'Yêu cầu đổi model') {
   const oldModel = providerModel();
@@ -522,23 +553,29 @@ function render() {
             <button class="icon-btn" id="pdfSearchPrev" ${!doc ? 'disabled' : ''} title="Kết quả trước">↑</button>
             <button class="icon-btn" id="pdfSearchNext" ${!doc ? 'disabled' : ''} title="Kết quả sau">↓</button>
           </div>
-          <div class="viewer-controls">
-            <div class="reader-mode-switch" title="Kiểu đọc PDF">
-              <button id="readerContinuous" class="${state.readerMode === 'continuous' ? 'active' : ''}" ${!doc || doc.viewerKind !== 'pdf' ? 'disabled' : ''}>Liên tục</button>
-              <button id="readerSingle" class="${state.readerMode === 'single' ? 'active' : ''}" ${!doc || doc.viewerKind !== 'pdf' ? 'disabled' : ''}>1 trang</button>
+          <div class="viewer-controls" aria-label="Điều khiển trình đọc PDF">
+            <div class="toolbar-group toolbar-mode-group">
+              <div class="reader-mode-switch" title="Kiểu đọc PDF">
+                <button id="readerContinuous" class="${state.readerMode === 'continuous' ? 'active' : ''}" ${!doc || doc.viewerKind !== 'pdf' ? 'disabled' : ''}>Liên tục</button>
+                <button id="readerSingle" class="${state.readerMode === 'single' ? 'active' : ''}" ${!doc || doc.viewerKind !== 'pdf' ? 'disabled' : ''}>1 trang</button>
+              </div>
             </div>
-            <button class="icon-btn" id="zoomOut" ${!doc ? 'disabled' : ''} title="Thu nhỏ (−)">−</button>
-            <button class="zoom-value" id="fitWidth" ${!doc ? 'disabled' : ''} title="Vừa chiều rộng (Ctrl+0)">${Math.round(state.zoom * 100)}%</button>
-            <button class="icon-btn" id="zoomIn" ${!doc ? 'disabled' : ''} title="Phóng to (+)">＋</button>
-            <span class="toolbar-divider"></span>
-            <button class="icon-btn" id="prevPage" ${!doc ? 'disabled' : ''} title="Trang trước (Page Up)">‹</button>
-            <input class="page-input" id="pageInput" value="${state.page}" ${!doc ? 'disabled' : ''} aria-label="Số trang">
-            <span class="page-total">/ ${doc?.pageCount || 0}</span>
-            <button class="icon-btn" id="nextPage" ${!doc ? 'disabled' : ''} title="Trang sau (Page Down)">›</button>
-            <span class="toolbar-divider"></span>
-            <button class="icon-btn" id="viewerToggleAssistant" title="Ẩn/hiện trợ lý">AI</button>
-            <button class="icon-btn" id="resetLayout" title="Khôi phục bố cục 3 vùng">↺</button>
-            <button class="icon-btn ${state.focusReader ? 'active-tool' : ''}" id="focusReader" title="${state.focusReader ? 'Thoát chế độ tập trung' : 'Chế độ tập trung PDF'}">${state.focusReader ? '⊞' : '⛶'}</button>
+            <div class="toolbar-group toolbar-zoom-group" aria-label="Thu phóng">
+              <button class="icon-btn" id="zoomOut" ${!doc ? 'disabled' : ''} title="Thu nhỏ (−)">−</button>
+              <button class="zoom-value" id="fitWidth" ${!doc ? 'disabled' : ''} title="Vừa chiều rộng (Ctrl+0)">${Math.round(state.zoom * 100)}%</button>
+              <button class="icon-btn" id="zoomIn" ${!doc ? 'disabled' : ''} title="Phóng to (+)">＋</button>
+            </div>
+            <div class="toolbar-group toolbar-page-group" aria-label="Điều hướng trang">
+              <button class="icon-btn" id="prevPage" ${!doc ? 'disabled' : ''} title="Trang trước (Page Up)">‹</button>
+              <input class="page-input" id="pageInput" value="${state.page}" ${!doc ? 'disabled' : ''} aria-label="Số trang">
+              <span class="page-total">/ ${doc?.pageCount || 0}</span>
+              <button class="icon-btn" id="nextPage" ${!doc ? 'disabled' : ''} title="Trang sau (Page Down)">›</button>
+            </div>
+            <div class="toolbar-group toolbar-layout-group" aria-label="Bố cục trình đọc">
+              <button class="icon-btn" id="viewerToggleAssistant" title="Ẩn/hiện trợ lý">AI</button>
+              <button class="icon-btn" id="resetLayout" title="Khôi phục bố cục 3 vùng">↺</button>
+              <button class="icon-btn ${state.focusReader ? 'active-tool' : ''}" id="focusReader" title="${state.focusReader ? 'Thoát chế độ tập trung' : 'Chế độ tập trung PDF'}">${state.focusReader ? '⊞' : '⛶'}</button>
+            </div>
           </div>
         </div>
         ${doc ? viewerContentHtml(doc) : emptyViewerHtml()}
@@ -552,9 +589,9 @@ function render() {
         </div>
         <div class="ai-quickbar">
           <label><span>AI</span><select id="quickProviderSelect">${availableProviderEntries().map(([id,p]) => `<option value="${id}" ${id===state.settings.provider?'selected':''}>${esc(p.short)}</option>`).join('')}</select></label>
-          <label class="quick-model-field"><span>Model</span><select id="quickModelSelect" ${state.settings.provider==='local'?'disabled':''}>${quickModelOptionsHtml()}</select></label>
+          <label class="quick-model-field"><span>Model</span><button type="button" class="quick-model-trigger" id="openQuickModelPicker" ${state.settings.provider==='local'?'disabled':''} title="Chọn model AI"><span class="quick-model-name">${esc(providerModel() || 'Không dùng AI')}</span><span class="quick-model-caret">⌄</span></button></label>
           <button class="icon-btn quick-model-refresh" id="refreshModelsQuick" title="Lấy danh sách model khả dụng">↻</button>
-          <small class="quick-model-note"><span class="model-approval-lock">🔒 Đổi model cần OK</span>${state.modelOptions.length ? ` · ${state.modelOptionsVerified ? 'Danh sách đã xác minh' : 'Catalog gợi ý, chưa xác minh'}` : ''}</small>
+          <small class="quick-model-note"><span class="model-approval-lock">🔒 Đổi model cần OK</span>${state.modelOptions.length ? ` · ${state.modelOptionsVerified ? `${state.modelOptions.length} model đã xác minh` : `${state.modelOptions.length} model trong catalog`}` : ''}</small>
         </div>
         <div class="tabs">${[
           ['summary', 'Tóm tắt'], ['chat', 'Hỏi đáp'], ['lookup', 'Tra cứu'], ['calc', 'Tính'], ['compare', 'So sánh'], ['checklist', 'Nghiệm thu'], ['settings', 'Cài đặt']
@@ -569,6 +606,7 @@ function render() {
       <button data-mobile="assistant" class="${state.mobile === 'assistant' ? 'active' : ''}">Trợ lý</button>
     </nav>
 
+    ${state.modelPickerOpen ? modelPickerHtml() : ''}
     ${state.progress ? progressHtml() : ''}
     ${state.toast ? `<div class="toast ${state.toast.type}">${esc(state.toast.message)}</div>` : ''}
   </div>`;
@@ -957,6 +995,23 @@ function bind() {
       }
       if (el.id === 'saveSettings') { updateSettingsFromForm(); return; }
       if (el.id === 'testConnection') { await testConnection(); return; }
+      if (el.closest?.('#openQuickModelPicker')) { state.modelPickerOpen = true; render(); queueMicrotask(() => document.querySelector('#modelPickerSearch')?.focus()); return; }
+      if (el.id === 'closeModelPicker' || (el.id === 'modelPickerOverlay' && event.target === el)) { state.modelPickerOpen = false; render(); return; }
+      const modelChoice = el.closest?.('[data-model-choice]');
+      if (modelChoice) {
+        const next = modelChoice.dataset.modelChoice || '';
+        if (confirmModelSwitch(next, 'Bạn đang chọn một model khác.')) state.modelPickerOpen = false;
+        render();
+        return;
+      }
+      if (el.id === 'applyManualModel') {
+        const next = document.querySelector('#manualModelInput')?.value.trim() || '';
+        if (!next) return showToast('Hãy nhập model ID cần dùng.', 'warning');
+        if (confirmModelSwitch(next, 'Bạn đang nhập model thủ công.')) state.modelPickerOpen = false;
+        render();
+        return;
+      }
+      if (el.id === 'refreshModelsFromPicker') { await refreshModels(); return; }
       if (el.id === 'refreshModels' || el.id === 'refreshModelsQuick') { await refreshModels(); return; }
       if (el.id === 'ocrActivePdf') { await ocrActivePdfLocal(); return; }
       if (el.id === 'autoLocalModels') { await applyRecommendedLocalModels(); return; }
@@ -1005,7 +1060,6 @@ function bind() {
     if (el.id === 'formulaScanMode') { state.formulaScanMode = el.value || 'auto'; localStorage.setItem(STORAGE.formulaScanMode, state.formulaScanMode); return; }
     if (el.id === 'formulaSelect') { state.formulaSelection = el.value; localStorage.setItem(STORAGE.formulaSelection, el.value); render(); return; }
     if (el.id === 'providerSelect' || el.id === 'quickProviderSelect') { providerChanged(event); return; }
-    if (el.id === 'quickModelSelect') { const next=el.value; if (!confirmModelSwitch(next, 'Bạn đang chọn một model khác.')) { render(); } else render(); return; }
     if (el.id === 'strictInput') { state.settings.strict = el.checked; }
   };
 
@@ -1014,6 +1068,17 @@ function bind() {
     if (el.id === 'chatQuestion') state.chatDraft = el.value;
     else if (el.id === 'pdfSearchInput') { state.readerQuery = el.value; state.readerMatchIndex = -1; localStorage.setItem(STORAGE.readerQuery, state.readerQuery); }
     else if (el.id === 'pageRange') { const n=Number(el.value)||1; const label=document.querySelector('#readerStatusPage'); if(label) label.textContent=String(n); }
+    else if (el.id === 'modelPickerSearch') {
+      const q = String(el.value || '').trim().toLowerCase();
+      let visible = 0;
+      document.querySelectorAll('.model-option-row').forEach(row => {
+        const match = !q || String(row.dataset.modelFilter || '').includes(q);
+        row.hidden = !match;
+        if (match) visible++;
+      });
+      const count = document.querySelector('#modelPickerCount');
+      if (count) count.textContent = `${visible} model`;
+    }
     else if (el.id === 'lookupQuery') state.lookup.draft = el.value;
     else if (el.id === 'compareQuestion') state.compare.draft = el.value;
     else if (el.id === 'modelInput') state.settingsDraft.model = el.value;
@@ -1027,6 +1092,7 @@ function bind() {
   app.onkeydown = event => {
     if (event.isComposing) return;
     const el = event.target;
+    if (event.key === 'Escape' && state.modelPickerOpen) { event.preventDefault(); state.modelPickerOpen = false; render(); return; }
     if (el.id === 'pageInput' && event.key === 'Enter') { event.preventDefault(); jumpPage(Number(el.value)); return; }
     if (el.id === 'pdfSearchInput' && event.key === 'Enter') { event.preventDefault(); findNextInActive(event.shiftKey ? -1 : 1); return; }
     if (el.id === 'lookupQuery' && event.key === 'Enter') { event.preventDefault(); runLookup(); return; }
@@ -1912,6 +1978,7 @@ HNL chỉ chuyển khi bạn bấm OK.`);
   if (!ok) { render(); return; }
   state.settings.provider = provider;
   state.settings.model = nextModel;
+  state.modelPickerOpen = false;
   state.settingsDraft = {};
   state.modelOptions = [];
   state.modelOptionsVerified = false;
@@ -1942,8 +2009,11 @@ async function refreshModels() {
     const current = providerModel();
     const missingCurrent = Boolean(state.modelOptionsVerified && state.modelOptions.length && current && !state.modelOptions.includes(current));
     if (state.modelOptionsVerified) {
+      const geminiCoverage = state.settings.provider === 'gemini' && Number(result.discoveredCount || 0) > 0
+        ? ` API thấy ${result.discoveredCount} model generateContent; ${result.compatibleCount || state.modelOptions.length} model phù hợp chat kỹ thuật${result.filteredCount ? `; ${result.filteredCount} model chuyên biệt đã ẩn khỏi bộ chọn chat` : ''}.`
+        : '';
       state.modelStatus = state.modelOptions.length
-        ? (missingCurrent ? `Đã xác minh ${state.modelOptions.length} model. Model hiện tại ${current} không còn trong danh sách; HNL KHÔNG tự chuyển.` : `Đã xác minh ${state.modelOptions.length} model từ ${result.source || 'API'}. HNL không tự đổi model.`)
+        ? (missingCurrent ? `Đã xác minh ${state.modelOptions.length} model. Model hiện tại ${current} không còn trong danh sách; HNL KHÔNG tự chuyển.${geminiCoverage}` : `Đã xác minh ${state.modelOptions.length} model từ ${result.source || 'API'}. HNL không tự đổi model.${geminiCoverage}`)
         : `Đã kết nối nhưng tài khoản/Ollama không trả về model khả dụng.`;
     } else {
       state.modelStatus = `Chỉ hiển thị catalog gợi ý, CHƯA xác minh model thực tế. ${result.warning || ''}`.trim();

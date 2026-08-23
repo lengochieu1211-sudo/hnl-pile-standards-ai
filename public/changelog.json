@@ -1,6 +1,21 @@
 {
-  "current": "1.9.17",
+  "current": "1.9.18",
   "releases": [
+    {
+      "version": "1.9.18",
+      "title": "UI State Guard · Offline AI Ready · Full Logic/Responsive Audit",
+      "date": "2026-08-23",
+      "changes": [
+        "Sửa OCR/Chọn vùng không còn full-render làm PDF nhảy về đầu; giữ trang và vị trí cuộn.",
+        "Sửa Kiểm tra kết nối API cập nhật kết quả tại chỗ, không kéo tab Cài đặt về đầu và không làm mất focus/key nháp.",
+        "Thêm UI State Guard bảo toàn PDF scroll/page, panel scroll, thư viện scroll và focus qua các render cần thiết.",
+        "Trước khi tải model, HNL Bridge bảo đảm Ollama API 11434 thật sự sẵn sàng; tự chạy ollama serve nếu cần và trả OLLAMA_NOT_READY rõ ràng.",
+        "Cancel tải model Windows dừng cả process tree; giữ kiểm tra dung lượng và xác nhận trước download.",
+        "Audit lại button delegation, responsive toolbar/container, model sync và version gate.",
+        "Các nút thay đổi bố cục giữ nguyên viewport PDF thay vì ép scroll trang hiện tại về đầu.",
+        "Citation sang PDF khác xác minh docId của viewer trước khi dùng shell trang, tránh nhảy/ render nhầm DOM tài liệu cũ."
+      ]
+    },
     {
       "version": "1.9.17",
       "title": "Full Source Audit · Unified AI Key · Local-first PDF Region OCR · Archive/Offline Hardening",

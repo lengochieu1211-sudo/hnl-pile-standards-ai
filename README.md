@@ -1,5 +1,17 @@
-# HNL Pile Standards AI v1.9.17
+# HNL Pile Standards AI v1.9.18
 
+
+## v1.9.18 — UI State Guard · Offline AI Ready · Full Logic/Responsive Audit
+
+- Sửa lỗi **bật Chọn chữ/OCR vùng làm PDF nhảy về đầu**: công cụ chọn cập nhật trực tiếp layer hiện tại, không full-render toàn ứng dụng.
+- Sửa lỗi **Kiểm tra kết nối API làm tab Cài đặt nhảy lên trên**: kết quả kết nối cập nhật tại chỗ, giữ scroll/focus/API key đang nhập.
+- Thêm **UI State Guard** cho những full-render còn cần thiết: bảo toàn PDF page/scroll, panel scroll, thư viện scroll và focus input khi cùng ngữ cảnh.
+- Các nút chỉ đổi bố cục (ẩn/hiện panel, Focus, Reset layout) không còn ép PDF cuộn về đầu trang hiện tại.
+- Sửa citation đổi sang PDF khác: chỉ tái sử dụng `pdf-page-N` khi DOM đang render đúng `docId`; nếu khác tài liệu sẽ render tài liệu mới rồi mới nhảy trang.
+- Offline AI: trước `ollama pull`, Bridge kiểm tra API 11434; nếu Ollama đã cài nhưng server chưa chạy thì tự `ollama serve`, chờ sẵn sàng rồi mới tải model.
+- Cancel model trên Windows dùng `taskkill /PID ... /T /F` để dừng cả process tree.
+- Giữ nguyên nguyên tắc: không tự tải model nhiều GB, không tự đổi provider/model, Vision/Embedding chỉ đổi sau xác nhận OK.
+- Tiếp tục responsive theo chiều rộng thực của PDF/AI panel; tab AI 4 → 3 → 2 cột và Cài đặt luôn nằm trong lưới.
 ## v1.9.17 — Full Source Audit · AI Key/Archive/Offline/PDF Region Hardening
 
 - **Gemini/OpenAI/Claude/Grok key trên PC:** Direct và HNL Bridge dùng cùng key phiên theo provider; Test Connection, Refresh Models và Chat không còn đọc hai nguồn key khác nhau.

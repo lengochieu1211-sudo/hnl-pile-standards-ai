@@ -1,7 +1,7 @@
 {
   "name": "hnl-pile-standards-ai",
   "private": true,
-  "version": "1.9.17",
+  "version": "1.9.18",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -86,6 +86,6 @@
       "artifactName": "HNL-Pile-Standards-AI-Portable-${version}-${arch}.${ext}"
     }
   },
-  "description": "HNL Pile Standards AI - Web + Desktop engineering AI with unified session API keys, local-first smart PDF region OCR, archive engine diagnostics, disk-safe Ollama setup, PDF.js legacy compatibility, responsive UI, synchronized model controls and version-gated Windows builds.",
+  "description": "HNL Pile Standards AI - Web + Desktop engineering AI with UI state preservation, unified session API keys, local-first PDF region OCR, Ollama readiness checks, archive diagnostics, responsive 3-panel layout and version-gated Windows builds.",
   "author": "HNL"
 }

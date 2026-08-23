@@ -10,7 +10,7 @@ import { extractFormulaLibrary, formulaStats, verifiedFormulaLibrary, evaluateEx
 
 const SOURCE_META = Object.freeze({
   version: typeof __HNL_APP_VERSION__ !== 'undefined' ? __HNL_APP_VERSION__ : '0.0.0',
-  release: 'PC AI Key Sync · Built-in RAR · Smart PDF Select/OCR'
+  release: 'UI State Guard · Offline AI Ready · Responsive Audit'
 });
 
 let APP_META = {
@@ -547,7 +547,72 @@ async function copyBuildDiagnostics() {
   } catch (error) { showToast(`Không sao chép được: ${error.message}`, 'error'); }
 }
 
+function captureRenderViewport() {
+  try {
+    const pdf = document.querySelector('#pdfScroll');
+    const panel = document.querySelector('.panel-body');
+    const docs = document.querySelector('.doc-list');
+    const active = document.activeElement;
+    const anchor = state.readerMode === 'continuous' ? document.querySelector(`#pdf-page-${state.page}`) : null;
+    const pdfRect = pdf?.getBoundingClientRect?.();
+    const anchorRect = anchor?.getBoundingClientRect?.();
+    return {
+      docId: pdf?.dataset?.docId || state.activeDocId,
+      readerMode: state.readerMode,
+      page: state.page,
+      tab: state.tab,
+      modelPickerOpen: Boolean(state.modelPickerOpen),
+      pdfTop: Number(pdf?.scrollTop || 0),
+      pdfLeft: Number(pdf?.scrollLeft || 0),
+      pageAnchorOffset: anchorRect && pdfRect ? anchorRect.top - pdfRect.top : null,
+      panelTop: Number(panel?.scrollTop || 0),
+      docsTop: Number(docs?.scrollTop || 0),
+      focusId: active?.id || '',
+      selectionStart: typeof active?.selectionStart === 'number' ? active.selectionStart : null,
+      selectionEnd: typeof active?.selectionEnd === 'number' ? active.selectionEnd : null
+    };
+  } catch { return null; }
+}
+
+function restoreRenderViewport(snapshot) {
+  if (!snapshot) return;
+  try {
+    const sameDoc = snapshot.docId === state.activeDocId && snapshot.readerMode === state.readerMode;
+    if (sameDoc && !state.pendingPageScroll) {
+      const pdf = document.querySelector('#pdfScroll');
+      if (pdf) {
+        pdf.scrollLeft = snapshot.pdfLeft || 0;
+        if (state.readerMode === 'continuous' && snapshot.pageAnchorOffset != null) {
+          const anchor = document.querySelector(`#pdf-page-${snapshot.page}`);
+          if (anchor) {
+            const pdfRect = pdf.getBoundingClientRect();
+            const anchorRect = anchor.getBoundingClientRect();
+            pdf.scrollTop += (anchorRect.top - pdfRect.top) - snapshot.pageAnchorOffset;
+          } else pdf.scrollTop = snapshot.pdfTop || 0;
+        } else pdf.scrollTop = snapshot.pdfTop || 0;
+        updateReaderPageUi(snapshot.page || state.page);
+      }
+    }
+    if (snapshot.tab === state.tab) {
+      const panel = document.querySelector('.panel-body');
+      if (panel) panel.scrollTop = snapshot.panelTop || 0;
+    }
+    const docs = document.querySelector('.doc-list');
+    if (docs) docs.scrollTop = snapshot.docsTop || 0;
+    if (snapshot.focusId && snapshot.tab === state.tab && snapshot.modelPickerOpen === Boolean(state.modelPickerOpen)) {
+      const target = document.getElementById(snapshot.focusId);
+      if (target && !target.disabled) {
+        target.focus?.({ preventScroll:true });
+        if (snapshot.selectionStart != null && typeof target.setSelectionRange === 'function') {
+          try { target.setSelectionRange(snapshot.selectionStart, snapshot.selectionEnd ?? snapshot.selectionStart); } catch {}
+        }
+      }
+    }
+  } catch { /* UI preservation must never block rendering. */ }
+}
+
 function render() {
+  const viewportSnapshot = captureRenderViewport();
   const doc = activeDoc();
   const sources = sourceDocs();
   const provider = PROVIDERS[state.settings.provider] || PROVIDERS.local;
@@ -686,7 +751,11 @@ function render() {
   bind();
   bindWorkspaceSplitters();
   bindGlobalReaderShortcuts();
-  if (doc) queueMicrotask(drawPage);
+  if (doc) queueMicrotask(async () => {
+    await drawPage();
+    requestAnimationFrame(() => restoreRenderViewport(viewportSnapshot));
+  });
+  else requestAnimationFrame(() => restoreRenderViewport(viewportSnapshot));
 }
 
 function emptyLibraryHtml() {
@@ -706,9 +775,9 @@ function viewerContentHtml(doc) {
       const p = i + 1;
       return `<section class="pdf-page-shell" id="pdf-page-${p}" data-page="${p}"><div class="page-float-label">${p}</div><canvas class="pdf-page-canvas" data-page="${p}"></canvas><div class="pdf-text-layer" data-page="${p}"></div><div class="pdf-region-layer" data-page="${p}"></div><div class="pdf-page-loading">Trang ${p}</div></section>`;
     }).join('');
-    return `<div class="canvas-wrap pdf-continuous" id="pdfScroll">${pages}</div><div class="reader-statusbar"><span>Trang <b id="readerStatusPage">${state.page}</b>/${doc.pageCount}</span><input id="pageRange" type="range" min="1" max="${doc.pageCount}" value="${state.page}"><span>${Math.round(state.zoom*100)}% · kéo chuột để pan · Ctrl+cuộn để zoom</span></div>`;
+    return `<div class="canvas-wrap pdf-continuous" id="pdfScroll" data-doc-id="${esc(doc.id)}">${pages}</div><div class="reader-statusbar"><span>Trang <b id="readerStatusPage">${state.page}</b>/${doc.pageCount}</span><input id="pageRange" type="range" min="1" max="${doc.pageCount}" value="${state.page}"><span>${Math.round(state.zoom*100)}% · kéo chuột để pan · Ctrl+cuộn để zoom</span></div>`;
   }
-  return `<div class="canvas-wrap pdf-single" id="pdfScroll"><section class="pdf-page-shell single" data-page="${state.page}"><canvas id="pdfCanvas"></canvas><div class="pdf-text-layer" data-page="${state.page}"></div><div class="pdf-region-layer" data-page="${state.page}"></div></section></div><div class="reader-statusbar"><span>Trang <b>${state.page}</b>/${doc.pageCount}</span><input id="pageRange" type="range" min="1" max="${doc.pageCount}" value="${state.page}"><span>${Math.round(state.zoom*100)}% · PageUp/PageDown đổi trang</span></div>`;
+  return `<div class="canvas-wrap pdf-single" id="pdfScroll" data-doc-id="${esc(doc.id)}"><section class="pdf-page-shell single" data-page="${state.page}"><canvas id="pdfCanvas"></canvas><div class="pdf-text-layer" data-page="${state.page}"></div><div class="pdf-region-layer" data-page="${state.page}"></div></section></div><div class="reader-statusbar"><span>Trang <b>${state.page}</b>/${doc.pageCount}</span><input id="pageRange" type="range" min="1" max="${doc.pageCount}" value="${state.page}"><span>${Math.round(state.zoom*100)}% · PageUp/PageDown đổi trang</span></div>`;
 }
 
 function emptyViewerHtml() {
@@ -851,7 +920,7 @@ function formulaLibraryHtml() {
   const byDoc = stats.byDoc.map(d => `<span>${esc(d.standard || d.name)}: ${d.total} CT${d.aiDetected ? ` · ${d.aiDetected} AI` : ''}${d.computable ? ` · ${d.computable} tính được` : ''}</span>`).join('');
   return `<div class="panel-section formula-library">
     <div class="panel-section-title"><h3>Thư viện công thức toàn bộ PDF</h3><span>${items.length} công thức</span></div>
-    <div class="notice"><b>v1.7.1 quét công thức trực tiếp từ dữ liệu bạn tải lên.</b> Với PDF có lớp chữ, app phân tích cục bộ; với PDF scan/hình hoặc công thức bị vỡ dòng, chế độ Hybrid/AI sẽ đọc trực tiếp ảnh từng trang bằng AI Vision. Công thức AI nhận diện luôn gắn tài liệu + trang gốc và mặc định cần xác minh trước khi cho tính tự động.</div>
+    <div class="notice"><b>Quét công thức thông minh từ dữ liệu bạn tải lên.</b> Với PDF có lớp chữ, app phân tích cục bộ; với PDF scan/hình hoặc công thức bị vỡ dòng, chế độ Hybrid/AI sẽ đọc trực tiếp ảnh từng trang bằng AI Vision. Công thức AI nhận diện luôn gắn tài liệu + trang gốc và mặc định cần xác minh trước khi cho tính tự động.</div>
     <div class="formula-stats four"><div><span>Đã xác minh</span><b>${verifiedCount}</b></div><div><span>Tổng phát hiện</span><b>${stats.total}</b></div><div><span>AI/Vision</span><b>${stats.aiDetected || 0}</b></div><div><span>Cần kiểm tra</span><b>${stats.needsReview}</b></div></div>
     ${byDoc ? `<div class="formula-doc-stats">${byDoc}</div>` : ''}
     <div class="grid2 formula-scan-controls"><label class="field"><span>Phương pháp quét</span><select id="formulaScanMode"><option value="auto" ${state.formulaScanMode==='auto'?'selected':''}>Tự động Hybrid · khuyên dùng</option><option value="local" ${state.formulaScanMode==='local'?'selected':''}>Cục bộ nhanh · lớp chữ</option><option value="ai" ${state.formulaScanMode==='ai'?'selected':''}>AI/Vision · quét toàn bộ trang</option></select></label><div class="notice compact"><b>AI đang chọn:</b> ${esc(PROVIDERS[state.settings.provider]?.label || 'Local')}${state.settings.provider==='local' ? ' · chưa có AI Vision' : ` · ${esc(providerModel(true))}`}</div></div>
@@ -990,7 +1059,7 @@ function settingsHtml() {
   const isOllama = state.settings.provider === 'ollama';
   const githubHttps = location.protocol === 'https:' && !isLocalHost();
   return `<div class="panel-section">
-    <div class="panel-section-title"><h3>AI & kết nối</h3><span>${state.connectionStatus?.ok ? 'Sẵn sàng' : 'Chưa kiểm tra'}</span></div>
+    <div class="panel-section-title"><h3>AI & kết nối</h3><span id="connectionStateLabel">${state.connectionStatus?.ok ? 'Sẵn sàng' : (state.connectionStatus ? 'Có lỗi' : 'Chưa kiểm tra')}</span></div>
     <label class="field"><span>Nhà cung cấp</span><select id="providerSelect">${options}</select></label>
     ${state.settings.provider === 'local' ? `<div class="notice success"><b>Tra cứu nhanh không phải AI.</b><br>${IS_DESKTOP_EDITION ? 'Chế độ này tìm kiếm cục bộ, không cần mạng. Muốn AI offline suy luận, chọn <b>HNL Offline AI · Ollama</b>.' : 'Chế độ này tìm ngay trong dữ liệu đã nạp, không cần API. Muốn AI suy luận trên bản Web, chọn <b>Gemini / ChatGPT / Claude / Grok</b>.'}</div>` : `
       <div class="segmented"><button data-connection="direct" class="${state.settings.connection === 'direct' ? 'active' : ''}">Trực tiếp</button><button data-connection="bridge" class="${state.settings.connection === 'bridge' ? 'active' : ''}">HNL Bridge</button></div>
@@ -1010,7 +1079,7 @@ function settingsHtml() {
         </select></label>
         <label class="field"><span>Model embedding cục bộ</span><input id="embeddingModelInput" value="${esc(draftSetting('embeddingModel', state.settings.embeddingModel))}" placeholder="bge-m3"><small>Khuyến nghị tiếng Việt/kỹ thuật: bge-m3. Có thể dùng nomic-embed-text nếu máy nhẹ.</small></label>
         <label class="switch-row"><input id="semanticRerankInput" type="checkbox" ${state.settings.semanticRerank ? 'checked' : ''}><span><b>Semantic rerank</b><small>Rerank các đoạn ứng viên bằng embedding cục bộ trước khi gửi cho model trả lời.</small></span></label>
-        <div class="notice"><b>Cơ chế v1.7:</b> quét toàn bộ trang → tìm từ khóa/cấu trúc → embedding semantic → cân bằng giữa PDF → thêm trang lân cận → model trả lời có citation.</div>
+        <div class="notice"><b>Cơ chế truy hồi:</b> quét toàn bộ trang → tìm từ khóa/cấu trúc → embedding semantic → cân bằng giữa PDF → thêm trang lân cận → model trả lời có citation.</div>
         <div class="action-row"><button class="btn" id="autoLocalModels" type="button">⚙ Tự chọn model theo máy</button><button class="btn" id="installCurrentLocalModel" type="button">⬇ Cài model văn bản</button><button class="btn" id="installLocalAiPack" type="button">⬇ Cài bộ AI Offline chuẩn</button></div><div class="notice"><b>Desktop:</b> nút cài model gọi Ollama ngay trên máy. Bộ chuẩn gồm model văn bản + embedding + vision; chỉ cần tải một lần rồi có thể dùng offline.</div>
         ${localModelManagerHtml()}
       </div>` : ''}
@@ -1018,7 +1087,7 @@ function settingsHtml() {
     `}
     <label class="switch-row"><input id="strictInput" type="checkbox" ${state.settings.strict ? 'checked' : ''}><span><b>Khóa nguồn tài liệu</b><small>AI không được tự thêm quy định ngoài PDF/ảnh/text đã chọn.</small></span></label>
     <div class="action-row"><button class="btn primary" id="saveSettings">Lưu cài đặt</button><button class="btn" id="testConnection">Kiểm tra kết nối</button></div>
-    ${state.connectionStatus ? `<div class="notice ${state.connectionStatus.ok ? 'success' : 'error'}"><b>${state.connectionStatus.ok ? 'Kết nối OK' : 'Kết nối lỗi'}</b><br>${esc(state.connectionStatus.message || '')}</div>` : ''}
+    <div id="connectionStatusBox" class="notice ${state.connectionStatus?.ok ? 'success' : 'error'}" ${state.connectionStatus ? '' : 'hidden'}><b>${state.connectionStatus?.ok ? 'Kết nối OK' : 'Kết nối lỗi'}</b><br>${esc(state.connectionStatus?.message || '')}</div>
   </div>
   ${versionCardHtml()}
   <div class="panel-section"><div class="panel-section-title"><h3>Dữ liệu đầu vào</h3><span>v${APP_META.version}</span></div><div class="capability-grid"><span>✓ PDF nhiều file</span><span>✓ ZIP tự bung</span><span>✓ Đọc cả thư mục</span><span>✓ Ảnh JPG/PNG/WebP</span><span>✓ TXT/CSV/JSON</span><span>${IS_DESKTOP_EDITION ? '✓ RAR/7Z/TAR/GZ cục bộ' : '✓ ZIP trên Web; RAR/7Z dùng Desktop'}</span><span>✓ Archive có mật khẩu</span><span>✓ Quét toàn bộ trang</span><span>✓ Thư viện công thức tự quét</span><span>✓ Hybrid Semantic RAG</span><span>✓ Local Embedding/Rerank</span><span>✓ Tự chẩn đoán Ollama/RAM/GPU</span><span>✓ Quản lý model Offline & ổ đĩa</span><span>✓ Nhiều model AI</span><span>✓ PDF liên tục + kéo/pan</span><span>✓ Tìm trong PDF + phím tắt</span><span>✓ Giao diện co giãn</span></div>${archiveEngineCardHtml()}</div>
@@ -1052,12 +1121,12 @@ function bind() {
       if (el.id === 'assistantSettingsQuick') { state.tab = 'settings'; state.focusReader=false; state.rightCollapsed=false; localStorage.setItem(STORAGE.rightCollapsed, 'false'); if (window.innerWidth <= 880) state.mobile='assistant'; render(); return; }
       if (el.id === 'selectAll') { state.docs.forEach(d => state.selected.add(d.id)); showToast(`Đã chọn ${state.docs.length} tài liệu làm nguồn.`, 'success'); render(); return; }
       if (el.id === 'clearSelection') { state.selected.clear(); showToast(state.settings.scope === 'selected' ? 'Đã bỏ chọn nguồn. Phạm vi “Đã chọn” hiện không có tài liệu.' : 'Đã bỏ dấu tick. Phạm vi Toàn thư viện vẫn tra cứu tất cả tài liệu.', 'info'); render(); return; }
-      if (el.id === 'toggleLibrary' || el.id === 'viewerToggleLibrary') { state.focusReader=false; state.leftCollapsed = !state.leftCollapsed; localStorage.setItem(STORAGE.leftCollapsed, String(state.leftCollapsed)); state.pendingPageScroll=true; render(); return; }
-      if (el.id === 'toggleAssistant' || el.id === 'viewerToggleAssistant') { state.focusReader=false; state.rightCollapsed = !state.rightCollapsed; localStorage.setItem(STORAGE.rightCollapsed, String(state.rightCollapsed)); state.pendingPageScroll=true; render(); return; }
-      if (el.id === 'reopenLibrary') { state.focusReader=false; state.leftCollapsed=false; localStorage.setItem(STORAGE.leftCollapsed, 'false'); state.pendingPageScroll=true; render(); return; }
-      if (el.id === 'reopenAssistant') { state.focusReader=false; state.rightCollapsed=false; localStorage.setItem(STORAGE.rightCollapsed, 'false'); state.pendingPageScroll=true; render(); return; }
-      if (el.id === 'resetLayout') { state.focusReader=false; state.leftCollapsed=false; state.rightCollapsed=false; state.layout={left:290,right:440}; localStorage.setItem(STORAGE.leftCollapsed,'false'); localStorage.setItem(STORAGE.rightCollapsed,'false'); localStorage.setItem(STORAGE.leftWidth,'290'); localStorage.setItem(STORAGE.rightWidth,'440'); state.pendingPageScroll=true; showToast('Đã khôi phục bố cục Thư viện · PDF · Trợ lý.', 'success'); render(); return; }
-      if (el.id === 'focusReader') { state.focusReader = !state.focusReader; state.pendingPageScroll = true; render(); return; }
+      if (el.id === 'toggleLibrary' || el.id === 'viewerToggleLibrary') { state.focusReader=false; state.leftCollapsed = !state.leftCollapsed; localStorage.setItem(STORAGE.leftCollapsed, String(state.leftCollapsed)); render(); return; }
+      if (el.id === 'toggleAssistant' || el.id === 'viewerToggleAssistant') { state.focusReader=false; state.rightCollapsed = !state.rightCollapsed; localStorage.setItem(STORAGE.rightCollapsed, String(state.rightCollapsed)); render(); return; }
+      if (el.id === 'reopenLibrary') { state.focusReader=false; state.leftCollapsed=false; localStorage.setItem(STORAGE.leftCollapsed, 'false'); render(); return; }
+      if (el.id === 'reopenAssistant') { state.focusReader=false; state.rightCollapsed=false; localStorage.setItem(STORAGE.rightCollapsed, 'false'); render(); return; }
+      if (el.id === 'resetLayout') { state.focusReader=false; state.leftCollapsed=false; state.rightCollapsed=false; state.layout={left:290,right:440}; localStorage.setItem(STORAGE.leftCollapsed,'false'); localStorage.setItem(STORAGE.rightCollapsed,'false'); localStorage.setItem(STORAGE.leftWidth,'290'); localStorage.setItem(STORAGE.rightWidth,'440'); showToast('Đã khôi phục bố cục Thư viện · PDF · Trợ lý.', 'success'); render(); return; }
+      if (el.id === 'focusReader') { state.focusReader = !state.focusReader; render(); return; }
       if (el.id === 'readerContinuous') { setReaderMode('continuous'); return; }
       if (el.id === 'readerSingle') { setReaderMode('single'); return; }
       if (el.id === 'pdfSmartSelect') { await togglePdfSmartSelection(); return; }
@@ -1144,9 +1213,7 @@ function bind() {
       if (el.matches('[data-find]')) { findInActive(el.dataset.find); return; }
       if (el.matches('[data-hit-doc]')) {
         state.activeDocId = el.dataset.hitDoc;
-        state.page = Number(el.dataset.hitPage) || 1;
-        state.mobile = 'viewer';
-        render();
+        jumpPage(Number(el.dataset.hitPage) || 1);
         return;
       }
     } catch (error) {
@@ -1432,6 +1499,32 @@ function pdfPageHasSelectableText(doc, page = state.page) {
   return text.length >= 24;
 }
 
+async function applyPdfSelectionModeUi(doc = activeDoc()) {
+  const button = document.querySelector('#pdfSmartSelect');
+  if (button) {
+    button.classList.toggle('active-tool', state.pdfSelectionMode !== 'off');
+    button.setAttribute('aria-pressed', state.pdfSelectionMode !== 'off' ? 'true' : 'false');
+    button.title = state.pdfSelectionMode === 'text' ? 'Đang chọn chữ · bấm để chuyển OCR vùng' : state.pdfSelectionMode === 'region' ? 'Đang OCR vùng · bấm để tắt' : 'PDF có text: bôi chọn/copy. Trang scan: kéo vùng OCR';
+  }
+  const shells = [...document.querySelectorAll('.pdf-page-shell')];
+  if (state.pdfSelectionMode === 'off') {
+    for (const shell of shells) {
+      shell.classList.remove('pdf-text-selecting','pdf-region-selecting');
+      clearRegionLayer(shell.querySelector('.pdf-region-layer'));
+    }
+    closePdfSelectionPopup();
+    return;
+  }
+  const current = Math.max(1, Number(state.page || 1));
+  for (const shell of shells) {
+    const page = Number(shell.dataset.page || current);
+    const rendered = shell.querySelector('canvas')?.dataset?.rendered === '1' || shell.classList.contains('single') || page === current;
+    if (!rendered) continue;
+    shell.classList.remove('pdf-text-selecting','pdf-region-selecting');
+    await preparePdfSelectionLayer(doc, shell);
+  }
+}
+
 async function togglePdfSmartSelection() {
   const doc = activeDoc();
   if (!doc || doc.viewerKind !== 'pdf') return showToast('Hãy mở một PDF trước.', 'warning');
@@ -1444,7 +1537,7 @@ async function togglePdfSmartSelection() {
     : state.pdfSelectionMode === 'region'
       ? 'Chế độ OCR vùng: kéo đúng vùng cần đọc. HNL ưu tiên text layer → OCR cục bộ → chỉ đề nghị Vision AI khi cần.'
       : 'Đã tắt Chọn chữ/OCR vùng.', 'success');
-  render();
+  await applyPdfSelectionModeUi(doc);
 }
 
 async function preparePdfSelectionLayer(doc, shell) {
@@ -1756,10 +1849,13 @@ function jumpPage(page) {
   const target = Math.min(Math.max(1, Number(page) || 1), doc.pageCount);
   state.page = target;
   state.mobile = window.innerWidth <= 880 ? 'viewer' : state.mobile;
-  if (state.readerMode === 'continuous' && document.querySelector(`#pdf-page-${target}`)) {
+  const wrap = document.querySelector('#pdfScroll');
+  const targetShell = document.querySelector(`#pdf-page-${target}`);
+  const sameRenderedDoc = wrap?.dataset?.docId === String(doc.id);
+  if (state.readerMode === 'continuous' && sameRenderedDoc && targetShell) {
     updateReaderPageUi(target);
-    document.querySelector(`#pdf-page-${target}`)?.scrollIntoView({ behavior:'smooth', block:'start' });
-    renderContinuousPage(doc, document.querySelector(`#pdf-page-${target}`));
+    targetShell.scrollIntoView({ behavior:'smooth', block:'start' });
+    renderContinuousPage(doc, targetShell);
     return;
   }
   state.pendingPageScroll = true;
@@ -2659,10 +2755,25 @@ function updateSettingsFromForm() {
   render();
 }
 
+function updateConnectionStatusUi(status, { pending = false } = {}) {
+  const box = document.querySelector('#connectionStatusBox');
+  const label = document.querySelector('#connectionStateLabel');
+  const badge = document.querySelector('#openSettings');
+  if (badge) badge.classList.toggle('ok', Boolean(status?.ok) && !pending);
+  if (label) label.textContent = pending ? 'Đang kiểm tra…' : status?.ok ? 'Sẵn sàng' : status ? 'Có lỗi' : 'Chưa kiểm tra';
+  if (!box) return;
+  if (!pending && !status) { box.hidden = true; return; }
+  box.hidden = false;
+  box.className = `notice ${pending ? '' : status?.ok ? 'success' : 'error'}`.trim();
+  const title = pending ? 'Đang kiểm tra kết nối…' : status?.ok ? 'Kết nối OK' : 'Kết nối lỗi';
+  const message = pending ? 'Giữ nguyên vị trí và dữ liệu đang nhập; HNL chỉ cập nhật kết quả tại đây.' : String(status?.message || '');
+  box.innerHTML = `<b>${esc(title)}</b><br>${esc(message)}`;
+}
+
 async function testConnection() {
   const draft = rememberSettingsDraft();
   state.connectionStatus = null;
-  render();
+  updateConnectionStatusUi(null, { pending:true });
   try {
     let result;
     const provider = state.settings.provider;
@@ -2696,7 +2807,7 @@ async function testConnection() {
     }
     state.connectionStatus = result;
   } catch (error) { state.connectionStatus = { ok:false, message:`${error.message} Cài đặt nháp chưa được lưu.` }; }
-  render();
+  updateConnectionStatusUi(state.connectionStatus);
 }
 
 function bindWorkspaceSplitters() {

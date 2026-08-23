@@ -721,3 +721,69 @@ test('v1.9.17 Bridge permits Electron file origin while rejecting unrelated brow
   assert.match(bridge, /!origin \|\| origin === 'null'/);
   assert.match(bridge, /Origin không được phép truy cập HNL Bridge/);
 });
+
+test('v1.9.18 PDF smart select updates layers in place and never full-renders the app', () => {
+  const start = source.indexOf('async function togglePdfSmartSelection()');
+  const end = source.indexOf('async function preparePdfSelectionLayer', start);
+  const body = source.slice(start, end);
+  assert.match(body, /applyPdfSelectionModeUi/);
+  assert.doesNotMatch(body, /\brender\(\)/);
+  assert.match(source, /function captureRenderViewport/);
+  assert.match(source, /function restoreRenderViewport/);
+  assert.match(source, /pageAnchorOffset/);
+});
+
+test('v1.9.18 API connection test updates status in place without resetting Settings scroll', () => {
+  const start = source.indexOf('async function testConnection()');
+  const end = source.indexOf('function bindWorkspaceSplitters()', start);
+  const body = source.slice(start, end);
+  assert.match(source, /id="connectionStatusBox"/);
+  assert.match(source, /id="connectionStateLabel"/);
+  assert.match(source, /function updateConnectionStatusUi/);
+  assert.doesNotMatch(body, /\brender\(\)/);
+  assert.match(body, /updateConnectionStatusUi\(null, \{ pending:true \}\)/);
+  assert.match(body, /updateConnectionStatusUi\(state\.connectionStatus\)/);
+});
+
+test('v1.9.18 Ollama pull waits for the local API and cancel kills Windows process tree', () => {
+  const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
+  assert.match(bridge, /async function ensureOllamaServerReady/);
+  assert.match(bridge, /ollamaApiReady/);
+  assert.match(bridge, /spawn\(exe,\['serve'\]/);
+  assert.match(bridge, /OLLAMA_NOT_READY/);
+  assert.match(bridge, /app\.post\('\/api\/local\/pull-model', async/);
+  assert.match(bridge, /await ensureOllamaServerReady\(\{ timeoutMs:20000 \}\)/);
+  assert.match(bridge, /taskkill\.exe/);
+  assert.match(bridge, /'\/PID',String\(job\.pid\),'\/T','\/F'/);
+});
+
+test('v1.9.18 assistant and PDF toolbar remain container-responsive with Settings reachable', () => {
+  const css = fs.readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  assert.match(css, /container-name:viewer/);
+  assert.match(css, /@container viewer \(max-width:1050px\)/);
+  assert.match(css, /@container viewer \(max-width:620px\)/);
+  assert.match(css, /container-name:assistant/);
+  assert.match(css, /grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+  assert.match(css, /@container assistant \(max-width:390px\)[\s\S]*repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(css, /@container assistant \(max-width:315px\)[\s\S]*repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(source, /\['settings', 'Cài đặt'\]/);
+});
+
+test('v1.9.18 citation navigation never reuses page shells from another PDF', () => {
+  assert.match(source, /id="pdfScroll" data-doc-id="\$\{esc\(doc\.id\)\}"/);
+  assert.match(source, /sameRenderedDoc = wrap\?\.dataset\?\.docId === String\(doc\.id\)/);
+  assert.match(source, /if \(state\.readerMode === 'continuous' && sameRenderedDoc && targetShell\)/);
+  assert.match(source, /state\.activeDocId = el\.dataset\.hitDoc;\s*jumpPage\(Number\(el\.dataset\.hitPage\)/s);
+});
+
+test('v1.9.18 layout-only buttons preserve PDF viewport instead of forcing page top', () => {
+  for (const id of ['toggleLibrary','toggleAssistant','reopenLibrary','reopenAssistant','resetLayout','focusReader']) {
+    const hit = source.match(new RegExp(`if \\(el\\.id === '${id}'[\\s\\S]{0,420}?render\\(\\); return; \\}`));
+    assert.ok(hit, `${id} handler not found`);
+    assert.doesNotMatch(hit[0], /pendingPageScroll\s*=\s*true/);
+  }
+});
+
+test('v1.9.18 viewport snapshot keys off the rendered PDF, not a newly changed state doc id', () => {
+  assert.match(source, /docId: pdf\?\.dataset\?\.docId \|\| state\.activeDocId/);
+});

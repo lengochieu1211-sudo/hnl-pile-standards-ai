@@ -352,11 +352,44 @@ function setUserModelsDir(dir) {
   process.env.OLLAMA_MODELS=dir;
   if(process.platform==='win32'){ const script=`[Environment]::SetEnvironmentVariable('OLLAMA_MODELS', ${JSON.stringify(dir)}, 'User')`; const r=spawnSync('powershell.exe',['-NoProfile','-Command',script],{encoding:'utf8',windowsHide:true,timeout:8000}); if(r.status!==0) throw new Error((r.stderr||r.stdout||'Không đặt được OLLAMA_MODELS').trim()); }
 }
+async function ollamaApiReady(base = (process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434').replace(/\/$/, ''), timeoutMs = 1000) {
+  try {
+    const resp = await fetch(`${base}/api/tags`, { signal:AbortSignal.timeout(timeoutMs) });
+    return resp.ok;
+  } catch { return false; }
+}
+
+async function ensureOllamaServerReady({ timeoutMs = 20000, forceStart = false } = {}) {
+  const base=(process.env.OLLAMA_BASE_URL||'http://127.0.0.1:11434').replace(/\/$/,'');
+  if (!forceStart && await ollamaApiReady(base, 900)) return { ok:true, base, alreadyRunning:true };
+  const exe=requireOllamaExecutable();
+  try {
+    const child=spawn(exe,['serve'],{detached:true,windowsHide:true,stdio:'ignore',env:{...process.env}});
+    child.once('error',()=>{});
+    child.unref();
+  } catch (err) {
+    const error = new Error(`Không khởi động được Ollama server: ${err.message}`);
+    error.code = err.code || 'OLLAMA_NOT_READY';
+    throw error;
+  }
+  const started=Date.now();
+  while(Date.now()-started < timeoutMs) {
+    if (await ollamaApiReady(base, 1200)) return { ok:true, base, alreadyRunning:false };
+    await new Promise(r=>setTimeout(r,500));
+  }
+  const error = new Error(`Đã tìm thấy ollama.exe nhưng Ollama API ${base} chưa sẵn sàng. Hãy kiểm tra tiến trình Ollama, firewall hoặc cổng 11434.`);
+  error.code = 'OLLAMA_NOT_READY';
+  throw error;
+}
+
 async function restartOllamaServer() {
-  if(process.platform!=='win32') return {ok:false,message:'Tự khởi động lại Ollama hiện chỉ hỗ trợ Windows.'};
-  try{spawnSync('taskkill',['/IM','ollama.exe','/F'],{encoding:'utf8',windowsHide:true,timeout:5000});}catch{}
-  try{const exe=requireOllamaExecutable();const child=spawn(exe,['serve'],{detached:true,windowsHide:true,stdio:'ignore',env:{...process.env}});child.once('error',()=>{});child.unref();}catch(err){return {ok:false,message:err.message,code:err.code};}
-  const base=(process.env.OLLAMA_BASE_URL||'http://127.0.0.1:11434').replace(/\/$/,''); for(let i=0;i<12;i++){await new Promise(r=>setTimeout(r,500));try{const resp=await fetch(`${base}/api/tags`,{signal:AbortSignal.timeout(900)});if(resp.ok)return {ok:true};}catch{}} return {ok:false,message:'Đã đặt thư mục nhưng Ollama chưa phản hồi sau khi khởi động lại.'};
+  if(process.platform!=='win32') {
+    try { return await ensureOllamaServerReady({timeoutMs:12000,forceStart:true}); }
+    catch(err) { return {ok:false,message:err.message,code:err.code}; }
+  }
+  try{spawnSync('taskkill.exe',['/IM','ollama.exe','/T','/F'],{encoding:'utf8',windowsHide:true,timeout:5000});}catch{}
+  try { return await ensureOllamaServerReady({timeoutMs:16000,forceStart:true}); }
+  catch(err) { return {ok:false,message:err.message,code:err.code}; }
 }
 function stripAnsi(text=''){return String(text).replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g,'').replace(/\r/g,'\n');}
 function updatePullProgress(job,chunk){const text=stripAnsi(chunk);job.output=(job.output+text).slice(-12000);const matches=[...text.matchAll(/(\d{1,3})\s*%/g)];if(matches.length)job.progress=Math.max(job.progress||0,Math.min(99,Number(matches.at(-1)[1])||0));}
@@ -581,21 +614,25 @@ app.get('/api/local/archive-engines', (_req,res) => {
 });
 
 const MODEL_PULL_JOBS = new Map();
-app.post('/api/local/pull-model', (req, res) => {
+app.post('/api/local/pull-model', async (req, res) => {
   try {
     const model = String(req.body?.model || '').trim();
     if (!model || !/^[a-zA-Z0-9._:/-]{2,120}$/.test(model)) return res.status(400).json({ error:'Tên model Ollama không hợp lệ.' });
     if (MODEL_PULL_JOBS.get(model)?.status === 'running') return res.json({ ok:true, model, status:'running' });
+    await ensureOllamaServerReady({ timeoutMs:20000 });
     const exe = requireOllamaExecutable();
-    const child = spawn(exe, ['pull', model], { windowsHide:true, stdio:['ignore','pipe','pipe'] });
+    const child = spawn(exe, ['pull', model], { windowsHide:true, stdio:['ignore','pipe','pipe'], env:{...process.env} });
     const job = { status:'running', startedAt:new Date().toISOString(), output:'', progress:0, pid:child.pid, child };
     MODEL_PULL_JOBS.set(model, job);
     const add = chunk => updatePullProgress(job, chunk);
     child.stdout?.on('data', add); child.stderr?.on('data', add);
-    child.on('error', err => { job.status='error'; job.error=err.message; });
+    child.on('error', err => { job.status='error'; job.error=err.message; job.finishedAt=new Date().toISOString(); delete job.child; });
     child.on('exit', code => { job.status = code === 0 ? 'done' : (job.status === 'cancelled' ? 'cancelled' : 'error'); job.progress = code === 0 ? 100 : job.progress; job.exitCode=code; job.finishedAt=new Date().toISOString(); delete job.child; });
     res.json({ ok:true, model, status:'running' });
-  } catch (err) { res.status(err.code === 'OLLAMA_NOT_INSTALLED' ? 503 : 500).json({ error:err.message || 'Không chạy được ollama pull.', code:err.code || 'OLLAMA_PULL_ERROR' }); }
+  } catch (err) {
+    const unavailable = ['OLLAMA_NOT_INSTALLED','OLLAMA_NOT_READY'].includes(err.code);
+    res.status(unavailable ? 503 : 500).json({ error:err.message || 'Không chạy được ollama pull.', code:err.code || 'OLLAMA_PULL_ERROR' });
+  }
 });
 app.get('/api/local/model-jobs', (_req,res) => {
   res.json({ jobs:[...MODEL_PULL_JOBS.entries()].map(([model,j])=>({ model, status:j.status, startedAt:j.startedAt, finishedAt:j.finishedAt, progress:j.progress||0, error:j.error, exitCode:j.exitCode, output:j.output })) });
@@ -603,7 +640,13 @@ app.get('/api/local/model-jobs', (_req,res) => {
 app.post('/api/local/cancel-model-pull', (req,res)=>{
   const model=String(req.body?.model||'').trim(); const job=MODEL_PULL_JOBS.get(model);
   if(!job||job.status!=='running') return res.status(404).json({error:'Không có tác vụ tải model đang chạy.'});
-  try{job.status='cancelled';if(job.child&&!job.child.killed)job.child.kill();res.json({ok:true,model,status:'cancelled'});}catch(err){res.status(500).json({error:err.message});}
+  try{
+    job.status='cancelled';
+    if(job.pid && process.platform==='win32') spawnSync('taskkill.exe',['/PID',String(job.pid),'/T','/F'],{encoding:'utf8',windowsHide:true,timeout:5000});
+    else if(job.child&&!job.child.killed) job.child.kill('SIGTERM');
+    job.finishedAt=new Date().toISOString();
+    res.json({ok:true,model,status:'cancelled'});
+  }catch(err){res.status(500).json({error:err.message});}
 });
 
 app.get('/api/local/model-manager', async (_req,res)=>{

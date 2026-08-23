@@ -2,7 +2,7 @@ import './styles.css';
 import { renderPdfPage, renderPdfPageToBase64, renderPdfTextLayer, cropCanvasRegionToBase64, extractTextFromLayerRegion, ocrImageBase64Locally, clearPdfCache } from './pdf.js';
 import { expandInputItems, parseInputFile, fileToBase64, extractArchiveViaLocalBridge, isArchiveFile } from './ingest.js';
 import { saveDocument, getDocuments, deleteDocument } from './db.js';
-import { searchChunks, searchEveryPage, smartSearchChunks, deepSearchChunks, localSummary, localAnswer, corpusStats, isBroadQuery, planEngineeringQueries, clearSearchCache } from './search.js';
+import { searchChunks, searchEveryPage, smartSearchChunks, deepSearchChunks, localSummary, localAnswer, corpusStats, isBroadQuery, planEngineeringQueries, clearSearchCache, coreSearchPhrase, findTocPageTargets } from './search.js';
 import { PROVIDERS, buildRagPrompt, callBridge, callDirect, bridgeHealth, testDirectProvider, listAvailableModelsDetailed, semanticRerank, localEngineDiagnostics } from './ai.js';
 import { annulusAreaMm2, axialResistance, loadClassSigmaCe, tcvn7888Checklist } from './calculators.js';
 import { diameters7888, lookup7888, classesForDiameter7888 } from './tcvn7888.js';
@@ -10,7 +10,7 @@ import { extractFormulaLibrary, formulaStats, verifiedFormulaLibrary, evaluateEx
 
 const SOURCE_META = Object.freeze({
   version: typeof __HNL_APP_VERSION__ !== 'undefined' ? __HNL_APP_VERSION__ : '0.0.0',
-  release: 'UI State Guard · Offline AI Ready · Responsive Audit'
+  release: 'Hybrid Visual RAG · Compact Settings UI · Targeted OCR'
 });
 
 let APP_META = {
@@ -98,6 +98,7 @@ const state = {
   busy: false,
   connectionStatus: null,
   diagnosticHtml: '',
+  diagnosticSummary: null,
   modelOptions: [],
   modelOptionsVerified: false,
   modelCatalogSource: '',
@@ -481,20 +482,26 @@ function versionCardHtml() {
   const update = state.updateStatus;
   const updateHtml = update ? `<div class="notice ${update.ok ? (update.available ? 'warning' : 'success') : 'error'}"><b>${esc(update.title || '')}</b>${update.message ? `<br>${esc(update.message)}` : ''}${update.url ? ` <a class="inline-link" href="${esc(update.url)}" target="_blank" rel="noreferrer">Mở GitHub Release</a>` : ''}</div>` : '';
   const changes = (state.changelog || []).slice(0, 2);
-  const changelogHtml = changes.length ? `<div class="mini-changelog">${changes.map(r => `<div><b>v${esc(r.version)} · ${esc(r.title || '')}</b><small>${(r.changes || []).slice(0, 3).map(x => `• ${esc(x)}`).join('<br>')}</small></div>`).join('')}</div>` : '';
-  return `<div class="panel-section app-version-card">
-    <div class="panel-section-title"><h3>Phiên bản & bản build</h3><span>${EDITION_LABEL}</span></div>
-    <div class="version-grid">
-      <div><span>Phiên bản</span><b>v${APP_META.version}</b></div>
-      <div><span>Bản build</span><b>${esc(buildNumberLabel())}</b></div>
-      <div><span>Thời điểm build</span><b>${esc(formatBuildTime(APP_META.builtAt))}</b></div>
-      <div><span>Kênh</span><b>${EDITION_LABEL}</b></div>
-      <div><span>Commit</span><b>${esc(APP_META.commitShort || 'local')}</b></div>
-      <div><span>Nhánh</span><b>${esc(APP_META.branch || 'local')}</b></div>
-    </div>
-    <p class="muted">Ngày giờ này được đọc từ <code>build-info.json</code> tạo <b>sau khi bước build thành công</b>. Không dùng ngày giờ ghi cứng trong source.</p>
-    <div class="action-row"><button class="btn" id="checkAppUpdate">↻ Kiểm tra cập nhật</button><button class="btn" id="copyBuildDiagnostics">⧉ Sao chép thông tin</button>${APP_META.workflowUrl ? `<a class="btn inline-link" href="${esc(APP_META.workflowUrl)}" target="_blank" rel="noreferrer">GitHub Build</a>` : ''}</div>
-    ${updateHtml}${changelogHtml}
+  const changelogHtml = changes.length ? `<div class="mini-changelog">${changes.map(r => `<div><b>v${esc(r.version)} · ${esc(r.title || '')}</b><small>${(r.changes || []).slice(0, 4).map(x => `• ${esc(x)}`).join('<br>')}</small></div>`).join('')}</div>` : '';
+  return `<div class="panel-section app-version-card compact-settings-card">
+    <div class="panel-section-title"><h3>Phiên bản & bản build</h3><span>v${APP_META.version}</span></div>
+    <div class="compact-overview-line"><div><b>v${APP_META.version} · ${esc(buildNumberLabel())}</b><small>${EDITION_LABEL} · ${esc(formatBuildTime(APP_META.builtAt))}</small></div><span class="compact-status">${esc(APP_META.commitShort || 'local')}</span></div>
+    <details id="settingsVersionDetails" class="compact-disclosure" data-persist-detail>
+      <summary><span>Xem chi tiết phiên bản & thay đổi</span><span class="disclosure-chevron">⌄</span></summary>
+      <div class="disclosure-body">
+        <div class="version-grid">
+          <div><span>Phiên bản</span><b>v${APP_META.version}</b></div>
+          <div><span>Bản build</span><b>${esc(buildNumberLabel())}</b></div>
+          <div><span>Thời điểm build</span><b>${esc(formatBuildTime(APP_META.builtAt))}</b></div>
+          <div><span>Kênh</span><b>${EDITION_LABEL}</b></div>
+          <div><span>Commit</span><b>${esc(APP_META.commitShort || 'local')}</b></div>
+          <div><span>Nhánh</span><b>${esc(APP_META.branch || 'local')}</b></div>
+        </div>
+        <p class="muted">Thông tin build được đọc từ <code>build-info.json</code> tạo sau bước build; không ghi cứng ngày giờ trong source.</p>
+        <div class="action-row"><button class="btn" id="checkAppUpdate">↻ Kiểm tra cập nhật</button><button class="btn" id="copyBuildDiagnostics">⧉ Sao chép thông tin</button>${APP_META.workflowUrl ? `<a class="btn inline-link" href="${esc(APP_META.workflowUrl)}" target="_blank" rel="noreferrer">GitHub Build</a>` : ''}</div>
+        ${updateHtml}${changelogHtml}
+      </div>
+    </details>
   </div>`;
 }
 async function loadBuildMetadata() {
@@ -567,6 +574,7 @@ function captureRenderViewport() {
       pageAnchorOffset: anchorRect && pdfRect ? anchorRect.top - pdfRect.top : null,
       panelTop: Number(panel?.scrollTop || 0),
       docsTop: Number(docs?.scrollTop || 0),
+      openDetails: [...document.querySelectorAll('details[data-persist-detail][open]')].map(x => x.id).filter(Boolean),
       focusId: active?.id || '',
       selectionStart: typeof active?.selectionStart === 'number' ? active.selectionStart : null,
       selectionEnd: typeof active?.selectionEnd === 'number' ? active.selectionEnd : null
@@ -599,6 +607,7 @@ function restoreRenderViewport(snapshot) {
     }
     const docs = document.querySelector('.doc-list');
     if (docs) docs.scrollTop = snapshot.docsTop || 0;
+    for (const id of snapshot.openDetails || []) { const detail = document.getElementById(id); if (detail?.tagName === 'DETAILS') detail.open = true; }
     if (snapshot.focusId && snapshot.tab === state.tab && snapshot.modelPickerOpen === Boolean(state.modelPickerOpen)) {
       const target = document.getElementById(snapshot.focusId);
       if (target && !target.disabled) {
@@ -666,7 +675,7 @@ function render() {
             <option value="selected" ${state.settings.scope === 'selected' ? 'selected' : ''}>Chỉ tài liệu đã tick</option>
             <option value="active" ${state.settings.scope === 'active' ? 'selected' : ''}>Chỉ PDF đang mở</option>
           </select></label>
-          <div class="coverage-line"><b>${esc(scopeLabel())}</b><small>Mặc định v${APP_META.version} quét tất cả trang có lớp chữ trước khi xếp hạng kết quả.</small></div>
+          <div class="coverage-line"><b>${esc(scopeLabel())}</b><small>Mặc định v${APP_META.version} quét toàn bộ lớp chữ; nếu mục tiêu nằm trong ảnh/scan thì chỉ OCR/Vision các trang đích cần thiết.</small></div>
           <label class="switch-row">
             <input id="strictSide" type="checkbox" ${state.settings.strict ? 'checked' : ''}>
             <span><b>Khóa nguồn</b><small>Không cho AI tự thêm nội dung ngoài PDF</small></span>
@@ -830,7 +839,7 @@ function summaryHtml() {
       <div class="eyebrow">${esc(doc.standard || 'Tài liệu')}</div>
       <h3>Tóm tắt kỹ sư</h3>
       <p>Đọc cục bộ ngay, hoặc dùng AI để tổng hợp sâu hơn nhưng vẫn khóa theo nguồn PDF.</p>
-      <div class="action-row"><button class="btn primary" id="aiSummary" ${state.busy ? 'disabled' : ''}>Tóm tắt PDF đang mở</button><button class="btn" id="aiSummaryAll" ${state.busy || !sourceDocs().length ? 'disabled' : ''}>Tóm tắt toàn bộ nguồn</button></div><div class="coverage-line"><b>${esc(scopeLabel())}</b><small>Tóm tắt toàn bộ nguồn sẽ quét mọi trang có lớp chữ trong phạm vi hiện tại.</small></div>
+      <div class="action-row"><button class="btn primary" id="aiSummary" ${state.busy ? 'disabled' : ''}>Tóm tắt PDF đang mở</button><button class="btn" id="aiSummaryAll" ${state.busy || !sourceDocs().length ? 'disabled' : ''}>Tóm tắt toàn bộ nguồn</button></div><div class="coverage-line"><b>${esc(scopeLabel())}</b><small>Tóm tắt toàn bộ nguồn quét mọi trang có lớp chữ; trang ảnh cần đọc sẽ dùng OCR/Vision có mục tiêu.</small></div>
     </div>
     ${doc.scannedLikely ? `<div class="notice warning"><b>PDF có ít lớp text.</b> Hình vẫn xem được nhưng tra cứu chữ sẽ thiếu nếu chưa OCR. <button class="btn compact-btn" id="ocrActivePdf" type="button">OCR toàn PDF bằng AI Offline</button></div>` : ''}
     <div class="panel-section"><div class="panel-section-title"><h3>Cấu trúc nhận diện</h3><span>${summary.headings.length} mục</span></div>${summary.headings.slice(0, 18).map(x => sourceLine(x, doc)).join('') || '<div class="muted">Chưa nhận diện được đề mục rõ ràng.</div>'}</div>
@@ -872,7 +881,7 @@ function lookupHtml() {
   return `${docs.length ? '' : noSourceCard('tra cứu')}
     <div class="panel-section">
       <div class="panel-section-title"><h3>Tìm trong dữ liệu</h3><span>${docs.length} nguồn</span></div>
-      <div class="coverage-line"><b>${esc(scopeLabel())}</b><small>${state.searchStats ? `Lần tìm gần nhất đã quét ${state.searchStats.textPages}/${state.searchStats.pages} trang · ${state.searchStats.chunks} đoạn.` : 'Mỗi lần tìm sẽ quét toàn bộ trang có lớp chữ trong phạm vi rồi mới xếp hạng.'}</small></div>
+      <div class="coverage-line"><b>${esc(scopeLabel())}</b><small>${state.searchStats ? `Lần tìm gần nhất: lớp chữ ${state.searchStats.textPages}/${state.searchStats.pages} trang · ${state.searchStats.chunks} đoạn${state.searchStats.visualPagesInspected ? ` · kiểm tra ảnh ${state.searchStats.visualPagesInspected} trang đích` : ''}.` : 'Mỗi lần tìm quét toàn bộ lớp chữ trước; OCR/Vision chỉ chạy trên trang đích khi cần.'}</small></div>
       <div class="search-box"><input id="lookupQuery" value="${esc(state.lookup.draft || state.lookup.query)}" placeholder="Ví dụ: sai lệch đường kính, vết nứt, D600 cấp B…"><button id="lookupBtn" ${!docs.length ? 'disabled' : ''}>Quét tất cả trang</button></div>
       <div class="search-results">${resultHtml}</div>
     </div>
@@ -1090,8 +1099,19 @@ function settingsHtml() {
     <div id="connectionStatusBox" class="notice ${state.connectionStatus?.ok ? 'success' : 'error'}" ${state.connectionStatus ? '' : 'hidden'}><b>${state.connectionStatus?.ok ? 'Kết nối OK' : 'Kết nối lỗi'}</b><br>${esc(state.connectionStatus?.message || '')}</div>
   </div>
   ${versionCardHtml()}
-  <div class="panel-section"><div class="panel-section-title"><h3>Dữ liệu đầu vào</h3><span>v${APP_META.version}</span></div><div class="capability-grid"><span>✓ PDF nhiều file</span><span>✓ ZIP tự bung</span><span>✓ Đọc cả thư mục</span><span>✓ Ảnh JPG/PNG/WebP</span><span>✓ TXT/CSV/JSON</span><span>${IS_DESKTOP_EDITION ? '✓ RAR/7Z/TAR/GZ cục bộ' : '✓ ZIP trên Web; RAR/7Z dùng Desktop'}</span><span>✓ Archive có mật khẩu</span><span>✓ Quét toàn bộ trang</span><span>✓ Thư viện công thức tự quét</span><span>✓ Hybrid Semantic RAG</span><span>✓ Local Embedding/Rerank</span><span>✓ Tự chẩn đoán Ollama/RAM/GPU</span><span>✓ Quản lý model Offline & ổ đĩa</span><span>✓ Nhiều model AI</span><span>✓ PDF liên tục + kéo/pan</span><span>✓ Tìm trong PDF + phím tắt</span><span>✓ Giao diện co giãn</span></div>${archiveEngineCardHtml()}</div>
-  <div class="panel-section"><div class="panel-section-title"><h3>Chẩn đoán ứng dụng</h3><span>v${APP_META.version}</span></div><p class="muted">Kiểm tra bộ nhớ trình duyệt, tài liệu, nguồn đang chọn và cấu hình AI.</p><button class="btn" id="runDiagnostics">Chạy chẩn đoán</button>${state.diagnosticHtml}</div>`;
+  <div class="panel-section compact-settings-card">
+    <div class="panel-section-title"><h3>Dữ liệu đầu vào</h3><span>v${APP_META.version}</span></div>
+    <div class="compact-overview-line"><div><b>PDF · Thư mục · Archive · Ảnh · Text</b><small>Hybrid RAG · OCR có mục tiêu · Offline AI trên Desktop</small></div><span class="compact-status">Sẵn sàng</span></div>
+    <details id="settingsInputDetails" class="compact-disclosure" data-persist-detail>
+      <summary><span>Xem chi tiết định dạng & tính năng</span><span class="disclosure-chevron">⌄</span></summary>
+      <div class="disclosure-body"><div class="capability-grid"><span>✓ PDF nhiều file</span><span>✓ ZIP tự bung</span><span>✓ Đọc cả thư mục</span><span>✓ Ảnh JPG/PNG/WebP</span><span>✓ TXT/CSV/JSON</span><span>${IS_DESKTOP_EDITION ? '✓ RAR/7Z/TAR/GZ cục bộ' : '✓ ZIP trên Web; RAR/7Z dùng Desktop'}</span><span>✓ Archive có mật khẩu</span><span>✓ Quét toàn bộ lớp chữ</span><span>✓ OCR/Vision đúng trang mục tiêu</span><span>✓ Thư viện công thức tự quét</span><span>✓ Hybrid Semantic + Visual RAG</span><span>✓ Local Embedding/Rerank</span><span>✓ Tự chẩn đoán Ollama/RAM/GPU</span><span>✓ Quản lý model Offline & ổ đĩa</span><span>✓ Nhiều model AI</span><span>✓ PDF liên tục + kéo/pan</span><span>✓ Tìm trong PDF + phím tắt</span><span>✓ Giao diện co giãn</span></div>${archiveEngineCardHtml()}</div>
+    </details>
+  </div>
+  <div class="panel-section compact-settings-card">
+    <div class="panel-section-title"><h3>Chẩn đoán ứng dụng</h3><span>${state.diagnosticSummary ? `${state.diagnosticSummary.passed}/${state.diagnosticSummary.total}` : `v${APP_META.version}`}</span></div>
+    <div class="compact-overview-line"><div><b>${state.diagnosticSummary ? `${state.diagnosticSummary.passed}/${state.diagnosticSummary.total} kiểm tra ${state.diagnosticSummary.ok ? 'đạt' : 'cần xem'}` : 'Kiểm tra nhanh tình trạng ứng dụng'}</b><small>Bộ nhớ · PDF · nguồn · AI · build${IS_DESKTOP_EDITION ? ' · Ollama · archive' : ''}</small></div><button class="btn compact-btn" id="runDiagnostics">Chạy</button></div>
+    ${state.diagnosticHtml ? `<details id="settingsDiagnosticDetails" class="compact-disclosure" data-persist-detail><summary><span>Xem chi tiết chẩn đoán</span><span class="disclosure-chevron">⌄</span></summary><div class="disclosure-body">${state.diagnosticHtml}</div></details>` : ''}
+  </div>`;
 }
 
 function sourceChipsHtml(hits = []) {
@@ -2107,6 +2127,107 @@ async function chooseApprovedEmbeddingFallback(error, currentModel) {
   } catch { return ''; }
 }
 
+
+function normalizedFlat(text = '') {
+  return String(text || '').toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9.%+/-]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function textMatchesCoreQuestion(text, question) {
+  const core = coreSearchPhrase(question);
+  if (!core) return false;
+  const flat = normalizedFlat(text);
+  if (flat.includes(core)) return true;
+  const terms = core.split(/\s+/).filter(Boolean);
+  return terms.length > 0 && terms.every(t => flat.includes(t));
+}
+
+/**
+ * Targeted visual fallback for mixed PDFs.
+ * It never OCRs the whole document automatically. Searchable TOC anchors and
+ * low-text target pages are used to inspect only a few likely pages:
+ * text layer -> local TextDetector OCR -> same-call Vision image when needed.
+ */
+async function collectTargetedPdfEvidence(question, docs, tocTargets = [], existingHits = []) {
+  const byDoc = new Map((docs || []).map(d => [d.id, d]));
+  const refs = [];
+  const seen = new Set();
+  const pushRef = (docId, page, reason, target = null) => {
+    const doc = byDoc.get(docId);
+    const p = Number(page || 0);
+    if (!doc || doc.viewerKind !== 'pdf' || p < 1 || p > Number(doc.pageCount || doc.pages?.length || 0)) return;
+    const key = `${docId}:${p}`;
+    if (seen.has(key) || refs.length >= 4) return;
+    seen.add(key); refs.push({ doc, page:p, reason, target });
+  };
+
+  for (const target of (tocTargets || []).slice(0, 3)) {
+    // The resolved target page gets first priority, then one neighboring page.
+    pushRef(target.docId, target.targetPage, 'toc-target', target);
+    for (const p of target.candidatePages || []) {
+      if (refs.length >= 4) break;
+      if (p !== target.targetPage) pushRef(target.docId, p, 'toc-neighbor', target);
+    }
+  }
+
+  // A lexical hit on a nearly image-only page is another useful visual hint.
+  for (const hit of (existingHits || []).slice(0, 8)) {
+    const doc = byDoc.get(hit.docId);
+    const pg = doc?.pages?.find(x => Number(x.page) === Number(hit.page));
+    if (doc?.viewerKind === 'pdf' && String(pg?.text || '').trim().length < 220) pushRef(doc.id, hit.page, 'low-text-hit');
+    if (refs.length >= 4) break;
+  }
+
+  const hits = [];
+  const images = [];
+  const diagnostics = [];
+  for (const ref of refs) {
+    const pageObj = ref.doc.pages?.find(x => Number(x.page) === ref.page);
+    const layerText = String(pageObj?.text || '').trim();
+    if (layerText.length >= 80 && textMatchesCoreQuestion(layerText, question)) {
+      hits.push({ docId:ref.doc.id, docName:ref.doc.name, standard:ref.doc.standard, page:ref.page, chunk:'target-text', text:layerText.slice(0, 12000), score:980, targeted:true, targetReason:ref.reason });
+      diagnostics.push({ docId:ref.doc.id, page:ref.page, mode:'text-layer' });
+      continue;
+    }
+
+    let image = null;
+    let localOcr = { available:false, text:'', blocks:0 };
+    try {
+      image = await renderPdfPageToBase64(ref.doc, ref.page, 1.75);
+      localOcr = await ocrImageBase64Locally(image);
+    } catch (error) {
+      diagnostics.push({ docId:ref.doc.id, page:ref.page, mode:'render-error', error:error.message });
+      continue;
+    }
+
+    const ocrText = String(localOcr.text || '').trim();
+    const isExactTarget = ref.reason === 'toc-target';
+    const ocrRelevant = ocrText.length >= 45 && (textMatchesCoreQuestion(ocrText, question) || (isExactTarget && ocrText.length >= 120));
+    if (ocrRelevant) {
+      hits.push({ docId:ref.doc.id, docName:ref.doc.name, standard:ref.doc.standard, page:ref.page, chunk:'target-ocr', text:ocrText.slice(0, 12000), score:textMatchesCoreQuestion(ocrText, question) ? 995 : 920, targeted:true, ocrLocal:true, targetReason:ref.reason });
+      diagnostics.push({ docId:ref.doc.id, page:ref.page, mode:'local-ocr', chars:ocrText.length });
+    } else diagnostics.push({ docId:ref.doc.id, page:ref.page, mode:localOcr.available ? 'local-ocr-weak' : 'local-ocr-unavailable', chars:ocrText.length });
+
+    // For an AI provider, send only the small set of targeted pages to Vision in
+    // the *same answer request*. No automatic full-PDF Vision scan and no extra
+    // model switch is performed here.
+    if (state.settings.provider !== 'local' && image?.data && images.length < 3 && (!ocrRelevant || isExactTarget)) {
+      const imageNo = images.length + 1;
+      images.push({
+        data:image.data, mimeType:image.mimeType, docId:ref.doc.id, page:ref.page,
+        name:`${ref.doc.standard || ref.doc.name} · trang PDF ${ref.page}`,
+        targeted:true, targetReason:ref.reason,
+        tocHeading:ref.target?.heading || '', printedPage:ref.target?.printedPage || null
+      });
+      hits.push({
+        docId:ref.doc.id, docName:ref.doc.name, standard:ref.doc.standard, page:ref.page,
+        chunk:`visual-locator-${imageNo}`, score:940, targeted:true, visualLocator:true,
+        text:`ẢNH TRANG ĐÍCH #${imageNo} đính kèm tương ứng ${ref.doc.standard || ref.doc.name}, trang PDF ${ref.page}. Dòng này chỉ gắn định danh/citation cho ảnh; nội dung kỹ thuật phải đọc trực tiếp từ ảnh đính kèm.`
+      });
+    }
+  }
+  return { hits, images, diagnostics, inspectedPages:refs.length };
+}
+
 async function getAnswer(question, docsOverride = null) {
   const docs = docsOverride || sourceDocs();
   if (!docs.length) throw new Error('Không có tài liệu trong phạm vi tìm kiếm hiện tại.');
@@ -2163,6 +2284,30 @@ async function getAnswer(question, docsOverride = null) {
     state.searchStats = { ...stats, retrieval: useDeep ? 'Deep Lexical RAG' : 'Fast Balanced RAG' };
   }
 
+  // v1.9.19 Hybrid Visual RAG: searchable TOC text can point to a content
+  // page whose actual body is image/scan. Inspect only those target pages.
+  const tocTargets = findTocPageTargets(question, textDocs, 6);
+  const targeted = await collectTargetedPdfEvidence(question, textDocs, tocTargets, hits);
+  const tocAnchorHits = tocTargets.map((t, i) => ({
+    docId:t.docId, docName:t.docName, standard:t.standard, page:t.sourcePage, chunk:`toc-${i}`,
+    score:210 - i, tocAnchor:true, targeted:true,
+    text:`CHỈ DẪN MỤC LỤC (chỉ dùng để định vị, KHÔNG dùng như nội dung định nghĩa): mục “${t.heading}” trỏ tới trang in ${t.printedPage}; trang PDF mục tiêu ước tính ${t.targetPage}${t.offset != null ? ` (offset ${t.offset >= 0 ? '+' : ''}${t.offset}, ${t.offsetVotes} mốc đối chiếu)` : ''}.`
+  }));
+  if (targeted.hits.length || tocAnchorHits.length) {
+    const seen = new Set();
+    hits = [...targeted.hits, ...hits, ...tocAnchorHits].filter(h => {
+      const key = `${h.docId}:${h.page}:${h.chunk ?? String(h.text || '').slice(0,80)}`;
+      if (seen.has(key)) return false; seen.add(key); return true;
+    }).slice(0, retrievalLimit + Math.min(6, targeted.hits.length + tocAnchorHits.length));
+  }
+  state.searchStats = {
+    ...(state.searchStats || stats),
+    tocTargets:tocTargets.length,
+    visualPagesInspected:targeted.inspectedPages,
+    targetedLocalOcr:targeted.diagnostics.filter(x => x.mode === 'local-ocr').length,
+    targetedVisionPages:targeted.images.length
+  };
+
   const docIds = new Set(docs.map(d => d.id));
   const pinned = (state.pinnedSources || []).filter(x => docIds.has(x.docId) && String(x.text || '').trim());
   if (pinned.length) {
@@ -2171,11 +2316,12 @@ async function getAnswer(question, docsOverride = null) {
   }
 
   const imageDocs = docs.filter(d => d.viewerKind === 'image').slice(0, 8);
-  const images = [];
+  const standaloneImages = [];
   for (const d of imageDocs) {
     if (d.size > 8 * 1024 * 1024) continue;
-    try { images.push({ data: await fileToBase64(d.blob), mimeType: d.type || 'image/jpeg', name: d.name, docId: d.id }); } catch { /* skip */ }
+    try { standaloneImages.push({ data: await fileToBase64(d.blob), mimeType: d.type || 'image/jpeg', name: d.name, docId: d.id }); } catch { /* skip */ }
   }
+  const images = [...targeted.images, ...standaloneImages];
 
   const qNorm = String(question).toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
   const dMatch = qNorm.match(/(?:^|\s)d\s*(\d{3,4})(?:\s|$)/);
@@ -2193,22 +2339,29 @@ async function getAnswer(question, docsOverride = null) {
     }
   }
 
-  if (images.length) {
-    const imageHits = images.map((img, i) => { const d = imageDocs.find(x => x.id === img.docId); return ({ docId:d.id, docName:d.name, standard:d.standard, page:1, score:100-i, text:`Nguồn hình ảnh: ${d.name}. Đọc trực tiếp nội dung, chữ, bảng và ký hiệu nhìn thấy trong ảnh; không suy đoán phần không nhìn rõ.` }); });
-    hits = [...imageHits, ...hits].slice(0, retrievalLimit + images.length);
+  if (standaloneImages.length) {
+    const imageHits = standaloneImages.map((img, i) => {
+      const d = imageDocs.find(x => x.id === img.docId);
+      return ({ docId:d.id, docName:d.name, standard:d.standard, page:1, score:100-i, text:`Nguồn hình ảnh: ${d.name}. Đọc trực tiếp nội dung, chữ, bảng và ký hiệu nhìn thấy trong ảnh; không suy đoán phần không nhìn rõ.` });
+    });
+    hits = [...imageHits, ...hits].slice(0, retrievalLimit + standaloneImages.length);
   }
 
-  if (!hits.length) {
-    return { text: `Không tìm thấy đủ căn cứ trong các tài liệu đang chọn. Đã quét toàn bộ ${stats.textPages}/${stats.pages} trang có lớp chữ trong ${stats.docs} tài liệu (${stats.chunks} đoạn).`, hits: [], stats };
+  const substantiveHits = hits.filter(h => !h.tocAnchor && !h.visualLocator);
+  if (!substantiveHits.length && !images.length) {
+    const tocHint = tocTargets.length ? ` Hệ thống có tìm thấy mục “${tocTargets[0].heading}” trong mục lục và đã định vị trang đích, nhưng chưa đọc được nội dung pixel ở trang đó.` : '';
+    return { text: `Không tìm thấy đủ căn cứ trong các tài liệu đang chọn.${tocHint} Đã quét toàn bộ ${stats.textPages}/${stats.pages} trang có lớp chữ trong ${stats.docs} tài liệu (${stats.chunks} đoạn).`, hits: tocAnchorHits, stats };
   }
   if (state.settings.provider === 'local') {
+    if (!substantiveHits.length && tocTargets.length) return { text: `Đã tìm thấy mục “${tocTargets[0].heading}” trong mục lục và định vị trang PDF khoảng ${tocTargets[0].targetPage}, nhưng trang đích là ảnh/scan và OCR cục bộ trên máy chưa đọc đủ rõ. Hãy chọn HNL Offline AI (Ollama) hoặc Gemini để đọc đúng trang đích bằng Vision; HNL không cần OCR toàn bộ PDF.`, hits: tocAnchorHits, stats };
     if (images.length) return { text: `Tra cứu nhanh đã quét ${stats.textPages}/${stats.pages} trang chữ nhưng không đọc pixel ảnh. Hãy chọn HNL Offline AI (Ollama) hoặc Gemini để đọc ảnh trực tiếp.`, hits, stats };
-    return { text: localAnswer(question, hits, stats), hits, stats };
+    return { text: localAnswer(question, substantiveHits, stats), hits:substantiveHits, stats };
   }
 
   const planText = queryPlan.length > 1 ? `\nKẾ HOẠCH TRA CỨU: ${queryPlan.map(x => x.label).join(' → ')}.` : '';
   const retrievalText = state.searchStats?.retrieval ? ` Chế độ chọn ngữ cảnh: ${state.searchStats.retrieval}${state.searchStats.embeddingModel ? ` (${state.searchStats.embeddingModel})` : ''}.` : '';
-  const coverage = `\n\nTHỐNG KÊ PHẠM VI: hệ thống đã quét toàn bộ ${stats.textPages}/${stats.pages} trang có lớp chữ, ${stats.chunks} đoạn thuộc ${stats.docs} tài liệu trước khi chọn ngữ cảnh liên quan.${retrievalText}${planText} Không được hiểu số đoạn ngữ cảnh bên dưới là số trang đã quét.`;
+  const visualText = targeted.images.length ? `\nHYBRID VISUAL RAG: có ${targeted.images.length} ảnh trang PDF mục tiêu được chọn từ mục lục/điểm ít lớp chữ. Hãy ĐỌC TRỰC TIẾP các ảnh này để trả lời nếu lớp chữ thiếu. Dòng CHỈ DẪN MỤC LỤC chỉ dùng để định vị, tuyệt đối không coi là nội dung định nghĩa. Nếu ảnh mục tiêu không đủ rõ thì phải nói không đủ căn cứ.` : (targeted.hits.some(h => h.ocrLocal) ? `\nHYBRID VISUAL RAG: OCR cục bộ đã bổ sung ${targeted.hits.filter(h => h.ocrLocal).length} trang mục tiêu; ưu tiên nội dung OCR có citation trang.` : '');
+  const coverage = `\n\nTHỐNG KÊ PHẠM VI: hệ thống đã quét toàn bộ ${stats.textPages}/${stats.pages} trang có lớp chữ, ${stats.chunks} đoạn thuộc ${stats.docs} tài liệu trước khi chọn ngữ cảnh liên quan.${retrievalText}${planText}${visualText} Không được hiểu số đoạn ngữ cảnh bên dưới là số trang đã quét.`;
   const prompt = buildRagPrompt(question, hits, state.settings.strict) + coverage;
   const text = await callConfiguredAiWithApproval({ prompt, images });
   if (!text) throw new Error('AI không trả về nội dung.');
@@ -2900,6 +3053,7 @@ async function runDiagnostics() {
     }
   }
   const passed = tests.filter(t => t[1]).length;
+  state.diagnosticSummary = { passed, total:tests.length, ok:passed === tests.length };
   state.diagnosticHtml = `<div class="diagnostic"><div class="diagnostic-score">${passed}/${tests.length} kiểm tra đạt</div>${tests.map(([name, ok, detail]) => `<div class="diagnostic-row ${ok ? 'ok' : 'bad'}"><span>${ok ? '✓' : '!'}</span><b>${esc(name)}</b><small>${esc(detail)}</small></div>`).join('')}</div>`;
   render();
 }

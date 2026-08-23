@@ -1,6 +1,21 @@
 {
-  "current": "1.9.18",
+  "current": "1.9.19",
   "releases": [
+    {
+      "version": "1.9.19",
+      "title": "Hybrid Visual RAG · TOC Target OCR · Compact Settings UI",
+      "date": "2026-08-23",
+      "changes": [
+        "Sửa truy vấn tiếng Việt kỹ thuật: stop-word chỉ loại từ an toàn sau bỏ dấu; giữ các từ dễ trùng dấu như tải/trọng, bảng, co ngót, độ lún; “cọc chống là gì” rút đúng về “cọc chống”.",
+        "Hybrid Visual RAG nhận diện mục lục có số trang, suy ra offset trang in ↔ trang PDF từ các đề mục đối chiếu và định vị đúng trang nội dung cần đọc.",
+        "PDF hỗn hợp text + scan dùng pipeline có mục tiêu: text layer → OCR cục bộ TextDetector → chỉ gửi tối đa vài ảnh trang đích cho Vision trong cùng lượt hỏi; không tự OCR/Vision toàn bộ PDF.",
+        "Dòng mục lục chỉ dùng để định vị, không được coi là nội dung định nghĩa; nếu trang ảnh không đọc đủ rõ vẫn phải báo không đủ căn cứ.",
+        "Thu gọn Phiên bản/Build, Dữ liệu đầu vào và Chẩn đoán thành thông tin tóm tắt; chi tiết chỉ bung khi người dùng bấm Xem chi tiết.",
+        "UI State Guard lưu cả trạng thái các khối chi tiết đang mở qua full-render, tránh người dùng phải mở lại sau thao tác kiểm tra/cập nhật.",
+        "Chẩn đoán chỉ hiện điểm tổng quan bên ngoài (ví dụ 8/8 đạt); danh sách từng kiểm tra nằm trong phần chi tiết.",
+        "Giữ toàn bộ sửa v1.9.18: OCR/API không nhảy vị trí, citation đúng docId, Ollama 11434 ready trước pull, responsive 3-panel và version gate."
+      ]
+    },
     {
       "version": "1.9.18",
       "title": "UI State Guard · Offline AI Ready · Full Logic/Responsive Audit",

@@ -787,3 +787,27 @@ test('v1.9.18 layout-only buttons preserve PDF viewport instead of forcing page 
 test('v1.9.18 viewport snapshot keys off the rendered PDF, not a newly changed state doc id', () => {
   assert.match(source, /docId: pdf\?\.dataset\?\.docId \|\| state\.activeDocId/);
 });
+
+test('v1.9.19 Hybrid Visual RAG targets TOC/low-text PDF pages instead of full-document Vision', () => {
+  assert.match(source, /findTocPageTargets/);
+  assert.match(source, /collectTargetedPdfEvidence/);
+  assert.match(source, /renderPdfPageToBase64\(ref\.doc, ref\.page/);
+  assert.match(source, /ocrImageBase64Locally\(image\)/);
+  assert.match(source, /images\.length < 3/);
+  assert.match(source, /CHỈ DẪN MỤC LỤC/);
+  assert.match(source, /chỉ dùng để định vị/);
+  assert.match(source, /HYBRID VISUAL RAG/);
+});
+
+test('v1.9.19 compact settings hide verbose release, capability and diagnostic details by default', () => {
+  const css = fs.readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  for (const id of ['settingsVersionDetails','settingsInputDetails','settingsDiagnosticDetails']) assert.match(source, new RegExp(id));
+  assert.match(source, /data-persist-detail/);
+  assert.match(source, /Xem chi tiết phiên bản & thay đổi/);
+  assert.match(source, /Xem chi tiết định dạng & tính năng/);
+  assert.match(source, /Xem chi tiết chẩn đoán/);
+  assert.match(source, /diagnosticSummary/);
+  assert.match(source, /openDetails: \[\.\.\.document\.querySelectorAll\('details\[data-persist-detail\]\[open\]'\)\]/);
+  assert.match(css, /\.compact-disclosure/);
+  assert.match(css, /\.compact-overview-line/);
+});

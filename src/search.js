@@ -1,6 +1,11 @@
 const CHUNK_CACHE = new Map();
 
-const STOP = new Set('và là của cho được trong theo các một những với tại từ khi về hoặc có không để này đó trên dưới như thì bởi bằng do vào ra đến'.split(' '));
+// Keep this list deliberately conservative. Accent stripping makes many
+// Vietnamese function words collide with engineering terms: tại/tải -> tai,
+// bằng/bảng -> bang, có/co -> co, trọng/trong -> trong. Those ambiguous tokens
+// MUST NOT be stop-words or queries such as "tải trọng", "Bảng 1" and
+// "co ngót" would lose their technical meaning.
+const STOP = new Set('va la cua cho duoc theo cac mot nhung khi ve hoac de nay tren duoi nhu thi boi vao gi the nao sao hay xin biet nghia khai niem'.split(' '));
 
 export function normalize(text = '') {
   return String(text)
@@ -13,7 +18,153 @@ export function tokenize(text = '') {
   return normalize(text)
     .replace(/[^a-z0-9.%+/-]+/g, ' ')
     .split(/\s+/)
-    .filter(t => t.length > 1 && !STOP.has(t));
+    .filter(t => (t.length > 1 || /^\d$/.test(t)) && !STOP.has(t));
+}
+
+
+/**
+ * Reduce a natural-language Vietnamese question to its technical search phrase.
+ * STOP contains *normalized* tokens because tokenize() removes Vietnamese accents.
+ * This fixes queries such as "cọc chống là gì" being diluted by "la/gi".
+ */
+export function coreSearchPhrase(query = '') {
+  let q = normalize(query).replace(/[^a-z0-9.%+/-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  // Remove question framing without globally removing ambiguous engineering
+  // tokens from tokenize().
+  q = q.replace(/^(?:xin cho biet|hay cho biet|cho biet|dinh nghia|khai niem|the nao la)\s+/, '');
+  q = q.replace(/\s+(?:la gi|nghia la gi|la nhu the nao)\s*$/, '');
+  return tokenize(q).slice(0, 12).join(' ').trim();
+}
+
+function phraseMatches(text = '', phrase = '') {
+  const core = String(phrase || '').trim();
+  if (!core) return false;
+  const flat = normalize(text).replace(/[^a-z0-9.%+/-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (flat.includes(core)) return true;
+  const terms = core.split(/\s+/).filter(Boolean);
+  return terms.length > 0 && terms.every(t => flat.includes(t));
+}
+
+const TOC_CACHE = new Map();
+
+function parseTocLine(raw = '') {
+  const line = String(raw || '').replace(/\u00a0/g, ' ').trim();
+  if (line.length < 4) return null;
+  // Prefer dot leaders / wide gaps. The fallback single-space branch is kept for
+  // PDF text extraction that collapses dot leaders, but is validated below.
+  const m = line.match(/^(.*?)(?:\.{2,}|\s{2,}|\s)(\d{1,4})\s*$/);
+  if (!m) return null;
+  const heading = String(m[1] || '').replace(/[.·•\s]+$/g, '').trim();
+  const printedPage = Number(m[2]);
+  if (!heading || !Number.isInteger(printedPage) || printedPage < 1 || printedPage > 5000) return null;
+  const section = heading.match(/^\s*(\d+(?:\.\d+)*)\s+/)?.[1] || '';
+  const body = section ? heading.replace(/^\s*\d+(?:\.\d+)*\s+/, '').trim() : heading;
+  const bodyCore = tokenize(body).slice(0, 10).join(' ');
+  if (!bodyCore) return null;
+  return { line, heading, body, bodyCore, section, printedPage, dotLeader:/\.{2,}/.test(line) };
+}
+
+function tocEntries(doc) {
+  if (!doc?.id) return [];
+  const signature = `${doc.pageCount || doc.pages?.length || 0}:${doc.textChars || (doc.pages || []).reduce((n,p)=>n+String(p.text||'').length,0)}`;
+  const cached = TOC_CACHE.get(doc.id);
+  if (cached?.signature === signature) return cached.entries;
+  const entries = [];
+  for (const page of doc.pages || []) {
+    const text = String(page.text || '');
+    if (!text.trim()) continue;
+    const parsed = text.split(/\r?\n/).map(parseTocLine).filter(Boolean);
+    const norm = normalize(text);
+    const pageLooksToc = /(?:^|\s)muc\s+luc(?:\s|$)/.test(norm) || parsed.filter(x => x.dotLeader).length >= 2 || parsed.length >= 5;
+    if (!pageLooksToc) continue;
+    for (const entry of parsed) entries.push({ ...entry, sourcePage:Number(page.page || 1) });
+  }
+  TOC_CACHE.set(doc.id, { signature, entries });
+  return entries;
+}
+
+function actualPageForEntry(doc, entry, tocSourcePages = new Set()) {
+  const sec = entry.section ? normalize(entry.section) : '';
+  const bodyTokens = tokenize(entry.body).slice(0, 6);
+  if (!bodyTokens.length) return null;
+  const bodyPhrase = bodyTokens.join(' ');
+  let best = null;
+  for (const page of doc.pages || []) {
+    const pno = Number(page.page || 0);
+    if (!pno || tocSourcePages.has(pno)) continue;
+    const flat = normalize(page.text || '').replace(/[^a-z0-9.%+/-]+/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!flat) continue;
+    const hasBody = flat.includes(bodyPhrase) || bodyTokens.every(t => flat.includes(t));
+    if (!hasBody) continue;
+    let score = 10 + bodyTokens.length * 2;
+    if (sec && flat.includes(`${sec} ${bodyPhrase}`)) score += 35;
+    else if (sec && flat.includes(sec)) score += 12;
+    // Prefer a page near the printed page when multiple references mention the heading.
+    score -= Math.min(12, Math.abs(pno - Number(entry.printedPage || pno)) * 0.12);
+    if (!best || score > best.score) best = { page:pno, score };
+  }
+  return best?.page || null;
+}
+
+function inferTocPageOffset(doc, entries) {
+  if (!entries.length) return null;
+  const sourcePages = new Set(entries.map(x => Number(x.sourcePage)));
+  const counts = new Map();
+  let samples = 0;
+  // Sample diverse entries; enough for a stable printed-page -> PDF-page offset
+  // without doing any OCR or network request.
+  for (const entry of entries.slice(0, 70)) {
+    if (tokenize(entry.body).length < 2) continue;
+    const actual = actualPageForEntry(doc, entry, sourcePages);
+    if (!actual) continue;
+    const delta = actual - Number(entry.printedPage || 0);
+    if (Math.abs(delta) > 40) continue;
+    counts.set(delta, (counts.get(delta) || 0) + 1);
+    samples++;
+    if (samples >= 14) break;
+  }
+  if (!counts.size) return null;
+  const ranked = [...counts.entries()].sort((a,b) => b[1] - a[1] || Math.abs(a[0]) - Math.abs(b[0]));
+  const [delta, votes] = ranked[0];
+  // Two agreeing anchors are strong. One is still useful as a best-effort hint.
+  return { delta:Number(delta), votes:Number(votes), samples };
+}
+
+/**
+ * Resolve exact technical terms found in a PDF table of contents to likely
+ * content pages. This is the bridge between searchable TOC text and scanned
+ * image-only content pages: "cọc chống" in the TOC can point HNL to the page
+ * that needs local OCR / Vision, instead of declaring "not found".
+ */
+export function findTocPageTargets(query, docs = [], limit = 8) {
+  const core = coreSearchPhrase(query);
+  if (!core || !Array.isArray(docs) || !docs.length) return [];
+  const out = [];
+  for (const doc of docs) {
+    const entries = tocEntries(doc);
+    if (!entries.length) continue;
+    const matched = entries.filter(e => phraseMatches(e.body, core));
+    if (!matched.length) continue;
+    const sourcePages = new Set(entries.map(x => Number(x.sourcePage)));
+    const offset = inferTocPageOffset(doc, entries);
+    for (const entry of matched) {
+      const directActual = actualPageForEntry(doc, entry, sourcePages);
+      let target = directActual || (offset ? Number(entry.printedPage) + offset.delta : Number(entry.printedPage));
+      target = Math.min(Math.max(1, Math.round(target || 1)), Number(doc.pageCount || doc.pages?.length || target || 1));
+      const candidates = [...new Set([target, target - 1, target + 1])]
+        .filter(p => p >= 1 && p <= Number(doc.pageCount || doc.pages?.length || p));
+      out.push({
+        docId:doc.id, docName:doc.name, standard:doc.standard,
+        sourcePage:entry.sourcePage, printedPage:entry.printedPage,
+        targetPage:target, candidatePages:candidates,
+        section:entry.section, heading:entry.heading, line:entry.line,
+        offset:offset?.delta ?? null, offsetVotes:offset?.votes || 0,
+        directActual:Boolean(directActual), score:directActual ? 120 : (offset?.votes >= 2 ? 105 : 90)
+      });
+      if (out.length >= limit) return out.sort((a,b)=>b.score-a.score || a.targetPage-b.targetPage);
+    }
+  }
+  return out.sort((a,b)=>b.score-a.score || a.docName.localeCompare(b.docName) || a.targetPage-b.targetPage).slice(0, limit);
 }
 
 /**
@@ -57,7 +208,10 @@ export function buildChunks(doc, chunkSize = 1400, overlap = 280) {
   return chunks;
 }
 
-export function clearSearchCache(docId = null) { if (docId) CHUNK_CACHE.delete(docId); else CHUNK_CACHE.clear(); }
+export function clearSearchCache(docId = null) {
+  if (docId) { CHUNK_CACHE.delete(docId); TOC_CACHE.delete(docId); }
+  else { CHUNK_CACHE.clear(); TOC_CACHE.clear(); }
+}
 
 export function corpusStats(docs = []) {
   let pages = 0, textPages = 0, chars = 0, chunks = 0;
@@ -74,7 +228,8 @@ export function corpusStats(docs = []) {
 }
 
 function scoreChunk(query, chunk) {
-  const qTokens = tokenize(query);
+  const coreQuery = coreSearchPhrase(query) || String(query || '');
+  const qTokens = tokenize(coreQuery);
   if (!qTokens.length) return 0;
   const textNorm = normalize(chunk.text);
   const words = tokenize(chunk.text);
@@ -94,8 +249,9 @@ function scoreChunk(query, chunk) {
   score += (matched / qTokens.length) * 16;
 
   const qNorm = normalize(query).replace(/\s+/g, ' ').trim();
+  const coreNorm = normalize(coreQuery).replace(/\s+/g, ' ').trim();
   const flatText = textNorm.replace(/\s+/g, ' ');
-  if (qNorm.length > 4 && flatText.includes(qNorm)) score += 34;
+  if (coreNorm.length > 4 && flatText.includes(coreNorm)) score += 34;
 
   // Reward adjacent query-token pairs. This helps clauses and table labels even
   // when PDF extraction inserts extra spaces/newlines.

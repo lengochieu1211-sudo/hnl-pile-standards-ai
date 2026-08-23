@@ -1,4 +1,15 @@
-# HNL Pile Standards AI v1.9.18
+# HNL Pile Standards AI v1.9.19
+
+
+## v1.9.19 — Hybrid Visual RAG · TOC Target OCR · Compact Settings UI
+
+- Sửa tìm kiếm tiếng Việt kỹ thuật: stop-word sau bỏ dấu chỉ loại từ **không va chạm thuật ngữ**; giữ đúng `tải trọng`, `Bảng 1`, `co ngót`, `độ lún`; **“cọc chống là gì” → “cọc chống”** để exact/lexical retrieval không bị loãng.
+- Thêm **TOC Target Resolver**: đọc mục lục, số trang đích và tự suy ra offset giữa số trang in với số trang PDF bằng các đề mục đối chiếu.
+- Thêm **Hybrid Visual RAG có mục tiêu** cho PDF hỗn hợp: text layer → OCR cục bộ → Vision đúng vài trang đích khi cần; không tự OCR/Vision toàn bộ tài liệu.
+- Mục lục chỉ được dùng để **định vị**, không được AI coi là nội dung định nghĩa; trang đích/ảnh vẫn phải cung cấp căn cứ thật.
+- Thu gọn **Phiên bản & Build / Dữ liệu đầu vào / Chẩn đoán ứng dụng** thành dòng tóm tắt; chi tiết chỉ mở khi bấm **Xem chi tiết**.
+- UI State Guard giữ trạng thái các khối chi tiết đang mở qua render; chẩn đoán bên ngoài chỉ hiện điểm tổng quan như **8/8 đạt**.
+- Giữ toàn bộ hardening v1.9.18: PDF/OCR/API không nhảy vị trí, citation đúng tài liệu, Ollama server ready trước pull, responsive 3 panel và version gate.
 
 
 ## v1.9.18 — UI State Guard · Offline AI Ready · Full Logic/Responsive Audit

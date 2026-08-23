@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { annulusAreaMm2, axialResistance } from '../src/calculators.js';
-import { searchChunks, searchEveryPage, smartSearchChunks, deepSearchChunks, localAnswer, localSummary, corpusStats } from '../src/search.js';
+import { searchChunks, searchEveryPage, smartSearchChunks, deepSearchChunks, localAnswer, localSummary, corpusStats, tokenize, coreSearchPhrase, findTocPageTargets } from '../src/search.js';
 import { lookup7888, classesForDiameter7888 } from '../src/tcvn7888.js';
 import { extractFormulaCandidates, evaluateExpression } from '../src/formulas.js';
 
@@ -113,4 +113,43 @@ test('v1.7.1 formula library includes AI/Vision formulas stored on uploaded docu
   const formulas=extractFormulaLibrary([doc]);
   assert.ok(formulas.some(x=>x.aiDetected && x.page===2 && x.label==='(10)'));
   assert.equal(formulas.find(x=>x.id==='af1')?.computable, false);
+});
+
+
+test('v1.9.19 Vietnamese technical query strips normalized question stop-words', () => {
+  assert.deepEqual(tokenize('cọc chống là gì'), ['coc', 'chong']);
+  assert.equal(coreSearchPhrase('Cọc chống là gì?'), 'coc chong');
+});
+
+test('v1.9.19 Vietnamese tokenizer preserves accent-colliding engineering terms', () => {
+  const tokens = tokenize('Bảng 1 tải trọng co ngót độ lún');
+  for (const term of ['bang','1','tai','trong','co','ngot','do','lun']) assert.ok(tokens.includes(term), `missing ${term}`);
+  assert.equal(coreSearchPhrase('Định nghĩa cọc chống là gì'), 'coc chong');
+});
+
+test('v1.9.19 TOC resolver finds cọc chống target page from searchable contents', () => {
+  const pages = Array.from({length:40}, (_, i) => ({ page:i+1, text:'' }));
+  pages[2].text = 'MỤC LỤC\n7.2 Các phương pháp tính toán ........ 28\n7.2.1 Cọc chống ........................ 28\n7.2.2 Cọc ma sát ....................... 31\n7.3 Thí nghiệm ........................ 35';
+  pages[27].text = '7.2.1 Cọc chống\nCọc chống truyền tải trọng xuống lớp đất hoặc đá có sức chịu tải lớn.';
+  const doc = { id:'toc1', name:'TCVN 10304.pdf', standard:'TCVN 10304:2025', pageCount:40, textChars:pages.reduce((n,p)=>n+p.text.length,0), pages };
+  const targets = findTocPageTargets('cọc chống là gì', [doc], 8);
+  assert.ok(targets.length >= 1);
+  assert.equal(targets[0].sourcePage, 3);
+  assert.equal(targets[0].printedPage, 28);
+  assert.equal(targets[0].targetPage, 28);
+  assert.match(targets[0].heading, /Cọc chống/i);
+});
+
+test('v1.9.19 TOC resolver infers printed-page to PDF-page offset before visual OCR', () => {
+  const pages = Array.from({length:80}, (_, i) => ({ page:i+1, text:'' }));
+  pages[2].text = 'MỤC LỤC\n1 Phạm vi ........ 5\n2 Tài liệu viện dẫn ........ 7\n7.2.1 Cọc chống ........ 28\n7.2.2 Cọc ma sát ........ 31\n8 Thí nghiệm ........ 49';
+  pages[6].text = '1 Phạm vi\nTiêu chuẩn áp dụng cho thiết kế móng cọc.'; // printed 5 -> PDF 7
+  pages[8].text = '2 Tài liệu viện dẫn\nCác tài liệu viện dẫn sau là cần thiết.'; // printed 7 -> PDF 9
+  // Page containing cọc chống intentionally has no text: it represents a scan.
+  const doc = { id:'toc2', name:'mixed.pdf', standard:'TCVN MIXED', pageCount:80, textChars:pages.reduce((n,p)=>n+p.text.length,0), pages };
+  const targets = findTocPageTargets('cọc chống là gì', [doc], 8);
+  assert.equal(targets[0].offset, 2);
+  assert.ok(targets[0].offsetVotes >= 2);
+  assert.equal(targets[0].targetPage, 30);
+  assert.deepEqual(targets[0].candidatePages, [30,29,31]);
 });

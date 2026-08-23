@@ -1,6 +1,18 @@
 {
-  "current": "1.9.3",
+  "current": "1.9.4",
   "releases": [
+    {
+      "version": "1.9.4",
+      "title": "UI Responsive & Panel Recovery",
+      "changes": [
+        "Sửa lỗi thu gọn cả hai panel rồi không thể mở lại: thêm nút phục hồi Thư viện/Trợ lý nằm ngoài panel.",
+        "Nút nguồn trên thanh đầu mở lại Thư viện; nút AI/Cài đặt mở lại Trợ lý trên desktop.",
+        "Bỏ ID trùng của nút thu gọn/mở panel; bổ sung nút khôi phục bố cục 3 vùng.",
+        "Toolbar PDF tự chuyển thành hai hàng ở màn hình vừa/1366 px để không đè lên vùng Trợ lý.",
+        "Tối ưu breakpoint, header, tabs và độ rộng panel cho Windows 1366x768 và scale 125%.",
+        "Đổi key layout v1.9.4 để không mang trạng thái panel bị kẹt từ bản v1.9.x cũ."
+      ]
+    },
     {
       "version": "1.9.3",
       "title": "Icon Pro & Windows Identity",

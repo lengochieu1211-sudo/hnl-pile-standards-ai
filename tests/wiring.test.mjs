@@ -62,7 +62,7 @@ test('AI citations remain connected to PDF navigation', () => {
   assert.match(source, /state\.activeDocId = el\.dataset\.hitDoc/);
 });
 
-test('v1.9.3 service worker gets cache version from registration and keeps metadata network-first', () => {
+test('v1.9.4 service worker gets cache version from registration and keeps metadata network-first', () => {
   const sw = fs.readFileSync(new URL('../public/sw.js', import.meta.url), 'utf8');
   assert.match(sw, /params\.get\('v'\)/);
   assert.match(sw, /build-info\.json/);
@@ -105,7 +105,7 @@ test('v1.4 dynamic model picker is wired', () => {
 });
 
 
-test('v1.9.3 reads version from package and runtime build metadata instead of hard-coded date', () => {
+test('v1.9.4 reads version from package and runtime build metadata instead of hard-coded date', () => {
   assert.match(source, /__HNL_APP_VERSION__/);
   assert.match(source, /build-info\.json/);
   assert.match(source, /formatBuildTime/);
@@ -246,12 +246,12 @@ test('v1.9.1 local model download jobs expose progress and cancel', () => {
 });
 
 
-test('v1.9.3 build generator and workflows stamp GitHub build identity', () => {
+test('v1.9.4 build generator and workflows stamp GitHub build identity', () => {
   const gen = fs.readFileSync(new URL('../scripts/generate-build-info.mjs', import.meta.url), 'utf8');
   const pages = fs.readFileSync(new URL('../.github/workflows/pages.yml', import.meta.url), 'utf8');
   const desktop = fs.readFileSync(new URL('../.github/workflows/desktop-win.yml', import.meta.url), 'utf8');
   const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
-  assert.equal(pkg.version, '1.9.3');
+  assert.equal(pkg.version, '1.9.4');
   assert.match(gen, /GITHUB_RUN_NUMBER/);
   assert.match(gen, /GITHUB_SHA/);
   assert.match(gen, /builtAt/);
@@ -260,13 +260,13 @@ test('v1.9.3 build generator and workflows stamp GitHub build identity', () => {
   assert.match(desktop, /github\.run_number/);
 });
 
-test('v1.9.3 update and diagnostic actions are wired', () => {
+test('v1.9.4 update and diagnostic actions are wired', () => {
   for (const token of ['checkAppUpdate','copyBuildDiagnostics','loadBuildMetadata','loadChangelog','currentBuildSummary']) assert.match(source, new RegExp(token));
   assert.match(source, /api\.github\.com\/repos/);
   assert.match(source, /releases\/latest/);
 });
 
-test('v1.9.3 Windows identity uses optimized multi-size HNL icon', () => {
+test('v1.9.4 Windows identity uses optimized multi-size HNL icon', () => {
   const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
   const electron = fs.readFileSync(new URL('../electron/main.cjs', import.meta.url), 'utf8');
   const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
@@ -276,4 +276,21 @@ test('v1.9.3 Windows identity uses optimized multi-size HNL icon', () => {
   assert.match(html, /favicon\.ico/);
   assert.match(html, /hnl-mark-32\.png/);
   assert.match(manifest, /hnl-mark-64\.png/);
+});
+
+
+test('v1.9.4 side panels always have recovery controls and unique viewer toggles', () => {
+  for (const token of ['reopenLibrary','reopenAssistant','viewerToggleLibrary','viewerToggleAssistant','resetLayout']) assert.match(source, new RegExp(token));
+  assert.match(source, /state\.focusReader=false; state\.leftCollapsed=false/);
+  assert.match(source, /state\.focusReader=false; state\.rightCollapsed=false/);
+  assert.match(source, /hnl\.leftCollapsed\.v194/);
+  assert.match(source, /hnl\.rightCollapsed\.v194/);
+});
+
+test('v1.9.4 medium desktop toolbar has anti-overlap responsive CSS', () => {
+  const css = fs.readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  assert.match(css, /max-width:1500px/);
+  assert.match(css, /grid-template-areas:"title controls" "search search"/);
+  assert.match(css, /panel-recovery-left/);
+  assert.match(css, /max-width:1366px/);
 });

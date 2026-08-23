@@ -392,7 +392,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   gap: 9px;
   box-shadow: 0 1px 0 rgba(16,43,78,.03);
 }
-.viewer-side-toggle { display: none; }
+.viewer-side-toggle { display: inline-grid; }
 .assistant-head-actions { display: flex; align-items: center; gap: 7px; }
 .reader-search {
   margin-left: auto;
@@ -574,3 +574,93 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 /* v1.9.3 · Icon Pro + Build metadata & diagnostics */
 .mini-changelog{display:grid;gap:8px;margin-top:10px}.mini-changelog>div{padding:10px 12px;border:1px solid var(--line,#d8e0ea);border-radius:10px;background:rgba(255,255,255,.55)}.mini-changelog b{display:block;font-size:12px;margin-bottom:4px}.mini-changelog small{display:block;line-height:1.45}.app-version-card code{font-size:11px}.app-version-card .version-grid{grid-template-columns:repeat(2,minmax(0,1fr))}@media(min-width:1180px){.app-version-card .version-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+
+/* =========================================================
+   HNL v1.9.4 — Responsive UI, panel recovery & overlap fixes
+   ========================================================= */
+.workspace { isolation:isolate; }
+.viewer-toolbar { min-width:0; }
+.viewer-title-wrap { min-width:0; flex:1 1 auto; }
+.viewer-controls { min-width:0; }
+.viewer-controls .icon-btn, .viewer-controls .zoom-value, .viewer-controls .page-input, .reader-mode-switch { flex:0 0 auto; }
+.active-tool { background:#e8f1fb !important; border-color:#9bb5d1 !important; color:var(--navy-900) !important; }
+
+/* A collapsed panel must always have a control OUTSIDE that panel to recover it. */
+.panel-recovery {
+  position:absolute;
+  top:50%;
+  z-index:45;
+  min-height:38px;
+  display:flex;
+  align-items:center;
+  gap:5px;
+  border:1px solid #b9c9da;
+  background:rgba(255,255,255,.96);
+  color:var(--navy-900);
+  padding:8px 9px;
+  font-size:10px;
+  font-weight:850;
+  box-shadow:0 8px 24px rgba(17,37,62,.16);
+  transform:translateY(-50%);
+  backdrop-filter:blur(6px);
+}
+.panel-recovery:hover { background:#eef5fc; border-color:#8faac5; }
+.panel-recovery-left { left:6px; border-radius:0 10px 10px 0; }
+.panel-recovery-right { right:6px; border-radius:10px 0 0 10px; }
+.panel-recovery span { writing-mode:vertical-rl; transform:rotate(180deg); letter-spacing:.04em; }
+.workspace.reader-focus .panel-recovery { display:flex; }
+
+/* Header content must shrink instead of overlapping controls. */
+.side-head > div:first-child, .assistant-head > div:first-child { min-width:0; }
+.assistant-head h2, .side-head h2 { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.assistant-head-actions { flex:0 0 auto; }
+.mode-chip { max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* Medium desktop: toolbar becomes two clean rows, never overlays the AI panel. */
+@media (max-width:1500px) and (min-width:881px) {
+  .viewer-toolbar {
+    display:grid;
+    grid-template-columns:minmax(140px,1fr) auto;
+    grid-template-areas:"title controls" "search search";
+    align-items:center;
+    gap:6px 9px;
+    padding:7px 10px 8px;
+  }
+  .viewer-title-wrap { grid-area:title; }
+  .viewer-title { max-width:100%; }
+  .viewer-controls {
+    grid-area:controls;
+    justify-content:flex-end;
+    overflow-x:auto;
+    max-width:100%;
+    scrollbar-width:none;
+  }
+  .viewer-controls::-webkit-scrollbar { display:none; }
+  .reader-search { grid-area:search; margin-left:0; min-width:0; max-width:none; width:100%; }
+}
+
+/* 1366x768 / Windows 125% safe profile. */
+@media (max-width:1366px) and (min-width:881px) {
+  .workspace { --left-w:250px !important; --right-w:350px !important; }
+  .sidebar { padding-left:10px; padding-right:10px; }
+  .assistant-head { padding-left:11px; padding-right:11px; }
+  .tabs { padding-left:4px; padding-right:4px; }
+  .tab { padding-left:7px; padding-right:7px; font-size:10px; }
+  .panel-body { padding:10px; }
+  .brand-sub { display:none; }
+  .topbar { padding-left:12px; padding-right:12px; }
+}
+
+/* Small desktop: preserve PDF first and let users reopen side panels explicitly. */
+@media (max-width:1120px) and (min-width:881px) {
+  .workspace { --left-w:235px !important; --right-w:330px !important; }
+  .viewer-title { font-size:11px; }
+  .reader-mode-switch button { padding:0 5px; }
+  .toolbar-divider { margin:0 2px; }
+}
+
+@media (max-width:880px) {
+  .panel-recovery { display:none !important; }
+  .viewer-side-toggle { display:inline-grid !important; }
+}

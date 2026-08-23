@@ -1,8 +1,8 @@
-# HNL Pile Standards AI v1.9.3
+# HNL Pile Standards AI v1.9.4
 
 **Dual Edition:** HNL Web + HNL Desktop AI.
 
-## v1.9.3 — Icon Pro & Windows Identity
+## v1.9.4 — Icon Pro & Windows Identity
 
 - Giữ nguyên nhận diện HNL: **HN xanh navy + L bạc**, nền sáng bo góc.
 - Tối ưu riêng cho Windows: icon nhỏ rõ hơn, giảm khoảng trống và tăng nét nhẹ.
@@ -55,7 +55,7 @@
 npm test
 ```
 
-v1.9.3 hiện có **38/38 bài test PASS**, gồm kiểm tra asset/icon Windows đa kích thước.
+v1.9.4 hiện có **38/38 bài test PASS**, gồm kiểm tra asset/icon Windows đa kích thước.
 
 ## Build Web
 

@@ -10,7 +10,7 @@ import { extractFormulaLibrary, formulaStats, verifiedFormulaLibrary, evaluateEx
 
 const SOURCE_META = Object.freeze({
   version: typeof __HNL_APP_VERSION__ !== 'undefined' ? __HNL_APP_VERSION__ : '0.0.0',
-  release: 'Build Metadata · Update Diagnostics · PWA Freshness'
+  release: 'UI Responsive · Panel Recovery · Logic Audit'
 });
 
 let APP_META = {
@@ -45,10 +45,10 @@ const STORAGE = {
   formulaScanMode: 'hnl.formulaScanMode.v171',
   readerMode: 'hnl.readerMode.v19',
   readerQuery: 'hnl.readerQuery.v19',
-  leftCollapsed: 'hnl.leftCollapsed.v19',
-  rightCollapsed: 'hnl.rightCollapsed.v19',
-  leftWidth: 'hnl.leftWidth.v19',
-  rightWidth: 'hnl.rightWidth.v19'
+  leftCollapsed: 'hnl.leftCollapsed.v194',
+  rightCollapsed: 'hnl.rightCollapsed.v194',
+  leftWidth: 'hnl.leftWidth.v194',
+  rightWidth: 'hnl.rightWidth.v194'
 };
 
 const state = {
@@ -333,6 +333,8 @@ function render() {
     </header>
 
     <main class="workspace ${state.focusReader ? 'reader-focus' : ''} ${state.leftCollapsed ? 'left-collapsed' : ''} ${state.rightCollapsed ? 'right-collapsed' : ''}" data-mobile="${state.mobile}" style="--left-w:${state.layout.left}px;--right-w:${state.layout.right}px">
+      ${(state.leftCollapsed || state.focusReader) ? '<button class="panel-recovery panel-recovery-left" id="reopenLibrary" title="Mở lại Thư viện">▶ <span>Thư viện</span></button>' : ''}
+      ${(state.rightCollapsed || state.focusReader) ? '<button class="panel-recovery panel-recovery-right" id="reopenAssistant" title="Mở lại Trợ lý AI"><span>Trợ lý</span> ◀</button>' : ''}
       <aside class="sidebar">
         <div class="side-head">
           <div><div class="section-kicker">Tài liệu</div><h2>Thư viện tiêu chuẩn</h2></div>
@@ -373,7 +375,7 @@ function render() {
       <section class="viewer">
         <div class="viewer-toolbar">
           <div class="viewer-title-wrap">
-            <button class="icon-btn viewer-side-toggle" id="toggleLibrary" title="Ẩn/hiện thư viện">☰</button>
+            <button class="icon-btn viewer-side-toggle" id="viewerToggleLibrary" title="Ẩn/hiện thư viện">☰</button>
             <span class="viewer-title">${doc ? esc(doc.standard || doc.name) : 'Trình đọc PDF'}</span>
             ${doc?.scannedLikely ? '<span class="warn-chip" title="PDF có rất ít lớp text">PDF scan</span>' : ''}
           </div>
@@ -396,8 +398,9 @@ function render() {
             <span class="page-total">/ ${doc?.pageCount || 0}</span>
             <button class="icon-btn" id="nextPage" ${!doc ? 'disabled' : ''} title="Trang sau (Page Down)">›</button>
             <span class="toolbar-divider"></span>
-            <button class="icon-btn" id="toggleAssistant" title="Ẩn/hiện trợ lý">AI</button>
-            <button class="icon-btn" id="focusReader" title="Chế độ tập trung PDF">⛶</button>
+            <button class="icon-btn" id="viewerToggleAssistant" title="Ẩn/hiện trợ lý">AI</button>
+            <button class="icon-btn" id="resetLayout" title="Khôi phục bố cục 3 vùng">↺</button>
+            <button class="icon-btn ${state.focusReader ? 'active-tool' : ''}" id="focusReader" title="${state.focusReader ? 'Thoát chế độ tập trung' : 'Chế độ tập trung PDF'}">${state.focusReader ? '⊞' : '⛶'}</button>
           </div>
         </div>
         ${doc ? viewerContentHtml(doc) : emptyViewerHtml()}
@@ -759,12 +762,15 @@ function bind() {
     try {
       if (el.matches('[data-tab]')) { state.tab = el.dataset.tab; render(); return; }
       if (el.matches('[data-mobile]')) { state.mobile = el.dataset.mobile; render(); return; }
-      if (el.id === 'sourceBadge') { state.mobile = 'library'; render(); return; }
-      if (el.id === 'openSettings') { state.tab = 'settings'; state.mobile = 'assistant'; render(); return; }
+      if (el.id === 'sourceBadge') { if (window.innerWidth > 880) { state.focusReader=false; state.leftCollapsed=false; localStorage.setItem(STORAGE.leftCollapsed, 'false'); } else state.mobile = 'library'; render(); return; }
+      if (el.id === 'openSettings') { state.tab = 'settings'; if (window.innerWidth > 880) { state.focusReader=false; state.rightCollapsed=false; localStorage.setItem(STORAGE.rightCollapsed, 'false'); } else state.mobile = 'assistant'; render(); return; }
       if (el.id === 'selectAll') { state.docs.forEach(d => state.selected.add(d.id)); showToast(`Đã chọn ${state.docs.length} tài liệu làm nguồn.`, 'success'); render(); return; }
       if (el.id === 'clearSelection') { state.selected.clear(); showToast(state.settings.scope === 'selected' ? 'Đã bỏ chọn nguồn. Phạm vi “Đã chọn” hiện không có tài liệu.' : 'Đã bỏ dấu tick. Phạm vi Toàn thư viện vẫn tra cứu tất cả tài liệu.', 'info'); render(); return; }
-      if (el.id === 'toggleLibrary') { state.leftCollapsed = !state.leftCollapsed; localStorage.setItem(STORAGE.leftCollapsed, String(state.leftCollapsed)); render(); return; }
-      if (el.id === 'toggleAssistant') { state.rightCollapsed = !state.rightCollapsed; localStorage.setItem(STORAGE.rightCollapsed, String(state.rightCollapsed)); render(); return; }
+      if (el.id === 'toggleLibrary' || el.id === 'viewerToggleLibrary') { state.focusReader=false; state.leftCollapsed = !state.leftCollapsed; localStorage.setItem(STORAGE.leftCollapsed, String(state.leftCollapsed)); state.pendingPageScroll=true; render(); return; }
+      if (el.id === 'toggleAssistant' || el.id === 'viewerToggleAssistant') { state.focusReader=false; state.rightCollapsed = !state.rightCollapsed; localStorage.setItem(STORAGE.rightCollapsed, String(state.rightCollapsed)); state.pendingPageScroll=true; render(); return; }
+      if (el.id === 'reopenLibrary') { state.focusReader=false; state.leftCollapsed=false; localStorage.setItem(STORAGE.leftCollapsed, 'false'); state.pendingPageScroll=true; render(); return; }
+      if (el.id === 'reopenAssistant') { state.focusReader=false; state.rightCollapsed=false; localStorage.setItem(STORAGE.rightCollapsed, 'false'); state.pendingPageScroll=true; render(); return; }
+      if (el.id === 'resetLayout') { state.focusReader=false; state.leftCollapsed=false; state.rightCollapsed=false; state.layout={left:290,right:440}; localStorage.setItem(STORAGE.leftCollapsed,'false'); localStorage.setItem(STORAGE.rightCollapsed,'false'); localStorage.setItem(STORAGE.leftWidth,'290'); localStorage.setItem(STORAGE.rightWidth,'440'); state.pendingPageScroll=true; showToast('Đã khôi phục bố cục Thư viện · PDF · Trợ lý.', 'success'); render(); return; }
       if (el.id === 'focusReader') { state.focusReader = !state.focusReader; state.pendingPageScroll = true; render(); return; }
       if (el.id === 'readerContinuous') { setReaderMode('continuous'); return; }
       if (el.id === 'readerSingle') { setReaderMode('single'); return; }
@@ -1980,7 +1986,9 @@ function bindGlobalReaderShortcuts() {
     if (event.key === '+' || event.key === '=') { event.preventDefault(); setZoom(state.zoom + .1); return; }
     if (event.key === '-') { event.preventDefault(); setZoom(state.zoom - .1); return; }
     if ((event.ctrlKey || event.metaKey) && event.key === '0') { event.preventDefault(); fitPageWidth(); return; }
-    if (event.key.toLowerCase() === 'f' && !event.ctrlKey && !event.metaKey) { state.focusReader = !state.focusReader; state.pendingPageScroll = true; render(); }
+    if (event.key.toLowerCase() === 'f' && !event.ctrlKey && !event.metaKey) { state.focusReader = !state.focusReader; state.pendingPageScroll = true; render(); return; }
+    if (event.key === '[') { state.focusReader=false; state.leftCollapsed=!state.leftCollapsed; localStorage.setItem(STORAGE.leftCollapsed,String(state.leftCollapsed)); render(); return; }
+    if (event.key === ']') { state.focusReader=false; state.rightCollapsed=!state.rightCollapsed; localStorage.setItem(STORAGE.rightCollapsed,String(state.rightCollapsed)); render(); return; }
   });
 }
 

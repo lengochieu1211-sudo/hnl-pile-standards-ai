@@ -1,16 +1,16 @@
 import './styles.css';
-import { renderPdfPage, renderPdfPageToBase64, renderPdfTextLayer, cropCanvasRegionToBase64, extractTextFromLayerRegion, ocrImageBase64Locally, clearPdfCache } from './pdf.js';
+import { renderPdfPage, renderPdfPageToBase64, renderPdfTextLayer, cropCanvasRegionToBase64, extractTextFromLayerRegion, ocrImageBase64Locally, clearPdfCache, reindexPdfText, TEXT_INDEX_VERSION } from './pdf.js';
 import { expandInputItems, parseInputFile, fileToBase64, extractArchiveViaLocalBridge, isArchiveFile } from './ingest.js';
-import { saveDocument, getDocuments, deleteDocument } from './db.js';
-import { searchChunks, searchEveryPage, smartSearchChunks, deepSearchChunks, localSummary, localAnswer, corpusStats, isBroadQuery, planEngineeringQueries, clearSearchCache, coreSearchPhrase, findTocPageTargets } from './search.js';
-import { PROVIDERS, buildRagPrompt, callBridge, callDirect, bridgeHealth, testDirectProvider, listAvailableModelsDetailed, semanticRerank, localEngineDiagnostics } from './ai.js';
+import { saveDocument, getDocuments, deleteDocument, saveChatSession, getChatSessions, deleteChatSession, saveCalculation, getCalculations, deleteCalculation } from './db.js';
+import { searchChunks, searchEveryPage, smartSearchChunks, deepSearchChunks, localSummary, localAnswer, corpusStats, isBroadQuery, planEngineeringQueries, clearSearchCache, coreSearchPhrase, findTocPageTargets, findExactPhrasePages, compactNormalize } from './search.js';
+import { PROVIDERS, buildRagPrompt, callBridge, callDirect, bridgeHealth, testDirectProvider, listAvailableModelsDetailed, semanticRerank, localEngineDiagnostics, supportsNativePdf } from './ai.js';
 import { annulusAreaMm2, axialResistance, loadClassSigmaCe, tcvn7888Checklist } from './calculators.js';
 import { diameters7888, lookup7888, classesForDiameter7888 } from './tcvn7888.js';
 import { extractFormulaLibrary, formulaStats, verifiedFormulaLibrary, evaluateExpression, clearFormulaCache } from './formulas.js';
 
 const SOURCE_META = Object.freeze({
   version: typeof __HNL_APP_VERSION__ !== 'undefined' ? __HNL_APP_VERSION__ : '0.0.0',
-  release: 'Hybrid Visual RAG · Compact Settings UI · Targeted OCR'
+  release: 'Native PDF AI · Persistent History · Hybrid RAG Citation'
 });
 
 let APP_META = {
@@ -48,7 +48,10 @@ const STORAGE = {
   leftCollapsed: 'hnl.leftCollapsed.v194',
   rightCollapsed: 'hnl.rightCollapsed.v194',
   leftWidth: 'hnl.leftWidth.v194',
-  rightWidth: 'hnl.rightWidth.v194'
+  rightWidth: 'hnl.rightWidth.v194',
+  nativePdfMode: 'hnl.nativePdfMode.v1921',
+  openaiPdfDetail: 'hnl.openaiPdfDetail.v1921',
+  historyRetentionDays: 'hnl.historyRetentionDays.v1921'
 };
 
 const state = {
@@ -76,6 +79,10 @@ const state = {
   mobile: 'library',
   chat: [],
   chatDraft: '',
+  chatSessions: [],
+  activeChatSessionId: null,
+  chatHistoryOpen: false,
+  calculations: [],
   lookup: { query: '', draft: '', hits: [] },
   compare: { query: '', draft: '', text: '', hits: [] },
   tableResult: null,
@@ -91,7 +98,10 @@ const state = {
     scope: localStorage.getItem(STORAGE.scope) || 'all',
     retrievalMode: localStorage.getItem(STORAGE.retrievalMode) || 'auto',
     embeddingModel: localStorage.getItem(STORAGE.embeddingModel) || 'bge-m3',
-    semanticRerank: localStorage.getItem(STORAGE.semanticRerank) !== 'false'
+    semanticRerank: localStorage.getItem(STORAGE.semanticRerank) !== 'false',
+    nativePdfMode: localStorage.getItem(STORAGE.nativePdfMode) || 'balanced',
+    openaiPdfDetail: localStorage.getItem(STORAGE.openaiPdfDetail) || 'auto',
+    historyRetentionDays: Number(localStorage.getItem(STORAGE.historyRetentionDays) || 365)
   },
   progress: null,
   toast: null,
@@ -115,7 +125,8 @@ const state = {
   archiveEngineError: '',
   buildInfoLoaded: false,
   updateStatus: null,
-  changelog: []
+  changelog: [],
+  nativePdfStatus: ''
 };
 
 if (!PROVIDERS[state.settings.provider] || (!IS_DESKTOP_EDITION && state.settings.provider === 'ollama')) state.settings.provider = 'local';
@@ -174,6 +185,14 @@ function sourceDocs() {
   if (state.settings.scope === 'active') { const active = activeDoc(); return active ? [active] : []; }
   return [...state.docs];
 }
+function usableTextPageCount(doc) {
+  return (doc?.pages || []).filter(p => p?.textQuality ? Boolean(p.textQuality.usable) : Boolean(String(p?.text || '').trim())).length;
+}
+
+function rawTextPageCount(doc) {
+  return (doc?.pages || []).filter(p => String(p?.text || '').trim()).length;
+}
+
 function scopeLabel() {
   if (state.settings.scope === 'selected') return `Đã chọn (${selectedDocs().length})`;
   if (state.settings.scope === 'active') return 'PDF đang mở';
@@ -223,6 +242,9 @@ function captureSettingsDraft() {
     ollamaUrl: document.querySelector('#ollamaInput')?.value.trim() ?? existing.ollamaUrl ?? state.settings.ollamaUrl,
     retrievalMode: document.querySelector('#retrievalModeInput')?.value ?? existing.retrievalMode ?? state.settings.retrievalMode,
     semanticRerank: document.querySelector('#semanticRerankInput')?.checked ?? existing.semanticRerank ?? state.settings.semanticRerank,
+    nativePdfMode: document.querySelector('#nativePdfModeInput')?.value ?? existing.nativePdfMode ?? state.settings.nativePdfMode,
+    openaiPdfDetail: document.querySelector('#openaiPdfDetailInput')?.value ?? existing.openaiPdfDetail ?? state.settings.openaiPdfDetail,
+    historyRetentionDays: Number(document.querySelector('#historyRetentionDaysInput')?.value ?? existing.historyRetentionDays ?? state.settings.historyRetentionDays),
     strict: document.querySelector('#strictInput')?.checked ?? existing.strict ?? state.settings.strict,
     apiKey: document.querySelector('#apiKeyInput')?.value ?? existing.apiKey ?? currentApiKey()
   };
@@ -308,12 +330,12 @@ function aiErrorKind(error) {
   return 'other';
 }
 function waitMs(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
-async function callConfiguredAiOnce({ prompt, images = [], modelOverride = '' }) {
+async function callConfiguredAiOnce({ prompt, images = [], documents = [], pdfDetail = state.settings.openaiPdfDetail || 'auto', modelOverride = '' }) {
   const model = modelOverride || providerModel(images.length > 0);
   if (state.settings.connection === 'bridge') {
-    return callBridge({ bridgeUrl:state.settings.bridgeUrl, provider:state.settings.provider, model, prompt, images, apiKey:currentApiKey() });
+    return callBridge({ bridgeUrl:state.settings.bridgeUrl, provider:state.settings.provider, model, prompt, images, documents, pdfDetail, apiKey:currentApiKey() });
   }
-  return callDirect({ provider:state.settings.provider, model, apiKey:currentApiKey(), prompt, ollamaUrl:state.settings.ollamaUrl, images });
+  return callDirect({ provider:state.settings.provider, model, apiKey:currentApiKey(), prompt, ollamaUrl:state.settings.ollamaUrl, images, documents, pdfDetail });
 }
 async function chooseApprovedFallbackModel(error, currentModel) {
   // Fallback is allowed only from a model list VERIFIED against the current
@@ -394,14 +416,14 @@ async function chooseApprovedOllamaVisionFallback(error, currentModel) {
   } catch { return ''; }
 }
 
-async function callConfiguredAiWithApproval({ prompt, images = [] }) {
+async function callConfiguredAiWithApproval({ prompt, images = [], documents = [], pdfDetail = state.settings.openaiPdfDetail || 'auto' }) {
   const forVision = images.length > 0 && state.settings.provider === 'ollama';
   const currentModel = providerModel(images.length > 0);
   let lastError;
   const retryDelays = [0, 1200, 3000];
   for (let i = 0; i < retryDelays.length; i++) {
     if (retryDelays[i]) await waitMs(retryDelays[i]);
-    try { return await callConfiguredAiOnce({ prompt, images, modelOverride:currentModel }); }
+    try { return await callConfiguredAiOnce({ prompt, images, documents, pdfDetail, modelOverride:currentModel }); }
     catch (error) {
       lastError = error;
       const kind = aiErrorKind(error);
@@ -411,10 +433,10 @@ async function callConfiguredAiWithApproval({ prompt, images = [] }) {
   const kind = aiErrorKind(lastError);
   if (forVision && ['quota','temporary','model'].includes(kind)) {
     const approvedVision = await chooseApprovedOllamaVisionFallback(lastError, currentModel);
-    if (approvedVision) return callConfiguredAiOnce({ prompt, images, modelOverride:approvedVision });
+    if (approvedVision) return callConfiguredAiOnce({ prompt, images, documents, pdfDetail, modelOverride:approvedVision });
   } else if (!forVision && ['quota','temporary','model'].includes(kind)) {
     const approved = await chooseApprovedFallbackModel(lastError, currentModel);
-    if (approved) return callConfiguredAiOnce({ prompt, images, modelOverride:approved });
+    if (approved) return callConfiguredAiOnce({ prompt, images, documents, pdfDetail, modelOverride:approved });
   }
   throw lastError;
 }
@@ -431,6 +453,9 @@ function saveSettings() {
   localStorage.setItem(STORAGE.retrievalMode, state.settings.retrievalMode);
   localStorage.setItem(STORAGE.embeddingModel, state.settings.embeddingModel);
   localStorage.setItem(STORAGE.semanticRerank, String(state.settings.semanticRerank));
+  localStorage.setItem(STORAGE.nativePdfMode, state.settings.nativePdfMode || 'balanced');
+  localStorage.setItem(STORAGE.openaiPdfDetail, state.settings.openaiPdfDetail || 'auto');
+  localStorage.setItem(STORAGE.historyRetentionDays, String([30,90,365,0].includes(Number(state.settings.historyRetentionDays)) ? Number(state.settings.historyRetentionDays) : 365));
 }
 function saveChecklist() { localStorage.setItem(STORAGE.checklist, JSON.stringify(state.checklist)); }
 function showToast(message, type = 'info') {
@@ -809,7 +834,7 @@ function docItem(d) {
       <input class="source-check" type="checkbox" data-select="${d.id}" ${selected ? 'checked' : ''} title="Chọn làm nguồn tra cứu">
       <button class="doc-main" data-open="${d.id}">
         <span class="pdf-badge">${d.viewerKind === 'image' ? 'IMG' : d.viewerKind === 'text' ? 'TXT' : 'PDF'}</span>
-        <span class="doc-copy"><b>${esc(d.standard || d.name)}</b><small>${d.pageCount} ${d.viewerKind === 'image' ? 'ảnh' : 'trang'} · ${fmtBytes(d.size)}</small><em>${d.viewerKind === 'image' ? (d.ocrStatus === 'browser' ? 'OCR ảnh: có' : 'Ảnh: AI Vision') : `${(d.pages || []).filter(p => String(p.text || '').trim()).length}/${d.pageCount} trang đã lấy chữ · ${(d.textChars || 0).toLocaleString('vi-VN')} ký tự`}</em>${d.sourcePath && d.sourcePath !== d.name ? `<em>${esc(d.sourcePath)}</em>` : (d.scannedLikely ? '<em class="warn-text">Có thể cần OCR/AI Vision</em>' : '')}</span>
+        <span class="doc-copy"><b>${esc(d.standard || d.name)}</b><small>${d.pageCount} ${d.viewerKind === 'image' ? 'ảnh' : 'trang'} · ${fmtBytes(d.size)}</small><em>${d.viewerKind === 'image' ? (d.ocrStatus === 'browser' ? 'OCR ảnh: có' : 'Ảnh: AI Vision') : `${usableTextPageCount(d)}/${d.pageCount} trang chữ hữu dụng${rawTextPageCount(d) !== usableTextPageCount(d) ? ` · ${rawTextPageCount(d)} trang có text thô` : ''} · ${(d.textChars || 0).toLocaleString('vi-VN')} ký tự${Number(d.textIndexVersion || 0) < TEXT_INDEX_VERSION ? ' · sẽ tự nâng chỉ mục khi tra cứu' : ''}`}</em>${d.sourcePath && d.sourcePath !== d.name ? `<em>${esc(d.sourcePath)}</em>` : (d.scannedLikely ? '<em class="warn-text">Có thể cần OCR/AI Vision</em>' : '')}</span>
       </button>
       <button class="more-btn danger" data-delete="${d.id}" title="Xóa tài liệu">×</button>
     </div>
@@ -849,6 +874,124 @@ function sourceLine(item, doc) {
   return `<div class="source-line"><button class="page-chip" data-jump="${item.page}" data-doc="${doc.id}">P.${item.page}</button><span>${esc(item.text)}</span></div>`;
 }
 
+
+function chatSessionTitle(messages = []) {
+  const first = messages.find(m => m.role === 'user' && String(m.text || '').trim());
+  const text = String(first?.text || 'Cuộc trò chuyện mới').replace(/\s+/g, ' ').trim();
+  return text.length > 58 ? `${text.slice(0, 58)}…` : text;
+}
+function chatSessionRecord() {
+  if (!state.activeChatSessionId) state.activeChatSessionId = crypto.randomUUID();
+  const now = new Date().toISOString();
+  const old = state.chatSessions.find(x => x.id === state.activeChatSessionId);
+  return {
+    id: state.activeChatSessionId,
+    title: chatSessionTitle(state.chat),
+    createdAt: old?.createdAt || now,
+    updatedAt: now,
+    provider: state.settings.provider,
+    model: providerModel(),
+    nativePdfMode: state.settings.nativePdfMode,
+    scope: state.settings.scope,
+    documentRefs: sourceDocs().map(d => ({ id:d.id, name:d.name, standard:d.standard || '' })),
+    messages: state.chat.map(m => ({ role:m.role, text:String(m.text || ''), hits:Array.isArray(m.hits) ? m.hits.map(h => ({ docId:h.docId, docName:h.docName, standard:h.standard, page:Number(h.page || 1), text:String(h.text || '').slice(0, 1800) })) : [], provider:m.provider || '', model:m.model || '', createdAt:m.createdAt || now }))
+  };
+}
+async function persistCurrentChat() {
+  if (!state.chat.length) return;
+  try {
+    const row = chatSessionRecord();
+    await saveChatSession(row);
+    const i = state.chatSessions.findIndex(x => x.id === row.id);
+    if (i >= 0) state.chatSessions[i] = row; else state.chatSessions.unshift(row);
+    state.chatSessions.sort((a,b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
+  } catch (error) { console.warn('Không lưu được lịch sử chat:', error); }
+}
+function startNewChat() {
+  state.activeChatSessionId = crypto.randomUUID();
+  state.chat = [];
+  state.chatDraft = '';
+  state.chatHistoryOpen = false;
+  state.nativePdfStatus = '';
+  render();
+  queueMicrotask(() => document.querySelector('#chatQuestion')?.focus());
+}
+function openChatSession(id) {
+  const row = state.chatSessions.find(x => x.id === id);
+  if (!row) return showToast('Không tìm thấy phiên trò chuyện.', 'warning');
+  state.activeChatSessionId = row.id;
+  state.chat = (row.messages || []).map(m => ({ ...m, hits:Array.isArray(m.hits) ? m.hits : [] }));
+  // Restore attachments/scope when those documents still exist locally, so a
+  // resumed conversation behaves like reopening a chat with its PDFs attached.
+  const savedIds = new Set((row.documentRefs || []).map(x => x.id));
+  const availableIds = state.docs.filter(d => savedIds.has(d.id)).map(d => d.id);
+  const missingCount = Math.max(0, savedIds.size - availableIds.length);
+  if (availableIds.length) {
+    state.selected = new Set(availableIds);
+    if (!availableIds.includes(state.activeDocId)) state.activeDocId = availableIds[0];
+  }
+  if (['current','selected','all'].includes(row.scope)) state.settings.scope = row.scope;
+  state.nativePdfStatus = '';
+  state.chatDraft = '';
+  state.chatHistoryOpen = false;
+  state.tab = 'chat';
+  render();
+  if (missingCount) showToast(`Đã mở lịch sử nhưng thiếu ${missingCount} PDF nguồn trên máy. Hãy nhập lại file để hỏi tiếp đủ căn cứ.`, 'warning');
+  queueMicrotask(() => { const log=document.querySelector('.chat-log'); if(log) log.scrollTop=log.scrollHeight; });
+}
+async function removeChatSession(id) {
+  if (!confirm('Xóa phiên trò chuyện này khỏi lịch sử cục bộ?')) return;
+  await deleteChatSession(id);
+  state.chatSessions = state.chatSessions.filter(x => x.id !== id);
+  if (state.activeChatSessionId === id) startNewChat(); else render();
+}
+async function purgeExpiredHistory() {
+  const days = Number(state.settings.historyRetentionDays || 0);
+  if (!days) return;
+  const cutoff = Date.now() - days * 86400000;
+  const staleSessions = state.chatSessions.filter(x => Date.parse(x.updatedAt || x.createdAt || 0) < cutoff);
+  const staleCalcs = state.calculations.filter(x => Date.parse(x.createdAt || 0) < cutoff);
+  await Promise.allSettled([...staleSessions.map(x => deleteChatSession(x.id)), ...staleCalcs.map(x => deleteCalculation(x.id))]);
+  if (staleSessions.length) state.chatSessions = state.chatSessions.filter(x => !staleSessions.some(y => y.id === x.id));
+  if (staleCalcs.length) state.calculations = state.calculations.filter(x => !staleCalcs.some(y => y.id === x.id));
+}
+function formatHistoryTime(value) {
+  const d = new Date(value || Date.now());
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleString('vi-VN', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+function chatHistoryHtml() {
+  const rows = state.chatSessions.slice(0, 60);
+  return `<div class="history-drawer"><div class="history-head"><div><b>Lịch sử hỏi đáp</b><small>${rows.length} phiên · Local-first</small></div><button class="icon-btn" id="closeChatHistory" title="Đóng">×</button></div>
+    <div class="history-list">${rows.length ? rows.map(x => `<div class="history-row ${x.id === state.activeChatSessionId ? 'active' : ''}"><button class="history-open" data-chat-session="${esc(x.id)}"><b>${esc(x.title || 'Cuộc trò chuyện')}</b><small>${esc(formatHistoryTime(x.updatedAt))} · ${(x.documentRefs || []).length} nguồn · ${esc(x.provider || '')}${x.model ? ` · ${esc(x.model)}` : ''}</small></button><button class="icon-btn danger-btn" data-delete-chat-session="${esc(x.id)}" title="Xóa">×</button></div>`).join('') : '<div class="muted history-empty">Chưa có lịch sử. Phiên đầu tiên sẽ tự lưu sau khi gửi câu hỏi.</div>'}</div>
+  </div>`;
+}
+async function recordCalculation(entry) {
+  const row = { id:crypto.randomUUID(), createdAt:new Date().toISOString(), appVersion:APP_META.version, ...entry };
+  state.calculations.unshift(row);
+  try { await saveCalculation(row); } catch (error) { console.warn('Không lưu được lịch sử tính toán:', error); }
+  return row;
+}
+function calculationHistoryHtml() {
+  const rows = state.calculations.slice(0, 20);
+  return `<details class="calc-history"><summary>Lịch sử tính toán · ${state.calculations.length}</summary><div class="history-list">${rows.length ? rows.map(x => `<div class="history-row"><button class="history-open" data-load-calculation="${esc(x.id)}"><b>${esc(x.title || x.type || 'Tính toán')}</b><small>${esc(formatHistoryTime(x.createdAt))}${x.resultText ? ` · ${esc(x.resultText)}` : ''}</small></button><button class="icon-btn danger-btn" data-delete-calculation="${esc(x.id)}" title="Xóa">×</button></div>`).join('') : '<div class="muted history-empty">Chưa có phép tính đã lưu.</div>'}</div></details>`;
+}
+function loadCalculation(id) {
+  const row = state.calculations.find(x => x.id === id);
+  if (!row) return showToast('Không tìm thấy phép tính.', 'warning');
+  const input = row.inputs || {};
+  for (const [key, value] of Object.entries(input)) {
+    const el = document.querySelector(`#${key}`);
+    if (el) el.value = value;
+  }
+  showToast('Đã nạp dữ liệu phép tính cũ. Bấm Tính để chạy lại.', 'success');
+}
+async function removeCalculation(id) {
+  if (!confirm('Xóa phép tính này khỏi lịch sử cục bộ?')) return;
+  await deleteCalculation(id);
+  state.calculations = state.calculations.filter(x => x.id !== id);
+  render();
+}
+
 function messageHtml(message) {
   const unique = [];
   const seen = new Set();
@@ -859,17 +1002,20 @@ function messageHtml(message) {
   const visible = unique.slice(0, 16);
   const chips = visible.map(h => `<button class="source-chip" data-hit-doc="${h.docId}" data-hit-page="${h.page}">${esc(h.standard || h.docName)} · P.${h.page}</button>`).join('');
   return `<div class="message ${message.role === 'user' ? 'user' : 'ai'}">
-    <div class="message-label">${message.role === 'user' ? 'Bạn' : (state.settings.provider === 'local' ? 'Tra cứu cục bộ' : 'HNL AI')}</div>
+    <div class="message-label">${message.role === 'user' ? 'Bạn' : (message.provider === 'local' ? 'Tra cứu cục bộ' : `HNL AI${message.provider ? ` · ${esc(PROVIDERS[message.provider]?.short || message.provider)}` : ''}${message.model ? ` · ${esc(message.model)}` : ''}`)}</div>
     <div class="answer-text rich-answer">${richTextHtml(message.text)}</div>
     ${chips ? `<details class="source-details" ${unique.length <= 6 ? 'open' : ''}><summary>Nguồn đã dùng · ${unique.length} trang</summary><div class="source-chips">${chips}${unique.length > visible.length ? `<span class="source-more">+${unique.length - visible.length} nguồn khác</span>` : ''}</div></details>` : ''}
   </div>`;
 }
 function chatHtml() {
   const hasSources = sourceDocs().length > 0;
+  const nativeLabel = supportsNativePdf(state.settings.provider) ? (state.settings.nativePdfMode === 'economy' ? 'RAG tiết kiệm' : state.settings.nativePdfMode === 'native' ? 'PDF native toàn nguồn' : 'PDF native tự động') : 'HNL RAG';
   return `<div class="chat-shell">
-    <div class="chat-log">${state.chat.length ? state.chat.map(messageHtml).join('') : `<div class="chat-welcome"><div class="chat-orb">AI</div><h3>Hỏi trực tiếp tiêu chuẩn</h3><p>Câu trả lời luôn kèm các trang PDF đã được dùng làm nguồn.</p><div class="suggestions"><button data-suggest="Cọc PHC D600 cấp B có mômen uốn nứt bao nhiêu?">PHC D600 cấp B</button><button data-suggest="Điều kiện nghiệm thu lô cọc là gì?">Nghiệm thu lô cọc</button><button data-suggest="Giới hạn vết nứt bề mặt cọc là bao nhiêu?">Giới hạn vết nứt</button></div></div>`}</div>
+    <div class="chat-toolbar"><div><b>${esc(chatSessionTitle(state.chat))}</b><small>${esc(nativeLabel)} · ${sourceDocs().length} nguồn${state.nativePdfStatus ? ` · ${esc(state.nativePdfStatus)}` : ''}</small></div><div><button class="btn compact-btn" id="newChatBtn">+ Mới</button><button class="btn compact-btn" id="chatHistoryBtn">Lịch sử ${state.chatSessions.length ? `(${state.chatSessions.length})` : ''}</button></div></div>
+    ${state.chatHistoryOpen ? chatHistoryHtml() : ''}
+    <div class="chat-log">${state.chat.length ? state.chat.map(messageHtml).join('') : `<div class="chat-welcome"><div class="chat-orb">AI</div><h3>Hỏi trực tiếp tiêu chuẩn</h3><p>Gemini/OpenAI có thể đọc PDF native; HNL RAG chạy song song để định vị trang và citation.</p><div class="suggestions"><button data-suggest="Cọc chống là gì?">Cọc chống là gì?</button><button data-suggest="Cọc PHC D600 cấp B có mômen uốn nứt bao nhiêu?">PHC D600 cấp B</button><button data-suggest="Điều kiện nghiệm thu lô cọc là gì?">Nghiệm thu lô cọc</button></div></div>`}</div>
     <div class="chat-composer"><textarea id="chatQuestion" placeholder="${hasSources ? 'Nhập câu hỏi theo tiêu chuẩn đang chọn…' : 'Chọn PDF làm nguồn trước…'}" ${!hasSources ? 'disabled' : ''}>${esc(state.chatDraft)}</textarea><button class="send-btn" id="askBtn" ${!hasSources || state.busy ? 'disabled' : ''}>${state.busy ? 'Đang xử lý…' : 'Gửi'}</button></div>
-    <div class="composer-hint">Enter để gửi · Shift + Enter xuống dòng · ${state.settings.strict ? 'Khóa nguồn đang bật' : 'Cho phép giải thích ngoài nguồn'}</div>
+    <div class="composer-hint">Enter để gửi · Shift + Enter xuống dòng · ${state.settings.strict ? 'Khóa nguồn đang bật' : 'Cho phép giải thích ngoài nguồn'} · lịch sử tự lưu cục bộ</div>
   </div>`;
 }
 
@@ -963,7 +1109,8 @@ function calcHtml() {
     <div id="calcResult"></div>
   </div>
   <div class="formula-card"><div class="formula">R<sub>aL</sub> = (σ<sub>cu</sub>/α − σ<sub>ce</sub>/4) × A<sub>0</sub></div><p>PC dùng α = 4; PHC/NPH dùng α = 3,5. App đồng thời hiển thị giá trị ngắn hạn và 80% giá trị ngắn hạn.</p><button class="source-chip" data-find="Phụ lục B">Mở nguồn trong PDF</button></div>
-  ${formulaLibraryHtml()}`;
+  ${formulaLibraryHtml()}
+  ${calculationHistoryHtml()}`;
 }
 
 function compareHtml() {
@@ -1066,6 +1213,7 @@ function settingsHtml() {
   const options = availableProviderEntries().map(([id, p]) => `<option value="${id}" ${id === state.settings.provider ? 'selected' : ''}>${esc(p.label)}</option>`).join('');
   const needsSessionKey = Boolean(provider?.needsKey);
   const isOllama = state.settings.provider === 'ollama';
+  const nativePdfProvider = supportsNativePdf(state.settings.provider);
   const githubHttps = location.protocol === 'https:' && !isLocalHost();
   return `<div class="panel-section">
     <div class="panel-section-title"><h3>AI & kết nối</h3><span id="connectionStateLabel">${state.connectionStatus?.ok ? 'Sẵn sàng' : (state.connectionStatus ? 'Có lỗi' : 'Chưa kiểm tra')}</span></div>
@@ -1094,6 +1242,16 @@ function settingsHtml() {
       </div>` : ''}
       ${state.settings.connection === 'bridge' ? `<label class="field"><span>HNL Bridge URL</span><input id="bridgeInput" value="${esc(draftSetting('bridgeUrl', state.settings.bridgeUrl))}"></label><div class="notice">Khi chạy Local, nên để Bridge cùng địa chỉ app, ví dụ http://127.0.0.1:8787.</div>` : ''}
     `}
+    ${nativePdfProvider ? `<div class="native-pdf-card"><div class="panel-section-title"><h3>Đọc PDF native</h3><span>${state.settings.nativePdfMode === 'economy' ? 'Tiết kiệm' : state.settings.nativePdfMode === 'native' ? 'Toàn tài liệu' : 'Cân bằng'}</span></div>
+      <label class="field"><span>Cách gửi PDF cho ${state.settings.provider === 'gemini' ? 'Gemini' : 'OpenAI'}</span><select id="nativePdfModeInput">
+        <option value="economy" ${state.settings.nativePdfMode === 'economy' ? 'selected' : ''}>Tiết kiệm · RAG trước, chỉ gửi trang/ảnh cần thiết</option>
+        <option value="balanced" ${state.settings.nativePdfMode === 'balanced' ? 'selected' : ''}>Cân bằng · RAG trước, tự dùng PDF native khi cần</option>
+        <option value="native" ${state.settings.nativePdfMode === 'native' ? 'selected' : ''}>Toàn tài liệu · gửi các PDF đủ điều kiện trực tiếp cho AI</option>
+      </select><small>PDF native giúp AI đọc cả chữ, ảnh, bảng, sơ đồ và công thức giống thao tác đính PDF trực tiếp. Ở Cân bằng, HNL RAG chạy trước và chỉ gửi PDF native khi câu hỏi rộng, căn cứ text yếu hoặc cần đọc hình/scan; Toàn tài liệu luôn gửi các PDF đủ điều kiện và có thể dùng nhiều token hơn.</small></label>
+      ${state.settings.provider === 'openai' ? `<label class="field"><span>Chi tiết ảnh trang PDF · OpenAI</span><select id="openaiPdfDetailInput"><option value="low" ${state.settings.openaiPdfDetail === 'low' ? 'selected' : ''}>Low · tiết kiệm token hình</option><option value="auto" ${state.settings.openaiPdfDetail === 'auto' ? 'selected' : ''}>Auto · khuyến nghị</option><option value="high" ${state.settings.openaiPdfDetail === 'high' ? 'selected' : ''}>High · bảng/sơ đồ/chữ nhỏ</option></select></label>` : ''}
+      <div class="notice"><b>Giới hạn an toàn HNL:</b> mỗi PDF native phải dưới 50 MB; OpenAI giới hạn tổng file trong một request 50 MB. Gemini hỗ trợ PDF native dài nhưng HNL vẫn giới hạn để tránh payload quá lớn. API key không được lưu cùng PDF/lịch sử.</div>
+    </div>` : ''}
+    <label class="field"><span>Lưu lịch sử cục bộ</span><select id="historyRetentionDaysInput"><option value="30" ${state.settings.historyRetentionDays === 30 ? 'selected' : ''}>30 ngày</option><option value="90" ${state.settings.historyRetentionDays === 90 ? 'selected' : ''}>90 ngày</option><option value="365" ${state.settings.historyRetentionDays === 365 ? 'selected' : ''}>365 ngày</option><option value="0" ${state.settings.historyRetentionDays === 0 ? 'selected' : ''}>Không tự xóa</option></select><small>Hỏi đáp và tính toán lưu Local-first trong IndexedDB. Không lưu API key.</small></label>
     <label class="switch-row"><input id="strictInput" type="checkbox" ${state.settings.strict ? 'checked' : ''}><span><b>Khóa nguồn tài liệu</b><small>AI không được tự thêm quy định ngoài PDF/ảnh/text đã chọn.</small></span></label>
     <div class="action-row"><button class="btn primary" id="saveSettings">Lưu cài đặt</button><button class="btn" id="testConnection">Kiểm tra kết nối</button></div>
     <div id="connectionStatusBox" class="notice ${state.connectionStatus?.ok ? 'success' : 'error'}" ${state.connectionStatus ? '' : 'hidden'}><b>${state.connectionStatus?.ok ? 'Kết nối OK' : 'Kết nối lỗi'}</b><br>${esc(state.connectionStatus?.message || '')}</div>
@@ -1101,10 +1259,10 @@ function settingsHtml() {
   ${versionCardHtml()}
   <div class="panel-section compact-settings-card">
     <div class="panel-section-title"><h3>Dữ liệu đầu vào</h3><span>v${APP_META.version}</span></div>
-    <div class="compact-overview-line"><div><b>PDF · Thư mục · Archive · Ảnh · Text</b><small>Hybrid RAG · OCR có mục tiêu · Offline AI trên Desktop</small></div><span class="compact-status">Sẵn sàng</span></div>
+    <div class="compact-overview-line"><div><b>PDF · Thư mục · Archive · Ảnh · Text</b><small>PDF native AI · Hybrid RAG/citation · Lịch sử local · Offline AI trên Desktop</small></div><span class="compact-status">Sẵn sàng</span></div>
     <details id="settingsInputDetails" class="compact-disclosure" data-persist-detail>
       <summary><span>Xem chi tiết định dạng & tính năng</span><span class="disclosure-chevron">⌄</span></summary>
-      <div class="disclosure-body"><div class="capability-grid"><span>✓ PDF nhiều file</span><span>✓ ZIP tự bung</span><span>✓ Đọc cả thư mục</span><span>✓ Ảnh JPG/PNG/WebP</span><span>✓ TXT/CSV/JSON</span><span>${IS_DESKTOP_EDITION ? '✓ RAR/7Z/TAR/GZ cục bộ' : '✓ ZIP trên Web; RAR/7Z dùng Desktop'}</span><span>✓ Archive có mật khẩu</span><span>✓ Quét toàn bộ lớp chữ</span><span>✓ OCR/Vision đúng trang mục tiêu</span><span>✓ Thư viện công thức tự quét</span><span>✓ Hybrid Semantic + Visual RAG</span><span>✓ Local Embedding/Rerank</span><span>✓ Tự chẩn đoán Ollama/RAM/GPU</span><span>✓ Quản lý model Offline & ổ đĩa</span><span>✓ Nhiều model AI</span><span>✓ PDF liên tục + kéo/pan</span><span>✓ Tìm trong PDF + phím tắt</span><span>✓ Giao diện co giãn</span></div>${archiveEngineCardHtml()}</div>
+      <div class="disclosure-body"><div class="capability-grid"><span>✓ PDF nhiều file</span><span>✓ ZIP tự bung</span><span>✓ Đọc cả thư mục</span><span>✓ Ảnh JPG/PNG/WebP</span><span>✓ TXT/CSV/JSON</span><span>${IS_DESKTOP_EDITION ? '✓ RAR/7Z/TAR/GZ cục bộ' : '✓ ZIP trên Web; RAR/7Z dùng Desktop'}</span><span>✓ Archive có mật khẩu</span><span>✓ Quét toàn bộ lớp chữ</span><span>✓ OCR/Vision đúng trang mục tiêu</span><span>✓ Thư viện công thức tự quét</span><span>✓ Gemini/OpenAI đọc PDF native</span><span>✓ Lịch sử Hỏi đáp/Tính toán local</span><span>✓ Hybrid Semantic + Visual RAG</span><span>✓ Local Embedding/Rerank</span><span>✓ Tự chẩn đoán Ollama/RAM/GPU</span><span>✓ Quản lý model Offline & ổ đĩa</span><span>✓ Nhiều model AI</span><span>✓ PDF liên tục + kéo/pan</span><span>✓ Tìm trong PDF + phím tắt</span><span>✓ Giao diện co giãn</span></div>${archiveEngineCardHtml()}</div>
     </details>
   </div>
   <div class="panel-section compact-settings-card">
@@ -1162,6 +1320,13 @@ function bind() {
       if (el.id === 'aiSummary') { await aiSummary(); return; }
       if (el.id === 'aiSummaryAll') { await aiSummaryAll(); return; }
       if (el.id === 'askBtn') { await askQuestion(); return; }
+      if (el.id === 'newChatBtn') { await persistCurrentChat(); startNewChat(); return; }
+      if (el.id === 'chatHistoryBtn') { state.chatHistoryOpen = !state.chatHistoryOpen; render(); return; }
+      if (el.id === 'closeChatHistory') { state.chatHistoryOpen = false; render(); return; }
+      if (el.matches('[data-chat-session]')) { openChatSession(el.dataset.chatSession); return; }
+      if (el.matches('[data-delete-chat-session]')) { await removeChatSession(el.dataset.deleteChatSession); return; }
+      if (el.matches('[data-load-calculation]')) { loadCalculation(el.dataset.loadCalculation); return; }
+      if (el.matches('[data-delete-calculation]')) { await removeCalculation(el.dataset.deleteCalculation); return; }
       if (el.matches('[data-suggest]')) {
         state.chatDraft = el.dataset.suggest || '';
         const q = document.querySelector('#chatQuestion');
@@ -2138,7 +2303,27 @@ function textMatchesCoreQuestion(text, question) {
   const flat = normalizedFlat(text);
   if (flat.includes(core)) return true;
   const terms = core.split(/\s+/).filter(Boolean);
-  return terms.length > 0 && terms.every(t => flat.includes(t));
+  if (terms.length > 0 && terms.every(t => flat.includes(t))) return true;
+  const compactCore = compactNormalize(core);
+  return compactCore.length >= 5 && compactNormalize(text).includes(compactCore);
+}
+
+async function ensureSearchTextIndexes(docs = []) {
+  const legacy = (docs || []).filter(d => d?.viewerKind === 'pdf' && d?.blob && Number(d.textIndexVersion || 0) < TEXT_INDEX_VERSION);
+  if (!legacy.length) return { reindexed:0, failed:0 };
+  let reindexed = 0, failed = 0;
+  for (const doc of legacy) {
+    try {
+      await reindexPdfText(doc);
+      await saveDocument(doc);
+      clearSearchCache(doc.id);
+      reindexed++;
+    } catch (error) {
+      failed++;
+      console.warn(`Không thể tái lập chỉ mục PDF ${doc.name}:`, error);
+    }
+  }
+  return { reindexed, failed };
 }
 
 /**
@@ -2228,12 +2413,133 @@ async function collectTargetedPdfEvidence(question, docs, tocTargets = [], exist
   return { hits, images, diagnostics, inspectedPages:refs.length };
 }
 
+
+const nativePdfConsent = new Set();
+function nativePdfCandidates(docs = []) {
+  return docs.filter(d => d.viewerKind === 'pdf' && d.blob && String(d.type || 'application/pdf').includes('pdf'));
+}
+function nativePdfPlan(docs = []) {
+  const provider = state.settings.provider;
+  const mode = state.settings.nativePdfMode || 'balanced';
+  if (!supportsNativePdf(provider) || mode === 'economy') return { docs:[], skipped:[], mode, provider, bytes:0, pages:0 };
+  const candidates = nativePdfCandidates(docs);
+  const maxRawBytes = 42 * 1024 * 1024; // leaves room for base64 + prompt inside Bridge/request limits
+  const maxEachBytes = 48 * 1024 * 1024;
+  const eligible = candidates.filter(d => Number(d.size || d.blob?.size || 0) <= maxEachBytes && (provider !== 'gemini' || Number(d.pageCount || 0) <= 1000));
+  const skipped = candidates.filter(d => !eligible.includes(d));
+  let ordered = eligible;
+  if (mode === 'balanced') {
+    const active = eligible.find(d => d.id === state.activeDocId);
+    ordered = [active || eligible[0]].filter(Boolean);
+  }
+  const picked = [];
+  let bytes = 0, pages = 0;
+  for (const d of ordered) {
+    const size = Number(d.size || d.blob?.size || 0);
+    const docPages = Number(d.pageCount || 0);
+    if (bytes + size > maxRawBytes) continue;
+    // Gemini document understanding supports up to 1000 PDF pages per request;
+    // keep the whole native bundle inside that limit rather than only checking each file.
+    if (provider === 'gemini' && pages + docPages > 1000) continue;
+    picked.push(d); bytes += size; pages += docPages;
+    if (mode === 'balanced') break;
+  }
+  return { docs:picked, skipped, mode, provider, bytes, pages };
+}
+async function prepareNativePdfDocuments(docs = [], { needed = true } = {}) {
+  const plan = nativePdfPlan(docs);
+  if (plan.mode === 'balanced' && !needed) {
+    state.nativePdfStatus = 'RAG đủ căn cứ · chưa gửi PDF native';
+    return { payloads:[], plan:{ ...plan, deferred:true } };
+  }
+  if (!plan.docs.length) {
+    state.nativePdfStatus = plan.mode === 'economy' || !supportsNativePdf(plan.provider) ? '' : 'PDF native không đủ điều kiện · dùng HNL RAG';
+    return { payloads:[], plan };
+  }
+  const key = `${state.activeChatSessionId || 'session'}:${plan.provider}:${plan.mode}:${plan.docs.map(d=>d.id).join(',')}`;
+  const highCost = plan.mode === 'native' || (plan.provider === 'openai' && (plan.pages > 60 || plan.bytes > 8 * 1024 * 1024));
+  if (highCost && !nativePdfConsent.has(key)) {
+    const note = plan.provider === 'openai'
+      ? 'OpenAI tính phí theo token đầu vào/đầu ra; PDF native gồm cả text và ảnh trang nên có thể dùng nhiều token hơn RAG.'
+      : 'Gemini sẽ đọc trực tiếp cả PDF; việc này có thể dùng quota lớn hơn chế độ RAG tiết kiệm.';
+    const ok = window.confirm(`Cho ${PROVIDERS[plan.provider]?.short || plan.provider} đọc PDF native cho phiên này?\n\n${plan.docs.map(d=>`• ${d.name} · ${d.pageCount} trang · ${fmtBytes(d.size)}`).join('\n')}\n\n${note}\n\nOK = dùng PDF native + HNL RAG/citation. Cancel = chỉ dùng RAG cho câu hỏi này.`);
+    if (!ok) {
+      state.nativePdfStatus = 'Người dùng chọn RAG cho câu này';
+      return { payloads:[], plan:{...plan, declined:true} };
+    }
+    nativePdfConsent.add(key);
+  }
+  const payloads = [];
+  for (const d of plan.docs) {
+    try { payloads.push({ docId:d.id, name:d.name, mimeType:'application/pdf', data:await fileToBase64(d.blob), pageCount:d.pageCount, size:d.size }); }
+    catch (error) { console.warn('Không chuẩn bị được PDF native:', d.name, error); }
+  }
+  state.nativePdfStatus = payloads.length ? `${payloads.length} PDF native · ${plan.pages} trang` : 'PDF native lỗi · dùng HNL RAG';
+  return { payloads, plan };
+}
+function nativePdfInstruction(payloads = []) {
+  if (!payloads.length) return '';
+  return `\n\nPDF NATIVE ĐÍNH KÈM: ${payloads.map(x=>`${x.name} (${x.pageCount || '?'} trang)`).join('; ')}. Hãy đọc trực tiếp PDF native để hiểu chữ, ảnh, bảng, sơ đồ và công thức. Các đoạn HNL RAG bên dưới chỉ là mốc định vị/citation, không giới hạn phạm vi đọc PDF. Khi trả lời, ưu tiên citation dạng [Tên file/tiêu chuẩn · Trang X]. Nếu không đọc chắc được nội dung, nói rõ không đủ căn cứ.`;
+}
+function mergeCitationHitsFromAnswer(text, hits = [], docs = []) {
+  const out = [...hits];
+  const seen = new Set(out.map(h => `${h.docId}:${Number(h.page || 1)}`));
+  const src = String(text || '');
+  const re = /(?:\[([^\]\n]{2,120}?)\s*[·|,;-]\s*)?(?:trang|p\.?|page)\s*(\d{1,4})\]?/gi;
+  let m;
+  while ((m = re.exec(src))) {
+    const page = Number(m[2]);
+    if (!Number.isFinite(page) || page < 1) continue;
+    const label = compactNormalize(m[1] || '');
+    let doc = null;
+    if (label) doc = docs.find(d => compactNormalize(`${d.standard || ''} ${d.name || ''}`).includes(label) || label.includes(compactNormalize(d.standard || d.name || '')));
+    if (!doc && docs.length === 1) doc = docs[0];
+    if (!doc || page > Number(doc.pageCount || page)) continue;
+    const key = `${doc.id}:${page}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ docId:doc.id, docName:doc.name, standard:doc.standard, page, score:980, nativeCitation:true, text:`Citation do AI đọc PDF native trả về: trang ${page}.` });
+  }
+  return out;
+}
+
+function recentConversationContext(maxMessages = 8, maxChars = 6500) {
+  // During ask/summary/checklist flows the last two rows are the current user
+  // request and its temporary "Đang…" assistant placeholder. Exclude them so
+  // the model receives only prior turns as conversational context.
+  const prior = state.chat.slice(0, Math.max(0, state.chat.length - 2))
+    .filter(m => ['user','ai'].includes(m.role) && String(m.text || '').trim())
+    .slice(-maxMessages);
+  if (!prior.length) return '';
+  const lines = [];
+  let used = 0;
+  for (const m of prior) {
+    const label = m.role === 'user' ? 'NGƯỜI DÙNG' : 'TRỢ LÝ';
+    const text = String(m.text || '').replace(/\s+/g, ' ').trim().slice(0, 2200);
+    const line = `${label}: ${text}`;
+    if (used + line.length > maxChars) break;
+    lines.push(line); used += line.length;
+  }
+  if (!lines.length) return '';
+  return `
+
+NGỮ CẢNH HỘI THOẠI TRƯỚC (chỉ dùng để hiểu câu hỏi nối tiếp/đại từ; KHÔNG coi câu trả lời cũ là nguồn tiêu chuẩn):
+${lines.join('\n')}
+Mọi kết luận kỹ thuật của lượt này vẫn phải được đối chiếu lại với PDF/RAG hiện tại.`;
+}
+
 async function getAnswer(question, docsOverride = null) {
   const docs = docsOverride || sourceDocs();
   if (!docs.length) throw new Error('Không có tài liệu trong phạm vi tìm kiếm hiện tại.');
   const textDocs = docs.filter(d => d.viewerKind !== 'image');
+  const nativePlanPreview = nativePdfPlan(docs);
+  const nativePdfAvailable = nativePlanPreview.docs.length > 0;
+  // v1.9.20: documents persisted by older builds keep their old extracted text.
+  // Rebuild once from the original PDF blob so users do NOT have to delete and
+  // re-import a 124-page standard after upgrading HNL.
+  const indexMigration = await ensureSearchTextIndexes(textDocs);
   const stats = corpusStats(textDocs);
-  state.searchStats = stats;
+  state.searchStats = { ...stats, textIndexVersion:TEXT_INDEX_VERSION, reindexedDocs:indexMigration.reindexed, reindexFailed:indexMigration.failed };
 
   // v1.7 Local Intelligence Engine: scan the COMPLETE corpus first, then
   // combine structural/keyword retrieval with optional local semantic reranking.
@@ -2251,6 +2557,13 @@ async function getAnswer(question, docsOverride = null) {
   let hits = useDeep
     ? deepSearchChunks(question, textDocs, candidateLimit)
     : smartSearchChunks(question, textDocs, candidateLimit, { perDoc: mode === 'fast' ? 4 : 7 });
+
+  // Exact phrase scan is independent of top-k/embedding rank. This is crucial
+  // for technical questions such as “cọc chống là gì”: the definition in mục 6
+  // must outrank a TOC-only occurrence in mục 7.2.1.
+  const exactPhraseHits = findExactPhrasePages(question, textDocs, 18);
+  const exactBodyHits = exactPhraseHits.filter(h => !h.tocAnchor);
+  const exactTocHits = exactPhraseHits.filter(h => h.tocAnchor);
 
   if (semanticRequested && hits.length > 1) {
     let embeddingModel = state.settings.embeddingModel || 'bge-m3';
@@ -2284,8 +2597,17 @@ async function getAnswer(question, docsOverride = null) {
     state.searchStats = { ...stats, retrieval: useDeep ? 'Deep Lexical RAG' : 'Fast Balanced RAG' };
   }
 
-  // v1.9.19 Hybrid Visual RAG: searchable TOC text can point to a content
-  // page whose actual body is image/scan. Inspect only those target pages.
+  if (exactPhraseHits.length) {
+    const seenExact = new Set();
+    hits = [...exactBodyHits, ...hits, ...exactTocHits].filter(h => {
+      const key = `${h.docId}:${h.page}:${h.chunk ?? String(h.text || '').slice(0,80)}`;
+      if (seenExact.has(key)) return false;
+      seenExact.add(key); return true;
+    }).slice(0, retrievalLimit + Math.min(12, exactPhraseHits.length));
+  }
+
+  // Hybrid Visual RAG: searchable TOC text can point to a content page whose
+  // actual body is image/scan. Inspect only those target pages.
   const tocTargets = findTocPageTargets(question, textDocs, 6);
   const targeted = await collectTargetedPdfEvidence(question, textDocs, tocTargets, hits);
   const tocAnchorHits = tocTargets.map((t, i) => ({
@@ -2302,10 +2624,15 @@ async function getAnswer(question, docsOverride = null) {
   }
   state.searchStats = {
     ...(state.searchStats || stats),
+    exactPhrasePages:exactPhraseHits.length,
+    exactBodyPages:exactBodyHits.length,
     tocTargets:tocTargets.length,
     visualPagesInspected:targeted.inspectedPages,
     targetedLocalOcr:targeted.diagnostics.filter(x => x.mode === 'local-ocr').length,
-    targetedVisionPages:targeted.images.length
+    targetedVisionPages:targeted.images.length,
+    textIndexVersion:TEXT_INDEX_VERSION,
+    reindexedDocs:indexMigration.reindexed,
+    reindexFailed:indexMigration.failed
   };
 
   const docIds = new Set(docs.map(d => d.id));
@@ -2348,24 +2675,46 @@ async function getAnswer(question, docsOverride = null) {
   }
 
   const substantiveHits = hits.filter(h => !h.tocAnchor && !h.visualLocator);
-  if (!substantiveHits.length && !images.length) {
+  if (!substantiveHits.length && !images.length && !nativePdfAvailable) {
     const tocHint = tocTargets.length ? ` Hệ thống có tìm thấy mục “${tocTargets[0].heading}” trong mục lục và đã định vị trang đích, nhưng chưa đọc được nội dung pixel ở trang đó.` : '';
     return { text: `Không tìm thấy đủ căn cứ trong các tài liệu đang chọn.${tocHint} Đã quét toàn bộ ${stats.textPages}/${stats.pages} trang có lớp chữ trong ${stats.docs} tài liệu (${stats.chunks} đoạn).`, hits: tocAnchorHits, stats };
   }
   if (state.settings.provider === 'local') {
     if (!substantiveHits.length && tocTargets.length) return { text: `Đã tìm thấy mục “${tocTargets[0].heading}” trong mục lục và định vị trang PDF khoảng ${tocTargets[0].targetPage}, nhưng trang đích là ảnh/scan và OCR cục bộ trên máy chưa đọc đủ rõ. Hãy chọn HNL Offline AI (Ollama) hoặc Gemini để đọc đúng trang đích bằng Vision; HNL không cần OCR toàn bộ PDF.`, hits: tocAnchorHits, stats };
-    if (images.length) return { text: `Tra cứu nhanh đã quét ${stats.textPages}/${stats.pages} trang chữ nhưng không đọc pixel ảnh. Hãy chọn HNL Offline AI (Ollama) hoặc Gemini để đọc ảnh trực tiếp.`, hits, stats };
-    return { text: localAnswer(question, substantiveHits, stats), hits:substantiveHits, stats };
+    if (images.length && !exactBodyHits.length) return { text: `Tra cứu nhanh đã quét ${stats.textPages}/${stats.pages} trang chữ nhưng không đọc pixel ảnh. Hãy chọn HNL Offline AI (Ollama) hoặc Gemini để đọc ảnh trực tiếp.`, hits, stats };
+    const localHits = exactBodyHits.length ? [...exactBodyHits, ...substantiveHits.filter(h => !exactBodyHits.some(e => e.docId === h.docId && e.page === h.page))] : substantiveHits;
+    return { text: localAnswer(question, localHits, stats), hits:localHits, stats };
   }
 
   const planText = queryPlan.length > 1 ? `\nKẾ HOẠCH TRA CỨU: ${queryPlan.map(x => x.label).join(' → ')}.` : '';
   const retrievalText = state.searchStats?.retrieval ? ` Chế độ chọn ngữ cảnh: ${state.searchStats.retrieval}${state.searchStats.embeddingModel ? ` (${state.searchStats.embeddingModel})` : ''}.` : '';
   const visualText = targeted.images.length ? `\nHYBRID VISUAL RAG: có ${targeted.images.length} ảnh trang PDF mục tiêu được chọn từ mục lục/điểm ít lớp chữ. Hãy ĐỌC TRỰC TIẾP các ảnh này để trả lời nếu lớp chữ thiếu. Dòng CHỈ DẪN MỤC LỤC chỉ dùng để định vị, tuyệt đối không coi là nội dung định nghĩa. Nếu ảnh mục tiêu không đủ rõ thì phải nói không đủ căn cứ.` : (targeted.hits.some(h => h.ocrLocal) ? `\nHYBRID VISUAL RAG: OCR cục bộ đã bổ sung ${targeted.hits.filter(h => h.ocrLocal).length} trang mục tiêu; ưu tiên nội dung OCR có citation trang.` : '');
   const coverage = `\n\nTHỐNG KÊ PHẠM VI: hệ thống đã quét toàn bộ ${stats.textPages}/${stats.pages} trang có lớp chữ, ${stats.chunks} đoạn thuộc ${stats.docs} tài liệu trước khi chọn ngữ cảnh liên quan.${retrievalText}${planText}${visualText} Không được hiểu số đoạn ngữ cảnh bên dưới là số trang đã quét.`;
-  const prompt = buildRagPrompt(question, hits, state.settings.strict) + coverage;
-  const text = await callConfiguredAiWithApproval({ prompt, images });
+  const nativeNeeded = state.settings.nativePdfMode === 'native' || (
+    state.settings.nativePdfMode === 'balanced' && (
+      broadQuery || substantiveHits.length < 2 || images.length > 0 || (exactBodyHits.length === 0 && tocTargets.length > 0)
+    )
+  );
+  const nativePrepared = await prepareNativePdfDocuments(docs, { needed:nativeNeeded });
+  const nativeDocs = nativePrepared.payloads || [];
+  const chatContext = recentConversationContext();
+  const prompt = buildRagPrompt(question, hits, state.settings.strict) + coverage + chatContext + nativePdfInstruction(nativeDocs);
+  let text = await callConfiguredAiWithApproval({ prompt, images, documents:nativeDocs, pdfDetail:state.settings.openaiPdfDetail || 'auto' });
   if (!text) throw new Error('AI không trả về nội dung.');
-  return { text, hits, stats };
+
+  // If the provider still emits the strict “not found” sentence while HNL has
+  // exact BODY pages, retry once with a narrow context instead of accepting a
+  // false negative caused by a large RAG context. Same provider/model is kept.
+  if (/Không tìm thấy đủ căn cứ trong các tài liệu đang chọn/i.test(text) && exactBodyHits.length) {
+    const narrow = exactBodyHits.slice(0, 6);
+    const narrowPrompt = buildRagPrompt(question, narrow, state.settings.strict) + chatContext + `
+
+ƯU TIÊN KIỂM TRA: HNL đã tìm thấy cụm kỹ thuật chính xác “${coreSearchPhrase(question)}” trong ${narrow.length} trang nội dung (không phải mục lục). Hãy đọc kỹ các trang này trước khi kết luận thiếu căn cứ.`;
+    const retry = await callConfiguredAiWithApproval({ prompt:narrowPrompt + nativePdfInstruction(nativeDocs), images:[], documents:nativeDocs, pdfDetail:state.settings.openaiPdfDetail || 'auto' });
+    if (retry?.trim()) text = retry;
+  }
+  hits = mergeCitationHitsFromAnswer(text, hits, docs);
+  return { text, hits, stats:{ ...stats, nativePdfCount:nativeDocs.length, nativePdfMode:state.settings.nativePdfMode } };
 }
 
 async function askQuestion(questionOverride = '') {
@@ -2375,17 +2724,18 @@ async function askQuestion(questionOverride = '') {
   if (!question) return showToast('Hãy nhập câu hỏi trước khi gửi.', 'warning');
   if (!sourceDocs().length) return showToast('Hãy chọn hoặc mở ít nhất một PDF làm nguồn.', 'warning');
   state.chatDraft = '';
-  state.chat.push({ role: 'user', text: question });
-  state.chat.push({ role: 'ai', text: 'Đang tra cứu nguồn PDF…', hits: [] });
+  state.chat.push({ role:'user', text:question, createdAt:new Date().toISOString() });
+  state.chat.push({ role:'ai', text:'Đang tra cứu nguồn PDF…', hits:[], provider:state.settings.provider, model:providerModel(), createdAt:new Date().toISOString() });
   state.busy = true;
   render();
   try {
     const answer = await getAnswer(question);
-    state.chat[state.chat.length - 1] = { role: 'ai', text: answer.text, hits: answer.hits };
+    state.chat[state.chat.length - 1] = { role:'ai', text:answer.text, hits:answer.hits, provider:state.settings.provider, model:providerModel(), createdAt:new Date().toISOString() };
   } catch (error) {
-    state.chat[state.chat.length - 1] = { role: 'ai', text: `Lỗi: ${error.message}`, hits: [] };
+    state.chat[state.chat.length - 1] = { role:'ai', text:`Lỗi: ${error.message}`, hits:[], provider:state.settings.provider, model:providerModel(), createdAt:new Date().toISOString() };
   } finally {
     state.busy = false;
+    await persistCurrentChat();
     render();
     queueMicrotask(() => { const log = document.querySelector('.chat-log'); if (log) log.scrollTop = log.scrollHeight; });
   }
@@ -2395,30 +2745,30 @@ async function aiSummary() {
   const doc = activeDoc() || sourceDocs()[0];
   if (!doc || state.busy) return;
   state.tab = 'chat';
-  state.chat.push({ role: 'user', text: `Tóm tắt ${doc.standard || doc.name}` });
-  state.chat.push({ role: 'ai', text: 'Đang tạo tóm tắt…', hits: [] });
+  state.chat.push({ role:'user', text:`Tóm tắt ${doc.standard || doc.name}`, createdAt:new Date().toISOString() });
+  state.chat.push({ role:'ai', text:'Đang tạo tóm tắt…', hits:[], provider:state.settings.provider, model:providerModel(), createdAt:new Date().toISOString() });
   state.busy = true;
   render();
   try {
     if (state.settings.provider === 'local') {
       const sum = localSummary(doc);
       const hits = [...sum.headings.slice(0, 8), ...sum.important.slice(0, 8)].map(x => ({ docId: doc.id, docName: doc.name, standard: doc.standard, page: x.page, text: x.text }));
-      state.chat[state.chat.length - 1] = { role: 'ai', text: localSummaryText(doc), hits };
+      state.chat[state.chat.length - 1] = { role:'ai', text:localSummaryText(doc), hits, provider:state.settings.provider, model:providerModel(), createdAt:new Date().toISOString() };
     } else {
       const answer = await getAnswer('Tóm tắt tiêu chuẩn theo góc nhìn kỹ sư cọc: phạm vi, phân loại, thông số bắt buộc, sai số, ngoại quan, phương pháp thử, nghiệm thu, bảo quản/vận chuyển và công thức. Mỗi ý phải có nguồn trang.', [doc]);
-      state.chat[state.chat.length - 1] = { role: 'ai', text: answer.text, hits: answer.hits };
+      state.chat[state.chat.length - 1] = { role:'ai', text:answer.text, hits:answer.hits, provider:state.settings.provider, model:providerModel(), createdAt:new Date().toISOString() };
     }
   } catch (error) {
-    state.chat[state.chat.length - 1] = { role: 'ai', text: `Lỗi: ${error.message}`, hits: [] };
-  } finally { state.busy = false; render(); }
+    state.chat[state.chat.length - 1] = { role:'ai', text:`Lỗi: ${error.message}`, hits:[], provider:state.settings.provider, model:providerModel(), createdAt:new Date().toISOString() };
+  } finally { state.busy = false; await persistCurrentChat(); render(); }
 }
 
 async function aiSummaryAll() {
   const docs = sourceDocs();
   if (!docs.length || state.busy) return showToast('Không có tài liệu trong phạm vi hiện tại.', 'warning');
   state.tab = 'chat';
-  state.chat.push({ role:'user', text:`Tóm tắt toàn bộ ${docs.length} tài liệu trong ${scopeLabel()}` });
-  state.chat.push({ role:'ai', text:'Đang quét toàn bộ trang và tổng hợp…', hits:[] });
+  state.chat.push({ role:'user', text:`Tóm tắt toàn bộ ${docs.length} tài liệu trong ${scopeLabel()}`, createdAt:new Date().toISOString() });
+  state.chat.push({ role:'ai', text:'Đang quét toàn bộ trang và tổng hợp…', hits:[], provider:state.settings.provider, model:providerModel(), createdAt:new Date().toISOString() });
   state.busy = true; render();
   try {
     if (state.settings.provider === 'local') {
@@ -2429,13 +2779,13 @@ async function aiSummaryAll() {
         return `## ${doc.standard || doc.name}\n${pts.map(x=>`• ${x.text} [Trang ${x.page}]`).join('\n') || 'Không trích được lớp chữ.'}`;
       });
       const hits = smartSearchChunks('yêu cầu kỹ thuật nghiệm thu phương pháp thử công thức', docs.filter(d=>d.viewerKind !== 'image'), 50, {perDoc:8});
-      state.chat[state.chat.length-1] = { role:'ai', text:`Đã quét ${stats.textPages}/${stats.pages} trang có chữ trong ${stats.docs} tài liệu.\n\n${parts.join('\n\n')}`, hits };
+      state.chat[state.chat.length-1] = { role:'ai', text:`Đã quét ${stats.textPages}/${stats.pages} trang có chữ trong ${stats.docs} tài liệu.\n\n${parts.join('\n\n')}`, hits, provider:state.settings.provider, model:providerModel(), createdAt:new Date().toISOString() };
     } else {
       const answer = await getAnswer('Tổng hợp TOÀN BỘ các tài liệu đang chọn theo từng tiêu chuẩn: phạm vi, yêu cầu kỹ thuật, số liệu/bảng quan trọng, công thức, phương pháp thử, nghiệm thu, bảo quản/vận chuyển và các điểm khác nhau. Không bỏ qua tài liệu nào có nội dung liên quan. Mỗi ý phải dẫn tên tài liệu và trang.', docs);
-      state.chat[state.chat.length-1] = { role:'ai', text:answer.text, hits:answer.hits };
+      state.chat[state.chat.length-1] = { role:'ai', text:answer.text, hits:answer.hits, provider:state.settings.provider, model:providerModel(), createdAt:new Date().toISOString() };
     }
-  } catch (error) { state.chat[state.chat.length-1] = { role:'ai', text:`Lỗi: ${error.message}`, hits:[] }; }
-  finally { state.busy=false; render(); }
+  } catch (error) { state.chat[state.chat.length-1] = { role:'ai', text:`Lỗi: ${error.message}`, hits:[], provider:state.settings.provider, model:providerModel(), createdAt:new Date().toISOString() }; }
+  finally { state.busy=false; await persistCurrentChat(); render(); }
 }
 
 function runLookup() {
@@ -2524,7 +2874,13 @@ function runCalc() {
       alpha
     });
     output.innerHTML = `<div class="calc-result"><div class="calc-main"><span>Sức chịu tải dài hạn</span><b>${result.longTermKn.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} kN</b></div><div class="metric-grid three"><div><span>A₀</span><b>${area.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} mm²</b></div><div><span>Ngắn hạn</span><b>${result.shortTermKn.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} kN</b></div><div><span>80% ngắn hạn</span><b>${result.recommendedMaxKn.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} kN</b></div></div><div class="footnote">α = ${alpha}; ứng suất quy đổi = ${result.stress.toFixed(3)} MPa. Luôn kiểm tra điều kiện áp dụng trong Phụ lục B.</div></div>`;
-    showToast('Đã tính toán xong.', 'success');
+    void recordCalculation({
+      kind:'verified-7888', type:'Sức chịu tải cọc', title:`${type} · D${D} · sức chịu tải dài hạn`,
+      inputs:{ cType:type, cClass:document.querySelector('#cClass')?.value || 'B', cDiameter:D, cThickness:t, cCu:document.querySelector('#cCu')?.value || '', cCe:document.querySelector('#cCe')?.value || '' },
+      result:{ areaMm2:area, longTermKn:result.longTermKn, shortTermKn:result.shortTermKn, recommendedMaxKn:result.recommendedMaxKn, stressMpa:result.stress, alpha },
+      resultText:`${result.longTermKn.toLocaleString('vi-VN', {maximumFractionDigits:1})} kN`, source:{standard:'TCVN 7888:2014', section:'Phụ lục B'}
+    });
+    showToast('Đã tính toán xong và lưu vào lịch sử cục bộ.', 'success');
     requestAnimationFrame(() => output.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
   } catch (error) { output.innerHTML = `<div class="notice error">${esc(error.message)}</div>`; showToast(error.message, 'error'); }
 }
@@ -2543,7 +2899,8 @@ function runDynamicFormula() {
     for (const v of item.variables) if (!Number.isFinite(values[v])) throw new Error(`Chưa nhập giá trị hợp lệ cho ${v}.`);
     const result = evaluateExpression(item.rhs, values);
     output.innerHTML = `<div class="calc-result"><div class="calc-main"><span>${esc(item.lhs || 'Kết quả')}</span><b>${Number(result).toLocaleString('vi-VN', { maximumFractionDigits: 8 })}</b></div><div class="footnote">Kết quả chưa tự gán đơn vị vì đơn vị phụ thuộc định nghĩa biến trong tiêu chuẩn. Đối chiếu ${esc(item.standard || item.docName)} · Trang ${item.page} trước khi sử dụng.</div></div>`;
-    showToast('Đã tính công thức tự quét.', 'success');
+    void recordCalculation({ kind:'dynamic-formula', type:'Công thức từ PDF', title:`${item.label || item.lhs || 'Công thức'} · ${item.standard || item.docName}`, inputs:values, result:{ value:Number(result), lhs:item.lhs || '' }, resultText:String(Number(result).toLocaleString('vi-VN', {maximumFractionDigits:8})), source:{docId:item.docId, standard:item.standard || item.docName, page:item.page, label:item.label || '', verified:Boolean(item.verified)} });
+    showToast('Đã tính công thức và lưu vào lịch sử cục bộ.', 'success');
   } catch (error) {
     output.innerHTML = `<div class="notice error">${esc(error.message)}</div>`;
     showToast(error.message, 'error');
@@ -2620,15 +2977,15 @@ function resetChecklist() {
 async function aiChecklist() {
   if (!sourceDocs().length || state.busy) return;
   state.tab = 'chat';
-  state.chat.push({ role: 'user', text: 'Tạo checklist nghiệm thu từ tiêu chuẩn đang chọn' });
-  state.chat.push({ role: 'ai', text: 'Đang trích checklist…', hits: [] });
+  state.chat.push({ role:'user', text:'Tạo checklist nghiệm thu từ tiêu chuẩn đang chọn', createdAt:new Date().toISOString() });
+  state.chat.push({ role:'ai', text:'Đang trích checklist…', hits:[], provider:state.settings.provider, model:providerModel(), createdAt:new Date().toISOString() });
   state.busy = true;
   render();
   try {
     const answer = await getAnswer('Trích checklist thực hành về hồ sơ, kiểm tra, thử nghiệm và nghiệm thu. Mỗi dòng phải có nguồn trang. Không thêm yêu cầu không có trong tài liệu.');
-    state.chat[state.chat.length - 1] = { role: 'ai', text: answer.text, hits: answer.hits };
-  } catch (error) { state.chat[state.chat.length - 1] = { role: 'ai', text: `Lỗi: ${error.message}`, hits: [] }; }
-  finally { state.busy = false; render(); }
+    state.chat[state.chat.length - 1] = { role:'ai', text:answer.text, hits:answer.hits, provider:state.settings.provider, model:providerModel(), createdAt:new Date().toISOString() };
+  } catch (error) { state.chat[state.chat.length - 1] = { role:'ai', text:`Lỗi: ${error.message}`, hits:[], provider:state.settings.provider, model:providerModel(), createdAt:new Date().toISOString() }; }
+  finally { state.busy = false; await persistCurrentChat(); render(); }
 }
 
 function providerChanged(event) {
@@ -2894,6 +3251,9 @@ function readSettingsForm({ askBeforeModelChange = false } = {}) {
   state.settings.ollamaUrl = String(draft.ollamaUrl || state.settings.ollamaUrl).trim();
   state.settings.retrievalMode = draft.retrievalMode || state.settings.retrievalMode || 'auto';
   state.settings.semanticRerank = Boolean(draft.semanticRerank);
+  state.settings.nativePdfMode = ['economy','balanced','native'].includes(draft.nativePdfMode) ? draft.nativePdfMode : 'balanced';
+  state.settings.openaiPdfDetail = ['low','auto','high'].includes(draft.openaiPdfDetail) ? draft.openaiPdfDetail : 'auto';
+  state.settings.historyRetentionDays = [30,90,365,0].includes(Number(draft.historyRetentionDays)) ? Number(draft.historyRetentionDays) : 365;
   state.settings.strict = Boolean(draft.strict);
   const key = String(draft.apiKey || '').trim();
   setCurrentApiKey(provider, key);
@@ -3061,12 +3421,21 @@ async function runDiagnostics() {
 (async function init() {
   await Promise.all([loadBuildMetadata(), loadChangelog()]);
   try {
-    state.docs = await getDocuments();
+    const [docs, sessions, calculations] = await Promise.all([getDocuments(), getChatSessions(), getCalculations()]);
+    state.docs = docs;
     state.docs.forEach(d => { if (!d.viewerKind) d.viewerKind = 'pdf'; state.selected.add(d.id); });
     state.activeDocId = state.docs[0]?.id || null;
+    state.chatSessions = sessions;
+    state.calculations = calculations;
+    const latest = sessions[0];
+    if (latest) {
+      state.activeChatSessionId = latest.id;
+      state.chat = (latest.messages || []).map(m => ({ ...m, hits:Array.isArray(m.hits) ? m.hits : [] }));
+    } else state.activeChatSessionId = crypto.randomUUID();
+    await purgeExpiredHistory();
   } catch (error) {
     console.warn(error);
-    state.toast = { message: 'Không mở được thư viện cục bộ của trình duyệt.', type: 'error' };
+    state.toast = { message: 'Không mở được đầy đủ dữ liệu cục bộ của ứng dụng.', type: 'error' };
   }
   render();
 })();

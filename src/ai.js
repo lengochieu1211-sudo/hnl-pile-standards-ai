@@ -56,9 +56,12 @@ async function jsonFetch(url, options, timeoutMs = 45000) {
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(url, { ...options, signal: controller.signal });
-    const data = await response.json().catch(() => ({}));
+    const raw = await response.text();
+    let data = {};
+    try { data = raw ? JSON.parse(raw) : {}; }
+    catch { data = raw ? { raw } : {}; }
     if (!response.ok) {
-      const message = data?.error?.message || data?.error || data?.message || `${response.status} ${response.statusText}`;
+      const message = data?.error?.message || data?.error || data?.message || data?.raw || `${response.status} ${response.statusText}`;
       const error = new Error(String(message));
       error.status = response.status;
       error.code = data?.error?.status || data?.error?.code || data?.code || '';
@@ -75,7 +78,24 @@ async function jsonFetch(url, options, timeoutMs = 45000) {
   }
 }
 
-export async function callBridge({ bridgeUrl, provider, model, prompt, images = [], apiKey = '' }) {
+
+function extractOpenAiResponseText(data = {}) {
+  if (typeof data.output_text === 'string' && data.output_text.trim()) return data.output_text;
+  const parts = [];
+  for (const item of data.output || []) {
+    for (const c of item?.content || []) {
+      if (typeof c?.text === 'string') parts.push(c.text);
+      else if (typeof c?.output_text === 'string') parts.push(c.output_text);
+    }
+  }
+  return parts.join('\n').trim();
+}
+
+export function supportsNativePdf(provider) {
+  return provider === 'gemini' || provider === 'openai';
+}
+
+export async function callBridge({ bridgeUrl, provider, model, prompt, images = [], documents = [], pdfDetail = 'auto', apiKey = '' }) {
   const base = String(bridgeUrl || '').replace(/\/$/, '');
   if (!base) throw new Error('Chưa cấu hình HNL Bridge URL.');
   const data = await jsonFetch(`${base}/api/chat`, {
@@ -85,17 +105,19 @@ export async function callBridge({ bridgeUrl, provider, model, prompt, images = 
       provider,
       model,
       images,
+      documents,
+      pdfDetail,
       apiKey: String(apiKey || '').trim(),
       messages: [
         { role: 'system', content: 'Trả lời bằng tiếng Việt, chính xác, ưu tiên ngắn gọn và luôn giữ citation nguồn tài liệu.' },
         { role: 'user', content: prompt }
       ]
     })
-  });
+  }, documents.length ? 150000 : 45000);
   return data.text || '';
 }
 
-export async function callDirect({ provider, model, apiKey, prompt, ollamaUrl = 'http://127.0.0.1:11434', images = [] }) {
+export async function callDirect({ provider, model, apiKey, prompt, ollamaUrl = 'http://127.0.0.1:11434', images = [], documents = [], pdfDetail = 'auto' }) {
   if (provider === 'ollama') {
     if (location.protocol === 'https:' && !/^https:\/\//i.test(ollamaUrl)) {
       throw new Error('GitHub Pages dùng HTTPS nên trình duyệt có thể chặn Ollama HTTP cục bộ. Hãy dùng HNL Bridge hoặc chạy frontend trên localhost.');
@@ -121,16 +143,36 @@ export async function callDirect({ provider, model, apiKey, prompt, ollamaUrl = 
 
   if (provider === 'gemini') {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model || 'gemini-3.7-flash')}:generateContent`;
+    const nativeParts = documents.map(x => ({ inlineData: { mimeType: x.mimeType || 'application/pdf', data: x.data } }));
     const data = await jsonFetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: 'Trả lời bằng tiếng Việt, chính xác và giữ citation nguồn tài liệu.' }] },
-        contents: [{ role: 'user', parts: [{ text: prompt }, ...images.map(x => ({ inlineData: { mimeType: x.mimeType || 'image/jpeg', data: x.data } }))] }],
+        systemInstruction: { parts: [{ text: 'Trả lời bằng tiếng Việt, chính xác. Khi có PDF native, phải đọc trực tiếp cả chữ, ảnh, bảng, sơ đồ và công thức trong PDF; HNL RAG chỉ là chỉ dẫn định vị/citation. Không bịa điều khoản hoặc số trang.' }] },
+        contents: [{ role: 'user', parts: [...nativeParts, ...images.map(x => ({ inlineData: { mimeType: x.mimeType || 'image/jpeg', data: x.data } })), { text: prompt }] }],
         generationConfig: { temperature: 0.1 }
       })
-    });
+    }, documents.length ? 150000 : 45000);
     return data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+  }
+
+  if (provider === 'openai' && documents.length) {
+    const detail = ['low','high','auto'].includes(pdfDetail) ? pdfDetail : 'auto';
+    const content = [
+      ...documents.map(x => ({ type:'input_file', filename:x.name || 'document.pdf', file_data:`data:${x.mimeType || 'application/pdf'};base64,${x.data}`, detail })),
+      ...images.map(x => ({ type:'input_image', image_url:`data:${x.mimeType || 'image/jpeg'};base64,${x.data}` })),
+      { type:'input_text', text:prompt }
+    ];
+    const data = await jsonFetch('https://api.openai.com/v1/responses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: model || 'gpt-4.1-mini',
+        input: [{ role:'user', content }],
+        instructions: 'Trả lời bằng tiếng Việt, chính xác. Khi có PDF native, đọc trực tiếp cả text và hình trang. HNL RAG chỉ là chỉ dẫn định vị/citation. Không bịa điều khoản, bảng hoặc số trang.'
+      })
+    }, 150000);
+    return extractOpenAiResponseText(data);
   }
 
   if (provider === 'openai') {

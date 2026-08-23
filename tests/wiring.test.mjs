@@ -555,7 +555,7 @@ test('v1.9.14 Offline AI detects missing Ollama before starting model pull', () 
 test('v1.9.16 Bridge accepts the session API key for chat and model discovery', () => {
   const ai = fs.readFileSync(new URL('../src/ai.js', import.meta.url), 'utf8');
   const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
-  assert.match(ai, /callBridge\(\{ bridgeUrl, provider, model, prompt, images = \[\], apiKey = '' \}\)/);
+  assert.match(ai, /callBridge\(\{ bridgeUrl, provider, model, prompt, images = \[\], documents = \[\], pdfDetail = 'auto', apiKey = '' \}\)/);
   assert.match(ai, /apiKey: String\(apiKey \|\| ''\)\.trim\(\)/);
   assert.match(ai, /X-HNL-API-Key/);
   assert.match(bridge, /requireKey\(name, override = ''\)/);
@@ -810,4 +810,105 @@ test('v1.9.19 compact settings hide verbose release, capability and diagnostic d
   assert.match(source, /openDetails: \[\.\.\.document\.querySelectorAll\('details\[data-persist-detail\]\[open\]'\)\]/);
   assert.match(css, /\.compact-disclosure/);
   assert.match(css, /\.compact-overview-line/);
+});
+
+
+test('v1.9.20 legacy PDF text index is automatically rebuilt before RAG', () => {
+  const pdf = fs.readFileSync(new URL('../src/pdf.js', import.meta.url), 'utf8');
+  assert.match(pdf, /TEXT_INDEX_VERSION = 3/);
+  assert.match(pdf, /export async function reindexPdfText/);
+  assert.match(pdf, /gap > Math\.max\(0\.9, h \* 0\.16\)/);
+  assert.match(source, /ensureSearchTextIndexes/);
+  assert.match(source, /Number\(d\.textIndexVersion \|\| 0\) < TEXT_INDEX_VERSION/);
+  assert.match(source, /await reindexPdfText\(doc\)/);
+  assert.match(source, /await saveDocument\(doc\)/);
+  assert.match(source, /clearSearchCache\(doc\.id\)/);
+});
+
+test('v1.9.20 RAG uses exact body phrase guard and narrow retry on false not-found', () => {
+  assert.match(source, /findExactPhrasePages\(question, textDocs, 18\)/);
+  assert.match(source, /exactBodyHits = exactPhraseHits\.filter\(h => !h\.tocAnchor\)/);
+  assert.match(source, /hits = \[\.\.\.exactBodyHits, \.\.\.hits, \.\.\.exactTocHits\]/);
+  assert.match(source, /provider still emits the strict “not found” sentence/);
+  assert.match(source, /narrowPrompt = buildRagPrompt\(question, narrow/);
+  assert.match(source, /Same provider\/model is kept|same provider\/model/i);
+});
+
+
+test('v1.9.21 Gemini and OpenAI accept native PDF inputs while HNL keeps RAG citations', () => {
+  const ai = fs.readFileSync(new URL('../src/ai.js', import.meta.url), 'utf8');
+  const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
+  assert.match(ai, /supportsNativePdf\(provider\)/);
+  assert.match(ai, /inlineData:\s*\{\s*mimeType:\s*x\.mimeType \|\| 'application\/pdf'/);
+  assert.match(ai, /https:\/\/api\.openai\.com\/v1\/responses/);
+  assert.match(ai, /type:'input_file'/);
+  assert.match(ai, /detail = \['low','high','auto'\]/);
+  assert.match(bridge, /documents = \[\], pdfDetail = 'auto'/);
+  assert.match(bridge, /type:'input_file'/);
+  assert.match(source, /nativePdfInstruction\(nativeDocs\)/);
+  assert.match(source, /mergeCitationHitsFromAnswer/);
+});
+
+test('v1.9.21 native PDF modes enforce cost guard and Gemini combined page safety', () => {
+  assert.match(source, /mode === 'economy'/);
+  assert.match(source, /mode === 'balanced'/);
+  assert.match(source, /mode === 'native'/);
+  assert.match(source, /maxRawBytes = 42 \* 1024 \* 1024/);
+  assert.match(source, /provider === 'gemini' && pages \+ docPages > 1000/);
+  assert.match(source, /window\.confirm\(`Cho \$\{PROVIDERS\[plan\.provider\]/);
+  assert.match(source, /nativePdfConsent/);
+  assert.match(source, /RAG đủ căn cứ · chưa gửi PDF native/);
+  assert.match(source, /broadQuery \|\| substantiveHits\.length < 2 \|\| images\.length > 0/);
+});
+
+test('v1.9.21 local history persists chat sessions and calculations without API keys', () => {
+  const db = fs.readFileSync(new URL('../src/db.js', import.meta.url), 'utf8');
+  assert.match(db, /const DB_VERSION = 2/);
+  assert.match(db, /chatSessions/);
+  assert.match(db, /calculations/);
+  assert.match(source, /saveChatSession\(row\)/);
+  assert.match(source, /saveCalculation\(row\)/);
+  assert.match(source, /historyRetentionDaysInput/);
+  assert.match(source, /\[30,90,365,0\]\.includes\(Number\(state\.settings\.historyRetentionDays\)\)/);
+  const recordBlock = source.match(/function chatSessionRecord\(\)[\s\S]*?\n}\nasync function persistCurrentChat/)?.[0] || '';
+  assert.doesNotMatch(recordBlock, /apiKey|currentApiKey|sessionKeys/);
+});
+
+test('v1.9.21 reopened chats restore available PDF attachments and follow-up context', () => {
+  assert.match(source, /const savedIds = new Set\(\(row\.documentRefs \|\| \[\]\)/);
+  assert.match(source, /state\.selected = new Set\(availableIds\)/);
+  assert.match(source, /function recentConversationContext/);
+  assert.match(source, /KHÔNG coi câu trả lời cũ là nguồn tiêu chuẩn/);
+  assert.match(source, /Mọi kết luận kỹ thuật của lượt này vẫn phải được đối chiếu lại với PDF\/RAG hiện tại/);
+});
+
+test('v1.9.21 native document calls use longer timeout without changing model automatically', () => {
+  const ai = fs.readFileSync(new URL('../src/ai.js', import.meta.url), 'utf8');
+  assert.match(ai, /documents\.length \? 150000 : 45000/);
+  assert.match(source, /HNL sẽ CHỈ chuyển model khi bạn bấm OK/);
+  assert.match(source, /Bấm Cancel để GIỮ NGUYÊN model hiện tại/);
+});
+
+test('v1.9.22 preserves non-JSON upstream API errors in Direct and Bridge modes', () => {
+  const ai = fs.readFileSync(new URL('../src/ai.js', import.meta.url), 'utf8');
+  const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
+  for (const code of [ai, bridge]) {
+    assert.match(code, /const raw = await .*\.text\(\)/);
+    assert.match(code, /JSON\.parse\(raw\)/);
+    assert.match(code, /data\?\.raw/);
+  }
+});
+
+test('v1.9.22 Bridge rejects oversized or malformed AI payloads', () => {
+  const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
+  assert.match(bridge, /messages\.length > 80/);
+  assert.match(bridge, /images\.length > 12/);
+  assert.match(bridge, /documents\.length > 12/);
+  assert.match(bridge, /encodedBytes > 64 \* 1024 \* 1024/);
+  assert.match(bridge, /m\.content\.length > 250000/);
+});
+
+test('v1.9.22 reopened history warns when PDF sources are missing', () => {
+  assert.match(source, /missingCount = Math\.max\(0, savedIds\.size - availableIds\.length\)/);
+  assert.match(source, /thiếu \$\{missingCount\} PDF nguồn trên máy/);
 });

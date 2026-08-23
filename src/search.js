@@ -14,6 +14,14 @@ export function normalize(text = '') {
     .replace(/đ/g, 'd');
 }
 
+/** Compact normalized form used only as an exact-phrase safety net.
+ * It recovers PDF text where a font/text layer was emitted as individual
+ * glyphs (e.g. “C ọ c  c h ố n g”). Normal token search remains primary.
+ */
+export function compactNormalize(text = '') {
+  return normalize(text).replace(/[^a-z0-9]+/g, '');
+}
+
 export function tokenize(text = '') {
   return normalize(text)
     .replace(/[^a-z0-9.%+/-]+/g, ' ')
@@ -42,10 +50,21 @@ function phraseMatches(text = '', phrase = '') {
   const flat = normalize(text).replace(/[^a-z0-9.%+/-]+/g, ' ').replace(/\s+/g, ' ').trim();
   if (flat.includes(core)) return true;
   const terms = core.split(/\s+/).filter(Boolean);
-  return terms.length > 0 && terms.every(t => flat.includes(t));
+  if (terms.length > 0 && terms.every(t => flat.includes(t))) return true;
+  const compactCore = compactNormalize(core);
+  return compactCore.length >= 5 && compactNormalize(text).includes(compactCore);
 }
 
 const TOC_CACHE = new Map();
+
+function looksLikeTocText(text = '') {
+  const raw = String(text || '');
+  const lines = raw.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+  const trailingPages = lines.filter(line => /(?:\.{2,}|\s{2,}|\s)\d{1,4}\s*$/.test(line)).length;
+  const dotted = lines.filter(line => /\.{3,}/.test(line)).length;
+  const norm = normalize(raw);
+  return /(?:^|\s)muc\s+luc(?:\s|$)/.test(norm) || dotted >= 2 || trailingPages >= 5;
+}
 
 function parseTocLine(raw = '') {
   const line = String(raw || '').replace(/\u00a0/g, ' ').trim();
@@ -75,7 +94,7 @@ function tocEntries(doc) {
     if (!text.trim()) continue;
     const parsed = text.split(/\r?\n/).map(parseTocLine).filter(Boolean);
     const norm = normalize(text);
-    const pageLooksToc = /(?:^|\s)muc\s+luc(?:\s|$)/.test(norm) || parsed.filter(x => x.dotLeader).length >= 2 || parsed.length >= 5;
+    const pageLooksToc = looksLikeTocText(text) || parsed.filter(x => x.dotLeader).length >= 2 || parsed.length >= 5;
     if (!pageLooksToc) continue;
     for (const entry of parsed) entries.push({ ...entry, sourcePage:Number(page.page || 1) });
   }
@@ -214,17 +233,18 @@ export function clearSearchCache(docId = null) {
 }
 
 export function corpusStats(docs = []) {
-  let pages = 0, textPages = 0, chars = 0, chunks = 0;
+  let pages = 0, textPages = 0, rawTextPages = 0, chars = 0, chunks = 0;
   const byDoc = [];
   for (const doc of docs || []) {
     const docPages = doc.pages?.length || doc.pageCount || 0;
-    const docTextPages = (doc.pages || []).filter(p => String(p.text || '').trim()).length;
+    const docRawTextPages = (doc.pages || []).filter(p => String(p.text || '').trim()).length;
+    const docTextPages = (doc.pages || []).filter(p => p.textQuality ? Boolean(p.textQuality.usable) : Boolean(String(p.text || '').trim())).length;
     const docChars = (doc.pages || []).reduce((n, p) => n + String(p.text || '').length, 0);
     const docChunks = buildChunks(doc).length;
-    pages += docPages; textPages += docTextPages; chars += docChars; chunks += docChunks;
-    byDoc.push({ docId: doc.id, name: doc.name, standard: doc.standard, pages: docPages, textPages: docTextPages, chars: docChars, chunks: docChunks });
+    pages += docPages; textPages += docTextPages; rawTextPages += docRawTextPages; chars += docChars; chunks += docChunks;
+    byDoc.push({ docId: doc.id, name: doc.name, standard: doc.standard, pages: docPages, textPages: docTextPages, rawTextPages:docRawTextPages, chars: docChars, chunks: docChunks });
   }
-  return { docs: docs.length, pages, textPages, chars, chunks, byDoc };
+  return { docs: docs.length, pages, textPages, rawTextPages, chars, chunks, byDoc };
 }
 
 function scoreChunk(query, chunk) {
@@ -252,6 +272,13 @@ function scoreChunk(query, chunk) {
   const coreNorm = normalize(coreQuery).replace(/\s+/g, ' ').trim();
   const flatText = textNorm.replace(/\s+/g, ' ');
   if (coreNorm.length > 4 && flatText.includes(coreNorm)) score += 34;
+  const compactCore = compactNormalize(coreQuery);
+  const compactText = compactNormalize(chunk.text);
+  if (compactCore.length >= 5 && compactText.includes(compactCore)) {
+    // Strong safety-net for character-spaced PDF text layers.
+    score += 52;
+    matched = Math.max(matched, qTokens.length);
+  }
 
   // Reward adjacent query-token pairs. This helps clauses and table labels even
   // when PDF extraction inserts extra spaces/newlines.
@@ -272,6 +299,34 @@ function scoreChunk(query, chunk) {
   // Prefer chunks where most unique query terms are covered, not one term many times.
   if (matched === qTokens.length && qTokens.length > 1) score += 18;
   return score;
+}
+
+/**
+ * Page-level exact technical phrase scan across the COMPLETE selected corpus.
+ * This pass runs before semantic/top-k retrieval so an exact term such as
+ * “cọc chống” cannot be lost because of embedding ranking or PDF glyph spacing.
+ * TOC pages are tagged as locators and deliberately ranked below body pages.
+ */
+export function findExactPhrasePages(query, docs = [], limit = 18) {
+  const core = coreSearchPhrase(query);
+  if (!core || !Array.isArray(docs) || !docs.length) return [];
+  const out = [];
+  for (const doc of docs) {
+    for (const page of doc.pages || []) {
+      const text = String(page.text || '').trim();
+      if (!text || !phraseMatches(text, core)) continue;
+      const toc = looksLikeTocText(text);
+      const flat = normalize(text).replace(/[^a-z0-9.%+/-]+/g, ' ').replace(/\s+/g, ' ').trim();
+      const direct = flat.includes(core);
+      out.push({
+        docId:doc.id, docName:doc.name, standard:doc.standard, page:Number(page.page || 1),
+        chunk:toc ? 'exact-toc' : 'exact-page', text:text.slice(0, 14000),
+        score:toc ? (direct ? 420 : 360) : (direct ? 1400 : 1250),
+        exactPhrase:true, compactExact:!direct, tocAnchor:toc
+      });
+    }
+  }
+  return out.sort((a,b) => b.score-a.score || a.docName.localeCompare(b.docName) || a.page-b.page).slice(0, limit);
 }
 
 /** Score the complete corpus, then limit. */

@@ -1,5 +1,28 @@
-# HNL Pile Standards AI v1.9.19
+# HNL Pile Standards AI v1.9.22
 
+
+
+## v1.9.21 — Native PDF AI · Persistent Conversation/Calculation History · Hybrid RAG Citation
+
+- **Gemini/OpenAI đọc PDF native:** HNL có thể gửi chính PDF gốc trong request AI để model đọc cả text, ảnh, bảng, sơ đồ và công thức; không còn phụ thuộc hoàn toàn vào text chunk/RAG.
+- **Ba chế độ chi phí:** Tiết kiệm (RAG trước), Cân bằng (RAG trước, tự bật PDF native khi câu hỏi rộng/căn cứ yếu/cần đọc hình), Toàn tài liệu (nhiều PDF native trong giới hạn an toàn và phải xác nhận khi có nguy cơ dùng nhiều quota/token).
+- **Gemini:** giới hạn an toàn dưới 50 MB/PDF và tổng tối đa 1000 trang native/request trong HNL; PDF lớn/không đủ điều kiện tự fallback về Hybrid RAG.
+- **OpenAI:** dùng Responses API `input_file` cho PDF, có `detail = low/auto/high`; HNL giới hạn bundle native dưới 42 MB để nằm dưới ngưỡng file request và giảm rủi ro payload quá lớn.
+- **Hội thoại nối tiếp:** các lượt trước được đưa vào prompt dưới dạng ngữ cảnh tham chiếu, nhưng không được coi là nguồn tiêu chuẩn; kết luận kỹ thuật lượt mới vẫn phải đối chiếu PDF/RAG.
+- **Lịch sử Hỏi đáp Local-first:** lưu phiên, provider/model, nguồn/citation, thời gian trong IndexedDB; mở lại phiên sẽ khôi phục các PDF nguồn còn tồn tại cục bộ. Không lưu API key.
+- **Lịch sử Tính toán:** tự lưu dữ liệu đầu vào, kết quả, nguồn/điều/trang và version HNL; có thể nạp lại input để chạy lại.
+- **Thời gian chờ PDF native** được tăng riêng cho request tài liệu lớn; retry/fallback model vẫn tuân thủ nguyên tắc không tự đổi model nếu người dùng chưa bấm OK.
+- Giữ toàn bộ sửa v1.9.20: tự re-index PDF cũ, Exact Phrase Guard, glyph-text recovery, targeted OCR/Vision, UI State Guard và Offline AI hardening.
+
+
+## v1.9.20 — PDF Text Reindex · Exact Phrase Guard · False-negative RAG Fix
+
+- Tự tái lập chỉ mục các PDF đã lưu từ bản cũ; người dùng không phải xóa và nhập lại tiêu chuẩn sau khi nâng version.
+- PDF.js text extraction ghép glyph theo khoảng cách hình học thay vì chèn dấu cách giữa mọi text item, tránh “C ọ c c h ố n g”.
+- Exact Phrase Guard quét toàn bộ trang trước top-k/semantic để thuật ngữ kỹ thuật chính xác không bị mất do rerank.
+- Trang mục lục được gắn nhãn locator, luôn ưu tiên trang nội dung/định nghĩa khi cùng có cụm từ.
+- Nếu AI vẫn trả sai câu “Không tìm thấy đủ căn cứ…” trong khi có trang nội dung exact, HNL retry một lần với ngữ cảnh hẹp, giữ nguyên provider/model.
+- Giữ Targeted OCR/Vision: chỉ đọc các trang đích cần thiết, không tự Vision toàn bộ PDF.
 
 ## v1.9.19 — Hybrid Visual RAG · TOC Target OCR · Compact Settings UI
 

@@ -24,7 +24,7 @@ function allowCorsOrigin(origin, callback) {
   return callback(new Error('Origin không được phép truy cập HNL Bridge.'));
 }
 app.use(cors({ origin: allowCorsOrigin }));
-app.use(express.json({ limit: '32mb' }));
+app.use(express.json({ limit: '72mb' }));
 
 const configured = (ollamaReady = false) => ({
   ollama: ollamaReady,
@@ -66,7 +66,10 @@ function messagesToText(messages = []) {
 
 async function jsonFetch(url, options) {
   const r = await fetch(url, options);
-  const data = await r.json().catch(async () => ({ raw: await r.text().catch(()=>'') }));
+  const raw = await r.text();
+  let data = {};
+  try { data = raw ? JSON.parse(raw) : {}; }
+  catch { data = raw ? { raw } : {}; }
   if (!r.ok) {
     const msg = data?.error?.message || data?.error || data?.message || data?.raw || `HTTP ${r.status}`;
     const error = new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
@@ -78,8 +81,34 @@ async function jsonFetch(url, options) {
   return data;
 }
 
-async function askOpenAI(model, messages, images = [], apiKey = '') {
+function openAiResponsesText(data = {}) {
+  if (typeof data.output_text === 'string' && data.output_text.trim()) return data.output_text;
+  const parts = [];
+  for (const item of data.output || []) for (const c of item?.content || []) {
+    if (typeof c?.text === 'string') parts.push(c.text);
+    else if (typeof c?.output_text === 'string') parts.push(c.output_text);
+  }
+  return parts.join('\n').trim();
+}
+
+async function askOpenAI(model, messages, images = [], documents = [], pdfDetail = 'auto', apiKey = '') {
   const key = requireKey('OPENAI_API_KEY', apiKey);
+  if (documents.length) {
+    const detail = ['low','high','auto'].includes(pdfDetail) ? pdfDetail : 'auto';
+    const system = messages.filter(m=>m.role==='system').map(m=>m.content).join('\n');
+    const userText = messages.filter(m=>m.role!=='system').map(m=>`${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
+    const content = [
+      ...documents.map(x => ({ type:'input_file', filename:x.name || 'document.pdf', file_data:`data:${x.mimeType || 'application/pdf'};base64,${x.data}`, detail })),
+      ...images.map(x => ({ type:'input_image', image_url:`data:${x.mimeType || 'image/jpeg'};base64,${x.data}` })),
+      { type:'input_text', text:userText }
+    ];
+    const data = await jsonFetch('https://api.openai.com/v1/responses', {
+      method:'POST',
+      headers:{'Content-Type':'application/json', Authorization:`Bearer ${key}`},
+      body:JSON.stringify({ model:model || 'gpt-4.1-mini', instructions:system || 'Trả lời bằng tiếng Việt, chính xác và giữ citation nguồn tài liệu.', input:[{role:'user', content}] })
+    });
+    return openAiResponsesText(data) || 'OpenAI không trả về nội dung văn bản.';
+  }
   const data = await jsonFetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
@@ -88,11 +117,15 @@ async function askOpenAI(model, messages, images = [], apiKey = '') {
   return data.choices?.[0]?.message?.content || 'OpenAI không trả về nội dung văn bản.';
 }
 
-async function askGemini(model, messages, images = [], apiKey = '') {
+async function askGemini(model, messages, images = [], documents = [], apiKey = '') {
   const key = requireKey('GEMINI_API_KEY', apiKey);
   const system = messages.filter(m=>m.role==='system').map(m=>m.content).join('\n');
   const nonSystem = messages.filter(m=>m.role!=='system');
-  const contents = nonSystem.map((m, i)=>({ role: m.role === 'assistant' ? 'model' : 'user', parts:[{text:m.content}, ...(images.length && i === nonSystem.length - 1 && m.role !== 'assistant' ? images.map(x => ({ inlineData:{ mimeType:x.mimeType || 'image/jpeg', data:x.data } })) : [])] }));
+  const contents = nonSystem.map((m, i)=>({ role: m.role === 'assistant' ? 'model' : 'user', parts:[
+    ...(documents.length && i === nonSystem.length - 1 && m.role !== 'assistant' ? documents.map(x => ({ inlineData:{ mimeType:x.mimeType || 'application/pdf', data:x.data } })) : []),
+    ...(images.length && i === nonSystem.length - 1 && m.role !== 'assistant' ? images.map(x => ({ inlineData:{ mimeType:x.mimeType || 'image/jpeg', data:x.data } })) : []),
+    {text:m.content}
+  ] }));
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model || 'gemini-3.7-flash')}:generateContent`;
   const data = await jsonFetch(url, {
     method:'POST',
@@ -738,11 +771,19 @@ app.get('/api/models/:provider', async (req, res) => {
 
 app.post('/api/chat', async (req, res) => {
   try {
-    const { provider, model, messages, images = [], apiKey = '' } = req.body || {};
+    const { provider, model, messages, images = [], documents = [], pdfDetail = 'auto', apiKey = '' } = req.body || {};
     if (!Array.isArray(messages) || !messages.length) return res.status(400).json({ error:'Thiếu messages.' });
+    if (messages.length > 80 || !Array.isArray(images) || images.length > 12 || !Array.isArray(documents) || documents.length > 12) {
+      return res.status(413).json({ error:'Yêu cầu AI vượt giới hạn an toàn của HNL Bridge.' });
+    }
+    const encodedBytes = [...images, ...documents].reduce((sum, item) => sum + String(item?.data || '').length, 0);
+    if (encodedBytes > 64 * 1024 * 1024) return res.status(413).json({ error:'Tổng dữ liệu PDF/ảnh mã hóa vượt giới hạn an toàn 64 MB.' });
+    if (messages.some(m => !m || !['system','user','assistant'].includes(m.role) || typeof m.content !== 'string' || m.content.length > 250000)) {
+      return res.status(400).json({ error:'Định dạng hoặc kích thước messages không hợp lệ.' });
+    }
     let text;
-    if (provider === 'openai') text = await askOpenAI(model, messages, images, apiKey);
-    else if (provider === 'gemini') text = await askGemini(model, messages, images, apiKey);
+    if (provider === 'openai') text = await askOpenAI(model, messages, images, documents, pdfDetail, apiKey);
+    else if (provider === 'gemini') text = await askGemini(model, messages, images, documents, apiKey);
     else if (provider === 'claude') text = await askClaude(model, messages, images, apiKey);
     else if (provider === 'grok') text = await askGrok(model, messages, images, apiKey);
     else if (provider === 'ollama') text = await askOllama(model, messages, images);
@@ -775,4 +816,3 @@ if (fs.existsSync(dist)) {
 }
 
 app.listen(PORT, '127.0.0.1', () => { console.log(`HNL Local AI: http://127.0.0.1:${PORT}`); refreshOllamaHealth().catch(()=>{}); });
-

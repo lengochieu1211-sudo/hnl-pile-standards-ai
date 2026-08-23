@@ -1,6 +1,47 @@
 {
-  "current": "1.9.19",
+  "current": "1.9.22",
   "releases": [
+    {
+      "version": "1.9.22",
+      "title": "Full Runtime Audit · Upstream Error Fidelity · Bridge Request Guard",
+      "date": "2026-08-23",
+      "changes": [
+        "Sửa bộ đọc phản hồi API ở Direct và Bridge để giữ nguyên thông báo lỗi dạng text/non-JSON; không còn biến lỗi upstream thành thông báo rỗng hoặc chung chung.",
+        "Thêm giới hạn an toàn cho số message, ảnh, PDF và tổng payload base64 trên HNL Bridge để tránh treo ứng dụng hoặc cạn bộ nhớ khi request bất thường.",
+        "Mở lại lịch sử chat nay cảnh báo rõ số PDF nguồn đang thiếu, tránh người dùng tưởng phiên cũ vẫn có đủ căn cứ để hỏi nối tiếp.",
+        "Audit xác nhận OpenAI Responses API hỗ trợ detail low/auto/high ngay trên input_file PDF; giữ nguyên chế độ PDF native hiện có.",
+        "Kiểm tra lại version gate, toàn bộ cú pháp JavaScript, regression test, Pages workflow và Windows Setup/Portable workflow."
+      ]
+    },
+    {
+      "version": "1.9.21",
+      "title": "Native PDF AI · Persistent History · Hybrid RAG Citation",
+      "date": "2026-08-23",
+      "changes": [
+        "Gemini/OpenAI có chế độ đọc PDF native trực tiếp để hiểu text, ảnh, bảng, sơ đồ và công thức; HNL RAG chạy song song để tìm nhanh và giữ citation.",
+        "Ba chế độ PDF AI: Tiết kiệm, Cân bằng và Toàn tài liệu; Cân bằng chạy RAG trước và chỉ bật PDF native khi câu hỏi rộng, căn cứ text yếu hoặc cần đọc hình/scan; Toàn tài liệu phải xác nhận khi có nguy cơ dùng nhiều quota/token.",
+        "Gemini native bundle được giới hạn tổng tối đa 1000 trang và dưới ngưỡng PDF an toàn; OpenAI dùng Responses API input_file với detail low/auto/high và bundle raw dưới 42 MB.",
+        "Lịch sử Hỏi đáp được lưu Local-first trong IndexedDB theo phiên, gồm provider/model, nguồn/citation và thời gian; mở lại phiên khôi phục các PDF nguồn còn tồn tại.",
+        "Lịch sử Tính toán lưu input/result/source/appVersion và cho phép nạp lại dữ liệu; API key không được ghi vào lịch sử.",
+        "Câu hỏi nối tiếp dùng ngữ cảnh các lượt trước để hiểu đại từ/ý tiếp theo nhưng không coi câu trả lời cũ là căn cứ kỹ thuật.",
+        "Tăng timeout riêng cho PDF native lớn; giữ nguyên quy tắc retry model hiện tại và chỉ fallback model sau xác nhận OK.",
+        "Giữ toàn bộ hardening v1.9.20: re-index, Exact Phrase Guard, visual target OCR/Vision, UI State Guard, Offline AI và version gate."
+      ]
+    },
+    {
+      "version": "1.9.20",
+      "title": "PDF Text Reindex · Exact Phrase Guard · False-negative RAG Fix",
+      "date": "2026-08-23",
+      "changes": [
+        "Tự động tái lập chỉ mục PDF cũ từ Blob gốc bằng TEXT_INDEX_VERSION mới; không cần xóa/nhập lại tài liệu sau nâng cấp.",
+        "Text extraction ghép các PDF.js text item theo tọa độ/khoảng cách hình học, không còn chèn khoảng trắng mù làm vỡ thuật ngữ như “C ọ c c h ố n g”.",
+        "Compact exact matching là safety-net cho lớp chữ tách glyph; exact phrase scan chạy toàn bộ corpus trước semantic/top-k.",
+        "Exact Phrase Guard ưu tiên trang nội dung/định nghĩa hơn trang mục lục; “cọc chống là gì” có thể tìm mục 6.2 thay vì chỉ mục 7.2.1.",
+        "Nếu AI vẫn trả câu thiếu căn cứ dù HNL có exact body pages, ứng dụng retry một lần với ngữ cảnh hẹp và giữ nguyên provider/model.",
+        "Thống kê RAG ghi textIndexVersion, số tài liệu được reindex, số trang exact/body và số trang Visual RAG đã kiểm tra.",
+        "Giữ các sửa v1.9.19: TOC-targeted OCR/Vision, compact Settings UI, UI State Guard, Offline AI/Ollama và version gate."
+      ]
+    },
     {
       "version": "1.9.19",
       "title": "Hybrid Visual RAG · TOC Target OCR · Compact Settings UI",

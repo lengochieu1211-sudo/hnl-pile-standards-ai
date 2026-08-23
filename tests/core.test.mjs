@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { annulusAreaMm2, axialResistance } from '../src/calculators.js';
-import { searchChunks, searchEveryPage, smartSearchChunks, deepSearchChunks, localAnswer, localSummary, corpusStats, tokenize, coreSearchPhrase, findTocPageTargets } from '../src/search.js';
+import { searchChunks, searchEveryPage, smartSearchChunks, deepSearchChunks, localAnswer, localSummary, corpusStats, tokenize, coreSearchPhrase, findTocPageTargets, findExactPhrasePages, compactNormalize } from '../src/search.js';
 import { lookup7888, classesForDiameter7888 } from '../src/tcvn7888.js';
 import { extractFormulaCandidates, evaluateExpression } from '../src/formulas.js';
 
@@ -152,4 +152,27 @@ test('v1.9.19 TOC resolver infers printed-page to PDF-page offset before visual 
   assert.ok(targets[0].offsetVotes >= 2);
   assert.equal(targets[0].targetPage, 30);
   assert.deepEqual(targets[0].candidatePages, [30,29,31]);
+});
+
+
+test('v1.9.20 compact exact search recovers character-spaced PDF glyph text', () => {
+  assert.equal(compactNormalize('C ọ c   c h ố n g'), 'cocchong');
+  const doc = { id:'glyph', name:'scan.pdf', standard:'TCVN TEST', pages:[
+    {page:19, text:'6.2 Theo điều kiện tương tác với đất, c ọ c   c h ố n g bao gồm các loại cọc được chôn trong đá.'}
+  ]};
+  const hits = searchChunks('cọc chống là gì', [doc], 5);
+  assert.ok(hits.some(h => h.page === 19), 'compact exact phrase must rescue split-glyph text');
+});
+
+test('v1.9.20 exact phrase pass prioritizes body definition over TOC occurrence', () => {
+  const doc = { id:'exact', name:'TCVN 10304.pdf', standard:'TCVN 10304:2025', pages:[
+    {page:3, text:'MỤC LỤC\n7.2.1 Cọc chống ........................ 28\n7.2.2 Cọc ma sát ....................... 31\n7.3 Thí nghiệm ........................ 35\n8 Yêu cầu .............................. 40\n9 Phụ lục .............................. 50'},
+    {page:21, text:'6.2 Theo điều kiện tương tác với đất, cọc được chia thành cọc chống và cọc ma sát. Cọc chống bao gồm các loại cọc được chôn trong đá.'},
+    {page:30, text:'7.2.1 Cọc chống\nSức chịu tải của cọc chống được xác định theo các quy định sau.'}
+  ]};
+  const hits = findExactPhrasePages('cọc chống là gì', [doc], 10);
+  assert.ok(hits.length >= 3);
+  assert.equal(hits[0].tocAnchor, false);
+  assert.ok([21,30].includes(hits[0].page));
+  assert.ok(hits.some(h => h.page === 3 && h.tocAnchor));
 });

@@ -1361,3 +1361,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .compact-overview-line { align-items: flex-start; }
   .compact-status { max-width: 72px; }
 }
+
+/* v1.9.21 · Native PDF + local history */
+.native-pdf-card{margin-top:12px;padding:12px;border:1px solid var(--line,#d9e0e8);border-radius:14px;background:linear-gradient(180deg,rgba(34,105,181,.045),rgba(255,255,255,.02))}
+.chat-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border-bottom:1px solid var(--line,#d9e0e8);background:var(--panel,#fff);position:sticky;top:0;z-index:4}
+.chat-toolbar>div:first-child{min-width:0;display:flex;flex-direction:column}.chat-toolbar b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chat-toolbar small{color:var(--muted,#667085);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chat-toolbar>div:last-child{display:flex;gap:6px;flex:0 0 auto}
+.history-drawer{margin:8px;border:1px solid var(--line,#d9e0e8);border-radius:14px;background:var(--panel,#fff);box-shadow:0 8px 26px rgba(15,23,42,.08);max-height:min(46vh,420px);display:flex;flex-direction:column;overflow:hidden}
+.history-head{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line,#d9e0e8)}.history-head>div{display:flex;flex-direction:column}.history-head small{color:var(--muted,#667085)}
+.history-list{overflow:auto;padding:6px}.history-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center;border-radius:10px}.history-row:hover,.history-row.active{background:rgba(34,105,181,.07)}
+.history-open{min-width:0;text-align:left;border:0;background:transparent;padding:8px 9px;display:flex;flex-direction:column;cursor:pointer}.history-open b,.history-open small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.history-open small{color:var(--muted,#667085);font-size:11px}.history-empty{padding:14px}
+.calc-history{margin-top:12px;border:1px solid var(--line,#d9e0e8);border-radius:12px;background:var(--panel,#fff)}.calc-history>summary{cursor:pointer;padding:10px 12px;font-weight:700}.calc-history .history-list{max-height:280px}
+@media(max-width:560px){.chat-toolbar{align-items:flex-start;flex-direction:column}.chat-toolbar>div:last-child{width:100%}.chat-toolbar>div:last-child .btn{flex:1}.history-drawer{max-height:42vh}.native-pdf-card{padding:10px}}

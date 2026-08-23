@@ -1,7 +1,7 @@
 {
   "name": "hnl-pile-standards-ai",
   "private": true,
-  "version": "1.9.19",
+  "version": "1.9.22",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -86,6 +86,6 @@
       "artifactName": "HNL-Pile-Standards-AI-Portable-${version}-${arch}.${ext}"
     }
   },
-  "description": "HNL Pile Standards AI - Web + Desktop engineering AI with Hybrid Visual RAG, TOC-targeted local OCR/Vision for mixed scan PDFs, compact settings disclosures, UI state preservation, unified AI keys, Ollama readiness and archive diagnostics.",
+  "description": "HNL Pile Standards AI - Web + Desktop engineering AI with native PDF input for Gemini/OpenAI, persistent local chat/calculation history, Hybrid RAG citations, targeted OCR/Vision, Offline Ollama and archive diagnostics.",
   "author": "HNL"
 }

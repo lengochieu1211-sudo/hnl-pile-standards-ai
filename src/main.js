@@ -1268,6 +1268,21 @@ async function removeDoc(id) {
 let activePdfObserver = null;
 let panCleanup = null;
 let readerScrollCleanup = null;
+let lastPdfErrorToast = { key: '', at: 0 };
+
+function reportPdfError(error) {
+  const raw = String(error?.message || error || 'Lỗi PDF không xác định.');
+  const compatibility = /getOrInsertComputed|is not a function/i.test(raw);
+  const message = compatibility
+    ? 'PDF.js không tương thích với engine trình duyệt/Windows hiện tại. HNL đã chuyển sang bản PDF.js Legacy; hãy cập nhật lên bản HNL mới và tải lại ứng dụng.'
+    : `Lỗi hiển thị PDF: ${raw}`;
+  const now = Date.now();
+  const key = compatibility ? 'pdfjs-compat' : raw;
+  if (lastPdfErrorToast.key === key && now - lastPdfErrorToast.at < 12000) return;
+  lastPdfErrorToast = { key, at: now };
+  showToast(message, 'error');
+}
+
 
 async function renderContinuousPage(doc, shell) {
   const canvas = shell?.querySelector('.pdf-page-canvas');
@@ -1383,7 +1398,7 @@ async function drawPage() {
   const canvas = document.querySelector('#pdfCanvas');
   if (!canvas) return;
   try { await renderPdfPage(doc, state.page, canvas, state.zoom); }
-  catch (error) { console.error(error); showToast(`Lỗi hiển thị PDF: ${error.message}`, 'error'); }
+  catch (error) { console.error(error); reportPdfError(error); }
 }
 function jumpPage(page) {
   const doc = activeDoc();
@@ -2137,6 +2152,12 @@ async function installLocalModels(models = []) {
   if (!confirm(`Tải model Ollama về máy?\n\n${unique.join('\n')}\n\nChỉ cần tải một lần; dung lượng có thể vài GB.`)) return;
   try {
     const base = String(state.settings.bridgeUrl || location.origin).replace(/\/$/, '');
+    const managerResponse = await fetch(`${base}/api/local/model-manager`);
+    const manager = await managerResponse.json().catch(()=>({}));
+    if (!managerResponse.ok) throw new Error(manager.error || 'Không kiểm tra được Ollama.');
+    if (manager.ollamaInstalled === false) {
+      return showToast('Máy chưa cài Ollama. Hãy cài Ollama miễn phí trước, mở lại HNL Desktop AI rồi mới tải model Offline.', 'warning');
+    }
     for (const model of unique) {
       const r = await fetch(`${base}/api/local/pull-model`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({model}) });
       const data = await r.json().catch(()=>({}));

@@ -1,4 +1,14 @@
-# HNL Pile Standards AI v1.9.13
+# HNL Pile Standards AI v1.9.14
+
+## v1.9.14 — PDF Legacy Compatibility & Desktop AI Stability
+
+- Sửa lỗi PDF `getOrInsertComputed is not a function` trên Electron/Windows bằng PDF.js **Legacy build** cho cả API chính và worker.
+- Thêm polyfill an toàn trước khi module ứng dụng chạy để bảo vệ Web/Desktop trên engine chưa hỗ trợ Map/WeakMap upsert mới.
+- Chặn toast lỗi PDF lặp liên tục; cùng một lỗi chỉ báo một lần trong khoảng thời gian ngắn và có thông báo tương thích rõ ràng.
+- Giữ PDF parser/RAG/Viewer dùng chung một lớp PDF.js tương thích, tránh tình trạng đọc được chữ nhưng canvas trắng hoặc AI/Cài đặt bị toast PDF che liên tục.
+- Làm cứng cài AI Offline: phát hiện rõ máy chưa có Ollama thay vì khởi chạy `ollama pull` rồi báo lỗi ngầm.
+- Giữ toàn bộ sửa v1.9.13: model trên/dưới đồng bộ, Cài đặt luôn thấy, toolbar tự co, Desktop tự fit màn hình, Bridge tự chọn cổng.
+
 
 ## v1.9.13 — Desktop Fit, Model Sync & Always-visible Settings
 

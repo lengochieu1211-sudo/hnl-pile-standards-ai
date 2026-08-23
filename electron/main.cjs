@@ -1,5 +1,5 @@
 const { app, BrowserWindow, dialog, shell, screen } = require('electron');
-const { spawn } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
@@ -46,10 +46,38 @@ async function waitFor(url, attempts = 30, delay = 400) {
   return false;
 }
 
+let ollamaExeCache;
+function findOllamaExecutable() {
+  if (ollamaExeCache !== undefined) return ollamaExeCache || null;
+  const candidates = [process.env.OLLAMA_EXE];
+  if (process.platform === 'win32') {
+    const local = process.env.LOCALAPPDATA || '';
+    const pf = process.env.ProgramFiles || process.env.PROGRAMFILES || '';
+    candidates.push(
+      local && path.join(local, 'Programs', 'Ollama', 'ollama.exe'),
+      local && path.join(local, 'Ollama', 'ollama.exe'),
+      pf && path.join(pf, 'Ollama', 'ollama.exe')
+    );
+  }
+  for (const candidate of candidates.filter(Boolean)) {
+    try { if (fs.existsSync(candidate)) return (ollamaExeCache = candidate); } catch {}
+  }
+  try {
+    const cmd = process.platform === 'win32' ? 'where.exe' : 'which';
+    const r = spawnSync(cmd, ['ollama'], { encoding:'utf8', windowsHide:true, timeout:2500 });
+    const found = String(r.stdout || '').split(/\r?\n/).map(x=>x.trim()).find(Boolean);
+    if (r.status === 0 && found) return (ollamaExeCache = found);
+  } catch {}
+  ollamaExeCache = '';
+  return null;
+}
+
 async function ensureOllama() {
   if (await ping('http://127.0.0.1:11434/api/tags', 900)) return { ok: true, started: false };
   try {
-    const child = spawn('ollama', ['serve'], { detached: true, windowsHide: true, stdio: 'ignore' });
+    const exe = findOllamaExecutable();
+    if (!exe) return { ok: false, started: false, reason: 'not-installed' };
+    const child = spawn(exe, ['serve'], { detached: true, windowsHide: true, stdio: 'ignore' });
     let spawnFailed = false;
     child.once('error', () => { spawnFailed = true; });
     child.unref();

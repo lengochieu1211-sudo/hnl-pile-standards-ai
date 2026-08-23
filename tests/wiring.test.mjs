@@ -516,3 +516,33 @@ test('v1.9.13 Desktop startup fits Windows work area and does not block on Ollam
   assert.match(electron, /child\.once\('error'/);
   assert.match(bridge, /AbortSignal\.timeout\(450\)/);
 });
+
+
+test('v1.9.14 PDF reader uses legacy API and worker to avoid getOrInsertComputed crashes', () => {
+  const pdf = fs.readFileSync(new URL('../src/pdf.js', import.meta.url), 'utf8');
+  const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+  assert.match(pdf, /pdfjs-dist\/legacy\/build\/pdf\.mjs/);
+  assert.match(pdf, /pdfjs-dist\/legacy\/build\/pdf\.worker\.mjs\?url/);
+  assert.doesNotMatch(pdf, /from 'pdfjs-dist';/);
+  assert.match(html, /getOrInsertComputed/);
+  assert.equal(pkg.dependencies['pdfjs-dist'], '5.4.149');
+});
+
+test('v1.9.14 PDF errors are classified and de-duplicated instead of spamming every render', () => {
+  assert.match(source, /function reportPdfError/);
+  assert.match(source, /getOrInsertComputed\|is not a function/);
+  assert.match(source, /now - lastPdfErrorToast\.at < 12000/);
+  assert.match(source, /reportPdfError\(error\)/);
+});
+
+test('v1.9.14 Offline AI detects missing Ollama before starting model pull', () => {
+  const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
+  const electron = fs.readFileSync(new URL('../electron/main.cjs', import.meta.url), 'utf8');
+  assert.match(bridge, /function findOllamaExecutable/);
+  assert.match(bridge, /OLLAMA_NOT_INSTALLED/);
+  assert.match(bridge, /ollamaInstalled:Boolean\(findOllamaExecutable\(\)\)/);
+  assert.match(source, /manager\.ollamaInstalled === false/);
+  assert.match(electron, /function findOllamaExecutable/);
+  assert.match(electron, /reason: 'not-installed'/);
+});

@@ -1,6 +1,17 @@
 {
-  "current": "1.9.13",
+  "current": "1.9.14",
   "releases": [
+    {
+      "version": "1.9.14",
+      "title": "PDF Legacy Compatibility & Desktop AI Stability",
+      "changes": [
+        "Sửa lỗi PDF getOrInsertComputed is not a function bằng pdfjs-dist legacy build cho cả main API và worker.",
+        "Thêm Map/WeakMap getOrInsertComputed compatibility shim trước module để Web/Desktop không phụ thuộc engine JS mới.",
+        "Giảm spam lỗi PDF: lỗi tương thích được nhận diện và toast được chống lặp.",
+        "AI Offline kiểm tra Ollama rõ ràng trước khi pull model, tránh tác vụ giả chạy rồi mới lỗi ENOENT.",
+        "Giữ model quickbar/Cài đặt đồng bộ, responsive toolbar/panel và Desktop startup ổn định từ v1.9.13."
+      ]
+    },
     {
       "version": "1.9.13",
       "title": "Desktop Fit, Single Model Source & Always-visible Settings",

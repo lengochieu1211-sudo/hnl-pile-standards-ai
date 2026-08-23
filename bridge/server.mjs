@@ -202,6 +202,41 @@ app.post('/api/local/semantic-rerank', async (req,res)=>{
 });
 
 
+let OLLAMA_EXE_CACHE;
+function findOllamaExecutable() {
+  if (OLLAMA_EXE_CACHE !== undefined) return OLLAMA_EXE_CACHE || null;
+  const candidates = [process.env.OLLAMA_EXE];
+  if (process.platform === 'win32') {
+    const local = process.env.LOCALAPPDATA || '';
+    const pf = process.env.ProgramFiles || process.env.PROGRAMFILES || '';
+    candidates.push(
+      local && path.join(local, 'Programs', 'Ollama', 'ollama.exe'),
+      local && path.join(local, 'Ollama', 'ollama.exe'),
+      pf && path.join(pf, 'Ollama', 'ollama.exe')
+    );
+  }
+  for (const candidate of candidates.filter(Boolean)) {
+    try { if (fs.existsSync(candidate)) return (OLLAMA_EXE_CACHE = candidate); } catch {}
+  }
+  try {
+    const cmd = process.platform === 'win32' ? 'where.exe' : 'which';
+    const r = spawnSync(cmd, ['ollama'], { encoding:'utf8', windowsHide:true, timeout:2500 });
+    const found = String(r.stdout || '').split(/\r?\n/).map(x=>x.trim()).find(Boolean);
+    if (r.status === 0 && found) return (OLLAMA_EXE_CACHE = found);
+  } catch {}
+  OLLAMA_EXE_CACHE = '';
+  return null;
+}
+function requireOllamaExecutable() {
+  const exe = findOllamaExecutable();
+  if (!exe) {
+    const error = new Error('Máy chưa cài Ollama hoặc HNL không tìm thấy ollama.exe. Hãy cài Ollama trước rồi mở lại HNL Desktop AI.');
+    error.code = 'OLLAMA_NOT_INSTALLED';
+    throw error;
+  }
+  return exe;
+}
+
 function currentModelsDir() { return process.env.OLLAMA_MODELS || path.join(os.homedir(), '.ollama', 'models'); }
 function directoryDiskInfo(targetPath='') {
   try { let probe=path.resolve(targetPath||currentModelsDir()); while(!fs.existsSync(probe)){ const parent=path.dirname(probe); if(parent===probe) break; probe=parent; } if(!fs.existsSync(probe)||typeof fs.statfsSync!=='function') return {freeBytes:0,totalBytes:0,path:probe}; const s=fs.statfsSync(probe); return {freeBytes:Number(s.bavail||s.bfree||0)*Number(s.bsize||0),totalBytes:Number(s.blocks||0)*Number(s.bsize||0),path:probe}; } catch { return {freeBytes:0,totalBytes:0,path:targetPath}; }
@@ -217,7 +252,7 @@ function setUserModelsDir(dir) {
 async function restartOllamaServer() {
   if(process.platform!=='win32') return {ok:false,message:'Tự khởi động lại Ollama hiện chỉ hỗ trợ Windows.'};
   try{spawnSync('taskkill',['/IM','ollama.exe','/F'],{encoding:'utf8',windowsHide:true,timeout:5000});}catch{}
-  try{const child=spawn('ollama',['serve'],{detached:true,windowsHide:true,stdio:'ignore',env:{...process.env}});child.unref();}catch(err){return {ok:false,message:err.message};}
+  try{const exe=requireOllamaExecutable();const child=spawn(exe,['serve'],{detached:true,windowsHide:true,stdio:'ignore',env:{...process.env}});child.once('error',()=>{});child.unref();}catch(err){return {ok:false,message:err.message,code:err.code};}
   const base=(process.env.OLLAMA_BASE_URL||'http://127.0.0.1:11434').replace(/\/$/,''); for(let i=0;i<12;i++){await new Promise(r=>setTimeout(r,500));try{const resp=await fetch(`${base}/api/tags`,{signal:AbortSignal.timeout(900)});if(resp.ok)return {ok:true};}catch{}} return {ok:false,message:'Đã đặt thư mục nhưng Ollama chưa phản hồi sau khi khởi động lại.'};
 }
 function stripAnsi(text=''){return String(text).replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g,'').replace(/\r/g,'\n');}
@@ -362,7 +397,8 @@ app.post('/api/local/pull-model', (req, res) => {
     const model = String(req.body?.model || '').trim();
     if (!model || !/^[a-zA-Z0-9._:/-]{2,120}$/.test(model)) return res.status(400).json({ error:'Tên model Ollama không hợp lệ.' });
     if (MODEL_PULL_JOBS.get(model)?.status === 'running') return res.json({ ok:true, model, status:'running' });
-    const child = spawn('ollama', ['pull', model], { windowsHide:true, stdio:['ignore','pipe','pipe'] });
+    const exe = requireOllamaExecutable();
+    const child = spawn(exe, ['pull', model], { windowsHide:true, stdio:['ignore','pipe','pipe'] });
     const job = { status:'running', startedAt:new Date().toISOString(), output:'', progress:0, pid:child.pid, child };
     MODEL_PULL_JOBS.set(model, job);
     const add = chunk => updatePullProgress(job, chunk);
@@ -370,7 +406,7 @@ app.post('/api/local/pull-model', (req, res) => {
     child.on('error', err => { job.status='error'; job.error=err.message; });
     child.on('exit', code => { job.status = code === 0 ? 'done' : (job.status === 'cancelled' ? 'cancelled' : 'error'); job.progress = code === 0 ? 100 : job.progress; job.exitCode=code; job.finishedAt=new Date().toISOString(); delete job.child; });
     res.json({ ok:true, model, status:'running' });
-  } catch (err) { res.status(500).json({ error:err.message || 'Không chạy được ollama pull.' }); }
+  } catch (err) { res.status(err.code === 'OLLAMA_NOT_INSTALLED' ? 503 : 500).json({ error:err.message || 'Không chạy được ollama pull.', code:err.code || 'OLLAMA_PULL_ERROR' }); }
 });
 app.get('/api/local/model-jobs', (_req,res) => {
   res.json({ jobs:[...MODEL_PULL_JOBS.entries()].map(([model,j])=>({ model, status:j.status, startedAt:j.startedAt, finishedAt:j.finishedAt, progress:j.progress||0, error:j.error, exitCode:j.exitCode, output:j.output })) });
@@ -385,11 +421,11 @@ app.get('/api/local/model-manager', async (_req,res)=>{
   const base=(process.env.OLLAMA_BASE_URL||'http://127.0.0.1:11434').replace(/\/$/,''); let ollama=false,models=[],version='';
   try{const tags=await jsonFetch(`${base}/api/tags`,{method:'GET'});ollama=true;models=(tags.models||[]).map(m=>({name:m.name||m.model,size:Number(m.size||0),modifiedAt:m.modified_at||'',digest:m.digest||'',details:m.details||{}}));try{const v=await jsonFetch(`${base}/api/version`,{method:'GET'});version=String(v.version||'');}catch{}}catch{}
   const modelsDir=currentModelsDir(); const disk=directoryDiskInfo(modelsDir); const jobs=[...MODEL_PULL_JOBS.entries()].map(([model,j])=>({model,status:j.status,progress:j.progress||0,startedAt:j.startedAt,finishedAt:j.finishedAt,error:j.error,output:j.output}));
-  res.json({ok:true,ollama,ollamaVersion:version,models,modelsDir,disk,installedBytes:models.reduce((n,m)=>n+(Number(m.size)||0),0),drives:windowsDrives(),jobs});
+  res.json({ok:true,ollama,ollamaInstalled:Boolean(findOllamaExecutable()),ollamaVersion:version,models,modelsDir,disk,installedBytes:models.reduce((n,m)=>n+(Number(m.size)||0),0),drives:windowsDrives(),jobs});
 });
 app.post('/api/local/delete-model',(req,res)=>{
   const model=String(req.body?.model||'').trim(); if(!model||!/^[a-zA-Z0-9._:/-]{2,120}$/.test(model))return res.status(400).json({error:'Tên model không hợp lệ.'}); if(MODEL_PULL_JOBS.get(model)?.status==='running')return res.status(409).json({error:'Model đang tải. Hãy hủy tải trước khi xóa.'});
-  try{const r=spawnSync('ollama',['rm',model],{encoding:'utf8',windowsHide:true,timeout:120000});if(r.error)throw r.error;if(r.status!==0)throw new Error((r.stderr||r.stdout||'ollama rm thất bại').trim());res.json({ok:true,model});}catch(err){res.status(500).json({error:err.message||'Không xóa được model.'});}
+  try{const exe=requireOllamaExecutable();const r=spawnSync(exe,['rm',model],{encoding:'utf8',windowsHide:true,timeout:120000});if(r.error)throw r.error;if(r.status!==0)throw new Error((r.stderr||r.stdout||'ollama rm thất bại').trim());res.json({ok:true,model});}catch(err){res.status(500).json({error:err.message||'Không xóa được model.'});}
 });
 app.post('/api/local/model-directory',async(req,res)=>{
   try{if([...MODEL_PULL_JOBS.values()].some(j=>j.status==='running'))return res.status(409).json({error:'Đang có model được tải. Hãy chờ hoặc hủy tải trước khi đổi thư mục model.'});const requested=String(req.body?.path||'').trim();if(!requested)return res.status(400).json({error:'Thiếu đường dẫn thư mục model.'});const dir=path.resolve(requested);fs.mkdirSync(dir,{recursive:true});setUserModelsDir(dir);const restart=req.body?.restart!==false;const rr=restart?await restartOllamaServer():{ok:true};res.json({ok:true,path:dir,restartOk:rr.ok,message:rr.ok?`Đã dùng thư mục model: ${dir}`:`Đã đặt OLLAMA_MODELS=${dir}. ${rr.message||'Hãy khởi động lại Ollama.'}`});}catch(err){res.status(500).json({error:err.message||'Không đổi được thư mục model.'});}

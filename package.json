@@ -1,7 +1,7 @@
 {
   "name": "hnl-pile-standards-ai",
   "private": true,
-  "version": "1.9.13",
+  "version": "1.9.14",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -26,7 +26,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^5.1.0",
-    "pdfjs-dist": "^5.4.149"
+    "pdfjs-dist": "5.4.149"
   },
   "devDependencies": {
     "electron": "^38.0.0",
@@ -80,6 +80,6 @@
       "artifactName": "HNL-Pile-Standards-AI-Portable-${version}-${arch}.${ext}"
     }
   },
-  "description": "HNL Pile Standards AI - Web + Desktop engineering AI with responsive desktop startup, always-visible assistant tabs, single-source model synchronization, approval-gated model switching, version-gated Windows builds, PDF RAG, formulas, OCR/Vision and offline/online AI.",
+  "description": "HNL Pile Standards AI - Web + Desktop engineering AI with PDF.js legacy compatibility for Windows/Electron, stable Offline AI startup, responsive UI, synchronized model controls, version-gated builds, PDF RAG, formulas, OCR/Vision and offline/online AI.",
   "author": "HNL"
 }

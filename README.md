@@ -1,4 +1,36 @@
-# HNL Pile Standards AI v1.9.14
+# HNL Pile Standards AI v1.9.17
+
+## v1.9.17 — Full Source Audit · AI Key/Archive/Offline/PDF Region Hardening
+
+- **Gemini/OpenAI/Claude/Grok key trên PC:** Direct và HNL Bridge dùng cùng key phiên theo provider; Test Connection, Refresh Models và Chat không còn đọc hai nguồn key khác nhau.
+- **Gemini Models API:** fallback catalog luôn ghi rõ “Không xác minh được danh sách model”; API thật vẫn đọc phân trang và lọc model hỗ trợ `generateContent`.
+- **Không tự đổi model:** Text/Vision/Embedding retry model hiện tại trước; chỉ đổi sang model khác sau khi hiện đề nghị và người dùng bấm **OK**.
+- **Smart Region OCR:** vùng chọn ưu tiên lấy text layer; nếu không đủ mới OCR local bằng `TextDetector`; chỉ khi local OCR kém mới hỏi xác nhận trước khi gửi đúng crop vùng chọn sang Vision AI.
+- **Menu vùng/text PDF:** Copy, Hỏi AI, Tra cứu, Tóm tắt, Dùng làm nguồn, Tìm toàn thư viện và Quét công thức vùng; công thức vùng luôn bắt đầu ở trạng thái AI Detected (`verified=false`, `allowCompute=false`) và giữ ảnh/trang nguồn.
+- **Archive Desktop:** giữ source path đầy đủ qua nested folder/archive và tên file trùng; engine ưu tiên **7-Zip → WinRAR/UnRAR → Windows tar → HNL Built-in RAR**; có mục kiểm tra engine và hướng dẫn 7-Zip.
+- **Desktop startup/Bridge:** UI được nạp trước khi chờ Local Engine; Bridge bind `127.0.0.1`, health không chờ Ollama, xác minh đúng HNL Bridge và thử cổng 8787–8799.
+- **Offline AI:** kiểm tra dung lượng trống trước pull model, hiện dung lượng dự phòng ước tính và không tải gì nếu chưa bấm OK; tiến độ/cancel/thư mục model vẫn giữ nguyên.
+- Giữ PDF.js Legacy, responsive theo container, model text một state, Gemini Models API phân trang, Version Gate và Windows workflow verify đủ Setup + Portable EXE.
+
+
+
+## v1.9.16 — PC AI Key Sync · RAR Runtime · Smart PDF Select/OCR
+
+- Sửa lỗi **Kiểm tra Gemini OK nhưng Hỏi đáp vẫn báo chưa nhập key**: key đã kiểm tra thành công được kích hoạt ngay cho phiên và HNL Bridge nhận key tạm thời từ UI, không cần ghi key vào file `.env`.
+- Direct/Bridge, refresh model và chat dùng cùng API key đang hoạt động; chuyển provider không dùng nhầm key của provider cũ.
+- RAR Desktop dùng CommonJS runtime đúng của `node-unrar-js` và đóng gói runtime vào EXE; giữ fallback 7-Zip/WinRAR cho trường hợp đặc biệt.
+- AI Offline: nút cài model tự chuyển sang cài Ollama nếu thiếu; installer chính thức được theo dõi trạng thái và tự tiếp tục pull model sau khi cài.
+- PDF có lớp chữ: bật **Chọn chữ** để bôi chọn/copy trực tiếp. PDF scan/ảnh: cùng công cụ cho phép kéo đúng vùng cần OCR/Vision, chỉ render vùng chọn để giảm RAM và dữ liệu gửi AI.
+- Giữ PDF.js Legacy, responsive 3 vùng, model approval và Windows Setup/Portable build gate.
+
+## v1.9.15 — One-click Offline AI & Built-in RAR
+
+- Nút cài AI Offline tự cài Ollama trên Windows khi máy chưa có: tải installer chính thức, kiểm tra chữ ký số rồi cài silent; sau đó tự tiếp tục tải bộ model đã chọn.
+- Trình quản lý Offline hiển thị trạng thái cài Ollama và có nút **Cài Ollama tự động** riêng.
+- RAR trên HNL Desktop/HNL Local có bộ giải nén tích hợp `node-unrar-js`, không còn bắt buộc người dùng cài 7-Zip/WinRAR chỉ để mở RAR.
+- Giữ fallback 7-Zip/WinRAR cho archive đặc biệt; RAR có mật khẩu vẫn hỏi mật khẩu và phân biệt sai mật khẩu.
+- Giữ toàn bộ sửa PDF Legacy, responsive UI, model sync và Windows build của v1.9.14.
+
 
 ## v1.9.14 — PDF Legacy Compatibility & Desktop AI Stability
 

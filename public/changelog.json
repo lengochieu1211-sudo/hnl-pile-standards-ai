@@ -1,6 +1,31 @@
 {
-  "current": "1.9.14",
+  "current": "1.9.17",
   "releases": [
+    {
+      "version": "1.9.17",
+      "title": "Full Source Audit · Unified AI Key · Local-first PDF Region OCR · Archive/Offline Hardening",
+      "changes": [
+        "Sửa root cause API key PC: UI session key hiện cho cả Direct và Bridge; Test Connection, Models API và Chat dùng cùng provider-specific key trong bộ nhớ/session.",
+        "Gemini catalog dự phòng luôn ghi rõ “Không xác minh được danh sách model”; Models API thật đọc phân trang và lọc model hỗ trợ generateContent cho picker chính.",
+        "Text/Vision/Embedding retry model hiện tại trước; fallback chỉ đổi sau khi người dùng bấm OK, không tự chuyển provider/model.",
+        "Smart PDF Region theo local-first: lấy text layer trong vùng → Chromium TextDetector nếu có → chỉ hỏi xác nhận trước khi gửi crop vùng chọn sang Vision AI; thêm menu Copy/Hỏi AI/Tra cứu/Tóm tắt/Dùng làm nguồn/Tìm toàn thư viện/Quét công thức.",
+        "Desktop archive giữ đúng source path khi thư mục lồng/trùng tên, hỗ trợ nested archive; ưu tiên 7-Zip → WinRAR/UnRAR → tar → HNL Built-in RAR và có chẩn đoán engine/đường dẫn cài 7-Zip.",
+        "Desktop mở UI trước khi chờ Bridge/Ollama; Bridge health phản hồi nhanh, chỉ bind localhost, thử cổng 8787–8799 và kiểm tra đúng nhận dạng HNL Bridge.",
+        "Offline AI kiểm tra Ollama/disk/model folder, hiển thị ước tính dung lượng trước tải và chặn gói model nếu ổ trống thấp hơn mức dự phòng; vẫn yêu cầu OK trước mọi tải/đổi model.",
+        "Giữ PDF.js legacy API/worker, responsive 3 panel, model sync một state, Gemini Models API phân trang, version gate và workflow bắt buộc đủ Setup + Portable EXE."
+      ]
+    },
+    {
+      "version": "1.9.16",
+      "title": "PC AI Key Sync, Built-in RAR, One-click Offline AI & Smart PDF Select/OCR",
+      "changes": [
+        "API key kiểm tra thành công được kích hoạt ngay cho phiên; Direct/Bridge/chat/model discovery dùng cùng key mà không ghi key xuống .env.",
+        "RAR Desktop ưu tiên node-unrar-js tích hợp trong ứng dụng, sau đó mới fallback 7-Zip/WinRAR/tar; giữ hỗ trợ mật khẩu.",
+        "Nếu thiếu Ollama, HNL có luồng cài tự động trên Windows và tiếp tục tải model Offline sau khi cài xong.",
+        "PDF text layer cho phép bôi chọn/copy chữ; trang scan/ảnh tự chuyển OCR vùng, chỉ crop vùng chọn để giảm tải.",
+        "Giữ PDF.js Legacy, responsive UI, model approval, version gate và Windows Setup/Portable verification."
+      ]
+    },
     {
       "version": "1.9.14",
       "title": "PDF Legacy Compatibility & Desktop AI Stability",

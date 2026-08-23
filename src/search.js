@@ -167,7 +167,7 @@ function bestSentence(text, query) {
 export function localAnswer(question, hits, stats = null) {
   if (!hits.length) {
     const scanned = stats ? ` Đã quét ${stats.textPages}/${stats.pages} trang có thể đọc chữ trong ${stats.docs} tài liệu.` : '';
-    return `Không tìm thấy nội dung phù hợp trong các tài liệu đang chọn.${scanned}`;
+    return `Không tìm thấy đủ căn cứ trong các tài liệu đang chọn.${scanned}`;
   }
   const unique = [];
   const seen = new Set();

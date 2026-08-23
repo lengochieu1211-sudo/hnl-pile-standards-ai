@@ -7,10 +7,23 @@ import { fileURLToPath } from 'node:url';
 import os from 'node:os';
 import { spawnSync, spawn } from 'node:child_process';
 import crypto from 'node:crypto';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
 
 const app = express();
 const PORT = Number(process.env.PORT || 8787);
-app.use(cors({ origin: process.env.ALLOWED_ORIGIN ? process.env.ALLOWED_ORIGIN.split(',') : true }));
+const configuredOrigins = String(process.env.ALLOWED_ORIGIN || '').split(',').map(x=>x.trim()).filter(Boolean);
+function allowCorsOrigin(origin, callback) {
+  if (!origin || origin === 'null') return callback(null, true); // same-origin/non-browser/file:// Electron fallback
+  if (configuredOrigins.includes(origin)) return callback(null, true);
+  try {
+    const u = new URL(origin);
+    if (['localhost','127.0.0.1','::1'].includes(u.hostname)) return callback(null, true);
+  } catch { /* invalid origin */ }
+  return callback(new Error('Origin không được phép truy cập HNL Bridge.'));
+}
+app.use(cors({ origin: allowCorsOrigin }));
 app.use(express.json({ limit: '32mb' }));
 
 const configured = (ollamaReady = false) => ({
@@ -21,21 +34,31 @@ const configured = (ollamaReady = false) => ({
   grok: Boolean(process.env.XAI_API_KEY)
 });
 
-app.get('/api/health', async (_req, res) => {
-  let ollamaReady = false;
+let OLLAMA_HEALTH = { ready:false, checkedAt:0, checking:false };
+async function refreshOllamaHealth() {
+  if (OLLAMA_HEALTH.checking) return;
+  OLLAMA_HEALTH.checking = true;
   try {
     const base = (process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434').replace(/\/$/,'');
-    const r = await fetch(`${base}/api/tags`, { signal: AbortSignal.timeout(450) });
-    ollamaReady = r.ok;
-  } catch { ollamaReady = false; }
-  res.json({ ok: true, service: 'HNL AI Bridge', providers: configured(ollamaReady), localUrl:`http://127.0.0.1:${PORT}` });
+    const r = await fetch(`${base}/api/tags`, { signal: AbortSignal.timeout(500) });
+    OLLAMA_HEALTH.ready = r.ok;
+  } catch { OLLAMA_HEALTH.ready = false; }
+  finally { OLLAMA_HEALTH.checkedAt = Date.now(); OLLAMA_HEALTH.checking = false; }
+}
+
+app.get('/api/health', (_req, res) => {
+  // Identity/health must answer immediately so Electron can distinguish HNL Bridge
+  // from an unrelated server on the same port. Ollama probing happens in background.
+  if (Date.now() - OLLAMA_HEALTH.checkedAt > 2500) refreshOllamaHealth().catch(()=>{});
+  res.json({ ok:true, service:'HNL AI Bridge', providers:configured(OLLAMA_HEALTH.ready), ollamaCheckedAt:OLLAMA_HEALTH.checkedAt || null, localUrl:`http://127.0.0.1:${PORT}` });
 });
 
-function requireKey(name) {
-  const value = process.env[name];
-  if (!value) throw new Error(`Thiếu biến môi trường ${name}`);
+function requireKey(name, override = '') {
+  const value = String(override || process.env[name] || '').trim();
+  if (!value) throw new Error(`Thiếu API key cho ${name}`);
   return value;
 }
+
 
 function messagesToText(messages = []) {
   return messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
@@ -55,8 +78,8 @@ async function jsonFetch(url, options) {
   return data;
 }
 
-async function askOpenAI(model, messages, images = []) {
-  const key = requireKey('OPENAI_API_KEY');
+async function askOpenAI(model, messages, images = [], apiKey = '') {
+  const key = requireKey('OPENAI_API_KEY', apiKey);
   const data = await jsonFetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
@@ -65,8 +88,8 @@ async function askOpenAI(model, messages, images = []) {
   return data.choices?.[0]?.message?.content || 'OpenAI không trả về nội dung văn bản.';
 }
 
-async function askGemini(model, messages, images = []) {
-  const key = requireKey('GEMINI_API_KEY');
+async function askGemini(model, messages, images = [], apiKey = '') {
+  const key = requireKey('GEMINI_API_KEY', apiKey);
   const system = messages.filter(m=>m.role==='system').map(m=>m.content).join('\n');
   const nonSystem = messages.filter(m=>m.role!=='system');
   const contents = nonSystem.map((m, i)=>({ role: m.role === 'assistant' ? 'model' : 'user', parts:[{text:m.content}, ...(images.length && i === nonSystem.length - 1 && m.role !== 'assistant' ? images.map(x => ({ inlineData:{ mimeType:x.mimeType || 'image/jpeg', data:x.data } })) : [])] }));
@@ -79,8 +102,8 @@ async function askGemini(model, messages, images = []) {
   return data.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('') || 'Gemini không trả về nội dung văn bản.';
 }
 
-async function askClaude(model, messages, images = []) {
-  const key = requireKey('ANTHROPIC_API_KEY');
+async function askClaude(model, messages, images = [], apiKey = '') {
+  const key = requireKey('ANTHROPIC_API_KEY', apiKey);
   const system = messages.filter(m=>m.role==='system').map(m=>m.content).join('\n');
   const nonSystem = messages.filter(m=>m.role!=='system');
   const chat = nonSystem.map((m, i)=>({ role:m.role==='assistant'?'assistant':'user', content:(images.length && i === nonSystem.length - 1 && m.role !== 'assistant') ? [...images.map(x => ({ type:'image', source:{ type:'base64', media_type:x.mimeType || 'image/jpeg', data:x.data } })), { type:'text', text:m.content }] : m.content }));
@@ -92,8 +115,8 @@ async function askClaude(model, messages, images = []) {
   return data.content?.filter(x=>x.type==='text').map(x=>x.text).join('\n') || 'Claude không trả về nội dung văn bản.';
 }
 
-async function askGrok(model, messages, images = []) {
-  const key = requireKey('XAI_API_KEY');
+async function askGrok(model, messages, images = [], apiKey = '') {
+  const key = requireKey('XAI_API_KEY', apiKey);
   const data = await jsonFetch('https://api.x.ai/v1/chat/completions', {
     method:'POST',
     headers:{'Content-Type':'application/json',Authorization:`Bearer ${key}`},
@@ -237,6 +260,86 @@ function requireOllamaExecutable() {
   return exe;
 }
 
+
+const OLLAMA_INSTALL = { status:'idle', progress:0, method:'', message:'', error:'', startedAt:null, finishedAt:null };
+function resetOllamaExecutableCache() { OLLAMA_EXE_CACHE = undefined; }
+function waitChild(child) {
+  return new Promise((resolve, reject) => {
+    child.once('error', reject);
+    child.once('exit', code => code === 0 ? resolve(code) : reject(new Error(`Tiến trình kết thúc với mã ${code}`)));
+  });
+}
+async function waitForOllamaExecutable(timeoutMs=90000) {
+  const started=Date.now();
+  while(Date.now()-started < timeoutMs) {
+    resetOllamaExecutableCache();
+    const exe=findOllamaExecutable();
+    if(exe) return exe;
+    await new Promise(r=>setTimeout(r,1500));
+  }
+  return null;
+}
+async function verifyWindowsSignature(file) {
+  if(process.platform!=='win32') return true;
+  const escaped=String(file).replaceAll("'", "''");
+  const script=`$s=Get-AuthenticodeSignature -LiteralPath '${escaped}'; if($s.Status -ne 'Valid'){Write-Error ('Signature='+$s.Status); exit 2}; Write-Output $s.SignerCertificate.Subject`;
+  const r=spawnSync('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-Command',script],{encoding:'utf8',windowsHide:true,timeout:30000});
+  if(r.status!==0) throw new Error(`Không xác minh được chữ ký số Ollama: ${(r.stderr||r.stdout||'Unknown signature').trim()}`);
+  return true;
+}
+async function tryWingetInstallOllama() {
+  if(process.platform!=='win32') return false;
+  const exists=spawnSync('where.exe',['winget.exe'],{encoding:'utf8',windowsHide:true,timeout:3000});
+  if(exists.status!==0) return false;
+  OLLAMA_INSTALL.method='winget'; OLLAMA_INSTALL.message='Đang cài Ollama bằng Windows Package Manager…'; OLLAMA_INSTALL.progress=20;
+  const child=spawn('winget.exe',['install','--id','Ollama.Ollama','-e','--silent','--accept-package-agreements','--accept-source-agreements'],{windowsHide:true,stdio:['ignore','pipe','pipe']});
+  let out=''; child.stdout?.on('data',d=>{out+=String(d); OLLAMA_INSTALL.progress=Math.min(85,OLLAMA_INSTALL.progress+1);}); child.stderr?.on('data',d=>{out+=String(d);});
+  try { await waitChild(child); return true; } catch(error) { console.warn('winget Ollama install failed:', out.slice(-2000), error.message); return false; }
+}
+async function downloadOfficialOllamaInstaller() {
+  const url='https://ollama.com/download/OllamaSetup.exe';
+  OLLAMA_INSTALL.method='official-installer'; OLLAMA_INSTALL.message='Đang tải OllamaSetup.exe từ ollama.com…'; OLLAMA_INSTALL.progress=25;
+  const response=await fetch(url,{redirect:'follow'});
+  if(!response.ok) throw new Error(`Tải OllamaSetup.exe thất bại: HTTP ${response.status}`);
+  const total=Number(response.headers.get('content-length')||0);
+  const reader=response.body?.getReader?.();
+  const chunks=[]; let got=0;
+  if(reader){ while(true){ const {done,value}=await reader.read(); if(done)break; chunks.push(value); got+=value.byteLength; if(total) OLLAMA_INSTALL.progress=Math.min(65,25+Math.round(got/total*40)); } }
+  else { const b=new Uint8Array(await response.arrayBuffer()); chunks.push(b); got=b.byteLength; }
+  const installer=path.join(os.tmpdir(),`HNL-OllamaSetup-${Date.now()}.exe`);
+  fs.writeFileSync(installer, Buffer.concat(chunks.map(c=>Buffer.from(c))));
+  await verifyWindowsSignature(installer);
+  return installer;
+}
+async function installOllamaJob() {
+  if(process.platform!=='win32') throw new Error('Cài Ollama tự động hiện chỉ hỗ trợ Windows.');
+  if(findOllamaExecutable()) return findOllamaExecutable();
+  OLLAMA_INSTALL.status='running'; OLLAMA_INSTALL.progress=5; OLLAMA_INSTALL.error=''; OLLAMA_INSTALL.startedAt=new Date().toISOString(); OLLAMA_INSTALL.finishedAt=null;
+  let installed=await tryWingetInstallOllama();
+  let installer='';
+  if(!installed){
+    installer=await downloadOfficialOllamaInstaller();
+    OLLAMA_INSTALL.message='Đang cài Ollama im lặng…'; OLLAMA_INSTALL.progress=70;
+    const child=spawn(installer,['/S'],{windowsHide:true,stdio:'ignore'});
+    await waitChild(child);
+  }
+  OLLAMA_INSTALL.message='Đang xác nhận Ollama sau khi cài…'; OLLAMA_INSTALL.progress=90;
+  const exe=await waitForOllamaExecutable(120000);
+  if(!exe) throw new Error('Đã chạy trình cài nhưng HNL chưa tìm thấy ollama.exe. Hãy đăng xuất/khởi động lại Windows hoặc cài Ollama thủ công.');
+  try { if(installer) fs.rmSync(installer,{force:true}); } catch {}
+  OLLAMA_INSTALL.status='done'; OLLAMA_INSTALL.progress=100; OLLAMA_INSTALL.message='Ollama đã cài xong.'; OLLAMA_INSTALL.finishedAt=new Date().toISOString();
+  return exe;
+}
+
+app.post('/api/local/install-ollama', async (_req,res)=>{
+  if(findOllamaExecutable()) return res.json({ok:true,status:'done',progress:100,message:'Ollama đã được cài.',executable:findOllamaExecutable()});
+  if(OLLAMA_INSTALL.status==='running') return res.json({ok:true,...OLLAMA_INSTALL});
+  OLLAMA_INSTALL.status='running'; OLLAMA_INSTALL.progress=1; OLLAMA_INSTALL.message='Đang chuẩn bị cài Ollama…'; OLLAMA_INSTALL.error='';
+  installOllamaJob().catch(error=>{OLLAMA_INSTALL.status='error';OLLAMA_INSTALL.error=error.message;OLLAMA_INSTALL.message='Cài Ollama thất bại.';OLLAMA_INSTALL.finishedAt=new Date().toISOString();console.error('Ollama install failed:',error);});
+  res.json({ok:true,...OLLAMA_INSTALL});
+});
+app.get('/api/local/ollama-install-status',(_req,res)=>res.json({ok:true,installed:Boolean(findOllamaExecutable()),...OLLAMA_INSTALL}));
+
 function currentModelsDir() { return process.env.OLLAMA_MODELS || path.join(os.homedir(), '.ollama', 'models'); }
 function directoryDiskInfo(targetPath='') {
   try { let probe=path.resolve(targetPath||currentModelsDir()); while(!fs.existsSync(probe)){ const parent=path.dirname(probe); if(parent===probe) break; probe=parent; } if(!fs.existsSync(probe)||typeof fs.statfsSync!=='function') return {freeBytes:0,totalBytes:0,path:probe}; const s=fs.statfsSync(probe); return {freeBytes:Number(s.bavail||s.bfree||0)*Number(s.bsize||0),totalBytes:Number(s.blocks||0)*Number(s.bsize||0),path:probe}; } catch { return {freeBytes:0,totalBytes:0,path:targetPath}; }
@@ -323,31 +426,99 @@ function archiveToolCandidates() {
 function looksPasswordError(text='') {
   return /(wrong password|password is incorrect|encrypted|enter password|data error.*password|headers error|can not open encrypted)/i.test(text);
 }
-function extractWithTool(input, output, password='') {
-  const ext = path.basename(input).toLowerCase();
-  if (/\.(?:tar|tgz|tar\.gz|gz|bz2|xz)$/i.test(ext) || !/\.(?:rar|7z)$/i.test(ext)) {
-    const tar = spawnSync('tar', ['-xf', input, '-C', output], { encoding:'utf8', windowsHide:true, timeout:120000 });
-    if (tar.status === 0) return { ok:true, tool:'tar' };
+
+let BUILTIN_UNRAR = undefined;
+function loadBuiltinUnrar() {
+  if (BUILTIN_UNRAR !== undefined) return BUILTIN_UNRAR;
+  try { BUILTIN_UNRAR = require('node-unrar-js'); }
+  catch (error) { console.warn('HNL built-in RAR runtime unavailable:', error.message); BUILTIN_UNRAR = null; }
+  return BUILTIN_UNRAR;
+}
+function safeArchiveEntryName(name='') {
+  const clean = String(name || '').replaceAll('\\','/').replace(/^[A-Za-z]:/, '').replace(/^\/+/, '');
+  const parts = clean.split('/').filter(part => part && part !== '.' && part !== '..');
+  return parts.join('/');
+}
+async function extractRarBuiltIn(input, output, password='') {
+  const unrar = loadBuiltinUnrar();
+  if (!unrar?.createExtractorFromFile) return { ok:false, code:'BUILTIN_UNRAR_MISSING', text:'node-unrar-js chưa được đóng gói.' };
+  try {
+    const extractor = await unrar.createExtractorFromFile({
+      filepath: input, targetPath: output, password: password || undefined,
+      filenameTransform: safeArchiveEntryName
+    });
+    const listed = extractor.getFileList();
+    const headers = [...listed.fileHeaders]; // exhaust iterator to release native/WASM objects
+    const encrypted = headers.some(h => Boolean(h?.flags?.encrypted));
+    if (encrypted && !password) return { ok:false, code:'PASSWORD_REQUIRED', text:'RAR có mục được mã hóa.' };
+    const result = extractor.extract();
+    const files = [...result.files]; // must traverse iterator fully
+    const failed = files.find(f => f?.extraction === null && !f?.fileHeader?.flags?.directory);
+    if (failed) return { ok:false, code:password ? 'BAD_PASSWORD' : 'ARCHIVE_ERROR', text:`Không giải nén được ${failed.fileHeader?.name || 'mục RAR'}.` };
+    return { ok:true, tool:'HNL Built-in RAR (node-unrar-js)' };
+  } catch (error) {
+    const text = `${error?.reason || ''} ${error?.message || error}`.trim();
+    if (looksPasswordError(text) || /password|encrypted|ERAR_BAD_PASSWORD/i.test(text)) return { ok:false, code:password ? 'BAD_PASSWORD' : 'PASSWORD_REQUIRED', text };
+    return { ok:false, code:'BUILTIN_RAR_ERROR', text };
   }
+}
+async function extractWithTool(input, output, password='') {
+  const ext = path.basename(input).toLowerCase();
   let found = false;
   let passwordIssue = false;
   let lastText = '';
-  for (const tool of archiveToolCandidates()) {
+  const candidates = archiveToolCandidates();
+
+  const runExternal = tool => {
     const isUnrar = /unrar/i.test(path.basename(tool));
     const args = isUnrar
       ? ['x','-y', password ? `-p${password}` : '-p-', input, `${output}${path.sep}`]
       : ['x','-y', password ? `-p${password}` : '-p', `-o${output}`, input];
     const result = spawnSync(tool, args, { encoding:'utf8', windowsHide:true, timeout:120000 });
-    if (result.error?.code === 'ENOENT') continue;
+    if (result.error?.code === 'ENOENT') return null;
     found = true;
     lastText = `${result.stdout || ''}\n${result.stderr || ''}`;
-    if (result.status === 0) return { ok:true, tool };
     if (looksPasswordError(lastText)) passwordIssue = true;
+    return result.status === 0 ? { ok:true, tool } : null;
+  };
+
+  // Requested priority: 7-Zip first for every archive format.
+  for (const tool of candidates.filter(x => !/unrar/i.test(path.basename(x)))) {
+    const ok = runExternal(tool);
+    if (ok) return ok;
   }
+
+  // Then WinRAR/UnRAR for RAR archives.
+  if (/\.rar$/i.test(ext)) {
+    for (const tool of candidates.filter(x => /unrar/i.test(path.basename(x)))) {
+      const ok = runExternal(tool);
+      if (ok) return ok;
+    }
+  }
+
+  // Windows/libarchive tar is the no-install fallback for formats it supports.
+  if (!/\.7z$/i.test(ext)) {
+    const tar = spawnSync('tar', ['-xf', input, '-C', output], { encoding:'utf8', windowsHide:true, timeout:120000 });
+    if (tar.error?.code !== 'ENOENT') {
+      found = true;
+      lastText = `${tar.stdout || ''}\n${tar.stderr || ''}`;
+      if (tar.status === 0) return { ok:true, tool:'tar' };
+      if (looksPasswordError(lastText)) passwordIssue = true;
+    }
+  }
+
+  // Finally use the bundled RAR runtime so RAR still works without extra installs.
+  if (/\.rar$/i.test(ext)) {
+    const builtin = await extractRarBuiltIn(input, output, password);
+    if (builtin.ok || ['PASSWORD_REQUIRED','BAD_PASSWORD'].includes(builtin.code)) return builtin;
+    lastText = builtin.text || lastText;
+  }
+
   if (passwordIssue) return { ok:false, code:password ? 'BAD_PASSWORD':'PASSWORD_REQUIRED', text:lastText };
-  if (!found) return { ok:false, code:'TOOL_MISSING', text:'Không tìm thấy 7-Zip/WinRAR/unrar.' };
+  if (!found && !/\.rar$/i.test(ext)) return { ok:false, code:'TOOL_MISSING', text:'Không tìm thấy 7-Zip/WinRAR/tar phù hợp cho archive này.' };
   return { ok:false, code:'ARCHIVE_ERROR', text:lastText };
 }
+
 
 // Archive extraction is intentionally local-only. ZIP remains browser-capable;
 // RAR/7Z/TAR/GZ/BZ2/XZ use Windows tar/7-Zip/WinRAR when HNL Local is running.
@@ -363,16 +534,20 @@ app.post('/api/extract-archive', express.raw({ type:'application/octet-stream', 
   try {
     fs.mkdirSync(output, { recursive:true });
     fs.writeFileSync(input, req.body);
-    const extracted = extractWithTool(input, output, password);
+    const extracted = await extractWithTool(input, output, password);
     if (!extracted.ok) {
       const status = ['PASSWORD_REQUIRED','BAD_PASSWORD'].includes(extracted.code) ? 401 : 400;
+      const lowerName = original.toLowerCase();
       const msg = extracted.code === 'PASSWORD_REQUIRED' ? 'Archive có mật khẩu.'
         : extracted.code === 'BAD_PASSWORD' ? 'Mật khẩu archive không đúng.'
-        : extracted.code === 'TOOL_MISSING' ? 'Máy chưa có công cụ đọc RAR/7Z. Hãy cài 7-Zip miễn phí; TAR/GZ có thể dùng tar của Windows.'
-        : 'Không giải nén được archive. File có thể hỏng hoặc dùng phương thức nén chưa được công cụ trên máy hỗ trợ.';
+        : extracted.code === 'TOOL_MISSING' ? 'Thiếu engine phù hợp. Hãy cài 7-Zip (ưu tiên) hoặc WinRAR/UnRAR; RAR thường vẫn có HNL Built-in dự phòng.'
+        : lowerName.endsWith('.7z') ? 'Không giải nén được 7Z. Hãy kiểm tra/cài 7-Zip trong Cài đặt → Bộ giải nén Desktop.'
+        : lowerName.endsWith('.zip') ? 'Không giải nén được ZIP. Nếu file có mật khẩu hoặc phương thức nén đặc biệt, hãy cài 7-Zip rồi thử lại.'
+        : lowerName.endsWith('.rar') ? 'Không giải nén được RAR bằng các engine hiện có. Hãy kiểm tra HNL Built-in RAR hoặc cài 7-Zip/WinRAR.'
+        : 'Không giải nén được archive. File có thể hỏng hoặc dùng phương thức nén chưa được engine trên máy hỗ trợ.';
       return res.status(status).json({ error:msg, code:extracted.code });
     }
-    const allowed = /\.(pdf|png|jpe?g|webp|bmp|gif|txt|md|csv|json|xml|html?|yaml|yml|zip)$/i;
+    const allowed = /\.(pdf|png|jpe?g|webp|bmp|gif|txt|md|csv|json|xml|html?|yaml|yml|zip|rar|7z|tar|tgz|gz|bz2|xz)$/i;
     const files = walkFiles(output).filter(x => allowed.test(x.rel)).slice(0, 1200);
     let total = 0;
     const entries = [];
@@ -390,6 +565,20 @@ app.post('/api/extract-archive', express.raw({ type:'application/octet-stream', 
 });
 
 
+app.get('/api/local/archive-engines', (_req,res) => {
+  const candidates = archiveToolCandidates();
+  const available = candidates.filter(commandExists);
+  let builtinRar = false;
+  try { builtinRar = Boolean(loadBuiltinUnrar()); } catch { builtinRar = false; }
+  res.json({
+    ok:true,
+    builtinRar,
+    sevenZip:available.filter(x=>/7z/i.test(path.basename(x))),
+    unrar:available.filter(x=>/unrar/i.test(path.basename(x))),
+    tar:commandExists('tar'),
+    priority:['7-Zip','WinRAR/UnRAR','Windows tar','HNL Built-in RAR']
+  });
+});
 
 const MODEL_PULL_JOBS = new Map();
 app.post('/api/local/pull-model', (req, res) => {
@@ -421,7 +610,7 @@ app.get('/api/local/model-manager', async (_req,res)=>{
   const base=(process.env.OLLAMA_BASE_URL||'http://127.0.0.1:11434').replace(/\/$/,''); let ollama=false,models=[],version='';
   try{const tags=await jsonFetch(`${base}/api/tags`,{method:'GET'});ollama=true;models=(tags.models||[]).map(m=>({name:m.name||m.model,size:Number(m.size||0),modifiedAt:m.modified_at||'',digest:m.digest||'',details:m.details||{}}));try{const v=await jsonFetch(`${base}/api/version`,{method:'GET'});version=String(v.version||'');}catch{}}catch{}
   const modelsDir=currentModelsDir(); const disk=directoryDiskInfo(modelsDir); const jobs=[...MODEL_PULL_JOBS.entries()].map(([model,j])=>({model,status:j.status,progress:j.progress||0,startedAt:j.startedAt,finishedAt:j.finishedAt,error:j.error,output:j.output}));
-  res.json({ok:true,ollama,ollamaInstalled:Boolean(findOllamaExecutable()),ollamaVersion:version,models,modelsDir,disk,installedBytes:models.reduce((n,m)=>n+(Number(m.size)||0),0),drives:windowsDrives(),jobs});
+  res.json({ok:true,ollama,ollamaInstalled:Boolean(findOllamaExecutable()),ollamaInstall:{...OLLAMA_INSTALL},ollamaVersion:version,models,modelsDir,disk,installedBytes:models.reduce((n,m)=>n+(Number(m.size)||0),0),drives:windowsDrives(),jobs});
 });
 app.post('/api/local/delete-model',(req,res)=>{
   const model=String(req.body?.model||'').trim(); if(!model||!/^[a-zA-Z0-9._:/-]{2,120}$/.test(model))return res.status(400).json({error:'Tên model không hợp lệ.'}); if(MODEL_PULL_JOBS.get(model)?.status==='running')return res.status(409).json({error:'Model đang tải. Hãy hủy tải trước khi xóa.'});
@@ -453,7 +642,7 @@ function sortGeminiModels(list=[]) {
   return clean.sort((a,b)=>score(b)-score(a)||a.localeCompare(b));
 }
 
-async function providerModels(provider) {
+async function providerModels(provider, apiKey = '') {
   try {
     if (provider === 'ollama') {
       const base = (process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434').replace(/\/$/,'');
@@ -461,7 +650,7 @@ async function providerModels(provider) {
       return { models:uniqueModels((data.models || []).map(x=>x.name || x.model)), verified:true, source:'ollama', warning:'' };
     }
     if (provider === 'gemini') {
-      const key = requireKey('GEMINI_API_KEY');
+      const key = requireKey('GEMINI_API_KEY', apiKey);
       const all=[]; let pageToken='';
       for (let page=0; page<20; page++) {
         const params=new URLSearchParams({pageSize:'100'});
@@ -476,43 +665,43 @@ async function providerModels(provider) {
       return {models:sortGeminiModels(chatModels),verified:true,source:'gemini-api',warning:'',discoveredCount:uniqueModels(generationModels).length,compatibleCount:uniqueModels(chatModels).length,filteredCount:Math.max(0,uniqueModels(generationModels).length-uniqueModels(chatModels).length)};
     }
     if (provider === 'openai') {
-      const key = requireKey('OPENAI_API_KEY');
+      const key = requireKey('OPENAI_API_KEY', apiKey);
       const data = await jsonFetch('https://api.openai.com/v1/models', { headers:{Authorization:`Bearer ${key}`} });
       return { models:uniqueModels((data.data || []).map(x=>x.id).filter(id=>/^(gpt-|o\d|chat-)/.test(id))), verified:true, source:'openai-api', warning:'' };
     }
     if (provider === 'claude') {
-      const key = requireKey('ANTHROPIC_API_KEY');
+      const key = requireKey('ANTHROPIC_API_KEY', apiKey);
       const data = await jsonFetch('https://api.anthropic.com/v1/models?limit=100', { headers:{'x-api-key':key,'anthropic-version':'2023-06-01'} });
       return { models:uniqueModels((data.data || []).map(x=>x.id)), verified:true, source:'anthropic-api', warning:'' };
     }
     if (provider === 'grok') {
-      const key = requireKey('XAI_API_KEY');
+      const key = requireKey('XAI_API_KEY', apiKey);
       const data = await jsonFetch('https://api.x.ai/v1/models', { headers:{Authorization:`Bearer ${key}`} });
       return { models:uniqueModels((data.data || data.models || []).map(x=>x.id || x.name)), verified:true, source:'xai-api', warning:'' };
     }
   } catch (err) {
     console.warn(`Model list ${provider} failed:`, err.message);
-    return { models:BRIDGE_FALLBACK_MODELS[provider] || [], verified:false, source:'catalog', warning:err.message || 'Không xác minh được model qua Bridge.' };
+    return { models:BRIDGE_FALLBACK_MODELS[provider] || [], verified:false, source:'catalog', warning:`Không xác minh được danh sách model.${err?.message ? ` ${err.message}` : ''}` };
   }
-  return { models:BRIDGE_FALLBACK_MODELS[provider] || [], verified:false, source:'catalog', warning:'Provider không hỗ trợ xác minh danh sách model.' };
+  return { models:BRIDGE_FALLBACK_MODELS[provider] || [], verified:false, source:'catalog', warning:'Không xác minh được danh sách model: Provider không hỗ trợ xác minh danh sách model.' };
 }
 
 app.get('/api/models/:provider', async (req, res) => {
   const provider = String(req.params.provider || '');
   if (!['ollama','gemini','openai','claude','grok'].includes(provider)) return res.status(400).json({error:'Provider không hợp lệ.'});
-  const result = await providerModels(provider);
+  const result = await providerModels(provider, String(req.get('X-HNL-API-Key') || '').trim());
   res.json({ provider, ...result });
 });
 
 app.post('/api/chat', async (req, res) => {
   try {
-    const { provider, model, messages, images = [] } = req.body || {};
+    const { provider, model, messages, images = [], apiKey = '' } = req.body || {};
     if (!Array.isArray(messages) || !messages.length) return res.status(400).json({ error:'Thiếu messages.' });
     let text;
-    if (provider === 'openai') text = await askOpenAI(model, messages, images);
-    else if (provider === 'gemini') text = await askGemini(model, messages, images);
-    else if (provider === 'claude') text = await askClaude(model, messages, images);
-    else if (provider === 'grok') text = await askGrok(model, messages, images);
+    if (provider === 'openai') text = await askOpenAI(model, messages, images, apiKey);
+    else if (provider === 'gemini') text = await askGemini(model, messages, images, apiKey);
+    else if (provider === 'claude') text = await askClaude(model, messages, images, apiKey);
+    else if (provider === 'grok') text = await askGrok(model, messages, images, apiKey);
     else if (provider === 'ollama') text = await askOllama(model, messages, images);
     else return res.status(400).json({ error:`Provider không hỗ trợ: ${provider}` });
     res.json({ text });
@@ -542,5 +731,5 @@ if (fs.existsSync(dist)) {
   app.get(/.*/, (req, res, next) => req.path.startsWith('/api/') ? next() : res.sendFile(path.join(dist, 'index.html')));
 }
 
-app.listen(PORT, () => console.log(`HNL Local AI: http://127.0.0.1:${PORT}`));
+app.listen(PORT, '127.0.0.1', () => { console.log(`HNL Local AI: http://127.0.0.1:${PORT}`); refreshOllamaHealth().catch(()=>{}); });
 

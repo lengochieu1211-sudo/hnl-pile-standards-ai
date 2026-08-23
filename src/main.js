@@ -1,5 +1,5 @@
 import './styles.css';
-import { renderPdfPage, renderPdfPageToBase64, clearPdfCache } from './pdf.js';
+import { renderPdfPage, renderPdfPageToBase64, renderPdfTextLayer, cropCanvasRegionToBase64, extractTextFromLayerRegion, ocrImageBase64Locally, clearPdfCache } from './pdf.js';
 import { expandInputItems, parseInputFile, fileToBase64, extractArchiveViaLocalBridge, isArchiveFile } from './ingest.js';
 import { saveDocument, getDocuments, deleteDocument } from './db.js';
 import { searchChunks, searchEveryPage, smartSearchChunks, deepSearchChunks, localSummary, localAnswer, corpusStats, isBroadQuery, planEngineeringQueries, clearSearchCache } from './search.js';
@@ -10,7 +10,7 @@ import { extractFormulaLibrary, formulaStats, verifiedFormulaLibrary, evaluateEx
 
 const SOURCE_META = Object.freeze({
   version: typeof __HNL_APP_VERSION__ !== 'undefined' ? __HNL_APP_VERSION__ : '0.0.0',
-  release: 'Responsive Model Picker · Gemini Catalog · Windows Build Fix'
+  release: 'PC AI Key Sync · Built-in RAR · Smart PDF Select/OCR'
 });
 
 let APP_META = {
@@ -60,6 +60,10 @@ const state = {
   readerMode: localStorage.getItem(STORAGE.readerMode) || 'continuous',
   readerQuery: localStorage.getItem(STORAGE.readerQuery) || '',
   readerMatchIndex: -1,
+  pdfSelectionMode: 'off', // off | text | region
+  pdfRegionBusy: false,
+  lastPdfRegion: null,
+  pinnedSources: [],
   focusReader: false,
   leftCollapsed: localStorage.getItem(STORAGE.leftCollapsed) === 'true',
   rightCollapsed: localStorage.getItem(STORAGE.rightCollapsed) === 'true',
@@ -106,6 +110,8 @@ const state = {
   formulaQuery: '',
   formulaScanMode: localStorage.getItem(STORAGE.formulaScanMode) || 'auto',
   archivePasswordCache: new Map(),
+  archiveEngines: null,
+  archiveEngineError: '',
   buildInfoLoaded: false,
   updateStatus: null,
   changelog: []
@@ -181,8 +187,28 @@ function providerModel(forVision = false) {
   return state.settings.model || PROVIDERS[state.settings.provider]?.model || '';
 }
 function isLocalHost() { return ['localhost','127.0.0.1','::1'].includes(location.hostname); }
+const volatileApiKeys = new Map();
 function sessionKeyName(provider) { return `hnl.apiKey.${provider}`; }
-function currentApiKey() { return sessionStorage.getItem(sessionKeyName(state.settings.provider)) || ''; }
+function currentApiKey(provider = state.settings.provider) {
+  const id = String(provider || '').trim();
+  if (!id) return '';
+  if (volatileApiKeys.has(id)) return volatileApiKeys.get(id) || '';
+  try {
+    const value = sessionStorage.getItem(sessionKeyName(id)) || '';
+    if (value) volatileApiKeys.set(id, value);
+    return value;
+  } catch { return ''; }
+}
+function setCurrentApiKey(provider, value) {
+  const id = String(provider || '').trim();
+  const key = String(value || '').trim();
+  if (!id) return;
+  if (key) volatileApiKeys.set(id, key); else volatileApiKeys.delete(id);
+  try {
+    if (key) sessionStorage.setItem(sessionKeyName(id), key);
+    else sessionStorage.removeItem(sessionKeyName(id));
+  } catch { /* Renderer memory still keeps the key for this app session. */ }
+}
 function draftSetting(name, fallback = '') {
   return Object.prototype.hasOwnProperty.call(state.settingsDraft || {}, name) ? state.settingsDraft[name] : fallback;
 }
@@ -284,7 +310,7 @@ function waitMs(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 async function callConfiguredAiOnce({ prompt, images = [], modelOverride = '' }) {
   const model = modelOverride || providerModel(images.length > 0);
   if (state.settings.connection === 'bridge') {
-    return callBridge({ bridgeUrl:state.settings.bridgeUrl, provider:state.settings.provider, model, prompt, images });
+    return callBridge({ bridgeUrl:state.settings.bridgeUrl, provider:state.settings.provider, model, prompt, images, apiKey:currentApiKey() });
   }
   return callDirect({ provider:state.settings.provider, model, apiKey:currentApiKey(), prompt, ollamaUrl:state.settings.ollamaUrl, images });
 }
@@ -341,6 +367,32 @@ function pickFallbackCandidate(provider, currentModel, models = []) {
   return available.sort((a,b) => score(b)-score(a) || a.localeCompare(b))[0];
 }
 
+async function chooseApprovedOllamaVisionFallback(error, currentModel) {
+  if (state.settings.provider !== 'ollama' || state.settings.connection !== 'bridge') return '';
+  try {
+    const base = String(state.settings.bridgeUrl || location.origin).replace(/\/$/, '');
+    const r = await fetch(`${base}/api/local/model-manager`, { cache:'no-store' });
+    const data = await r.json().catch(()=>({}));
+    if (!r.ok) return '';
+    const names = (data.models || []).map(x => String(x.name || x.model || '')).filter(Boolean);
+    const vision = names.filter(name => /(?:vision|llava|bakllava|moondream|minicpm-v|qwen[^:]*-?vl|gemma3)/i.test(name) && name !== currentModel);
+    const candidate = vision[0] || '';
+    if (!candidate) {
+      state.modelStatus = `Vision model ${currentModel} lỗi sau retry; chưa có Vision model khác đã cài để đề nghị.`;
+      return '';
+    }
+    const kind = aiErrorKind(error);
+    const ok = window.confirm(`Vision model hiện tại ${kind === 'quota' ? 'hết quota/giới hạn' : 'bị lỗi sau khi thử lại'}.\n\nVision hiện tại: ${currentModel}\nVision thay thế đã cài: ${candidate}\n\nBấm OK để chuyển Vision model và thử lại.\nCancel = GIỮ NGUYÊN.`);
+    if (!ok) return '';
+    state.settings.visionModel = candidate;
+    state.settingsDraft = {};
+    saveSettings();
+    state.modelStatus = `Người dùng đã đồng ý đổi Vision: ${currentModel} → ${candidate}.`;
+    showToast(`Đã chuyển Vision model sang ${candidate} theo xác nhận.`, 'warning');
+    return candidate;
+  } catch { return ''; }
+}
+
 async function callConfiguredAiWithApproval({ prompt, images = [] }) {
   const forVision = images.length > 0 && state.settings.provider === 'ollama';
   const currentModel = providerModel(images.length > 0);
@@ -355,9 +407,11 @@ async function callConfiguredAiWithApproval({ prompt, images = [] }) {
       if (!['quota','temporary'].includes(kind) || i === retryDelays.length - 1) break;
     }
   }
-  // Vision model is intentionally never auto-fallbacked: the user must choose
-  // another Vision model in settings, because capabilities may differ.
-  if (!forVision && ['quota','temporary','model'].includes(aiErrorKind(lastError))) {
+  const kind = aiErrorKind(lastError);
+  if (forVision && ['quota','temporary','model'].includes(kind)) {
+    const approvedVision = await chooseApprovedOllamaVisionFallback(lastError, currentModel);
+    if (approvedVision) return callConfiguredAiOnce({ prompt, images, modelOverride:approvedVision });
+  } else if (!forVision && ['quota','temporary','model'].includes(kind)) {
     const approved = await chooseApprovedFallbackModel(lastError, currentModel);
     if (approved) return callConfiguredAiOnce({ prompt, images, modelOverride:approved });
   }
@@ -586,6 +640,9 @@ function render() {
               <span class="page-total">/ ${doc?.pageCount || 0}</span>
               <button class="icon-btn" id="nextPage" ${!doc ? 'disabled' : ''} title="Trang sau (Page Down)">›</button>
             </div>
+            <div class="toolbar-group toolbar-selection-group" aria-label="Chọn chữ hoặc OCR vùng">
+              <button class="icon-btn ${state.pdfSelectionMode !== 'off' ? 'active-tool' : ''}" id="pdfSmartSelect" ${!doc || doc.viewerKind !== 'pdf' ? 'disabled' : ''} title="PDF có text: bôi chọn/copy. Trang scan: kéo vùng OCR">T▧</button>
+            </div>
             <div class="toolbar-group toolbar-layout-group" aria-label="Bố cục trình đọc">
               <button class="icon-btn" id="viewerToggleAssistant" title="Ẩn/hiện trợ lý">AI</button>
               <button class="icon-btn" id="resetLayout" title="Khôi phục bố cục 3 vùng">↺</button>
@@ -647,11 +704,11 @@ function viewerContentHtml(doc) {
   if (state.readerMode === 'continuous') {
     const pages = Array.from({ length: doc.pageCount || 0 }, (_, i) => {
       const p = i + 1;
-      return `<section class="pdf-page-shell" id="pdf-page-${p}" data-page="${p}"><div class="page-float-label">${p}</div><canvas class="pdf-page-canvas" data-page="${p}"></canvas><div class="pdf-page-loading">Trang ${p}</div></section>`;
+      return `<section class="pdf-page-shell" id="pdf-page-${p}" data-page="${p}"><div class="page-float-label">${p}</div><canvas class="pdf-page-canvas" data-page="${p}"></canvas><div class="pdf-text-layer" data-page="${p}"></div><div class="pdf-region-layer" data-page="${p}"></div><div class="pdf-page-loading">Trang ${p}</div></section>`;
     }).join('');
     return `<div class="canvas-wrap pdf-continuous" id="pdfScroll">${pages}</div><div class="reader-statusbar"><span>Trang <b id="readerStatusPage">${state.page}</b>/${doc.pageCount}</span><input id="pageRange" type="range" min="1" max="${doc.pageCount}" value="${state.page}"><span>${Math.round(state.zoom*100)}% · kéo chuột để pan · Ctrl+cuộn để zoom</span></div>`;
   }
-  return `<div class="canvas-wrap pdf-single" id="pdfScroll"><section class="pdf-page-shell single" data-page="${state.page}"><canvas id="pdfCanvas"></canvas></section></div><div class="reader-statusbar"><span>Trang <b>${state.page}</b>/${doc.pageCount}</span><input id="pageRange" type="range" min="1" max="${doc.pageCount}" value="${state.page}"><span>${Math.round(state.zoom*100)}% · PageUp/PageDown đổi trang</span></div>`;
+  return `<div class="canvas-wrap pdf-single" id="pdfScroll"><section class="pdf-page-shell single" data-page="${state.page}"><canvas id="pdfCanvas"></canvas><div class="pdf-text-layer" data-page="${state.page}"></div><div class="pdf-region-layer" data-page="${state.page}"></div></section></div><div class="reader-statusbar"><span>Trang <b>${state.page}</b>/${doc.pageCount}</span><input id="pageRange" type="range" min="1" max="${doc.pageCount}" value="${state.page}"><span>${Math.round(state.zoom*100)}% · PageUp/PageDown đổi trang</span></div>`;
 }
 
 function emptyViewerHtml() {
@@ -875,6 +932,9 @@ function localModelManagerHtml() {
   const models = Array.isArray(d.models) ? d.models : [];
   const jobs = Array.isArray(d.jobs) ? d.jobs : [];
   const drives = Array.isArray(d.drives) ? d.drives : [];
+  const installJob = d.ollamaInstall || {};
+  const installProgress = Math.max(0, Math.min(100, Number(installJob.progress || 0)));
+  const ollamaInstallUi = !d.ollamaInstalled ? `<div class="notice warning ollama-install-card"><b>Chưa cài Ollama.</b><br>HNL có thể cài tự động trên Windows rồi tiếp tục tải model Offline.<div class="action-row"><button class="btn primary" id="installOllamaNow" ${installJob.status === 'running' ? 'disabled' : ''}>${installJob.status === 'running' ? `Đang cài ${installProgress}%` : '⬇ Cài Ollama tự động'}</button></div>${installJob.status === 'running' ? `<div class="job-progress"><i style="width:${installProgress}%"></i></div><small>${esc(installJob.message || 'Đang cài…')}</small>` : ''}${installJob.status === 'error' ? `<div class="notice error">${esc(installJob.error || installJob.message || 'Cài Ollama thất bại.')}</div>` : ''}</div>` : '';
   const driveOptions = drives.map(x => `<button class="drive-chip" data-model-dir="${esc(`${x.device || ''}\\HNL_AI\\Models`)}"><b>${esc(x.device || '')}</b><span>${formatBytes(x.freeBytes)} trống</span></button>`).join('');
   const modelRows = models.length ? models.map(m => {
     const name = m.name || m.model || '';
@@ -885,7 +945,8 @@ function localModelManagerHtml() {
   }).join('') : `<div class="empty-models">Chưa có model Ollama nào trên máy.</div>`;
   const jobRows = jobs.length ? `<div class="model-jobs"><b>Tác vụ tải model</b>${jobs.slice().reverse().map(j => `<div class="model-job"><div><span>${esc(j.model)}</span><small>${j.status === 'running' ? `Đang tải · ${Number(j.progress||0)}%` : j.status === 'done' ? 'Hoàn tất' : j.status === 'cancelled' ? 'Đã hủy' : 'Lỗi'}</small></div><div class="job-progress"><i style="width:${Math.max(0,Math.min(100,Number(j.progress||0)))}%"></i></div>${j.status === 'running' ? `<button class="icon-btn danger-btn" data-cancel-local-model="${esc(j.model)}" title="Hủy tải">×</button>` : ''}</div>`).join('')}</div>` : '';
   return `<div class="model-manager-card">
-    <div class="panel-section-title"><h3>Quản lý AI Offline</h3><span>${d.ollama ? `${models.length} model` : 'Ollama chưa chạy'}</span></div>
+    <div class="panel-section-title"><h3>Quản lý AI Offline</h3><span>${d.ollama ? `${models.length} model` : (d.ollamaInstalled ? 'Ollama chưa chạy' : 'Chưa cài Ollama')}</span></div>
+    ${ollamaInstallUi}
     <div class="model-storage-grid"><div><span>Thư mục model</span><b>${esc(d.modelsDir || 'Chưa xác định')}</b></div><div><span>Model đã cài</span><b>${formatBytes(d.installedBytes || 0)}</b></div><div><span>Ổ đĩa còn trống</span><b>${formatBytes(d.disk?.freeBytes || 0)}</b></div><div><span>Tổng dung lượng ổ</span><b>${formatBytes(d.disk?.totalBytes || 0)}</b></div></div>
     <label class="field"><span>Đổi thư mục lưu model</span><div class="model-dir-picker"><input id="modelDirectoryInput" value="${esc(d.modelsDir || '')}" placeholder="Ví dụ D:\\HNL_AI\\Models"><button class="btn compact-btn" id="applyModelDirectory">Áp dụng</button></div><small>HNL đặt biến OLLAMA_MODELS cho tài khoản Windows. Sau khi đổi, HNL sẽ khởi động lại Ollama để model tải mới dùng đúng thư mục.</small></label>
     ${driveOptions ? `<div class="drive-chips">${driveOptions}</div>` : ''}
@@ -895,10 +956,37 @@ function localModelManagerHtml() {
   </div>`;
 }
 
+function archiveEngineCardHtml() {
+  if (!IS_DESKTOP_EDITION && !isLocalHost()) return '';
+  const d = state.archiveEngines;
+  const status = d
+    ? `7-Zip ${d.sevenZip?.length ? '✓' : '—'} · UnRAR ${d.unrar?.length ? '✓' : '—'} · tar ${d.tar ? '✓' : '—'} · HNL RAR ${d.builtinRar ? '✓' : '—'}`
+    : (state.archiveEngineError || 'Chưa kiểm tra engine giải nén trên máy.');
+  const needs7z = Boolean(d && !d.sevenZip?.length);
+  return `<div class="archive-engine-card"><div class="panel-section-title"><h3>Bộ giải nén Desktop</h3><span>${d?.builtinRar ? 'RAR sẵn sàng' : 'Kiểm tra'}</span></div><p class="muted">${esc(status)}</p>${needs7z ? '<div class="notice warning">RAR có HNL Built-in dự phòng. 7Z hoặc ZIP mã hóa/phương thức nén đặc biệt có thể cần cài 7-Zip.</div>' : ''}<div class="action-row"><button class="btn" id="checkArchiveEngines" type="button">Kiểm tra bộ giải nén</button><button class="btn" id="open7ZipHelp" type="button">Cài/thiết lập 7-Zip</button></div></div>`;
+}
+
+async function refreshArchiveEngines(showFeedback = false) {
+  if (!IS_DESKTOP_EDITION && !isLocalHost()) return null;
+  try {
+    const base = String(state.settings.bridgeUrl || location.origin).replace(/\/$/, '');
+    const r = await fetch(`${base}/api/local/archive-engines`, { cache:'no-store' });
+    const data = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(data.error || 'Không đọc được bộ giải nén Desktop.');
+    state.archiveEngines = data; state.archiveEngineError = '';
+    if (showFeedback) showToast(`Engine: ${data.priority?.join(' → ') || 'đã kiểm tra'}.`, 'success');
+    return data;
+  } catch (error) {
+    state.archiveEngines = null; state.archiveEngineError = error.message;
+    if (showFeedback) showToast(`Không kiểm tra được bộ giải nén: ${error.message}`, 'error');
+    return null;
+  } finally { render(); }
+}
+
 function settingsHtml() {
   const provider = PROVIDERS[state.settings.provider];
   const options = availableProviderEntries().map(([id, p]) => `<option value="${id}" ${id === state.settings.provider ? 'selected' : ''}>${esc(p.label)}</option>`).join('');
-  const directNeedsKey = state.settings.connection === 'direct' && provider?.needsKey;
+  const needsSessionKey = Boolean(provider?.needsKey);
   const isOllama = state.settings.provider === 'ollama';
   const githubHttps = location.protocol === 'https:' && !isLocalHost();
   return `<div class="panel-section">
@@ -908,7 +996,7 @@ function settingsHtml() {
       <div class="segmented"><button data-connection="direct" class="${state.settings.connection === 'direct' ? 'active' : ''}">Trực tiếp</button><button data-connection="bridge" class="${state.settings.connection === 'bridge' ? 'active' : ''}">HNL Bridge</button></div>
       <label class="field"><span>Model văn bản · đồng bộ với thanh AI phía trên</span><div class="model-picker shared-model-setting"><input id="modelInput" value="${esc(providerModel())}" readonly aria-readonly="true" title="Model hiện tại dùng chung toàn ứng dụng"><button class="btn compact-btn" id="openSettingsModelPicker" type="button">Chọn model</button><button class="btn compact-btn" id="refreshModels" type="button">↻</button></div><small class="${state.modelOptions.length ? (state.modelOptionsVerified ? 'model-status-verified' : 'model-status-suggested') : ''}">${esc(state.modelStatus || 'Model này dùng chung với thanh AI phía trên. Bấm Chọn model để đổi; HNL luôn hỏi OK trước khi áp dụng.')}</small></label><datalist id="modelOptionsList">${state.modelOptions.map(m => `<option value="${esc(m)}"></option>`).join('')}</datalist>
       ${isOllama ? `<label class="field"><span>Model đọc ảnh offline</span><input id="visionModelInput" value="${esc(draftSetting('visionModel', state.settings.visionModel))}" placeholder="gemma3:4b"></label>` : ''}
-      ${directNeedsKey ? `<label class="field"><span>API key · chỉ lưu trong phiên tab này</span><input id="apiKeyInput" type="password" value="${esc(draftSetting('apiKey', currentApiKey()))}" autocomplete="off" placeholder="Dán API key của bạn"></label>` : ''}
+      ${needsSessionKey ? `<label class="field"><span>API key · dùng chung Kiểm tra kết nối / Model / Chat trong phiên này</span><input id="apiKeyInput" type="password" value="${esc(draftSetting('apiKey', currentApiKey()))}" autocomplete="off" placeholder="Dán API key của bạn"><small>${state.settings.connection === 'bridge' ? 'Bridge sẽ ưu tiên key phiên này; nếu để trống mới dùng key cấu hình sẵn trên Bridge.' : 'Key chỉ giữ trong phiên ứng dụng/tab, không ghi vào source hay log.'}</small></label>` : ''}
       ${state.settings.provider === 'gemini' ? `<div class="notice"><b>Gemini API:</b> vào Google AI Studio → API Keys → Create API key → Copy, sau đó dán vào ô trên. Không ghi key vào source GitHub. <a class="inline-link" href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">Mở trang API Keys</a></div>` : ''}
       ${isOllama && state.settings.connection === 'direct' ? `<label class="field"><span>Ollama URL</span><input id="ollamaInput" value="${esc(draftSetting('ollamaUrl', state.settings.ollamaUrl))}"></label>` : ''}
       ${isOllama && githubHttps ? `<div class="notice error"><b>Đây là nguyên nhân Offline AI trong video không chạy.</b><br>GitHub Pages là HTTPS nhưng Ollama trên máy là HTTP. Trình duyệt chặn kết nối này. Hãy chạy <b>START_HNL_OFFLINE_AI.bat</b> trong source và mở app tại <b>http://127.0.0.1:8787</b>.</div>` : ''}
@@ -933,7 +1021,7 @@ function settingsHtml() {
     ${state.connectionStatus ? `<div class="notice ${state.connectionStatus.ok ? 'success' : 'error'}"><b>${state.connectionStatus.ok ? 'Kết nối OK' : 'Kết nối lỗi'}</b><br>${esc(state.connectionStatus.message || '')}</div>` : ''}
   </div>
   ${versionCardHtml()}
-  <div class="panel-section"><div class="panel-section-title"><h3>Dữ liệu đầu vào</h3><span>v${APP_META.version}</span></div><div class="capability-grid"><span>✓ PDF nhiều file</span><span>✓ ZIP tự bung</span><span>✓ Đọc cả thư mục</span><span>✓ Ảnh JPG/PNG/WebP</span><span>✓ TXT/CSV/JSON</span><span>${IS_DESKTOP_EDITION ? '✓ RAR/7Z/TAR/GZ cục bộ' : '✓ ZIP trên Web; RAR/7Z dùng Desktop'}</span><span>✓ Archive có mật khẩu</span><span>✓ Quét toàn bộ trang</span><span>✓ Thư viện công thức tự quét</span><span>✓ Hybrid Semantic RAG</span><span>✓ Local Embedding/Rerank</span><span>✓ Tự chẩn đoán Ollama/RAM/GPU</span><span>✓ Quản lý model Offline & ổ đĩa</span><span>✓ Nhiều model AI</span><span>✓ PDF liên tục + kéo/pan</span><span>✓ Tìm trong PDF + phím tắt</span><span>✓ Giao diện co giãn</span></div></div>
+  <div class="panel-section"><div class="panel-section-title"><h3>Dữ liệu đầu vào</h3><span>v${APP_META.version}</span></div><div class="capability-grid"><span>✓ PDF nhiều file</span><span>✓ ZIP tự bung</span><span>✓ Đọc cả thư mục</span><span>✓ Ảnh JPG/PNG/WebP</span><span>✓ TXT/CSV/JSON</span><span>${IS_DESKTOP_EDITION ? '✓ RAR/7Z/TAR/GZ cục bộ' : '✓ ZIP trên Web; RAR/7Z dùng Desktop'}</span><span>✓ Archive có mật khẩu</span><span>✓ Quét toàn bộ trang</span><span>✓ Thư viện công thức tự quét</span><span>✓ Hybrid Semantic RAG</span><span>✓ Local Embedding/Rerank</span><span>✓ Tự chẩn đoán Ollama/RAM/GPU</span><span>✓ Quản lý model Offline & ổ đĩa</span><span>✓ Nhiều model AI</span><span>✓ PDF liên tục + kéo/pan</span><span>✓ Tìm trong PDF + phím tắt</span><span>✓ Giao diện co giãn</span></div>${archiveEngineCardHtml()}</div>
   <div class="panel-section"><div class="panel-section-title"><h3>Chẩn đoán ứng dụng</h3><span>v${APP_META.version}</span></div><p class="muted">Kiểm tra bộ nhớ trình duyệt, tài liệu, nguồn đang chọn và cấu hình AI.</p><button class="btn" id="runDiagnostics">Chạy chẩn đoán</button>${state.diagnosticHtml}</div>`;
 }
 
@@ -972,6 +1060,7 @@ function bind() {
       if (el.id === 'focusReader') { state.focusReader = !state.focusReader; state.pendingPageScroll = true; render(); return; }
       if (el.id === 'readerContinuous') { setReaderMode('continuous'); return; }
       if (el.id === 'readerSingle') { setReaderMode('single'); return; }
+      if (el.id === 'pdfSmartSelect') { await togglePdfSmartSelection(); return; }
       if (el.id === 'pdfSearchPrev') { findNextInActive(-1); return; }
       if (el.id === 'pdfSearchNext') { findNextInActive(1); return; }
       if (el.matches('[data-open]')) { openDoc(el.dataset.open); return; }
@@ -1003,8 +1092,10 @@ function bind() {
       if (el.id === 'resetChecklist') { resetChecklist(); return; }
       if (el.id === 'aiChecklist') { await aiChecklist(); return; }
       if (el.matches('[data-connection]')) {
+        rememberSettingsDraft();
         state.settings.connection = el.dataset.connection;
         state.connectionStatus = null;
+        saveSettings();
         render();
         return;
       }
@@ -1030,6 +1121,7 @@ function bind() {
       if (el.id === 'refreshModels' || el.id === 'refreshModelsQuick') { await refreshModels(); return; }
       if (el.id === 'ocrActivePdf') { await ocrActivePdfLocal(); return; }
       if (el.id === 'autoLocalModels') { await applyRecommendedLocalModels(); return; }
+      if (el.id === 'installOllamaNow') { await installOllamaAutomatically(); return; }
       if (el.id === 'installCurrentLocalModel') { await installLocalModels([state.settings.model || 'qwen3:8b']); return; }
       if (el.id === 'installLocalAiPack') { await installLocalModels([state.settings.model || 'qwen3:8b', state.settings.embeddingModel || 'bge-m3', state.settings.visionModel || 'gemma3:4b']); return; }
       if (el.id === 'refreshLocalModelManager') { await refreshLocalModelManager(true); return; }
@@ -1039,6 +1131,8 @@ function bind() {
       if (el.matches('[data-install-pack]')) { await installModelPack(el.dataset.installPack); return; }
       if (el.matches('[data-delete-local-model]')) { await deleteLocalModel(el.dataset.deleteLocalModel); return; }
       if (el.matches('[data-cancel-local-model]')) { await cancelLocalModelPull(el.dataset.cancelLocalModel); return; }
+      if (el.id === 'checkArchiveEngines') { await refreshArchiveEngines(true); return; }
+      if (el.id === 'open7ZipHelp') { window.open('https://www.7-zip.org/download.html', '_blank', 'noopener,noreferrer'); return; }
       if (el.id === 'runDiagnostics') { await runDiagnostics(); return; }
       if (el.id === 'checkAppUpdate') { await checkAppUpdate(); return; }
       if (el.id === 'copyBuildDiagnostics') { await copyBuildDiagnostics(); return; }
@@ -1120,6 +1214,39 @@ function bind() {
       runCompare();
     }
   };
+  if (!bind.selectionToolsBound) {
+    bind.selectionToolsBound = true;
+    document.addEventListener('contextmenu', event => {
+      const layer = event.target?.closest?.('.pdf-text-layer');
+      if (!layer) return;
+      const text = String(window.getSelection?.()?.toString() || '').trim();
+      if (!text) return;
+      event.preventDefault();
+      const page = Number(layer.dataset.page || layer.closest('.pdf-page-shell')?.dataset.page || state.page || 1);
+      showPdfSelectionPopup(selectionSourceFromText(text, page), { x:event.clientX, y:event.clientY, region:false });
+    });
+    document.addEventListener('click', async event => {
+      const button = event.target?.closest?.('[data-pdf-selection-action]');
+      if (!button) { if (!event.target?.closest?.('.pdf-selection-popup')) closePdfSelectionPopup(); return; }
+      const popup = button.closest('.pdf-selection-popup');
+      const source = popup?._hnlSource;
+      const action = button.dataset.pdfSelectionAction;
+      if (action === 'close') { closePdfSelectionPopup(); return; }
+      if (!source?.text) return;
+      if (action === 'copy') { try { await navigator.clipboard.writeText(source.text); showToast('Đã copy đoạn đã chọn.', 'success'); } catch { showToast('Không copy tự động được; hãy dùng Ctrl+C.', 'warning'); } }
+      else if (action === 'pin') pinPdfSource(source);
+      else if (action === 'ask') { state.chatDraft = `Giải thích đoạn sau từ ${source.standard || source.docName}, trang ${source.page}:\n\n${source.text}`; state.tab='chat'; state.mobile='assistant'; render(); }
+      else if (action === 'summary') { state.chatDraft = `Tóm tắt chính xác đoạn sau, không thêm nội dung ngoài nguồn (${source.standard || source.docName}, trang ${source.page}):\n\n${source.text}`; state.tab='chat'; state.mobile='assistant'; render(); }
+      else if (action === 'lookup' || action === 'library') {
+        const query = String(source.text).replace(/\s+/g,' ').slice(0,420);
+        state.lookup.query=query; state.lookup.draft=query;
+        const docs = action === 'library' ? state.docs.filter(d=>d.viewerKind!=='image') : sourceDocs().filter(d=>d.viewerKind!=='image');
+        state.lookup.hits = searchEveryPage(query, docs, 100);
+        state.tab='lookup'; state.mobile='assistant'; render();
+      } else if (action === 'formula') await scanFormulaFromRegion(source);
+      closePdfSelectionPopup();
+    });
+  }
 }
 
 function bindSourceButtons() { /* event delegation handles source buttons */ }
@@ -1174,41 +1301,57 @@ function findNextInActive(direction = 1) {
   jumpPage(page);
   showToast(`“${q}” · kết quả ${state.readerMatchIndex + 1}/${matches.length} · trang ${page}.`, 'success');
 }
-async function extractArchiveWithPassword(archive) {
-  let password = state.archivePasswordCache.get(archive.name) || '';
+async function extractArchiveWithPassword(archive, cacheKey = archive.name) {
+  let password = state.archivePasswordCache.get(cacheKey) || '';
   try {
     return await extractArchiveViaLocalBridge(archive, password);
   } catch (error) {
     if (!['PASSWORD_REQUIRED','BAD_PASSWORD'].includes(error.code)) throw error;
     const message = error.code === 'BAD_PASSWORD'
-      ? `Mật khẩu của “${archive.name}” chưa đúng. Nhập lại mật khẩu archive:`
-      : `“${archive.name}” có mật khẩu. Nhập mật khẩu archive:`;
+      ? `Mật khẩu của “${cacheKey}” chưa đúng. Nhập lại mật khẩu archive:`
+      : `“${cacheKey}” có mật khẩu. Nhập mật khẩu archive:`;
     password = window.prompt(message, password || '') ?? '';
     if (!password) throw new Error('Đã hủy nhập mật khẩu archive.');
     const result = await extractArchiveViaLocalBridge(archive, password);
-    state.archivePasswordCache.set(archive.name, password);
+    state.archivePasswordCache.set(cacheKey, password);
     return result;
   }
+}
+
+function archiveLike(name='') { return /\.zip$/i.test(String(name||'')) || isArchiveFile(name); }
+async function expandLocalArchiveTree(archive, sourcePath = archive.name, depth = 0) {
+  if (depth > 3) throw new Error(`Archive lồng quá 3 cấp: ${sourcePath}`);
+  const extracted = await extractArchiveWithPassword(archive, sourcePath);
+  const out = [];
+  for (const item of extracted) {
+    const prefix = `${archive.name}/`;
+    const inside = String(item.path || item.file.name).startsWith(prefix) ? String(item.path).slice(prefix.length) : String(item.path || item.file.name);
+    const fullPath = `${sourcePath}/${inside}`.replace(/\/{2,}/g,'/');
+    if (archiveLike(item.file.name)) out.push(...await expandLocalArchiveTree(item.file, fullPath, depth + 1));
+    else out.push({ file:item.file, path:fullPath });
+  }
+  return out;
 }
 
 async function uploadInputs(event) {
   const raw = [...(event.target.files || [])];
   if (!raw.length) return showToast('Chưa chọn dữ liệu.', 'warning');
-  const localArchives = raw.filter(f => isArchiveFile(f.name));
+  // On Desktop/localhost every archive, including ZIP, goes through the local
+  // extraction engine so encrypted ZIP and Unicode/nested paths are supported.
+  // On Web, ZIP keeps the zero-install browser path.
+  const localArchives = raw.filter(f => isArchiveFile(f.name) || (isLocalHost() && /\.zip$/i.test(f.name)));
   let items = [];
   try {
     state.progress = { title: 'Đang quét dữ liệu', detail: `Đọc ${raw.length} mục…`, pct: 3 };
     render();
-    items = await expandInputItems(raw.filter(f => !isArchiveFile(f.name)));
+    items = await expandInputItems(raw.filter(f => !localArchives.includes(f)));
     if (localArchives.length) {
-      if (!isLocalHost()) showToast('RAR/7Z/TAR/GZ/BZ2/XZ cần HNL Local để giải nén an toàn. ZIP vẫn mở trực tiếp trên GitHub Pages.', 'warning');
+      if (!isLocalHost()) showToast('RAR/7Z/TAR/GZ/BZ2/XZ cần HNL Desktop/HNL Local. ZIP trên Web vẫn mở trực tiếp.', 'warning');
       else {
         for (const archive of localArchives) {
-          state.progress = { title:`Đang giải nén ${archive.name}`, detail:'Kiểm tra archive, mật khẩu và dữ liệu bên trong…', pct:5 }; render();
-          const extracted = await extractArchiveWithPassword(archive);
-          const expanded = await expandInputItems(extracted.map(x => x.file));
-          const pathMap = new Map(extracted.map(x => [x.file.name, x.path]));
-          items.push(...expanded.map(x => ({ ...x, path:pathMap.get(x.file.name) || x.path })));
+          state.progress = { title:`Đang giải nén ${archive.name}`, detail:'Kiểm tra engine, mật khẩu, Unicode và thư mục lồng…', pct:5 }; render();
+          const extracted = await expandLocalArchiveTree(archive, archive.name, 0);
+          items.push(...await expandInputItems(extracted));
         }
       }
     }
@@ -1284,6 +1427,209 @@ function reportPdfError(error) {
 }
 
 
+function pdfPageHasSelectableText(doc, page = state.page) {
+  const text = String(doc?.pages?.[Math.max(0, Number(page || 1) - 1)]?.text || '').trim();
+  return text.length >= 24;
+}
+
+async function togglePdfSmartSelection() {
+  const doc = activeDoc();
+  if (!doc || doc.viewerKind !== 'pdf') return showToast('Hãy mở một PDF trước.', 'warning');
+  const hasText = pdfPageHasSelectableText(doc, state.page);
+  if (state.pdfSelectionMode === 'off') state.pdfSelectionMode = hasText ? 'text' : 'region';
+  else if (state.pdfSelectionMode === 'text') state.pdfSelectionMode = 'region';
+  else state.pdfSelectionMode = 'off';
+  showToast(state.pdfSelectionMode === 'text'
+    ? 'Chế độ Chọn chữ: bôi chọn trực tiếp, Ctrl+C hoặc chuột phải để Copy / Hỏi AI / Tra cứu / Tóm tắt / Dùng làm nguồn.'
+    : state.pdfSelectionMode === 'region'
+      ? 'Chế độ OCR vùng: kéo đúng vùng cần đọc. HNL ưu tiên text layer → OCR cục bộ → chỉ đề nghị Vision AI khi cần.'
+      : 'Đã tắt Chọn chữ/OCR vùng.', 'success');
+  render();
+}
+
+async function preparePdfSelectionLayer(doc, shell) {
+  if (!shell || state.pdfSelectionMode === 'off') return;
+  const page = Number(shell.dataset.page || 1);
+  const textLayer = shell.querySelector('.pdf-text-layer');
+  const regionLayer = shell.querySelector('.pdf-region-layer');
+  const hasText = pdfPageHasSelectableText(doc, page);
+  if (state.pdfSelectionMode === 'text' && hasText && textLayer) {
+    try {
+      await renderPdfTextLayer(doc, page, textLayer, state.zoom);
+      shell.classList.add('pdf-text-selecting');
+      shell.classList.remove('pdf-region-selecting');
+    } catch (error) { console.warn('Text layer failed', error); }
+  } else if (regionLayer) {
+    // Region mode can still reuse an existing text layer before OCR. This lets
+    // users crop a table/paragraph on mixed PDFs without sending pixels to AI.
+    if (hasText && textLayer && !textLayer.childElementCount) {
+      try { await renderPdfTextLayer(doc, page, textLayer, state.zoom); } catch (error) { console.warn('Text layer preload failed', error); }
+    }
+    shell.classList.remove('pdf-text-selecting');
+    shell.classList.add('pdf-region-selecting');
+    bindPdfRegionLayer(doc, shell, regionLayer);
+  }
+}
+
+function clearRegionLayer(layer) {
+  if (!layer) return;
+  layer.querySelectorAll('.pdf-region-box,.pdf-region-hint').forEach(el => el.remove());
+}
+
+function bindPdfRegionLayer(doc, shell, layer) {
+  if (!layer || layer.dataset.boundRegion === '1') return;
+  layer.dataset.boundRegion = '1';
+  layer.innerHTML = '<div class="pdf-region-hint">Kéo vùng cần OCR</div>';
+  let start = null;
+  let box = null;
+  const point = e => {
+    const r = layer.getBoundingClientRect();
+    return { x:Math.max(0, Math.min(r.width, e.clientX-r.left)), y:Math.max(0, Math.min(r.height, e.clientY-r.top)), width:r.width, height:r.height };
+  };
+  layer.addEventListener('pointerdown', e => {
+    if (state.pdfRegionBusy || e.button !== 0) return;
+    e.preventDefault(); e.stopPropagation();
+    const p = point(e); start = p;
+    clearRegionLayer(layer);
+    box = document.createElement('div'); box.className='pdf-region-box';
+    layer.appendChild(box); layer.setPointerCapture?.(e.pointerId);
+  });
+  layer.addEventListener('pointermove', e => {
+    if (!start || !box) return;
+    const p=point(e); const x=Math.min(start.x,p.x), y=Math.min(start.y,p.y), w=Math.abs(p.x-start.x), h=Math.abs(p.y-start.y);
+    Object.assign(box.style,{left:`${x}px`,top:`${y}px`,width:`${w}px`,height:`${h}px`});
+  });
+  const finish = async e => {
+    if (!start || !box) return;
+    const p=point(e); const x=Math.min(start.x,p.x), y=Math.min(start.y,p.y), width=Math.abs(p.x-start.x), height=Math.abs(p.y-start.y);
+    start=null;
+    try { layer.releasePointerCapture?.(e.pointerId); } catch {}
+    if (width < 14 || height < 14) { clearRegionLayer(layer); return; }
+    await ocrSelectedPdfRegion(doc, shell, {x,y,width,height}, box);
+  };
+  layer.addEventListener('pointerup', finish);
+  layer.addEventListener('pointercancel', () => { start=null; clearRegionLayer(layer); });
+}
+
+async function ocrSelectedPdfRegion(doc, shell, rect, box) {
+  const canvas = shell.querySelector('canvas');
+  if (!canvas) return showToast('Trang PDF chưa render xong. Hãy thử lại.', 'warning');
+  state.pdfRegionBusy = true;
+  box?.classList.add('busy');
+  try {
+    const image = cropCanvasRegionToBase64(canvas, rect, { maxPixels:1_800_000, quality:.88 });
+    const page = Number(shell.dataset.page || state.page || 1);
+    const textLayer = shell.querySelector('.pdf-text-layer');
+    let text = String(extractTextFromLayerRegion(textLayer, rect) || '').trim();
+    let method = text.length >= 8 ? 'text-layer' : '';
+    let localOcr = { available:false, text:'' };
+
+    if (!method) {
+      localOcr = await ocrImageBase64Locally(image);
+      text = String(localOcr.text || '').trim();
+      if (text.length >= 12) method = 'local-ocr';
+    }
+
+    if (!method) {
+      if (state.settings.provider === 'local') {
+        const reason = localOcr.available ? 'OCR cục bộ chưa đọc đủ rõ vùng này.' : 'Máy/Chromium hiện không có TextDetector OCR cục bộ.';
+        throw new Error(`${reason} Hãy chọn Ollama Vision hoặc AI online nếu bạn muốn đề nghị Vision cho đúng vùng đã chọn.`);
+      }
+      const ok = window.confirm(`OCR cục bộ ${localOcr.available ? 'đã thử nhưng kết quả chưa đủ rõ' : 'không khả dụng'}.
+
+Chỉ gửi VÙNG ${image.width}×${image.height}px này tới ${PROVIDERS[state.settings.provider]?.label || state.settings.provider} Vision để đọc tiếp?
+
+Cancel = không gửi ảnh lên AI.`);
+      if (!ok) throw new Error('Đã hủy Vision AI; vùng ảnh không được gửi ra ngoài.');
+      const prompt = `OCR CHỈ VÙNG ẢNH ĐƯỢC CHỌN từ ${doc.standard || doc.name}, trang ${page}.\nYêu cầu:\n- Chép lại chính xác chữ, số, ký hiệu, đơn vị và công thức nhìn thấy.\n- Giữ xuống dòng/bảng ở mức có thể đọc được.\n- Không suy đoán phần nằm ngoài vùng ảnh.\n- Nếu có ký tự không chắc, đánh dấu [không rõ].`;
+      text = String(await callConfiguredAiWithApproval({ prompt, images:[image] }) || '').trim();
+      if (!text) throw new Error('Vision AI không nhận diện được nội dung trong vùng đã chọn.');
+      method = 'vision-ai';
+    }
+
+    state.lastPdfRegion = {
+      docId:doc.id, docName:doc.name, standard:doc.standard, page, text, image,
+      sourceRect:image.sourceRect, method, createdAt:new Date().toISOString()
+    };
+    showPdfRegionResult(state.lastPdfRegion);
+    showToast(method === 'text-layer'
+      ? 'Vùng chọn đã lấy chữ trực tiếp từ PDF, không OCR và không gửi AI.'
+      : method === 'local-ocr'
+        ? 'Đã OCR cục bộ đúng vùng chọn, chưa gửi ảnh lên AI.'
+        : `Vision chỉ đọc vùng ${image.width}×${image.height}px đã chọn.`, 'success');
+    box?.classList.remove('busy');
+  } catch (error) {
+    showToast(`Không đọc được vùng đã chọn: ${error.message}`, 'error');
+    box?.classList.remove('busy');
+  } finally { state.pdfRegionBusy=false; }
+}
+
+function pinPdfSource(source) {
+  if (!source?.text) return;
+  const item = { docId:source.docId, docName:source.docName, standard:source.standard, page:Number(source.page)||1, text:String(source.text).trim(), pinned:true };
+  const key = `${item.docId}:${item.page}:${item.text.slice(0,120)}`;
+  if (!state.pinnedSources.some(x => `${x.docId}:${x.page}:${x.text.slice(0,120)}` === key)) state.pinnedSources.push(item);
+  showToast('Đã ghim đoạn này làm nguồn ưu tiên cho câu hỏi tiếp theo.', 'success');
+}
+
+function selectionSourceFromText(text, page = state.page) {
+  const doc = activeDoc();
+  return doc ? { docId:doc.id, docName:doc.name, standard:doc.standard, page:Number(page)||1, text:String(text||'').trim() } : null;
+}
+
+function closePdfSelectionPopup() { document.querySelectorAll('.pdf-selection-popup').forEach(el => el.remove()); }
+
+function showPdfSelectionPopup(source, { x = 24, y = 80, region = false } = {}) {
+  closePdfSelectionPopup();
+  if (!source?.text) return;
+  const popup = document.createElement('div');
+  popup.className = 'pdf-selection-popup';
+  popup.style.left = `${Math.max(8, Math.min(window.innerWidth - 330, x))}px`;
+  popup.style.top = `${Math.max(8, Math.min(window.innerHeight - 260, y))}px`;
+  popup.innerHTML = `<div class="pdf-selection-popup-head"><b>${region ? 'Vùng PDF' : 'Đoạn đã chọn'} · Trang ${Number(source.page)||1}</b><button type="button" data-pdf-selection-action="close">×</button></div>
+    <div class="pdf-selection-preview">${esc(String(source.text).slice(0,900))}</div>
+    <div class="pdf-selection-actions">
+      <button type="button" data-pdf-selection-action="copy">Copy</button>
+      <button type="button" data-pdf-selection-action="ask">Hỏi AI</button>
+      <button type="button" data-pdf-selection-action="lookup">Tra cứu</button>
+      <button type="button" data-pdf-selection-action="summary">Tóm tắt</button>
+      <button type="button" data-pdf-selection-action="pin">Dùng làm nguồn</button>
+      <button type="button" data-pdf-selection-action="library">Tìm toàn thư viện</button>
+      ${region ? '<button type="button" data-pdf-selection-action="formula">Quét công thức vùng này</button>' : ''}
+    </div>`;
+  popup._hnlSource = source;
+  document.body.appendChild(popup);
+}
+
+function showPdfRegionResult(source) {
+  showPdfSelectionPopup(source, { x:Math.max(12, window.innerWidth - 350), y:Math.max(72, window.innerHeight - 300), region:true });
+}
+
+async function scanFormulaFromRegion(source) {
+  if (!source?.image?.data) return showToast('Vùng chọn không còn ảnh nguồn để quét công thức.', 'warning');
+  if (state.settings.provider === 'local') return showToast('Quét công thức ảnh cần Ollama Vision hoặc AI online.', 'warning');
+  const doc = state.docs.find(d => d.id === source.docId);
+  if (!doc) return showToast('Không tìm thấy PDF nguồn.', 'error');
+  if (!confirm(`Quét công thức CHỈ trong vùng đã chọn tại trang ${source.page}?\n\nKết quả sẽ lưu trạng thái AI Detected, không tự Verified.`)) return;
+  try {
+    const prompt = `Đọc CHỈ vùng ảnh đã chọn từ ${source.standard || source.docName}, trang ${source.page}. Trả về JSON array; mỗi phần tử có label,title,raw,expression,variables,units,conditions,context,confidence. Không suy đoán ngoài vùng ảnh. Nếu không có công thức trả [].`;
+    const answer = await callFormulaAi(prompt, [source.image]);
+    const items = parseAiFormulaPayload(answer).map((x, i) => ({
+      id:crypto.randomUUID(), page:Number(source.page)||1, label:String(x.label||'').trim(), title:String(x.title||x.section||'Công thức vùng chọn').trim(),
+      raw:String(x.raw||x.formula||x.equation||'').trim(), expression:String(x.expression||'').trim(), variables:Array.isArray(x.variables)?x.variables.map(String):[],
+      units:typeof x.units==='string'?x.units:(x.units?JSON.stringify(x.units):''), conditions:String(x.conditions||'').trim(), context:String(x.context||'').trim(),
+      confidence:Number.isFinite(Number(x.confidence))?Number(x.confidence):null, verified:false, allowCompute:false, aiProvider:state.settings.provider,
+      aiModel:providerModel(true), detectedAt:new Date().toISOString(), order:i, regionSource:{ mimeType:source.image.mimeType, data:source.image.data, width:source.image.width, height:source.image.height, sourceRect:source.sourceRect }
+    })).filter(x => x.raw || x.expression);
+    doc.aiFormulaItems = [...(Array.isArray(doc.aiFormulaItems) ? doc.aiFormulaItems : []), ...items];
+    doc.aiFormulaUpdatedAt = new Date().toISOString();
+    await saveDocument(doc); clearFormulaCache(doc.id);
+    showToast(items.length ? `Đã lưu ${items.length} công thức vùng chọn ở trạng thái AI Detected.` : 'Không phát hiện công thức trong vùng này.', items.length ? 'success' : 'info');
+  } catch (error) { showToast(`Quét công thức vùng lỗi: ${error.message}`, 'error'); }
+}
+
+
+
 async function renderContinuousPage(doc, shell) {
   const canvas = shell?.querySelector('.pdf-page-canvas');
   if (!canvas) return;
@@ -1299,6 +1645,7 @@ async function renderContinuousPage(doc, shell) {
     shell.style.minHeight = canvas.style.height || '';
     shell.style.aspectRatio = 'auto';
     shell.classList.add('rendered');
+    await preparePdfSelectionLayer(doc, shell);
   } catch (error) {
     canvas.dataset.renderKey = '';
     shell.classList.add('render-error');
@@ -1321,7 +1668,7 @@ function bindReaderPanAndZoom(wrap) {
   panCleanup?.();
   let dragging = false, sx = 0, sy = 0, sl = 0, st = 0;
   const down = e => {
-    if (e.pointerType !== 'mouse' || e.button !== 0 || e.target.closest('input,button')) return;
+    if (state.pdfSelectionMode !== 'off' || e.pointerType !== 'mouse' || e.button !== 0 || e.target.closest('input,button,.pdf-text-layer,.pdf-region-layer')) return;
     dragging = true; sx = e.clientX; sy = e.clientY; sl = wrap.scrollLeft; st = wrap.scrollTop;
     wrap.classList.add('dragging'); wrap.setPointerCapture?.(e.pointerId); e.preventDefault();
   };
@@ -1397,8 +1744,11 @@ async function drawPage() {
   if (wrap) bindReaderPanAndZoom(wrap);
   const canvas = document.querySelector('#pdfCanvas');
   if (!canvas) return;
-  try { await renderPdfPage(doc, state.page, canvas, state.zoom); }
-  catch (error) { console.error(error); reportPdfError(error); }
+  try {
+    await renderPdfPage(doc, state.page, canvas, state.zoom);
+    const shell = canvas.closest('.pdf-page-shell');
+    if (shell) await preparePdfSelectionLayer(doc, shell);
+  } catch (error) { console.error(error); reportPdfError(error); }
 }
 function jumpPage(page) {
   const doc = activeDoc();
@@ -1639,6 +1989,28 @@ async function verifySelectedAiFormula() {
   await saveDocument(doc); clearFormulaCache(doc.id); render(); showToast('Đã xác minh công thức và bật tính tự động.', 'success');
 }
 
+async function chooseApprovedEmbeddingFallback(error, currentModel) {
+  if (state.settings.provider !== 'ollama' || state.settings.connection !== 'bridge') return '';
+  try {
+    const base = String(state.settings.bridgeUrl || location.origin).replace(/\/$/, '');
+    const r = await fetch(`${base}/api/local/model-manager`, { cache:'no-store' });
+    const data = await r.json().catch(()=>({}));
+    if (!r.ok) return '';
+    const names = (data.models || []).map(x => String(x.name || x.model || '')).filter(Boolean);
+    const candidates = names.filter(name => /(?:embed|bge|nomic|mxbai|e5|gte)/i.test(name) && name !== currentModel);
+    const candidate = candidates[0] || '';
+    if (!candidate) return '';
+    const ok = window.confirm(`Embedding model hiện tại lỗi sau khi thử lại.\n\nEmbedding hiện tại: ${currentModel}\nEmbedding thay thế đã cài: ${candidate}\n\nBấm OK để chuyển và thử semantic rerank lại.\nCancel = giữ nguyên model và dùng lexical fallback cho câu hỏi này.`);
+    if (!ok) return '';
+    state.settings.embeddingModel = candidate;
+    state.settingsDraft = {};
+    saveSettings();
+    state.modelStatus = `Người dùng đã đồng ý đổi Embedding: ${currentModel} → ${candidate}.`;
+    showToast(`Đã chuyển Embedding model sang ${candidate} theo xác nhận.`, 'warning');
+    return candidate;
+  } catch { return ''; }
+}
+
 async function getAnswer(question, docsOverride = null) {
   const docs = docsOverride || sourceDocs();
   if (!docs.length) throw new Error('Không có tài liệu trong phạm vi tìm kiếm hiện tại.');
@@ -1664,24 +2036,42 @@ async function getAnswer(question, docsOverride = null) {
     : smartSearchChunks(question, textDocs, candidateLimit, { perDoc: mode === 'fast' ? 4 : 7 });
 
   if (semanticRequested && hits.length > 1) {
-    try {
-      const reranked = await semanticRerank({
-        bridgeUrl: state.settings.bridgeUrl,
-        query: question,
-        candidates: hits,
-        model: state.settings.embeddingModel || 'bge-m3',
-        limit: retrievalLimit
-      });
-      if (reranked.length) hits = reranked;
-      state.searchStats = { ...stats, retrieval: 'Hybrid Semantic RAG', embeddingModel: state.settings.embeddingModel || 'bge-m3' };
-    } catch (error) {
-      console.warn('Semantic rerank unavailable; falling back to lexical RAG.', error);
+    let embeddingModel = state.settings.embeddingModel || 'bge-m3';
+    let reranked = null;
+    let semanticError = null;
+    for (const delay of [0, 800, 1800]) {
+      if (delay) await waitMs(delay);
+      try {
+        reranked = await semanticRerank({ bridgeUrl:state.settings.bridgeUrl, query:question, candidates:hits, model:embeddingModel, limit:retrievalLimit });
+        semanticError = null; break;
+      } catch (error) { semanticError = error; }
+    }
+    if (!reranked && semanticError) {
+      const approvedEmbedding = await chooseApprovedEmbeddingFallback(semanticError, embeddingModel);
+      if (approvedEmbedding) {
+        embeddingModel = approvedEmbedding;
+        try { reranked = await semanticRerank({ bridgeUrl:state.settings.bridgeUrl, query:question, candidates:hits, model:embeddingModel, limit:retrievalLimit }); semanticError = null; }
+        catch (error) { semanticError = error; }
+      }
+    }
+    if (reranked?.length) {
+      hits = reranked;
+      state.searchStats = { ...stats, retrieval:'Hybrid Semantic RAG', embeddingModel };
+    } else {
+      console.warn('Semantic rerank unavailable; falling back to lexical RAG.', semanticError);
       hits = hits.slice(0, retrievalLimit);
-      state.searchStats = { ...stats, retrieval: 'Deep/lexical fallback', semanticError: error.message };
+      state.searchStats = { ...stats, retrieval:'Deep/lexical fallback', semanticError:semanticError?.message || 'Embedding không khả dụng' };
     }
   } else {
     hits = hits.slice(0, retrievalLimit);
     state.searchStats = { ...stats, retrieval: useDeep ? 'Deep Lexical RAG' : 'Fast Balanced RAG' };
+  }
+
+  const docIds = new Set(docs.map(d => d.id));
+  const pinned = (state.pinnedSources || []).filter(x => docIds.has(x.docId) && String(x.text || '').trim());
+  if (pinned.length) {
+    const seen = new Set(pinned.map(x => `${x.docId}:${x.page}:${String(x.text).slice(0,120)}`));
+    hits = [...pinned, ...hits.filter(x => !seen.has(`${x.docId}:${x.page}:${String(x.text).slice(0,120)}`))].slice(0, retrievalLimit);
   }
 
   const imageDocs = docs.filter(d => d.viewerKind === 'image').slice(0, 8);
@@ -1713,7 +2103,7 @@ async function getAnswer(question, docsOverride = null) {
   }
 
   if (!hits.length) {
-    return { text: `Không tìm thấy nội dung phù hợp. Đã quét toàn bộ ${stats.textPages}/${stats.pages} trang có lớp chữ trong ${stats.docs} tài liệu (${stats.chunks} đoạn).`, hits: [], stats };
+    return { text: `Không tìm thấy đủ căn cứ trong các tài liệu đang chọn. Đã quét toàn bộ ${stats.textPages}/${stats.pages} trang có lớp chữ trong ${stats.docs} tài liệu (${stats.chunks} đoạn).`, hits: [], stats };
   }
   if (state.settings.provider === 'local') {
     if (images.length) return { text: `Tra cứu nhanh đã quét ${stats.textPages}/${stats.pages} trang chữ nhưng không đọc pixel ảnh. Hãy chọn HNL Offline AI (Ollama) hoặc Gemini để đọc ảnh trực tiếp.`, hits, stats };
@@ -2144,19 +2534,74 @@ async function openModelDirectory() {
   try { const base=String(state.settings.bridgeUrl||location.origin).replace(/\/$/,''); const r=await fetch(`${base}/api/local/open-model-directory`,{method:'POST'}); const data=await r.json().catch(()=>({})); if(!r.ok) throw new Error(data.error||'Không mở được thư mục model.'); } catch(error){ showToast(`Không mở được thư mục: ${error.message}`,'error'); }
 }
 
+async function waitForOllamaInstall(base, timeoutMs = 10 * 60 * 1000) {
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    const r = await fetch(`${base}/api/local/ollama-install-status`, { cache:'no-store' });
+    const data = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(data.error || 'Không đọc được trạng thái cài Ollama.');
+    state.localModelManager = { ...(state.localModelManager || {}), data:{ ...((state.localModelManager || {}).data || {}), ollamaInstalled:Boolean(data.installed), ollamaInstall:data } };
+    render();
+    if (data.installed || data.status === 'done') return data;
+    if (data.status === 'error') throw new Error(data.error || data.message || 'Cài Ollama thất bại.');
+    await waitMs(1500);
+  }
+  throw new Error('Cài Ollama quá thời gian chờ.');
+}
+
+async function installOllamaAutomatically({ silentConfirm = false } = {}) {
+  if (!IS_DESKTOP_EDITION && !isLocalHost()) return showToast('Cài Ollama tự động chỉ dùng trong HNL Desktop AI/HNL Local.', 'warning');
+  if (!silentConfirm && !confirm('Cài Ollama miễn phí trên Windows ngay bây giờ?\n\nHNL sẽ ưu tiên Windows Package Manager; nếu không có sẽ tải OllamaSetup.exe từ ollama.com, kiểm tra chữ ký số rồi cài im lặng.')) return false;
+  try {
+    const base = String(state.settings.bridgeUrl || location.origin).replace(/\/$/, '');
+    const r = await fetch(`${base}/api/local/install-ollama`, { method:'POST' });
+    const data = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(data.error || 'Không khởi động được cài Ollama.');
+    showToast(data.status === 'done' ? 'Ollama đã có trên máy.' : 'Đã bắt đầu cài Ollama. HNL đang theo dõi tiến trình…', 'success');
+    await waitForOllamaInstall(base);
+    await refreshLocalModelManager(false);
+    showToast('Ollama đã sẵn sàng. Bạn có thể tải model Offline.', 'success');
+    return true;
+  } catch (error) {
+    showToast(`Không cài được Ollama: ${error.message}`, 'error');
+    await refreshLocalModelManager(false).catch(()=>{});
+    return false;
+  }
+}
+
+function estimateOllamaModelBytes(model='') {
+  const name = String(model || '').toLowerCase();
+  const GB = 1024 ** 3;
+  if (/qwen3:4b/.test(name)) return 3 * GB;
+  if (/qwen3:8b/.test(name)) return 6 * GB;
+  if (/qwen3:14b/.test(name)) return 10 * GB;
+  if (/gemma3:4b/.test(name)) return 4 * GB;
+  if (/bge-m3/.test(name)) return 1.5 * GB;
+  if (/nomic-embed-text/.test(name)) return 0.5 * GB;
+  return 4 * GB;
+}
 async function installLocalModels(models = []) {
   if (!IS_DESKTOP_EDITION && !isLocalHost()) return showToast('Cài model Offline chỉ dùng trong HNL Desktop AI/HNL Local.', 'warning');
   if (state.settings.provider !== 'ollama') return showToast('Hãy chọn HNL Offline AI · Ollama trước.', 'warning');
   const unique = [...new Set(models.map(x => String(x || '').trim()).filter(Boolean))];
   if (!unique.length) return showToast('Chưa có tên model để cài.', 'warning');
-  if (!confirm(`Tải model Ollama về máy?\n\n${unique.join('\n')}\n\nChỉ cần tải một lần; dung lượng có thể vài GB.`)) return;
   try {
     const base = String(state.settings.bridgeUrl || location.origin).replace(/\/$/, '');
-    const managerResponse = await fetch(`${base}/api/local/model-manager`);
-    const manager = await managerResponse.json().catch(()=>({}));
+    const managerResponse = await fetch(`${base}/api/local/model-manager`, { cache:'no-store' });
+    let manager = await managerResponse.json().catch(()=>({}));
     if (!managerResponse.ok) throw new Error(manager.error || 'Không kiểm tra được Ollama.');
+    const estimate = Math.ceil(unique.reduce((sum, model) => sum + estimateOllamaModelBytes(model), 0) * 1.15);
+    const free = Number(manager.disk?.freeBytes || 0);
+    if (free > 0 && free < estimate) throw new Error(`Ổ lưu model chỉ còn ${formatBytes(free)}, thấp hơn mức dự phòng ${formatBytes(estimate)} cho gói đã chọn. Hãy đổi ổ/thư mục model trước.`);
+    const ok = confirm(`Tải model Ollama về máy?\n\n${unique.join('\n')}\n\nDung lượng dự phòng ước tính: ${formatBytes(estimate)}${free > 0 ? `\nỔ hiện tại còn trống: ${formatBytes(free)}` : ''}\n\nChỉ bấm OK mới bắt đầu tải; có thể hủy trong Trình quản lý Offline.`);
+    if (!ok) return showToast('Đã hủy; chưa tải model nào.', 'info');
     if (manager.ollamaInstalled === false) {
-      return showToast('Máy chưa cài Ollama. Hãy cài Ollama miễn phí trước, mở lại HNL Desktop AI rồi mới tải model Offline.', 'warning');
+      const okInstall = confirm('Máy chưa có Ollama. Cài Ollama tự động rồi tiếp tục tải bộ model Offline đã chọn?');
+      if (!okInstall) return showToast('Đã hủy cài AI Offline.', 'warning');
+      const installed = await installOllamaAutomatically({ silentConfirm:true });
+      if (!installed) return;
+      const refreshed = await fetch(`${base}/api/local/model-manager`, { cache:'no-store' });
+      manager = await refreshed.json().catch(()=>manager);
     }
     for (const model of unique) {
       const r = await fetch(`${base}/api/local/pull-model`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({model}) });
@@ -2202,8 +2647,7 @@ function readSettingsForm({ askBeforeModelChange = false } = {}) {
   state.settings.semanticRerank = Boolean(draft.semanticRerank);
   state.settings.strict = Boolean(draft.strict);
   const key = String(draft.apiKey || '').trim();
-  if (key) sessionStorage.setItem(sessionKeyName(provider), key);
-  else sessionStorage.removeItem(sessionKeyName(provider));
+  setCurrentApiKey(provider, key);
   state.settingsDraft = {};
   saveSettings();
   return true;
@@ -2232,11 +2676,23 @@ async function testConnection() {
       result = { ok:false, message:'GitHub Pages HTTPS không thể kết nối ổn định tới Ollama/Bridge HTTP trên máy. Hãy chạy START_HNL_OFFLINE_AI.bat rồi mở http://127.0.0.1:8787.' };
     } else if (connection === 'bridge') {
       const health = await bridgeHealth(bridgeUrl);
-      const configured = health.providers?.[provider];
-      result = { ok:Boolean(health.ok && configured !== false), message:configured === false ? `Bridge hoạt động nhưng chưa cấu hình key cho ${PROVIDERS[provider].label}.` : 'HNL Bridge phản hồi bình thường. Cài đặt nháp chưa được lưu.' };
+      if (!health?.ok) throw new Error('HNL Bridge không phản hồi.');
+      if (provider === 'ollama') {
+        result = { ok:Boolean(health.providers?.ollama), message:health.providers?.ollama ? 'Ollama qua HNL Bridge phản hồi bình thường.' : 'HNL Bridge đang chạy nhưng Ollama chưa sẵn sàng.' };
+      } else if (apiKey) {
+        const text = await callBridge({ bridgeUrl, provider, model, apiKey, prompt:'Chỉ trả lời đúng một từ: OK' });
+        result = { ok:Boolean(text), message:text ? 'Kết nối AI qua HNL Bridge OK. API key này đã được kích hoạt cho phiên hiện tại.' : 'AI không trả về nội dung.' };
+      } else {
+        const configured = health.providers?.[provider];
+        result = { ok:Boolean(configured), message:configured ? 'HNL Bridge đã có API key cấu hình sẵn và phản hồi bình thường.' : `Bridge hoạt động nhưng chưa có API key cho ${PROVIDERS[provider].label}.` };
+      }
     } else {
       result = await testDirectProvider({ provider, model, apiKey, ollamaUrl });
-      if (result?.message) result.message += ' Cài đặt nháp chưa được lưu.';
+      if (result?.message) result.message += ' API key hợp lệ sẽ được dùng ngay trong phiên hiện tại.';
+    }
+    if (result?.ok && apiKey && !['local','ollama'].includes(provider)) {
+      setCurrentApiKey(provider, apiKey);
+      state.settingsDraft = { ...(state.settingsDraft || {}), apiKey };
     }
     state.connectionStatus = result;
   } catch (error) { state.connectionStatus = { ok:false, message:`${error.message} Cài đặt nháp chưa được lưu.` }; }
@@ -2306,6 +2762,20 @@ async function runDiagnostics() {
   if (state.settings.provider !== 'local') {
     const ok = state.settings.connection === 'bridge' ? Boolean(state.settings.bridgeUrl) : (state.settings.provider === 'ollama' ? Boolean(state.settings.ollamaUrl) : Boolean(currentApiKey()));
     tests.push(['Cấu hình AI', ok, state.settings.connection === 'bridge' ? 'Bridge' : 'Trực tiếp']);
+  }
+  if ((IS_DESKTOP_EDITION || isLocalHost()) && state.settings.bridgeUrl) {
+    try {
+      const base = String(state.settings.bridgeUrl || location.origin).replace(/\/$/, '');
+      const r = await fetch(`${base}/api/local/archive-engines`, { cache:'no-store' });
+      const d = await r.json().catch(()=>({}));
+      if (!r.ok) throw new Error(d.error || 'Không đọc được engine archive.');
+      state.archiveEngines = d; state.archiveEngineError = '';
+      const hasGeneral = Boolean(d.sevenZip?.length || d.tar);
+      tests.push(['Giải nén Desktop', Boolean(d.builtinRar || hasGeneral), `7-Zip ${d.sevenZip?.length ? '✓' : '—'} · UnRAR ${d.unrar?.length ? '✓' : '—'} · tar ${d.tar ? '✓' : '—'} · HNL RAR ${d.builtinRar ? '✓' : '—'}`]);
+    } catch (error) {
+      state.archiveEngineError = error.message;
+      tests.push(['Giải nén Desktop', false, error.message]);
+    }
   }
   if (state.settings.provider === 'ollama' && state.settings.connection === 'bridge' && state.settings.bridgeUrl) {
     try {

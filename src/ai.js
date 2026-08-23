@@ -48,7 +48,7 @@ export function buildRagPrompt(question, hits, strict = true) {
     `[Nguồn ${i + 1}] ${h.standard || h.docName} | File: ${h.docName} | Trang ${h.page}\n${h.text}`
   ).join('\n\n');
 
-  return `Bạn là trợ lý kỹ thuật chuyên tra cứu tiêu chuẩn xây dựng và cọc.\n\nQUY TẮC BẮT BUỘC:\n- Chỉ kết luận dựa trên các nguồn tài liệu được cung cấp${strict ? '' : ', trừ khi phần giải thích ngoài tài liệu được ghi nhãn rõ'}.\n- Không tự bịa số liệu, công thức, điều khoản, bảng hoặc số trang.\n- Mỗi kết luận kỹ thuật phải kèm nguồn dạng [Tên tiêu chuẩn/file · Trang X].\n- Nếu nguồn không đủ, phải nói: “Không tìm thấy đủ căn cứ trong các tài liệu đang chọn”.\n- Khi có số liệu, giữ nguyên đơn vị và điều kiện áp dụng.\n- Nếu các nguồn khác nhau, tách riêng từng nguồn và không tự hòa giải mâu thuẫn.\n\nCÂU HỎI:\n${question}\n\nNGỮ CẢNH TỪ TÀI LIỆU:\n${sources}`;
+  return `Bạn là trợ lý kỹ thuật chuyên tra cứu tiêu chuẩn xây dựng và cọc.\n\nQUY TẮC BẮT BUỘC:\n- Chỉ kết luận dựa trên các nguồn tài liệu được cung cấp${strict ? '' : ', trừ khi phần giải thích ngoài tài liệu được ghi nhãn rõ'}.\n- Không tự bịa số liệu, công thức, điều khoản, bảng hoặc số trang.\n- Mỗi kết luận kỹ thuật phải kèm nguồn dạng [Tên tiêu chuẩn/file · Trang X].\n- Nếu nguồn không đủ, phải nói chính xác: “Không tìm thấy đủ căn cứ trong các tài liệu đang chọn.”\n- Khi có số liệu, giữ nguyên đơn vị và điều kiện áp dụng.\n- Nếu các nguồn khác nhau, tách riêng từng nguồn và không tự hòa giải mâu thuẫn.\n\nCÂU HỎI:\n${question}\n\nNGỮ CẢNH TỪ TÀI LIỆU:\n${sources}`;
 }
 
 async function jsonFetch(url, options, timeoutMs = 45000) {
@@ -75,7 +75,7 @@ async function jsonFetch(url, options, timeoutMs = 45000) {
   }
 }
 
-export async function callBridge({ bridgeUrl, provider, model, prompt, images = [] }) {
+export async function callBridge({ bridgeUrl, provider, model, prompt, images = [], apiKey = '' }) {
   const base = String(bridgeUrl || '').replace(/\/$/, '');
   if (!base) throw new Error('Chưa cấu hình HNL Bridge URL.');
   const data = await jsonFetch(`${base}/api/chat`, {
@@ -85,6 +85,7 @@ export async function callBridge({ bridgeUrl, provider, model, prompt, images = 
       provider,
       model,
       images,
+      apiKey: String(apiKey || '').trim(),
       messages: [
         { role: 'system', content: 'Trả lời bằng tiếng Việt, chính xác, ưu tiên ngắn gọn và luôn giữ citation nguồn tài liệu.' },
         { role: 'user', content: prompt }
@@ -290,7 +291,7 @@ export async function listAvailableModelsDetailed({ provider, connection = 'dire
   try {
     if (connection === 'bridge') {
       const base = String(bridgeUrl || '').replace(/\/$/, '');
-      const data = await jsonFetch(`${base}/api/models/${encodeURIComponent(provider)}`, { method:'GET' }, 12000);
+      const data = await jsonFetch(`${base}/api/models/${encodeURIComponent(provider)}`, { method:'GET', headers: apiKey ? { 'X-HNL-API-Key': apiKey } : {} }, 12000);
       const models = uniqueModels(data.models || []);
       // Old bridge versions did not expose `verified`; fail safe and do not
       // allow those lists to drive automatic fallback proposals.
@@ -304,7 +305,7 @@ export async function listAvailableModelsDetailed({ provider, connection = 'dire
       return { models:uniqueModels((data.models || []).map(x => x.name || x.model)), verified:true, source:'ollama', warning:'' };
     }
     if (!apiKey) {
-      return { models:suggestedModels(provider), verified:false, source:'catalog', warning:'Chưa có API key để xác minh model thực tế của tài khoản.' };
+      return { models:suggestedModels(provider), verified:false, source:'catalog', warning:'Không xác minh được danh sách model: chưa có API key để xác minh model thực tế của tài khoản.' };
     }
     if (provider === 'gemini') {
       // Gemini Models.list is paginated. Read every page instead of assuming one
@@ -347,9 +348,9 @@ export async function listAvailableModelsDetailed({ provider, connection = 'dire
     }
   } catch (error) {
     console.warn('Model listing failed; returning unverified suggestions only.', error);
-    return { models:suggestedModels(provider), verified:false, source:'catalog', warning:error?.message || 'Không xác minh được danh sách model.' };
+    return { models:suggestedModels(provider), verified:false, source:'catalog', warning:`Không xác minh được danh sách model.${error?.message ? ` ${error.message}` : ''}` };
   }
-  return { models:suggestedModels(provider), verified:false, source:'catalog', warning:'Nhà cung cấp chưa hỗ trợ xác minh danh sách model.' };
+  return { models:suggestedModels(provider), verified:false, source:'catalog', warning:'Không xác minh được danh sách model: nhà cung cấp chưa hỗ trợ xác minh danh sách model.' };
 }
 
 /** Backward-compatible list-only helper. */

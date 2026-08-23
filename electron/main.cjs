@@ -93,7 +93,7 @@ async function ensureOllama() {
 }
 
 async function ensureBridge() {
-  for (const candidate of [8787, 8788, 8789, 8790, 8791]) {
+  for (const candidate of Array.from({ length: 13 }, (_, i) => 8787 + i)) {
     bridgePort = candidate;
     if (await checkHnlBridge(healthUrl(), 900)) return true;
     const occupied = await ping(`http://127.0.0.1:${candidate}/`, 450);
@@ -148,22 +148,29 @@ function createWindow() {
 
 async function boot() {
   const win = createWindow();
-  let bridgeOk = false;
-  try { bridgeOk = await ensureBridge(); } catch (error) {
+  const fallback = path.join(app.getAppPath(), 'dist', 'index.html');
+
+  // Start Bridge in parallel, but load the packaged UI immediately. A missing
+  // Ollama/slow local engine must never make the Desktop app look frozen.
+  const bridgePromise = ensureBridge().catch(error => {
     logStream?.write(`\n[boot] ${error.stack || error.message}\n`);
+    return false;
+  });
+  if (fs.existsSync(fallback)) {
+    await win.loadFile(fallback, { query: { desktop: '1' } });
   }
-  if (bridgeOk) {
+
+  const bridgeOk = await bridgePromise;
+  if (bridgeOk && !win.isDestroyed()) {
     await win.loadURL(localUrl());
     ensureOllama().catch(error => logStream?.write(`\n[ollama] ${error.stack || error.message}\n`));
     return;
   }
-  const fallback = path.join(app.getAppPath(), 'dist', 'index.html');
-  if (fs.existsSync(fallback)) await win.loadFile(fallback, { query: { desktop: '1' } });
-  dialog.showMessageBox(win, {
+  if (!win.isDestroyed()) dialog.showMessageBox(win, {
     type: 'warning',
     title: 'HNL Local Engine chưa khởi động',
     message: 'Ứng dụng vẫn mở để dùng AI Online/tra cứu cục bộ. Offline AI chỉ cần khi bạn chọn Ollama.',
-    detail: `Bridge không khởi động được trên các cổng 8787–8791. Xem log: ${path.join(app.getPath('userData'), 'hnl-bridge.log')}`
+    detail: `Bridge không khởi động được trên các cổng 8787–8799. Xem log: ${path.join(app.getPath('userData'), 'hnl-bridge.log')}`
   });
 }
 

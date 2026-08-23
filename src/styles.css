@@ -1176,3 +1176,123 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .shared-model-setting #refreshModels { grid-column:2; }
   .shared-model-setting #openSettingsModelPicker { grid-column:1 / -1; width:100%; }
 }
+
+/* =========================================================
+   HNL v1.9.17 — Local-first Smart Region OCR + selection actions
+   ========================================================= */
+.toolbar-selection-group { flex:0 0 auto; }
+.pdf-page-shell { position:relative; }
+.pdf-text-layer,
+.pdf-region-layer {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  pointer-events:none;
+}
+.pdf-text-layer { z-index:4; color:transparent; user-select:text; -webkit-user-select:text; }
+.pdf-text-layer span {
+  position:absolute;
+  white-space:pre;
+  line-height:1;
+  color:transparent;
+  cursor:text;
+  user-select:text;
+  -webkit-user-select:text;
+}
+.pdf-text-layer ::selection,
+.pdf-text-layer span::selection { background:rgba(38,112,196,.30); color:transparent; }
+.pdf-page-shell.pdf-text-selecting .pdf-text-layer { pointer-events:auto; }
+.pdf-page-shell.pdf-text-selecting canvas { pointer-events:none; }
+.pdf-page-shell.pdf-text-selecting { cursor:text; }
+
+.pdf-region-layer { z-index:5; cursor:crosshair; touch-action:none; }
+.pdf-page-shell.pdf-region-selecting .pdf-region-layer { pointer-events:auto; }
+.pdf-region-hint {
+  position:absolute;
+  top:10px;
+  right:10px;
+  padding:5px 8px;
+  border:1px solid #b8c9dc;
+  border-radius:8px;
+  background:rgba(255,255,255,.94);
+  color:var(--navy-900);
+  font-size:9px;
+  font-weight:800;
+  box-shadow:0 4px 14px rgba(17,37,62,.10);
+  pointer-events:none;
+}
+.pdf-region-box {
+  position:absolute;
+  border:2px solid #2e6ca8;
+  background:rgba(68,135,202,.12);
+  box-shadow:0 0 0 1px rgba(255,255,255,.75) inset;
+  pointer-events:none;
+}
+.pdf-region-box.busy::after {
+  content:'Đang OCR vùng…';
+  position:absolute;
+  left:6px;
+  top:6px;
+  padding:4px 6px;
+  border-radius:6px;
+  background:rgba(16,43,78,.92);
+  color:#fff;
+  font-size:9px;
+  font-weight:800;
+}
+.ollama-install-card .job-progress { margin:8px 0 4px; }
+
+@container viewer (max-width:720px) {
+  .toolbar-selection-group { order:5; }
+}
+
+/* =========================================================
+   HNL v1.9.17 — Smart PDF selection action popup
+   ========================================================= */
+.pdf-selection-popup {
+  position: fixed;
+  z-index: 10050;
+  width: min(320px, calc(100vw - 16px));
+  max-height: min(360px, calc(100vh - 16px));
+  overflow: auto;
+  padding: 9px;
+  border: 1px solid #b8c9dc;
+  border-radius: 12px;
+  background: rgba(255,255,255,.98);
+  box-shadow: 0 18px 48px rgba(15,37,63,.22);
+  color: var(--text);
+}
+.pdf-selection-popup-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; }
+.pdf-selection-popup-head b { min-width:0; font-size:10px; color:var(--navy-900); overflow-wrap:anywhere; }
+.pdf-selection-popup-head button { border:0; background:transparent; font-size:18px; cursor:pointer; color:var(--muted); }
+.pdf-selection-preview {
+  max-height: 118px;
+  overflow:auto;
+  white-space:pre-wrap;
+  word-break:break-word;
+  padding:8px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:#f8fbfe;
+  font-size:9.5px;
+  line-height:1.45;
+}
+.pdf-selection-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; margin-top:8px; }
+.pdf-selection-actions button {
+  min-width:0;
+  min-height:30px;
+  padding:6px 7px;
+  border:1px solid var(--line-dark);
+  border-radius:8px;
+  background:#fff;
+  color:var(--navy-900);
+  font-size:9px;
+  font-weight:800;
+  cursor:pointer;
+}
+.pdf-selection-actions button:hover { background:#f1f6fb; border-color:#9db4ce; }
+@media (max-width:560px) {
+  .pdf-selection-popup { left:8px !important; right:8px; width:auto; }
+}

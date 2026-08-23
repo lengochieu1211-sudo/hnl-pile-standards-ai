@@ -390,7 +390,7 @@ test('current release version is synchronized across all active metadata', () =>
   assert.match(versionGate, /VERSION GATE PASS/);
 });
 
-test('refresh model and connection test do not commit draft settings', () => {
+test('refresh model does not commit drafts; successful connection activates only the session API key', () => {
   const refreshStart = source.indexOf('async function refreshModels()');
   const refreshEnd = source.indexOf('async function applyRecommendedLocalModels()', refreshStart);
   const refreshBody = source.slice(refreshStart, refreshEnd);
@@ -401,8 +401,9 @@ test('refresh model and connection test do not commit draft settings', () => {
   const testEnd = source.indexOf('function bindWorkspaceSplitters()', testStart);
   const testBody = source.slice(testStart, testEnd);
   assert.doesNotMatch(testBody, /saveSettings\(/);
-  assert.doesNotMatch(testBody, /sessionStorage\.setItem/);
-  assert.match(testBody, /Cài đặt nháp chưa được lưu/);
+  assert.match(testBody, /result\?\.ok && apiKey/);
+  assert.match(testBody, /setCurrentApiKey\(provider, apiKey\)/);
+  assert.match(testBody, /đã được kích hoạt cho phiên hiện tại|dùng ngay trong phiên hiện tại/);
 });
 
 test('all current model-changing paths require explicit user confirmation', () => {
@@ -510,11 +511,14 @@ test('v1.9.13 Desktop startup fits Windows work area and does not block on Ollam
   const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
   assert.match(electron, /screen\.getPrimaryDisplay\(\)\.workAreaSize/);
   assert.match(electron, /checkHnlBridge/);
-  assert.match(electron, /8787, 8788, 8789, 8790, 8791/);
+  assert.match(electron, /Array\.from\(\{ length: 13 \}, \(_, i\) => 8787 \+ i\)/);
+  assert.match(electron, /await win\.loadFile\(fallback/);
+  assert.match(electron, /const bridgeOk = await bridgePromise/);
   assert.match(electron, /await win\.loadURL\(localUrl\(\)\)/);
   assert.match(electron, /ensureOllama\(\)\.catch/);
   assert.match(electron, /child\.once\('error'/);
-  assert.match(bridge, /AbortSignal\.timeout\(450\)/);
+  assert.match(bridge, /OLLAMA_HEALTH/);
+  assert.match(bridge, /refreshOllamaHealth/);
 });
 
 
@@ -545,4 +549,175 @@ test('v1.9.14 Offline AI detects missing Ollama before starting model pull', () 
   assert.match(source, /manager\.ollamaInstalled === false/);
   assert.match(electron, /function findOllamaExecutable/);
   assert.match(electron, /reason: 'not-installed'/);
+});
+
+
+test('v1.9.16 Bridge accepts the session API key for chat and model discovery', () => {
+  const ai = fs.readFileSync(new URL('../src/ai.js', import.meta.url), 'utf8');
+  const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
+  assert.match(ai, /callBridge\(\{ bridgeUrl, provider, model, prompt, images = \[\], apiKey = '' \}\)/);
+  assert.match(ai, /apiKey: String\(apiKey \|\| ''\)\.trim\(\)/);
+  assert.match(ai, /X-HNL-API-Key/);
+  assert.match(bridge, /requireKey\(name, override = ''\)/);
+  assert.match(bridge, /X-HNL-API-Key/);
+  assert.match(bridge, /apiKey = ''/);
+  assert.match(source, /callBridge\(\{ bridgeUrl:state\.settings\.bridgeUrl[\s\S]*apiKey:currentApiKey\(\)/);
+});
+
+test('v1.9.17 Desktop archive extraction follows external-first priority with built-in RAR fallback', () => {
+  const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+  const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
+  assert.equal(pkg.dependencies['node-unrar-js'], '^2.0.2');
+  assert.ok(pkg.build.files.includes('node_modules/node-unrar-js/**/*'));
+  assert.match(bridge, /loadBuiltinUnrar/);
+  assert.match(bridge, /createExtractorFromFile/);
+  assert.match(bridge, /HNL Built-in RAR/);
+  assert.match(bridge, /Requested priority: 7-Zip first/);
+  assert.match(bridge, /Then WinRAR\/UnRAR/);
+  assert.match(bridge, /Windows\/libarchive tar/);
+  assert.match(bridge, /Finally use the bundled RAR runtime/);
+  assert.match(bridge, /await extractRarBuiltIn/);
+  assert.match(bridge, /PASSWORD_REQUIRED/);
+  assert.match(bridge, /BAD_PASSWORD/);
+});
+
+test('v1.9.16 Offline AI can install Ollama automatically and continue model setup', () => {
+  const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
+  assert.match(source, /installOllamaNow/);
+  assert.match(source, /installOllamaAutomatically/);
+  assert.match(source, /api\/local\/install-ollama/);
+  assert.match(source, /api\/local\/ollama-install-status/);
+  assert.match(bridge, /app\.post\('\/api\/local\/install-ollama'/);
+  assert.match(bridge, /Ollama\.Ollama/);
+  assert.match(bridge, /https:\/\/ollama\.com\/download\/OllamaSetup\.exe/);
+  assert.match(bridge, /Get-AuthenticodeSignature/);
+});
+
+test('v1.9.16 PDF supports selectable text and region-only OCR/Vision', () => {
+  const pdf = fs.readFileSync(new URL('../src/pdf.js', import.meta.url), 'utf8');
+  const css = fs.readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  assert.match(source, /pdfSmartSelect/);
+  assert.match(source, /togglePdfSmartSelection/);
+  assert.match(source, /preparePdfSelectionLayer/);
+  assert.match(source, /ocrSelectedPdfRegion/);
+  assert.match(pdf, /renderPdfTextLayer/);
+  assert.match(pdf, /cropCanvasRegionToBase64/);
+  assert.match(pdf, /maxPixels = 1_800_000/);
+  assert.match(css, /pdf-text-layer/);
+  assert.match(css, /pdf-region-layer/);
+  assert.match(source, /Ctrl\+C/);
+});
+
+
+test('v1.9.17 session API key is one renderer source for settings, models, test and chat', () => {
+  assert.match(source, /const volatileApiKeys = new Map\(\)/);
+  assert.match(source, /function currentApiKey\(provider = state\.settings\.provider\)/);
+  assert.match(source, /function setCurrentApiKey\(provider, value\)/);
+  assert.match(source, /needsSessionKey \? `<label class="field"><span>API key/);
+  assert.match(source, /setCurrentApiKey\(provider, (?:key|apiKey)\)/);
+  assert.match(source, /apiKey:currentApiKey\(\)/);
+  assert.match(source, /apiKey: String\(draft\.apiKey \|\| ''\)\.trim\(\)/);
+});
+
+test('v1.9.17 smart PDF region uses text first, local OCR second and explicit Vision consent', () => {
+  const pdf = fs.readFileSync(new URL('../src/pdf.js', import.meta.url), 'utf8');
+  assert.match(source, /extractTextFromLayerRegion/);
+  assert.match(source, /ocrImageBase64Locally/);
+  assert.match(source, /window\.confirm\([\s\S]*Vision AI/);
+  assert.match(source, /showPdfSelectionPopup/);
+  for (const label of ['Copy','Hỏi AI','Tra cứu','Tóm tắt','Dùng làm nguồn','Tìm toàn thư viện','Quét công thức vùng này']) assert.match(source, new RegExp(label));
+  assert.match(source, /contextmenu/);
+  assert.match(source, /scanFormulaFromRegion/);
+  assert.match(source, /verified:false/);
+  assert.match(source, /allowCompute:false/);
+  assert.match(source, /regionSource/);
+  assert.match(pdf, /export function extractTextFromLayerRegion/);
+  assert.match(pdf, /export async function ocrImageBase64Locally/);
+  assert.match(pdf, /TextDetector/);
+});
+
+test('v1.9.17 Desktop archives preserve nested source paths and route ZIP through local bridge', () => {
+  const ingest = fs.readFileSync(new URL('../src/ingest.js', import.meta.url), 'utf8');
+  assert.match(source, /function archiveLike/);
+  assert.match(source, /async function expandLocalArchiveTree/);
+  assert.match(source, /expandLocalArchiveTree\(archive, archive\.name, 0\)/);
+  assert.match(source, /fullPath/);
+  assert.match(ingest, /internalPath:name/);
+  assert.match(ingest, /const currentPath = sourcePath \|\| file\.webkitRelativePath \|\| file\.name/);
+  assert.match(ingest, /maxDepth = 3/);
+});
+
+test('v1.9.17 Bridge is localhost-only, reports archive engines, and health does not await Ollama', () => {
+  const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
+  assert.match(bridge, /app\.listen\(PORT, '127\.0\.0\.1'/);
+  assert.match(bridge, /ALLOWED_ORIGIN/);
+  assert.match(bridge, /\/api\/local\/archive-engines/);
+  assert.match(bridge, /priority:\['7-Zip','WinRAR\/UnRAR','Windows tar','HNL Built-in RAR'\]/);
+  assert.match(bridge, /app\.get\('\/api\/health'[\s\S]*OLLAMA_HEALTH/);
+  assert.doesNotMatch(bridge, /app\.get\('\/api\/health'[\s\S]{0,500}await\s+pingOllama/);
+});
+
+test('v1.9.17 Desktop archive diagnostics and disk-safe offline installs are wired', () => {
+  assert.match(source, /archiveEngineCardHtml/);
+  assert.match(source, /checkArchiveEngines/);
+  assert.match(source, /open7ZipHelp/);
+  assert.match(source, /api\/local\/archive-engines/);
+  assert.match(source, /function estimateOllamaModelBytes/);
+  assert.match(source, /free > 0 && free < estimate/);
+  assert.match(source, /Chỉ bấm OK mới bắt đầu tải/);
+  assert.match(source, /data-cancel-local-model/);
+});
+
+test('v1.9.17 Vision and Embedding fallback never switch without explicit OK', () => {
+  assert.match(source, /chooseApprovedOllamaVisionFallback/);
+  assert.match(source, /Bấm OK để chuyển Vision model/);
+  assert.match(source, /state\.settings\.visionModel = candidate/);
+  assert.match(source, /chooseApprovedEmbeddingFallback/);
+  assert.match(source, /Bấm OK để chuyển và thử semantic rerank lại/);
+  assert.match(source, /state\.settings\.embeddingModel = candidate/);
+  assert.match(source, /for \(const delay of \[0, 800, 1800\]\)/);
+});
+
+test('v1.9.17 every literal button id has an explicit delegated handler', () => {
+  const ids = [...source.matchAll(/<button[^>]*\bid="([^"]+)"/g)].map(m => m[1]);
+  const unique = [...new Set(ids)];
+  assert.ok(unique.length >= 50, `expected broad button audit, found ${unique.length}`);
+  for (const id of unique) {
+    const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const byId = new RegExp(`el\\.id\\s*===\\s*['\"]${escaped}['\"]`).test(source);
+    const byClosest = new RegExp(`el\\.closest[^\n]*#${escaped}`).test(source);
+    assert.ok(byId || byClosest, `button ${id} has no explicit delegated handler`);
+  }
+});
+
+test('v1.9.17 dynamic data-action buttons are covered by delegation', () => {
+  for (const attr of ['data-connection','data-delete','data-delete-local-model','data-cancel-local-model','data-install-pack','data-model-choice','data-model-dir','data-open','data-jump','data-find','data-hit-doc','data-mobile','data-pdf-selection-action','data-suggest','data-tab']) {
+    assert.match(source, new RegExp(attr), `${attr} missing from rendered UI`);
+  }
+  for (const handler of ['dataset.connection','dataset.delete','dataset.deleteLocalModel','dataset.cancelLocalModel','dataset.installPack','dataset.modelChoice','dataset.modelDir','dataset.open','dataset.jump','dataset.find','dataset.hitDoc','dataset.mobile','dataset.pdfSelectionAction','dataset.suggest','dataset.tab']) {
+    assert.match(source, new RegExp(handler.replaceAll('.', '\\.')), `${handler} missing from delegated logic`);
+  }
+});
+
+test('v1.9.17 unverified model catalog always says it is not verified', () => {
+  const ai = fs.readFileSync(new URL('../src/ai.js', import.meta.url), 'utf8');
+  const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
+  assert.match(ai, /Không xác minh được danh sách model: chưa có API key/);
+  assert.match(ai, /Không xác minh được danh sách model\.\$\{error\?\.message/);
+  assert.match(bridge, /Không xác minh được danh sách model\.\$\{err\?\.message/);
+});
+
+test('v1.9.17 insufficient evidence uses the required exact sentence', () => {
+  const ai = fs.readFileSync(new URL('../src/ai.js', import.meta.url), 'utf8');
+  const search = fs.readFileSync(new URL('../src/search.js', import.meta.url), 'utf8');
+  const required = 'Không tìm thấy đủ căn cứ trong các tài liệu đang chọn.';
+  assert.ok(ai.includes(required));
+  assert.ok(search.includes(required));
+  assert.ok(source.includes(required));
+});
+
+test('v1.9.17 Bridge permits Electron file origin while rejecting unrelated browser origins', () => {
+  const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
+  assert.match(bridge, /!origin \|\| origin === 'null'/);
+  assert.match(bridge, /Origin không được phép truy cập HNL Bridge/);
 });

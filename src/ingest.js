@@ -145,7 +145,7 @@ export async function extractZip(file, { maxEntries = 800, maxUncompressed = 350
     totalOut += bytes.byteLength || uncompSize;
     if (totalOut > maxUncompressed) throw new Error('ZIP giải nén vượt giới hạn 350 MB để tránh treo trình duyệt.');
     const shortName = name.split('/').pop() || name;
-    out.push({ file: new File([bytes], shortName, { type: inferMime(shortName), lastModified: file.lastModified }), path: `${file.name}/${name}` });
+    out.push({ file: new File([bytes], shortName, { type: inferMime(shortName), lastModified: file.lastModified }), path: `${file.name}/${name}`, internalPath:name });
   }
   return out;
 }
@@ -162,18 +162,27 @@ export async function parseInputFile(file, { sourcePath = '', onPdfProgress = ()
   throw new Error(`Chưa hỗ trợ loại file: ${file.name}`);
 }
 
-export async function expandInputItems(files, { maxDepth = 2 } = {}) {
+export async function expandInputItems(files, { maxDepth = 3 } = {}) {
   const output = [];
-  async function visit(file, path='', depth=0) {
+  async function visit(file, sourcePath='', depth=0) {
+    if (!file) return;
+    const currentPath = sourcePath || file.webkitRelativePath || file.name;
     if (ZIP_EXT.test(file.name)) {
-      if (depth >= maxDepth) return;
+      if (depth >= maxDepth) throw new Error(`ZIP lồng quá ${maxDepth} cấp: ${currentPath}`);
       const entries = await extractZip(file);
-      for (const entry of entries) await visit(entry.file, entry.path, depth + 1);
+      for (const entry of entries) {
+        const inside = entry.internalPath || String(entry.path || '').replace(new RegExp(`^${file.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/?`), '');
+        await visit(entry.file, `${currentPath}/${inside}`.replace(/\/{2,}/g,'/'), depth + 1);
+      }
       return;
     }
-    if (supportedInput(file.name)) output.push({ file, path: path || file.webkitRelativePath || file.name });
+    if (supportedInput(file.name)) output.push({ file, path: currentPath });
   }
-  for (const file of files) await visit(file, file.webkitRelativePath || file.name, 0);
+  for (const item of files) {
+    const file = item?.file || item;
+    const sourcePath = item?.path || file?.webkitRelativePath || file?.name || '';
+    await visit(file, sourcePath, 0);
+  }
   return output;
 }
 

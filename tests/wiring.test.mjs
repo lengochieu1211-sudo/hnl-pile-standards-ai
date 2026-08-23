@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 const source = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
+const pkgMeta = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+const CURRENT_VERSION = pkgMeta.version;
 
 const criticalControls = [
   ['sourceBadge', 'sourceBadge'],
@@ -246,12 +248,12 @@ test('v1.9.1 local model download jobs expose progress and cancel', () => {
 });
 
 
-test('v1.9.4 build generator and workflows stamp GitHub build identity', () => {
+test('build generator and workflows stamp GitHub build identity', () => {
   const gen = fs.readFileSync(new URL('../scripts/generate-build-info.mjs', import.meta.url), 'utf8');
   const pages = fs.readFileSync(new URL('../.github/workflows/pages.yml', import.meta.url), 'utf8');
   const desktop = fs.readFileSync(new URL('../.github/workflows/desktop-win.yml', import.meta.url), 'utf8');
   const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
-  assert.equal(pkg.version, '1.9.5');
+  assert.equal(pkg.version, CURRENT_VERSION);
   assert.match(gen, /GITHUB_RUN_NUMBER/);
   assert.match(gen, /GITHUB_SHA/);
   assert.match(gen, /builtAt/);
@@ -305,5 +307,109 @@ test('v1.9.5 settings tab is always reachable and Windows EXE autobuilds on main
   assert.match(css, /panel-body.*overflow:auto/s);
   assert.match(desktop, /branches:\s*\n\s*- main/);
   assert.match(desktop, /Build NSIS and Portable EXE/);
-  assert.match(desktop, /release\/\*\.exe/);
+  assert.match(desktop, /release\/HNL-Pile-Standards-AI-Setup-\*\.exe/);
+  assert.match(desktop, /release\/HNL-Pile-Standards-AI-Portable-\*\.exe/);
+});
+
+
+test('v1.9.7 desktop layout fluidly shrinks without auto-hiding side panels', () => {
+  const css = fs.readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  assert.match(source, /--left-user-w:\$\{state\.layout\.left\}px/);
+  assert.match(source, /--right-user-w:\$\{state\.layout\.right\}px/);
+  assert.match(css, /--left-effective:\s*max\(220px,\s*min\(var\(--left-user-w/);
+  assert.match(css, /--right-effective:\s*max\(300px,\s*min\(var\(--right-user-w/);
+  assert.match(css, /grid-template-columns:\s*var\(--left-effective\)\s+minmax\(340px,\s*1fr\)\s+var\(--right-effective\)/);
+  assert.match(css, /max-width:980px[\s\S]*min-width:881px[\s\S]*--left-effective:\s*215px[\s\S]*--right-effective:\s*290px/);
+  assert.match(css, /max-width:880px[\s\S]*mobile-nav/);
+});
+
+test('v1.9.7 resize preserves explicit panel state and splitters follow effective widths', () => {
+  const css = fs.readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  assert.match(css, /splitter-left\s*\{\s*left:\s*calc\(var\(--left-effective\)/);
+  assert.match(css, /splitter-right\s*\{\s*right:\s*calc\(var\(--right-effective\)/);
+  assert.match(source, /--left-user-w' : '--right-user-w/);
+  assert.doesNotMatch(source, /resize[\s\S]{0,240}leftCollapsed\s*=\s*true/i);
+  assert.doesNotMatch(source, /resize[\s\S]{0,240}rightCollapsed\s*=\s*true/i);
+});
+
+
+test('Windows artifact names are target-specific and avoid unsupported target macro', () => {
+  const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+  assert.equal(pkg.version, CURRENT_VERSION);
+  assert.ok(!String(pkg.build?.win?.artifactName || '').includes('${target}'));
+  assert.match(pkg.build?.nsis?.artifactName || '', /Setup/);
+  assert.match(pkg.build?.portable?.artifactName || '', /Portable/);
+});
+
+test('Windows workflow verifies both Setup and Portable EXEs', () => {
+  const workflow = fs.readFileSync(new URL('../.github/workflows/desktop-win.yml', import.meta.url), 'utf8');
+  assert.match(workflow, /Verify Windows EXEs/);
+  assert.match(workflow, /HNL-Pile-Standards-AI-Setup-\*\.exe/);
+  assert.match(workflow, /HNL-Pile-Standards-AI-Portable-\*\.exe/);
+});
+
+
+test('v1.9.8 model picker is visible in assistant and refresh never silently switches model', () => {
+  assert.match(source, /quickProviderSelect/);
+  assert.match(source, /quickModelSelect/);
+  assert.match(source, /refreshModelsQuick/);
+  assert.match(source, /HNL không tự đổi model/);
+  assert.doesNotMatch(source, /models\.length && !models\.includes\(state\.settings\.model\)\) state\.settings\.model =/);
+});
+
+test('v1.9.8 every fallback model switch requires explicit OK confirmation', () => {
+  assert.match(source, /chooseApprovedFallbackModel/);
+  assert.match(source, /Bấm OK để chuyển sang model này và thử lại/);
+  assert.match(source, /Bấm Cancel để GIỮ NGUYÊN model hiện tại/);
+  assert.match(source, /confirmModelSwitch/);
+  assert.match(source, /HNL sẽ CHỈ chuyển model khi bạn bấm OK/);
+});
+
+test('v1.9.8 bridge preserves upstream AI status for quota and transient error handling', () => {
+  const ai = fs.readFileSync(new URL('../src/ai.js', import.meta.url), 'utf8');
+  const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
+  assert.match(ai, /error\.status = response\.status/);
+  assert.match(bridge, /upstreamStatus/);
+  assert.match(bridge, /429/);
+  assert.match(source, /retryDelays = \[0, 1200, 3000\]/);
+});
+
+
+test('current release version is synchronized across all active metadata', () => {
+  const readme = fs.readFileSync(new URL('../README.md', import.meta.url), 'utf8');
+  const changelog = JSON.parse(fs.readFileSync(new URL('../public/changelog.json', import.meta.url), 'utf8'));
+  const buildDoc = fs.readFileSync(new URL('../docs/BUILD_METADATA.md', import.meta.url), 'utf8');
+  const versionGate = fs.readFileSync(new URL('../scripts/check-version-sync.mjs', import.meta.url), 'utf8');
+  const release = fs.readFileSync(new URL(`../docs/RELEASE_V${CURRENT_VERSION}.md`, import.meta.url), 'utf8');
+  assert.match(CURRENT_VERSION, /^\d+\.\d+\.\d+$/);
+  assert.equal(readme.split(/\r?\n/)[0], `# HNL Pile Standards AI v${CURRENT_VERSION}`);
+  assert.equal(changelog.current, CURRENT_VERSION);
+  assert.equal(changelog.releases[0]?.version, CURRENT_VERSION);
+  assert.match(release, new RegExp(`^# HNL Pile Standards AI v${CURRENT_VERSION.replaceAll('.', '\\.')}`));
+  assert.match(buildDoc, new RegExp(`"version"\\s*:\\s*"${CURRENT_VERSION.replaceAll('.', '\\.') }"`));
+  assert.match(versionGate, /VERSION GATE PASS/);
+});
+
+test('refresh model and connection test do not commit draft settings', () => {
+  const refreshStart = source.indexOf('async function refreshModels()');
+  const refreshEnd = source.indexOf('async function applyRecommendedLocalModels()', refreshStart);
+  const refreshBody = source.slice(refreshStart, refreshEnd);
+  assert.doesNotMatch(refreshBody, /saveSettings\(/);
+  assert.doesNotMatch(refreshBody, /sessionStorage\.setItem/);
+
+  const testStart = source.indexOf('async function testConnection()');
+  const testEnd = source.indexOf('function bindWorkspaceSplitters()', testStart);
+  const testBody = source.slice(testStart, testEnd);
+  assert.doesNotMatch(testBody, /saveSettings\(/);
+  assert.doesNotMatch(testBody, /sessionStorage\.setItem/);
+  assert.match(testBody, /Cài đặt nháp chưa được lưu/);
+});
+
+test('all current model-changing paths require explicit user confirmation', () => {
+  assert.match(source, /function confirmModelSwitch/);
+  assert.match(source, /Chuyển nhà cung cấp AI\?/);
+  assert.match(source, /Đổi cấu hình model AI\?/);
+  assert.match(source, /HNL đề xuất cấu hình theo máy/);
+  assert.match(source, /Cài và đặt bộ AI Offline/);
+  assert.match(source, /Bấm OK để chuyển sang model này và thử lại/);
 });

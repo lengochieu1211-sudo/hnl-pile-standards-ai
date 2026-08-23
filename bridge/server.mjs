@@ -46,7 +46,11 @@ async function jsonFetch(url, options) {
   const data = await r.json().catch(async () => ({ raw: await r.text().catch(()=>'') }));
   if (!r.ok) {
     const msg = data?.error?.message || data?.error || data?.message || data?.raw || `HTTP ${r.status}`;
-    throw new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+    const error = new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+    error.status = r.status;
+    error.code = data?.error?.status || data?.error?.code || data?.code || '';
+    error.payload = data;
+    throw error;
   }
   return data;
 }
@@ -409,39 +413,40 @@ async function providerModels(provider) {
     if (provider === 'ollama') {
       const base = (process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434').replace(/\/$/,'');
       const data = await jsonFetch(`${base}/api/tags`, { method:'GET' });
-      return uniqueModels((data.models || []).map(x=>x.name || x.model));
+      return { models:uniqueModels((data.models || []).map(x=>x.name || x.model)), verified:true, source:'ollama', warning:'' };
     }
     if (provider === 'gemini') {
       const key = requireKey('GEMINI_API_KEY');
       const data = await jsonFetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000', { headers:{'x-goog-api-key':key} });
-      return uniqueModels((data.models || []).filter(m=>!m.supportedGenerationMethods || m.supportedGenerationMethods.includes('generateContent')).map(m=>String(m.name||'').replace(/^models\//,'')));
+      return { models:uniqueModels((data.models || []).filter(m=>!m.supportedGenerationMethods || m.supportedGenerationMethods.includes('generateContent')).map(m=>String(m.name||'').replace(/^models\//,''))), verified:true, source:'gemini-api', warning:'' };
     }
     if (provider === 'openai') {
       const key = requireKey('OPENAI_API_KEY');
       const data = await jsonFetch('https://api.openai.com/v1/models', { headers:{Authorization:`Bearer ${key}`} });
-      return uniqueModels((data.data || []).map(x=>x.id).filter(id=>/^(gpt-|o\d|chat-)/.test(id)));
+      return { models:uniqueModels((data.data || []).map(x=>x.id).filter(id=>/^(gpt-|o\d|chat-)/.test(id))), verified:true, source:'openai-api', warning:'' };
     }
     if (provider === 'claude') {
       const key = requireKey('ANTHROPIC_API_KEY');
       const data = await jsonFetch('https://api.anthropic.com/v1/models?limit=100', { headers:{'x-api-key':key,'anthropic-version':'2023-06-01'} });
-      return uniqueModels((data.data || []).map(x=>x.id));
+      return { models:uniqueModels((data.data || []).map(x=>x.id)), verified:true, source:'anthropic-api', warning:'' };
     }
     if (provider === 'grok') {
       const key = requireKey('XAI_API_KEY');
       const data = await jsonFetch('https://api.x.ai/v1/models', { headers:{Authorization:`Bearer ${key}`} });
-      return uniqueModels((data.data || data.models || []).map(x=>x.id || x.name));
+      return { models:uniqueModels((data.data || data.models || []).map(x=>x.id || x.name)), verified:true, source:'xai-api', warning:'' };
     }
   } catch (err) {
     console.warn(`Model list ${provider} failed:`, err.message);
+    return { models:BRIDGE_FALLBACK_MODELS[provider] || [], verified:false, source:'catalog', warning:err.message || 'Không xác minh được model qua Bridge.' };
   }
-  return BRIDGE_FALLBACK_MODELS[provider] || [];
+  return { models:BRIDGE_FALLBACK_MODELS[provider] || [], verified:false, source:'catalog', warning:'Provider không hỗ trợ xác minh danh sách model.' };
 }
 
 app.get('/api/models/:provider', async (req, res) => {
   const provider = String(req.params.provider || '');
   if (!['ollama','gemini','openai','claude','grok'].includes(provider)) return res.status(400).json({error:'Provider không hợp lệ.'});
-  const models = await providerModels(provider);
-  res.json({ provider, models });
+  const result = await providerModels(provider);
+  res.json({ provider, ...result });
 });
 
 app.post('/api/chat', async (req, res) => {
@@ -458,7 +463,9 @@ app.post('/api/chat', async (req, res) => {
     res.json({ text });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message || 'AI Bridge lỗi không xác định.' });
+    const status = Number(err?.status || 0);
+    const safeStatus = [400,401,403,404,408,409,429,500,502,503,504].includes(status) ? status : 500;
+    res.status(safeStatus).json({ error: err.message || 'AI Bridge lỗi không xác định.', code: err?.code || '', upstreamStatus: status || null });
   }
 });
 

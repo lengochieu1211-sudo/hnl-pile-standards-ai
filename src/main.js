@@ -3,14 +3,14 @@ import { renderPdfPage, renderPdfPageToBase64, clearPdfCache } from './pdf.js';
 import { expandInputItems, parseInputFile, fileToBase64, extractArchiveViaLocalBridge, isArchiveFile } from './ingest.js';
 import { saveDocument, getDocuments, deleteDocument } from './db.js';
 import { searchChunks, searchEveryPage, smartSearchChunks, deepSearchChunks, localSummary, localAnswer, corpusStats, isBroadQuery, planEngineeringQueries, clearSearchCache } from './search.js';
-import { PROVIDERS, buildRagPrompt, callBridge, callDirect, bridgeHealth, testDirectProvider, listAvailableModels, semanticRerank, localEngineDiagnostics } from './ai.js';
+import { PROVIDERS, buildRagPrompt, callBridge, callDirect, bridgeHealth, testDirectProvider, listAvailableModelsDetailed, semanticRerank, localEngineDiagnostics } from './ai.js';
 import { annulusAreaMm2, axialResistance, loadClassSigmaCe, tcvn7888Checklist } from './calculators.js';
 import { diameters7888, lookup7888, classesForDiameter7888 } from './tcvn7888.js';
 import { extractFormulaLibrary, formulaStats, verifiedFormulaLibrary, evaluateExpression, clearFormulaCache } from './formulas.js';
 
 const SOURCE_META = Object.freeze({
   version: typeof __HNL_APP_VERSION__ !== 'undefined' ? __HNL_APP_VERSION__ : '0.0.0',
-  release: 'UI Responsive · Panel Recovery · Logic Audit'
+  release: 'Full Sync · Logic · UI Hardening'
 });
 
 let APP_META = {
@@ -95,7 +95,10 @@ const state = {
   connectionStatus: null,
   diagnosticHtml: '',
   modelOptions: [],
+  modelOptionsVerified: false,
+  modelCatalogSource: '',
   modelStatus: '',
+  settingsDraft: {},
   localModelManager: { loading:false, data:null, error:'', pollTimer:null },
   searchStats: null,
   formulaSelection: localStorage.getItem(STORAGE.formulaSelection) || '',
@@ -179,6 +182,141 @@ function providerModel(forVision = false) {
 function isLocalHost() { return ['localhost','127.0.0.1','::1'].includes(location.hostname); }
 function sessionKeyName(provider) { return `hnl.apiKey.${provider}`; }
 function currentApiKey() { return sessionStorage.getItem(sessionKeyName(state.settings.provider)) || ''; }
+function draftSetting(name, fallback = '') {
+  return Object.prototype.hasOwnProperty.call(state.settingsDraft || {}, name) ? state.settingsDraft[name] : fallback;
+}
+function captureSettingsDraft() {
+  const existing = state.settingsDraft || {};
+  return {
+    model: document.querySelector('#modelInput')?.value.trim() ?? existing.model ?? state.settings.model,
+    visionModel: document.querySelector('#visionModelInput')?.value.trim() ?? existing.visionModel ?? state.settings.visionModel,
+    embeddingModel: document.querySelector('#embeddingModelInput')?.value.trim() ?? existing.embeddingModel ?? state.settings.embeddingModel,
+    bridgeUrl: document.querySelector('#bridgeInput')?.value.trim() ?? existing.bridgeUrl ?? state.settings.bridgeUrl,
+    ollamaUrl: document.querySelector('#ollamaInput')?.value.trim() ?? existing.ollamaUrl ?? state.settings.ollamaUrl,
+    retrievalMode: document.querySelector('#retrievalModeInput')?.value ?? existing.retrievalMode ?? state.settings.retrievalMode,
+    semanticRerank: document.querySelector('#semanticRerankInput')?.checked ?? existing.semanticRerank ?? state.settings.semanticRerank,
+    strict: document.querySelector('#strictInput')?.checked ?? existing.strict ?? state.settings.strict,
+    apiKey: document.querySelector('#apiKeyInput')?.value ?? existing.apiKey ?? currentApiKey()
+  };
+}
+function rememberSettingsDraft() { state.settingsDraft = captureSettingsDraft(); return state.settingsDraft; }
+
+function modelOptionsForCurrentProvider() {
+  const current = providerModel();
+  const preferred = PROVIDERS[state.settings.provider]?.model || '';
+  return [...new Set([current, preferred, ...(state.modelOptions || [])].map(x => String(x || '').trim()).filter(Boolean))];
+}
+function quickModelOptionsHtml() {
+  if (state.settings.provider === 'local') return '<option value="">Không dùng AI</option>';
+  const current = providerModel();
+  const models = modelOptionsForCurrentProvider();
+  if (!models.length) return `<option value="${esc(current)}">${esc(current || 'Chưa có model')}</option>`;
+  return models.map(m => `<option value="${esc(m)}" ${m === current ? 'selected' : ''}>${esc(m)}</option>`).join('');
+}
+function confirmModelSwitch(nextModel, reason = 'Yêu cầu đổi model') {
+  const oldModel = providerModel();
+  const next = String(nextModel || '').trim();
+  if (!next || next === oldModel) return true;
+  const ok = window.confirm(`${reason}\n\nModel hiện tại: ${oldModel || '(chưa chọn)'}\nModel đề nghị: ${next}\n\nHNL sẽ CHỈ chuyển model khi bạn bấm OK.`);
+  if (!ok) return false;
+  state.settings.model = next;
+  state.connectionStatus = null;
+  saveSettings();
+  state.modelStatus = `Đã chuyển sang ${next} sau khi người dùng xác nhận.`;
+  showToast(`Đã chuyển model: ${oldModel || 'chưa chọn'} → ${next}.`, 'success');
+  return true;
+}
+function aiErrorKind(error) {
+  const status = Number(error?.status || 0);
+  const text = String(error?.message || error || '').toLowerCase();
+  if (status === 429 || /429|resource_exhausted|rate.?limit|quota|hết.*(quota|lưu lượng|hạn mức)/i.test(text)) return 'quota';
+  if ([500,502,503,504].includes(status) || /503|service.?unavailable|overloaded|temporar|timeout|hết thời gian/i.test(text)) return 'temporary';
+  if (status === 404 || /model.*not found|not_found|không.*model|model.*không tồn tại/i.test(text)) return 'model';
+  return 'other';
+}
+function waitMs(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+async function callConfiguredAiOnce({ prompt, images = [], modelOverride = '' }) {
+  const model = modelOverride || providerModel(images.length > 0);
+  if (state.settings.connection === 'bridge') {
+    return callBridge({ bridgeUrl:state.settings.bridgeUrl, provider:state.settings.provider, model, prompt, images });
+  }
+  return callDirect({ provider:state.settings.provider, model, apiKey:currentApiKey(), prompt, ollamaUrl:state.settings.ollamaUrl, images });
+}
+async function chooseApprovedFallbackModel(error, currentModel) {
+  // Fallback is allowed only from a model list VERIFIED against the current
+  // account/API/Ollama. Static suggestions are never used as availability proof.
+  let models = state.modelOptionsVerified ? [...(state.modelOptions || [])] : [];
+  if (!models.length) {
+    const result = await listAvailableModelsDetailed({
+      provider: state.settings.provider,
+      connection: state.settings.connection,
+      apiKey: currentApiKey(),
+      bridgeUrl: state.settings.bridgeUrl,
+      ollamaUrl: state.settings.ollamaUrl
+    });
+    state.modelOptions = result.models || [];
+    state.modelOptionsVerified = result.verified === true;
+    state.modelCatalogSource = result.source || '';
+    models = state.modelOptionsVerified ? [...state.modelOptions] : [];
+    if (!state.modelOptionsVerified) {
+      state.modelStatus = `Không đề nghị fallback vì danh sách model chưa được xác minh. ${result.warning || ''}`.trim();
+      return '';
+    }
+  }
+  const candidate = pickFallbackCandidate(state.settings.provider, currentModel, models);
+  if (!candidate) return '';
+  const kind = aiErrorKind(error);
+  const reason = kind === 'quota' ? 'Model hiện tại đang báo hết quota/rate limit.'
+    : kind === 'model' ? 'Model hiện tại không còn khả dụng.'
+    : 'Model hiện tại vẫn lỗi sau khi thử lại.';
+  const ok = window.confirm(`${reason}\n\nModel hiện tại: ${currentModel}\nModel thay thế đã xác minh: ${candidate}\n\nBấm OK để chuyển sang model này và thử lại.\nBấm Cancel để GIỮ NGUYÊN model hiện tại.`);
+  if (!ok) return '';
+  state.settings.model = candidate;
+  state.settingsDraft = {};
+  state.connectionStatus = null;
+  saveSettings();
+  state.modelStatus = `Người dùng đã đồng ý fallback: ${currentModel} → ${candidate}.`;
+  showToast(`Đã được bạn đồng ý chuyển model sang ${candidate}.`, 'warning');
+  render();
+  return candidate;
+}
+function pickFallbackCandidate(provider, currentModel, models = []) {
+  const available = [...new Set(models.filter(m => m && m !== currentModel))];
+  if (!available.length) return '';
+  const score = m => {
+    const x = String(m).toLowerCase();
+    let n = 0;
+    if (provider === 'gemini') { if (/flash/.test(x)) n += 30; if (/lite/.test(x)) n += 8; if (/pro/.test(x)) n -= 8; }
+    if (provider === 'openai') { if (/mini|nano/.test(x)) n += 25; if (/gpt-5/.test(x)) n += 8; }
+    if (provider === 'claude') { if (/haiku/.test(x)) n += 25; if (/sonnet/.test(x)) n += 12; if (/opus/.test(x)) n -= 5; }
+    if (provider === 'grok') { if (/fast/.test(x)) n += 25; if (/mini/.test(x)) n += 12; }
+    return n;
+  };
+  return available.sort((a,b) => score(b)-score(a) || a.localeCompare(b))[0];
+}
+
+async function callConfiguredAiWithApproval({ prompt, images = [] }) {
+  const forVision = images.length > 0 && state.settings.provider === 'ollama';
+  const currentModel = providerModel(images.length > 0);
+  let lastError;
+  const retryDelays = [0, 1200, 3000];
+  for (let i = 0; i < retryDelays.length; i++) {
+    if (retryDelays[i]) await waitMs(retryDelays[i]);
+    try { return await callConfiguredAiOnce({ prompt, images, modelOverride:currentModel }); }
+    catch (error) {
+      lastError = error;
+      const kind = aiErrorKind(error);
+      if (!['quota','temporary'].includes(kind) || i === retryDelays.length - 1) break;
+    }
+  }
+  // Vision model is intentionally never auto-fallbacked: the user must choose
+  // another Vision model in settings, because capabilities may differ.
+  if (!forVision && ['quota','temporary','model'].includes(aiErrorKind(lastError))) {
+    const approved = await chooseApprovedFallbackModel(lastError, currentModel);
+    if (approved) return callConfiguredAiOnce({ prompt, images, modelOverride:approved });
+  }
+  throw lastError;
+}
 
 function saveSettings() {
   localStorage.setItem(STORAGE.provider, state.settings.provider);
@@ -332,7 +470,7 @@ function render() {
       </div>
     </header>
 
-    <main class="workspace ${state.focusReader ? 'reader-focus' : ''} ${state.leftCollapsed ? 'left-collapsed' : ''} ${state.rightCollapsed ? 'right-collapsed' : ''}" data-mobile="${state.mobile}" style="--left-w:${state.layout.left}px;--right-w:${state.layout.right}px">
+    <main class="workspace ${state.focusReader ? 'reader-focus' : ''} ${state.leftCollapsed ? 'left-collapsed' : ''} ${state.rightCollapsed ? 'right-collapsed' : ''}" data-mobile="${state.mobile}" style="--left-user-w:${state.layout.left}px;--right-user-w:${state.layout.right}px">
       ${(state.leftCollapsed || state.focusReader) ? '<button class="panel-recovery panel-recovery-left" id="reopenLibrary" title="Mở lại Thư viện">▶ <span>Thư viện</span></button>' : ''}
       ${(state.rightCollapsed || state.focusReader) ? '<button class="panel-recovery panel-recovery-right" id="reopenAssistant" title="Mở lại Trợ lý AI"><span>Trợ lý</span> ◀</button>' : ''}
       <aside class="sidebar">
@@ -411,6 +549,12 @@ function render() {
         <div class="assistant-head">
           <div><div class="section-kicker">Kỹ thuật</div><h2>Trợ lý tiêu chuẩn</h2></div>
           <div class="assistant-head-actions"><span class="mode-chip">${state.settings.provider === 'local' ? 'Tra nhanh' : esc(PROVIDERS[state.settings.provider]?.short)}</span><button class="icon-btn quick-settings-btn" id="assistantSettingsQuick" title="Mở Cài đặt" aria-label="Mở Cài đặt">⚙</button><button class="icon-btn" id="toggleAssistant" title="Thu gọn trợ lý">▶</button></div>
+        </div>
+        <div class="ai-quickbar">
+          <label><span>AI</span><select id="quickProviderSelect">${availableProviderEntries().map(([id,p]) => `<option value="${id}" ${id===state.settings.provider?'selected':''}>${esc(p.short)}</option>`).join('')}</select></label>
+          <label class="quick-model-field"><span>Model</span><select id="quickModelSelect" ${state.settings.provider==='local'?'disabled':''}>${quickModelOptionsHtml()}</select></label>
+          <button class="icon-btn quick-model-refresh" id="refreshModelsQuick" title="Lấy danh sách model khả dụng">↻</button>
+          <small class="quick-model-note"><span class="model-approval-lock">🔒 Đổi model cần OK</span>${state.modelOptions.length ? ` · ${state.modelOptionsVerified ? 'Danh sách đã xác minh' : 'Catalog gợi ý, chưa xác minh'}` : ''}</small>
         </div>
         <div class="tabs">${[
           ['summary', 'Tóm tắt'], ['chat', 'Hỏi đáp'], ['lookup', 'Tra cứu'], ['calc', 'Tính'], ['compare', 'So sánh'], ['checklist', 'Nghiệm thu'], ['settings', 'Cài đặt']
@@ -709,11 +853,11 @@ function settingsHtml() {
     <label class="field"><span>Nhà cung cấp</span><select id="providerSelect">${options}</select></label>
     ${state.settings.provider === 'local' ? `<div class="notice success"><b>Tra cứu nhanh không phải AI.</b><br>${IS_DESKTOP_EDITION ? 'Chế độ này tìm kiếm cục bộ, không cần mạng. Muốn AI offline suy luận, chọn <b>HNL Offline AI · Ollama</b>.' : 'Chế độ này tìm ngay trong dữ liệu đã nạp, không cần API. Muốn AI suy luận trên bản Web, chọn <b>Gemini / ChatGPT / Claude / Grok</b>.'}</div>` : `
       <div class="segmented"><button data-connection="direct" class="${state.settings.connection === 'direct' ? 'active' : ''}">Trực tiếp</button><button data-connection="bridge" class="${state.settings.connection === 'bridge' ? 'active' : ''}">HNL Bridge</button></div>
-      <label class="field"><span>Model văn bản</span><div class="model-picker"><input id="modelInput" list="modelOptionsList" value="${esc(providerModel())}" placeholder="Chọn hoặc nhập tên model"><button class="btn compact-btn" id="refreshModels" type="button">↻ Model</button></div><datalist id="modelOptionsList">${state.modelOptions.map(m => `<option value="${esc(m)}"></option>`).join('')}</datalist><small>${esc(state.modelStatus || 'Bấm ↻ Model để lấy danh sách model khả dụng của tài khoản/máy.')}</small></label>
-      ${isOllama ? `<label class="field"><span>Model đọc ảnh offline</span><input id="visionModelInput" value="${esc(state.settings.visionModel)}" placeholder="gemma3:4b"></label>` : ''}
-      ${directNeedsKey ? `<label class="field"><span>API key · chỉ lưu trong phiên tab này</span><input id="apiKeyInput" type="password" value="${esc(currentApiKey())}" autocomplete="off" placeholder="Dán API key của bạn"></label>` : ''}
+      <label class="field"><span>Model văn bản</span><div class="model-picker"><input id="modelInput" list="modelOptionsList" value="${esc(draftSetting('model', providerModel()))}" placeholder="Chọn hoặc nhập tên model"><button class="btn compact-btn" id="refreshModels" type="button">↻ Model</button></div><datalist id="modelOptionsList">${state.modelOptions.map(m => `<option value="${esc(m)}"></option>`).join('')}</datalist><small class="${state.modelOptions.length ? (state.modelOptionsVerified ? 'model-status-verified' : 'model-status-suggested') : ''}">${esc(state.modelStatus || 'Bấm ↻ Model để kiểm tra danh sách. Catalog gợi ý không được dùng làm fallback nếu chưa xác minh.')}</small></label>
+      ${isOllama ? `<label class="field"><span>Model đọc ảnh offline</span><input id="visionModelInput" value="${esc(draftSetting('visionModel', state.settings.visionModel))}" placeholder="gemma3:4b"></label>` : ''}
+      ${directNeedsKey ? `<label class="field"><span>API key · chỉ lưu trong phiên tab này</span><input id="apiKeyInput" type="password" value="${esc(draftSetting('apiKey', currentApiKey()))}" autocomplete="off" placeholder="Dán API key của bạn"></label>` : ''}
       ${state.settings.provider === 'gemini' ? `<div class="notice"><b>Gemini API:</b> vào Google AI Studio → API Keys → Create API key → Copy, sau đó dán vào ô trên. Không ghi key vào source GitHub. <a class="inline-link" href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">Mở trang API Keys</a></div>` : ''}
-      ${isOllama && state.settings.connection === 'direct' ? `<label class="field"><span>Ollama URL</span><input id="ollamaInput" value="${esc(state.settings.ollamaUrl)}"></label>` : ''}
+      ${isOllama && state.settings.connection === 'direct' ? `<label class="field"><span>Ollama URL</span><input id="ollamaInput" value="${esc(draftSetting('ollamaUrl', state.settings.ollamaUrl))}"></label>` : ''}
       ${isOllama && githubHttps ? `<div class="notice error"><b>Đây là nguyên nhân Offline AI trong video không chạy.</b><br>GitHub Pages là HTTPS nhưng Ollama trên máy là HTTP. Trình duyệt chặn kết nối này. Hãy chạy <b>START_HNL_OFFLINE_AI.bat</b> trong source và mở app tại <b>http://127.0.0.1:8787</b>.</div>` : ''}
       ${isOllama && isLocalHost() ? `<div class="notice success"><b>Đang ở chế độ Local.</b> Đây là môi trường đúng để dùng Ollama offline, semantic embedding và đọc ảnh bằng model vision.</div>` : ''}
       ${isOllama ? `<div class="local-engine-card"><div class="panel-section-title"><h3>HNL Local Intelligence Engine</h3><span>v${APP_META.version}</span></div>
@@ -723,13 +867,13 @@ function settingsHtml() {
           <option value="deep" ${state.settings.retrievalMode === 'deep' ? 'selected' : ''}>Deep Lexical · quét cấu trúc toàn thư viện</option>
           <option value="fast" ${state.settings.retrievalMode === 'fast' ? 'selected' : ''}>Nhanh · tra cứu cục bộ</option>
         </select></label>
-        <label class="field"><span>Model embedding cục bộ</span><input id="embeddingModelInput" value="${esc(state.settings.embeddingModel)}" placeholder="bge-m3"><small>Khuyến nghị tiếng Việt/kỹ thuật: bge-m3. Có thể dùng nomic-embed-text nếu máy nhẹ.</small></label>
+        <label class="field"><span>Model embedding cục bộ</span><input id="embeddingModelInput" value="${esc(draftSetting('embeddingModel', state.settings.embeddingModel))}" placeholder="bge-m3"><small>Khuyến nghị tiếng Việt/kỹ thuật: bge-m3. Có thể dùng nomic-embed-text nếu máy nhẹ.</small></label>
         <label class="switch-row"><input id="semanticRerankInput" type="checkbox" ${state.settings.semanticRerank ? 'checked' : ''}><span><b>Semantic rerank</b><small>Rerank các đoạn ứng viên bằng embedding cục bộ trước khi gửi cho model trả lời.</small></span></label>
         <div class="notice"><b>Cơ chế v1.7:</b> quét toàn bộ trang → tìm từ khóa/cấu trúc → embedding semantic → cân bằng giữa PDF → thêm trang lân cận → model trả lời có citation.</div>
         <div class="action-row"><button class="btn" id="autoLocalModels" type="button">⚙ Tự chọn model theo máy</button><button class="btn" id="installCurrentLocalModel" type="button">⬇ Cài model văn bản</button><button class="btn" id="installLocalAiPack" type="button">⬇ Cài bộ AI Offline chuẩn</button></div><div class="notice"><b>Desktop:</b> nút cài model gọi Ollama ngay trên máy. Bộ chuẩn gồm model văn bản + embedding + vision; chỉ cần tải một lần rồi có thể dùng offline.</div>
         ${localModelManagerHtml()}
       </div>` : ''}
-      ${state.settings.connection === 'bridge' ? `<label class="field"><span>HNL Bridge URL</span><input id="bridgeInput" value="${esc(state.settings.bridgeUrl)}"></label><div class="notice">Khi chạy Local, nên để Bridge cùng địa chỉ app, ví dụ http://127.0.0.1:8787.</div>` : ''}
+      ${state.settings.connection === 'bridge' ? `<label class="field"><span>HNL Bridge URL</span><input id="bridgeInput" value="${esc(draftSetting('bridgeUrl', state.settings.bridgeUrl))}"></label><div class="notice">Khi chạy Local, nên để Bridge cùng địa chỉ app, ví dụ http://127.0.0.1:8787.</div>` : ''}
     `}
     <label class="switch-row"><input id="strictInput" type="checkbox" ${state.settings.strict ? 'checked' : ''}><span><b>Khóa nguồn tài liệu</b><small>AI không được tự thêm quy định ngoài PDF/ảnh/text đã chọn.</small></span></label>
     <div class="action-row"><button class="btn primary" id="saveSettings">Lưu cài đặt</button><button class="btn" id="testConnection">Kiểm tra kết nối</button></div>
@@ -813,7 +957,7 @@ function bind() {
       }
       if (el.id === 'saveSettings') { updateSettingsFromForm(); return; }
       if (el.id === 'testConnection') { await testConnection(); return; }
-      if (el.id === 'refreshModels') { await refreshModels(); return; }
+      if (el.id === 'refreshModels' || el.id === 'refreshModelsQuick') { await refreshModels(); return; }
       if (el.id === 'ocrActivePdf') { await ocrActivePdfLocal(); return; }
       if (el.id === 'autoLocalModels') { await applyRecommendedLocalModels(); return; }
       if (el.id === 'installCurrentLocalModel') { await installLocalModels([state.settings.model || 'qwen3:8b']); return; }
@@ -860,7 +1004,8 @@ function bind() {
     if (el.id === 'cType' || el.id === 'cClass') { syncCalcDefaults(); return; }
     if (el.id === 'formulaScanMode') { state.formulaScanMode = el.value || 'auto'; localStorage.setItem(STORAGE.formulaScanMode, state.formulaScanMode); return; }
     if (el.id === 'formulaSelect') { state.formulaSelection = el.value; localStorage.setItem(STORAGE.formulaSelection, el.value); render(); return; }
-    if (el.id === 'providerSelect') { providerChanged(event); return; }
+    if (el.id === 'providerSelect' || el.id === 'quickProviderSelect') { providerChanged(event); return; }
+    if (el.id === 'quickModelSelect') { const next=el.value; if (!confirmModelSwitch(next, 'Bạn đang chọn một model khác.')) { render(); } else render(); return; }
     if (el.id === 'strictInput') { state.settings.strict = el.checked; }
   };
 
@@ -871,15 +1016,12 @@ function bind() {
     else if (el.id === 'pageRange') { const n=Number(el.value)||1; const label=document.querySelector('#readerStatusPage'); if(label) label.textContent=String(n); }
     else if (el.id === 'lookupQuery') state.lookup.draft = el.value;
     else if (el.id === 'compareQuestion') state.compare.draft = el.value;
-    else if (el.id === 'modelInput') state.settings.model = el.value;
-    else if (el.id === 'visionModelInput') state.settings.visionModel = el.value;
-    else if (el.id === 'bridgeInput') state.settings.bridgeUrl = el.value;
-    else if (el.id === 'ollamaInput') state.settings.ollamaUrl = el.value;
-    else if (el.id === 'apiKeyInput') {
-      const provider = state.settings.provider;
-      if (el.value.trim()) sessionStorage.setItem(sessionKeyName(provider), el.value.trim());
-      else sessionStorage.removeItem(sessionKeyName(provider));
-    }
+    else if (el.id === 'modelInput') state.settingsDraft.model = el.value;
+    else if (el.id === 'visionModelInput') state.settingsDraft.visionModel = el.value;
+    else if (el.id === 'embeddingModelInput') state.settingsDraft.embeddingModel = el.value;
+    else if (el.id === 'bridgeInput') state.settingsDraft.bridgeUrl = el.value;
+    else if (el.id === 'ollamaInput') state.settingsDraft.ollamaUrl = el.value;
+    else if (el.id === 'apiKeyInput') state.settingsDraft.apiKey = el.value;
   };
 
   app.onkeydown = event => {
@@ -1291,10 +1433,7 @@ function formulaAiTargets(doc, mode, localItems=[]) {
 
 async function callFormulaAi(prompt, images=[]) {
   if (state.settings.provider === 'local') throw new Error('Chế độ Tra cứu nhanh không có mô hình AI. Hãy chọn HNL Offline AI, Gemini, ChatGPT, Claude hoặc Grok.');
-  if (state.settings.connection === 'bridge') {
-    return callBridge({ bridgeUrl:state.settings.bridgeUrl, provider:state.settings.provider, model:providerModel(images.length > 0), prompt, images });
-  }
-  return callDirect({ provider:state.settings.provider, model:providerModel(images.length > 0), apiKey:currentApiKey(), prompt, ollamaUrl:state.settings.ollamaUrl, images });
+  return callConfiguredAiWithApproval({ prompt, images });
 }
 
 async function scanFormulaPageWithAi(doc, pageObj) {
@@ -1490,12 +1629,7 @@ async function getAnswer(question, docsOverride = null) {
   const retrievalText = state.searchStats?.retrieval ? ` Chế độ chọn ngữ cảnh: ${state.searchStats.retrieval}${state.searchStats.embeddingModel ? ` (${state.searchStats.embeddingModel})` : ''}.` : '';
   const coverage = `\n\nTHỐNG KÊ PHẠM VI: hệ thống đã quét toàn bộ ${stats.textPages}/${stats.pages} trang có lớp chữ, ${stats.chunks} đoạn thuộc ${stats.docs} tài liệu trước khi chọn ngữ cảnh liên quan.${retrievalText}${planText} Không được hiểu số đoạn ngữ cảnh bên dưới là số trang đã quét.`;
   const prompt = buildRagPrompt(question, hits, state.settings.strict) + coverage;
-  let text;
-  if (state.settings.connection === 'bridge') {
-    text = await callBridge({ bridgeUrl: state.settings.bridgeUrl, provider: state.settings.provider, model: providerModel(images.length > 0), prompt, images });
-  } else {
-    text = await callDirect({ provider: state.settings.provider, model: providerModel(images.length > 0), apiKey: currentApiKey(), prompt, ollamaUrl: state.settings.ollamaUrl, images });
-  }
+  const text = await callConfiguredAiWithApproval({ prompt, images });
   if (!text) throw new Error('AI không trả về nội dung.');
   return { text, hits, stats };
 }
@@ -1765,34 +1899,58 @@ async function aiChecklist() {
 
 function providerChanged(event) {
   const provider = event.target.value;
+  const oldProvider = state.settings.provider;
+  const oldModel = providerModel();
+  if (provider === oldProvider) return;
+  const nextModel = PROVIDERS[provider]?.model || '';
+  const ok = window.confirm(`Chuyển nhà cung cấp AI?
+
+Hiện tại: ${PROVIDERS[oldProvider]?.label || oldProvider}${oldModel ? ` · ${oldModel}` : ''}
+Mới: ${PROVIDERS[provider]?.label || provider}${nextModel ? ` · ${nextModel}` : ''}
+
+HNL chỉ chuyển khi bạn bấm OK.`);
+  if (!ok) { render(); return; }
   state.settings.provider = provider;
-  state.settings.model = PROVIDERS[provider]?.model || '';
+  state.settings.model = nextModel;
+  state.settingsDraft = {};
   state.modelOptions = [];
-  state.modelStatus = '';
+  state.modelOptionsVerified = false;
+  state.modelCatalogSource = '';
+  state.modelStatus = 'Đã đổi nhà cung cấp theo xác nhận của người dùng. Bấm ↻ để nạp model khả dụng.';
   if (provider === 'ollama' && isLocalHost()) { state.settings.connection = 'bridge'; state.settings.bridgeUrl = location.origin; }
   state.connectionStatus = null;
+  saveSettings();
   render();
   if (provider === 'ollama' && (IS_DESKTOP_EDITION || isLocalHost())) setTimeout(() => refreshLocalModelManager(false), 0);
 }
 async function refreshModels() {
   if (state.settings.provider === 'local') return showToast('Tra cứu nhanh không dùng model AI.', 'info');
-  readSettingsForm();
-  state.modelStatus = 'Đang lấy danh sách model…';
+  const draft = rememberSettingsDraft();
+  state.modelStatus = 'Đang kiểm tra danh sách model…';
   render();
   try {
-    const models = await listAvailableModels({
+    const result = await listAvailableModelsDetailed({
       provider: state.settings.provider,
       connection: state.settings.connection,
-      apiKey: currentApiKey(),
-      bridgeUrl: state.settings.bridgeUrl,
-      ollamaUrl: state.settings.ollamaUrl
+      apiKey: String(draft.apiKey || '').trim(),
+      bridgeUrl: draft.bridgeUrl || state.settings.bridgeUrl,
+      ollamaUrl: draft.ollamaUrl || state.settings.ollamaUrl
     });
-    state.modelOptions = models;
-    if (models.length && !models.includes(state.settings.model)) state.settings.model = models.includes(PROVIDERS[state.settings.provider]?.model) ? PROVIDERS[state.settings.provider].model : models[0];
-    state.modelStatus = models.length ? `Có ${models.length} model khả dụng. Có thể chọn trong ô phía trên.` : 'Không lấy được danh sách model; vẫn có thể nhập tên model thủ công.';
-    saveSettings();
-    showToast(models.length ? `Đã tải ${models.length} model.` : 'Không lấy được model động.', models.length ? 'success' : 'warning');
+    state.modelOptions = result.models || [];
+    state.modelOptionsVerified = result.verified === true;
+    state.modelCatalogSource = result.source || '';
+    const current = providerModel();
+    const missingCurrent = Boolean(state.modelOptionsVerified && state.modelOptions.length && current && !state.modelOptions.includes(current));
+    if (state.modelOptionsVerified) {
+      state.modelStatus = state.modelOptions.length
+        ? (missingCurrent ? `Đã xác minh ${state.modelOptions.length} model. Model hiện tại ${current} không còn trong danh sách; HNL KHÔNG tự chuyển.` : `Đã xác minh ${state.modelOptions.length} model từ ${result.source || 'API'}. HNL không tự đổi model.`)
+        : `Đã kết nối nhưng tài khoản/Ollama không trả về model khả dụng.`;
+    } else {
+      state.modelStatus = `Chỉ hiển thị catalog gợi ý, CHƯA xác minh model thực tế. ${result.warning || ''}`.trim();
+    }
+    showToast(state.modelOptionsVerified ? `Đã xác minh ${state.modelOptions.length} model.` : 'Danh sách hiện chỉ là gợi ý, chưa xác minh.', state.modelOptionsVerified ? 'success' : 'warning');
   } catch (error) {
+    state.modelOptions = []; state.modelOptionsVerified = false; state.modelCatalogSource = '';
     state.modelStatus = `Không lấy được danh sách: ${error.message}`;
     showToast(state.modelStatus, 'warning');
   }
@@ -1801,13 +1959,17 @@ async function refreshModels() {
 
 async function applyRecommendedLocalModels() {
   if (state.settings.provider !== 'ollama') return showToast('Hãy chọn HNL Offline AI · Ollama trước.', 'warning');
-  readSettingsForm();
   try {
     const d = await localEngineDiagnostics(state.settings.bridgeUrl);
     if (!d.ollama) throw new Error('Ollama chưa chạy. Hãy mở START_HNL_OFFLINE_AI.bat.');
-    if (d.recommended?.text) state.settings.model = d.recommended.text;
-    if (d.recommended?.vision) state.settings.visionModel = d.recommended.vision;
-    if (d.recommended?.embedding) state.settings.embeddingModel = d.recommended.embedding;
+    const nextText = d.recommended?.text || state.settings.model;
+    const nextVision = d.recommended?.vision || state.settings.visionModel;
+    const nextEmbedding = d.recommended?.embedding || state.settings.embeddingModel;
+    const ok = window.confirm(`HNL đề xuất cấu hình theo máy:\n\nText: ${state.settings.model || '(chưa chọn)'} → ${nextText}\nVision: ${state.settings.visionModel} → ${nextVision}\nEmbedding: ${state.settings.embeddingModel} → ${nextEmbedding}\n\nBấm OK mới áp dụng. Cancel = giữ nguyên.`);
+    if (!ok) return showToast('Đã giữ nguyên model hiện tại.', 'info');
+    state.settings.model = nextText;
+    state.settings.visionModel = nextVision;
+    state.settings.embeddingModel = nextEmbedding;
     state.settings.retrievalMode = 'auto';
     state.settings.semanticRerank = true;
     saveSettings();
@@ -1832,7 +1994,6 @@ async function refreshLocalModelManager(showFeedback = false) {
   state.localModelManager.loading = true; state.localModelManager.error = '';
   if (showFeedback) render();
   try {
-    readSettingsForm();
     const base = String(state.settings.bridgeUrl || location.origin).replace(/\/$/, '');
     const r = await fetch(`${base}/api/local/model-manager`);
     const data = await r.json().catch(()=>({}));
@@ -1851,11 +2012,22 @@ async function refreshLocalModelManager(showFeedback = false) {
 async function installModelPack(kind = 'balanced') {
   const packs = { light:['qwen3:4b','nomic-embed-text','gemma3:4b'], balanced:['qwen3:8b','bge-m3','gemma3:4b'], strong:['qwen3:14b','bge-m3','gemma3:4b'] };
   const models = packs[kind] || packs.balanced;
-  if (kind === 'light') { state.settings.model='qwen3:4b'; state.settings.embeddingModel='nomic-embed-text'; }
-  else if (kind === 'strong') { state.settings.model='qwen3:14b'; state.settings.embeddingModel='bge-m3'; }
-  else { state.settings.model='qwen3:8b'; state.settings.embeddingModel='bge-m3'; }
-  state.settings.visionModel='gemma3:4b'; saveSettings(); await installLocalModels(models); await refreshLocalModelManager(false);
+  const next = kind === 'light'
+    ? { model:'qwen3:4b', embeddingModel:'nomic-embed-text', visionModel:'gemma3:4b' }
+    : kind === 'strong'
+      ? { model:'qwen3:14b', embeddingModel:'bge-m3', visionModel:'gemma3:4b' }
+      : { model:'qwen3:8b', embeddingModel:'bge-m3', visionModel:'gemma3:4b' };
+  const ok = window.confirm(`Cài và đặt bộ AI Offline ${kind.toUpperCase()} làm cấu hình hiện tại?\n\nText: ${state.settings.model || '(chưa chọn)'} → ${next.model}\nVision: ${state.settings.visionModel} → ${next.visionModel}\nEmbedding: ${state.settings.embeddingModel} → ${next.embeddingModel}\n\nChỉ bấm OK mới đổi model và bắt đầu tải.`);
+  if (!ok) return showToast('Đã giữ nguyên model hiện tại; chưa tải bộ model.', 'info');
+  state.settings.model = next.model;
+  state.settings.embeddingModel = next.embeddingModel;
+  state.settings.visionModel = next.visionModel;
+  state.settingsDraft = {};
+  saveSettings();
+  await installLocalModels(models);
+  await refreshLocalModelManager(false);
 }
+
 async function deleteLocalModel(model) {
   model = String(model || '').trim(); if (!model) return;
   if (!confirm(`Xóa model Offline "${model}" khỏi máy?\n\nModel có thể tải lại sau bằng Ollama.`)) return;
@@ -1876,7 +2048,6 @@ async function openModelDirectory() {
 async function installLocalModels(models = []) {
   if (!IS_DESKTOP_EDITION && !isLocalHost()) return showToast('Cài model Offline chỉ dùng trong HNL Desktop AI/HNL Local.', 'warning');
   if (state.settings.provider !== 'ollama') return showToast('Hãy chọn HNL Offline AI · Ollama trước.', 'warning');
-  readSettingsForm();
   const unique = [...new Set(models.map(x => String(x || '').trim()).filter(Boolean))];
   if (!unique.length) return showToast('Chưa có tên model để cài.', 'warning');
   if (!confirm(`Tải model Ollama về máy?\n\n${unique.join('\n')}\n\nChỉ cần tải một lần; dung lượng có thể vài GB.`)) return;
@@ -1896,49 +2067,74 @@ async function installLocalModels(models = []) {
   render();
 }
 
-function readSettingsForm() {
+function readSettingsForm({ askBeforeModelChange = false } = {}) {
   const provider = document.querySelector('#providerSelect')?.value || state.settings.provider;
-  state.settings.provider = provider;
-  state.settings.model = document.querySelector('#modelInput')?.value.trim() || PROVIDERS[provider]?.model || '';
-  state.settings.visionModel = document.querySelector('#visionModelInput')?.value.trim() || state.settings.visionModel || 'gemma3:4b';
-  state.settings.bridgeUrl = document.querySelector('#bridgeInput')?.value.trim() || state.settings.bridgeUrl;
-  state.settings.ollamaUrl = document.querySelector('#ollamaInput')?.value.trim() || state.settings.ollamaUrl;
-  state.settings.retrievalMode = document.querySelector('#retrievalModeInput')?.value || state.settings.retrievalMode || 'auto';
-  state.settings.embeddingModel = document.querySelector('#embeddingModelInput')?.value.trim() || state.settings.embeddingModel || 'bge-m3';
-  state.settings.semanticRerank = document.querySelector('#semanticRerankInput')?.checked ?? state.settings.semanticRerank;
-  state.settings.strict = document.querySelector('#strictInput')?.checked ?? state.settings.strict;
-  const apiKeyInput = document.querySelector('#apiKeyInput');
-  if (apiKeyInput) {
-    const value = apiKeyInput.value.trim();
-    if (value) sessionStorage.setItem(sessionKeyName(provider), value);
-    else sessionStorage.removeItem(sessionKeyName(provider));
+  if (provider !== state.settings.provider) return false; // providerChanged owns provider switches.
+  const draft = rememberSettingsDraft();
+  const next = {
+    model: String(draft.model || PROVIDERS[provider]?.model || '').trim(),
+    visionModel: String(draft.visionModel || state.settings.visionModel || 'gemma3:4b').trim(),
+    embeddingModel: String(draft.embeddingModel || state.settings.embeddingModel || 'bge-m3').trim()
+  };
+  const changes = [];
+  if (next.model !== state.settings.model) changes.push(`Text: ${state.settings.model || '(chưa chọn)'} → ${next.model}`);
+  if (next.visionModel !== state.settings.visionModel) changes.push(`Vision: ${state.settings.visionModel || '(chưa chọn)'} → ${next.visionModel}`);
+  if (next.embeddingModel !== state.settings.embeddingModel) changes.push(`Embedding: ${state.settings.embeddingModel || '(chưa chọn)'} → ${next.embeddingModel}`);
+  if (askBeforeModelChange && changes.length) {
+    const ok = window.confirm(`Đổi cấu hình model AI?\n\n${changes.join('\n')}\n\nHNL chỉ áp dụng khi bạn bấm OK. Cancel = giữ nguyên toàn bộ cấu hình.`);
+    if (!ok) {
+      state.settingsDraft = {};
+      render();
+      return false;
+    }
   }
+  state.settings.model = next.model;
+  state.settings.visionModel = next.visionModel;
+  state.settings.embeddingModel = next.embeddingModel;
+  state.settings.bridgeUrl = String(draft.bridgeUrl || state.settings.bridgeUrl).trim();
+  state.settings.ollamaUrl = String(draft.ollamaUrl || state.settings.ollamaUrl).trim();
+  state.settings.retrievalMode = draft.retrievalMode || state.settings.retrievalMode || 'auto';
+  state.settings.semanticRerank = Boolean(draft.semanticRerank);
+  state.settings.strict = Boolean(draft.strict);
+  const key = String(draft.apiKey || '').trim();
+  if (key) sessionStorage.setItem(sessionKeyName(provider), key);
+  else sessionStorage.removeItem(sessionKeyName(provider));
+  state.settingsDraft = {};
   saveSettings();
+  return true;
 }
 function updateSettingsFromForm() {
-  readSettingsForm();
+  if (!readSettingsForm({ askBeforeModelChange:true })) return;
   state.connectionStatus = null;
-  showToast('Đã lưu cài đặt.', 'success');
+  showToast('Đã lưu cài đặt. Text/Vision/Embedding model chỉ đổi sau khi bạn xác nhận OK.', 'success');
+  render();
 }
+
 async function testConnection() {
-  readSettingsForm();
+  const draft = rememberSettingsDraft();
   state.connectionStatus = null;
   render();
   try {
     let result;
-    if (state.settings.provider === 'local') result = { ok: true, message: 'Tra cứu nhanh sẵn sàng. Đây không phải mô hình AI.' };
-    else if (state.settings.provider === 'ollama' && location.protocol === 'https:' && !isLocalHost() && !/^https:\/\//i.test(state.settings.bridgeUrl || '')) {
-      result = { ok: false, message: 'GitHub Pages HTTPS không thể kết nối ổn định tới Ollama/Bridge HTTP trên máy. Hãy chạy START_HNL_OFFLINE_AI.bat rồi mở http://127.0.0.1:8787.' };
-    }
-    else if (state.settings.connection === 'bridge') {
-      const health = await bridgeHealth(state.settings.bridgeUrl);
-      const configured = health.providers?.[state.settings.provider];
-      result = { ok: Boolean(health.ok && configured !== false), message: configured === false ? `Bridge hoạt động nhưng chưa cấu hình key cho ${PROVIDERS[state.settings.provider].label}.` : 'HNL Bridge phản hồi bình thường.' };
+    const provider = state.settings.provider;
+    const connection = state.settings.connection;
+    const model = String(draft.model || providerModel()).trim();
+    const bridgeUrl = draft.bridgeUrl || state.settings.bridgeUrl;
+    const ollamaUrl = draft.ollamaUrl || state.settings.ollamaUrl;
+    const apiKey = String(draft.apiKey || '').trim();
+    if (provider === 'local') result = { ok:true, message:'Tra cứu nhanh sẵn sàng. Đây không phải mô hình AI.' };
+    else if (provider === 'ollama' && location.protocol === 'https:' && !isLocalHost() && !/^https:\/\//i.test(bridgeUrl || '')) {
+      result = { ok:false, message:'GitHub Pages HTTPS không thể kết nối ổn định tới Ollama/Bridge HTTP trên máy. Hãy chạy START_HNL_OFFLINE_AI.bat rồi mở http://127.0.0.1:8787.' };
+    } else if (connection === 'bridge') {
+      const health = await bridgeHealth(bridgeUrl);
+      const configured = health.providers?.[provider];
+      result = { ok:Boolean(health.ok && configured !== false), message:configured === false ? `Bridge hoạt động nhưng chưa cấu hình key cho ${PROVIDERS[provider].label}.` : 'HNL Bridge phản hồi bình thường. Cài đặt nháp chưa được lưu.' };
     } else {
-      result = await testDirectProvider({ provider: state.settings.provider, model: providerModel(), apiKey: currentApiKey(), ollamaUrl: state.settings.ollamaUrl });
+      result = await testDirectProvider({ provider, model, apiKey, ollamaUrl });
+      if (result?.message) result.message += ' Cài đặt nháp chưa được lưu.';
     }
     state.connectionStatus = result;
-  } catch (error) { state.connectionStatus = { ok: false, message: error.message }; }
+  } catch (error) { state.connectionStatus = { ok:false, message:`${error.message} Cài đặt nháp chưa được lưu.` }; }
   render();
 }
 
@@ -1956,7 +2152,7 @@ function bindWorkspaceSplitters() {
         const delta = e.clientX - startX;
         const next = side === 'left' ? start + delta : start - delta;
         state.layout[side] = Math.round(Math.min(side === 'left' ? 390 : 560, Math.max(side === 'left' ? 240 : 330, next)));
-        workspace.style.setProperty(side === 'left' ? '--left-w' : '--right-w', `${state.layout[side]}px`);
+        workspace.style.setProperty(side === 'left' ? '--left-user-w' : '--right-user-w', `${state.layout[side]}px`);
       };
       const up = e => {
         handle.removeEventListener('pointermove', move); handle.removeEventListener('pointerup', up);

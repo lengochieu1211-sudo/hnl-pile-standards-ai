@@ -1,6 +1,60 @@
 {
-  "current": "1.9.5",
+  "current": "1.9.10",
   "releases": [
+    {
+      "version": "1.9.10",
+      "title": "Full Version Sync, Logic & UI Hardening",
+      "changes": [
+        "Version Gate mới đồng bộ package.json, README, changelog, release hiện hành, BUILD_METADATA và build-info sinh thử từ chính source.",
+        "Loại bỏ assertion version cũ 1.9.8 trong test; test hiện đọc version động từ package.json để không lệch khi phát hành bản mới.",
+        "Web/Windows Actions có bước Version Gate riêng trước test/build; Pages nâng checkout/setup-node lên v5 để tránh cảnh báo Node action cũ.",
+        "Giữ nguyên cơ chế hỏi OK trước mọi thay đổi Text/Vision/Embedding/provider; Refresh model và Kiểm tra kết nối không commit cài đặt nháp/API key.",
+        "Giữ layout tự co 3 vùng trên desktop và mobile tab dưới 880 px; panel không tự biến mất do resize.",
+        "Windows build tiếp tục tách artifactName Setup/Portable và verify đủ cả hai EXE trước upload."
+      ]
+    },
+    {
+      "version": "1.9.9",
+      "title": "Full Logic, UI & Version Hardening",
+      "changes": [
+        "Thêm Version Gate: package.json là nguồn version duy nhất; test/build dừng ngay nếu README, changelog hoặc release hiện hành lệch version.",
+        "Mọi thay đổi Text/Vision/Embedding model đều phải được người dùng bấm OK trước khi áp dụng; refresh/test không còn âm thầm lưu cài đặt.",
+        "API key chỉ ghi vào sessionStorage khi bấm Lưu cài đặt; gõ thử/refresh/test không tự lưu key.",
+        "Danh sách model phân biệt model đã xác minh qua API/Ollama với catalog gợi ý; fallback chỉ đề nghị model đã xác minh và vẫn bắt buộc OK.",
+        "Cài bộ model Offline và cấu hình đề xuất theo máy đều hỏi xác nhận trước khi đổi model hiện tại.",
+        "Chuẩn hóa responsive 3 vùng: desktop tự co thay vì mất panel; mobile chuyển tab; các nút phục hồi luôn có đường mở lại.",
+        "Workflow Web/Windows chạy Version Gate trước test/build và Windows chỉ upload khi xác minh đủ Setup + Portable EXE."
+      ]
+    },
+    {
+      "version": "1.9.8",
+      "title": "Dynamic Model Picker, User-approved Fallback & Windows EXE Build Fix",
+      "changes": [
+        "Hiển thị bộ chọn AI và model trực tiếp trên panel Trợ lý.",
+        "Làm mới danh sách model không tự đổi model đang dùng.",
+        "Khi quota/rate limit/503 xảy ra, HNL retry model hiện tại trước; mọi chuyển model dự phòng đều phải được người dùng bấm OK.",
+        "Không tự đổi sang nhà cung cấp AI khác và không tự đổi Vision model.",
+        "Bridge giữ upstream status để nhận biết 429/503/404 và xử lý đúng loại lỗi.",
+        "Sửa cấu hình electron-builder: Setup/Portable dùng artifactName riêng, loại bỏ macro ${target} gây lỗi build Windows.",
+        "Workflow Windows xác minh đủ Setup EXE và Portable EXE trước khi upload artifact."
+      ]
+    },
+    {
+      "version": "1.9.7",
+      "title": "Windows EXE Build Fix",
+      "changes": [
+        "Tách artifactName riêng cho NSIS Setup và Portable, loại bỏ macro ${target} không được electron-builder hỗ trợ.",
+        "Workflow Windows xác minh đủ cả Setup EXE và Portable EXE trước khi upload artifact."
+      ]
+    },
+    {
+      "version": "1.9.6",
+      "title": "Fluid Responsive Layout",
+      "changes": [
+        "Desktop giữ 3 vùng Thư viện/PDF/Trợ lý và tự co theo viewport thay vì tự ẩn panel.",
+        "Dưới 880 px chuyển sang điều hướng 3 tab; splitter và kích thước panel đã lưu vẫn được bảo toàn."
+      ]
+    },
     {
       "version": "1.9.5",
       "title": "UI Settings Visibility & Automatic Windows EXE Build",

@@ -683,3 +683,155 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .tabs { grid-template-columns:repeat(4,minmax(0,1fr)); position:sticky; top:0; z-index:3; }
   .panel-body { overflow:visible; }
 }
+
+/* =========================================================
+   HNL v1.9.6 — Fluid responsive layout, never auto-hide desktop panels
+   ========================================================= */
+/* Keep the user's preferred width, but cap it against the live viewport.
+   Panels shrink before the PDF area is clipped; they are hidden only by an
+   explicit user action (collapse/focus), never merely because the window narrows. */
+.workspace {
+  --left-effective: max(220px, min(var(--left-user-w, 290px), 24vw));
+  --right-effective: max(300px, min(var(--right-user-w, 440px), 34vw));
+  grid-template-columns: var(--left-effective) minmax(340px, 1fr) var(--right-effective);
+  min-width: 0;
+  overflow: hidden;
+}
+.workspace.left-collapsed { grid-template-columns: 0 minmax(340px, 1fr) var(--right-effective); }
+.workspace.right-collapsed { grid-template-columns: var(--left-effective) minmax(340px, 1fr) 0; }
+.workspace.left-collapsed.right-collapsed,
+.workspace.reader-focus { grid-template-columns: 0 minmax(340px, 1fr) 0; }
+.splitter-left { left: calc(var(--left-effective) - 3px); }
+.splitter-right { right: calc(var(--right-effective) - 3px); }
+
+/* Every major region is allowed to shrink internally instead of overflowing. */
+.sidebar, .viewer, .assistant-panel,
+.viewer-toolbar, .viewer-title-wrap, .viewer-controls,
+.assistant-head, .assistant-head-actions, .tabs, .panel-body,
+.doc-row, .doc-main, .doc-copy, .brand, .brand-copy, .top-actions { min-width: 0; }
+.sidebar, .assistant-panel { max-width: 100%; }
+.doc-copy small, .doc-copy em { overflow-wrap:anywhere; }
+
+/* Top bar also compresses gracefully. */
+.brand { flex: 1 1 auto; min-width: 0; }
+.brand-copy { min-width:0; }
+.brand-title, .brand-sub { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.top-actions { flex:0 0 auto; }
+.build-meta { min-width:0; }
+.build-meta > span:last-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:330px; }
+
+/* Desktop compact profile: shrink content, never drop either side panel. */
+@media (max-width:1180px) and (min-width:881px) {
+  .workspace {
+    --left-effective: max(215px, min(var(--left-user-w, 290px), 23vw));
+    --right-effective: max(290px, min(var(--right-user-w, 440px), 33vw));
+    grid-template-columns: var(--left-effective) minmax(320px, 1fr) var(--right-effective);
+  }
+  .workspace.left-collapsed { grid-template-columns:0 minmax(320px,1fr) var(--right-effective); }
+  .workspace.right-collapsed { grid-template-columns:var(--left-effective) minmax(320px,1fr) 0; }
+  .workspace.left-collapsed.right-collapsed,
+  .workspace.reader-focus { grid-template-columns:0 minmax(320px,1fr) 0; }
+  .sidebar { padding-left:9px; padding-right:9px; }
+  .assistant-head { padding-left:9px; padding-right:9px; }
+  .panel-body { padding:9px; }
+  .side-head h2, .assistant-head h2 { font-size:14px; }
+  .upload-box b { font-size:12px; }
+  .upload-box small, .library-note { font-size:9.5px; }
+  .doc-copy b { font-size:10.8px; }
+  .tabs { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .tab { font-size:9.4px; padding:7px 3px; }
+}
+
+/* Very narrow desktop just above mobile: preserve 3 usable columns. */
+@media (max-width:980px) and (min-width:881px) {
+  .workspace {
+    --left-effective: 215px;
+    --right-effective: 290px;
+    grid-template-columns: var(--left-effective) minmax(300px,1fr) var(--right-effective);
+  }
+  .workspace.left-collapsed { grid-template-columns:0 minmax(300px,1fr) var(--right-effective); }
+  .workspace.right-collapsed { grid-template-columns:var(--left-effective) minmax(300px,1fr) 0; }
+  .workspace.left-collapsed.right-collapsed,
+  .workspace.reader-focus { grid-template-columns:0 minmax(300px,1fr) 0; }
+  .brand-mark { width:40px; height:40px; }
+  .brand-title { font-size:13px; }
+  .build-meta > span:last-child { display:none; }
+  .source-badge, .ai-badge { padding:6px 8px; font-size:10.5px; }
+  .viewer-toolbar { padding-left:7px; padding-right:7px; }
+  .viewer-controls { gap:3px; }
+  .toolbar-divider { margin:0 1px; }
+}
+
+/* Mobile/tablet uses explicit 3-tab navigation; nothing is lost, it becomes a view switch. */
+@media (max-width:880px) {
+  .workspace { overflow:visible; }
+  .sidebar, .viewer, .assistant-panel { width:100%; max-width:none; }
+  .mobile-nav { position:fixed; left:0; right:0; bottom:0; }
+  .app-shell { padding-bottom:52px; }
+  .assistant-panel { height:calc(100vh - 112px); }
+  .panel-body { overflow:auto; min-height:0; }
+}
+
+/* =========================================================
+   HNL v1.9.8 — visible dynamic model picker + approval-safe fallback
+   ========================================================= */
+.ai-quickbar {
+  display:grid;
+  grid-template-columns:minmax(86px,.75fr) minmax(150px,1.45fr) auto;
+  gap:6px;
+  align-items:end;
+  padding:7px 10px;
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,#fbfdff,#f7faff);
+  min-width:0;
+}
+.ai-quickbar label { display:grid; gap:3px; min-width:0; }
+.ai-quickbar label > span { font-size:8.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+.ai-quickbar select {
+  width:100%; min-width:0; height:30px; border:1px solid var(--line); border-radius:8px;
+  background:#fff; color:var(--navy-900); padding:0 7px; font-size:10.5px; font-weight:650;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.ai-quickbar select:focus { outline:2px solid rgba(37,99,235,.16); border-color:#7aa7ea; }
+.quick-model-refresh { width:30px; height:30px; }
+.quick-model-note { grid-column:1 / -1; color:var(--muted); font-size:8.7px; line-height:1.35; overflow-wrap:anywhere; }
+@media (max-width:1180px) and (min-width:881px) {
+  .ai-quickbar { grid-template-columns:minmax(72px,.7fr) minmax(120px,1.3fr) auto; padding:6px 8px; }
+  .ai-quickbar select { font-size:9.7px; padding:0 5px; }
+  .quick-model-note { font-size:8.2px; }
+}
+@media (max-width:980px) and (min-width:881px) {
+  .ai-quickbar { grid-template-columns:minmax(0,1fr) auto; }
+  .ai-quickbar label:first-child { grid-column:1 / 2; }
+  .quick-model-field { grid-column:1 / 2; }
+  .quick-model-refresh { grid-column:2 / 3; grid-row:2; }
+  .quick-model-note { grid-column:1 / -1; }
+}
+@media (max-width:880px) {
+  .ai-quickbar { position:sticky; top:54px; z-index:3; grid-template-columns:minmax(86px,.7fr) minmax(130px,1.3fr) auto; }
+}
+
+
+/* =========================================================
+   HNL v1.9.10 — canonical responsive hardening
+   This final block intentionally wins over historical rules above.
+   Desktop panels shrink; only explicit collapse/focus can hide them.
+   ========================================================= */
+@media (min-width:881px) {
+  .workspace:not(.left-collapsed):not(.reader-focus) .sidebar { display:block; visibility:visible; }
+  .workspace:not(.right-collapsed):not(.reader-focus) .assistant-panel { display:flex; visibility:visible; }
+  .workspace:not(.left-collapsed):not(.reader-focus) .splitter-left,
+  .workspace:not(.right-collapsed):not(.reader-focus) .splitter-right { display:block; }
+  .assistant-head, .ai-quickbar, .tabs { flex:0 0 auto; }
+  .panel-body { min-height:0; overflow:auto; }
+}
+@media (max-width:880px) {
+  .workspace[data-mobile="library"] .sidebar { display:block; }
+  .workspace[data-mobile="viewer"] .viewer { display:flex; }
+  .workspace[data-mobile="assistant"] .assistant-panel { display:flex; }
+  .assistant-panel { min-height:0; }
+  .panel-body { min-height:0; overflow:auto; }
+}
+.model-status-verified { color:var(--success); }
+.model-status-suggested { color:var(--warning); }
+.model-approval-lock { display:inline-flex; align-items:center; gap:4px; font-weight:750; }

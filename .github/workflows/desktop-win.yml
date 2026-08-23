@@ -18,10 +18,10 @@ jobs:
       CSC_IDENTITY_AUTO_DISCOVERY: "false"
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
 
@@ -35,11 +35,31 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Version Gate
+        run: npm run check:version
+
       - name: Test core logic
         run: npm test
 
+      - name: Validate Windows builder config
+        shell: pwsh
+        run: |
+          node -e "const p=require('./package.json'); const w=p.build?.win||{}; const n=p.build?.nsis?.artifactName||''; const q=p.build?.portable?.artifactName||''; if(String(w.artifactName||'').includes('\${target}')) throw new Error('win.artifactName still contains unsupported target macro'); if(!/Setup/.test(n)||!/Portable/.test(q)) throw new Error('NSIS/Portable artifact names are not separated'); console.log('electron-builder artifact names OK')"
+
       - name: Build NSIS and Portable EXE
         run: npm run dist:win
+
+      - name: Verify Windows EXEs
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem release -Filter "HNL-Pile-Standards-AI-Setup-*.exe" -File
+          $portable = Get-ChildItem release -Filter "HNL-Pile-Standards-AI-Portable-*.exe" -File
+          if ($setup.Count -lt 1) { throw "Không tìm thấy Setup EXE trong release/" }
+          if ($portable.Count -lt 1) { throw "Không tìm thấy Portable EXE trong release/" }
+          Write-Host "Setup EXE:"
+          $setup | ForEach-Object { Write-Host " - $($_.Name) [$([math]::Round($_.Length/1MB,1)) MB]" }
+          Write-Host "Portable EXE:"
+          $portable | ForEach-Object { Write-Host " - $($_.Name) [$([math]::Round($_.Length/1MB,1)) MB]" }
 
       - name: Show embedded build metadata
         shell: pwsh
@@ -49,6 +69,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: HNL-Pile-Standards-AI-Windows-v${{ env.APP_VERSION }}-build-${{ github.run_number }}
-          path: release/*.exe
+          path: |
+            release/HNL-Pile-Standards-AI-Setup-*.exe
+            release/HNL-Pile-Standards-AI-Portable-*.exe
           if-no-files-found: error
           retention-days: 14

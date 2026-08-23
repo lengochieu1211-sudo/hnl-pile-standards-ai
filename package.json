@@ -1,7 +1,7 @@
 {
   "name": "hnl-pile-standards-ai",
   "private": true,
-  "version": "1.9.5",
+  "version": "1.9.10",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -15,11 +15,12 @@
     "bridge": "node bridge/server.mjs",
     "start": "node bridge/server.mjs",
     "offline": "npm run build:desktop && node bridge/server.mjs",
-    "test": "node --test tests/*.test.mjs",
+    "test": "npm run check:version && node --test tests/*.test.mjs",
     "check:web": "npm run test && npm run build:web",
     "check:desktop": "npm run test && npm run build:desktop",
     "desktop": "npm run build:desktop && electron .",
-    "dist:win": "npm run build:desktop && electron-builder --win nsis portable --publish never"
+    "dist:win": "npm run build:desktop && electron-builder --win nsis portable --publish never",
+    "check:version": "node scripts/check-version-sync.mjs"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -63,8 +64,7 @@
             "x64"
           ]
         }
-      ],
-      "artifactName": "HNL-Pile-Standards-AI-${version}-${arch}-${target}.${ext}"
+      ]
     },
     "nsis": {
       "oneClick": false,
@@ -73,7 +73,13 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "HNL Pile Standards AI",
-      "uninstallDisplayName": "HNL Pile Standards AI"
+      "uninstallDisplayName": "HNL Pile Standards AI",
+      "artifactName": "HNL-Pile-Standards-AI-Setup-${version}-${arch}.${ext}"
+    },
+    "portable": {
+      "artifactName": "HNL-Pile-Standards-AI-Portable-${version}-${arch}.${ext}"
     }
-  }
+  },
+  "description": "HNL Pile Standards AI - Web + Desktop engineering AI with version-gated builds, explicit model-change approval, PDF RAG, formulas, OCR/Vision and offline/online AI.",
+  "author": "HNL"
 }

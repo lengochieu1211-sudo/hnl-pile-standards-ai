@@ -59,7 +59,11 @@ async function jsonFetch(url, options, timeoutMs = 45000) {
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       const message = data?.error?.message || data?.error || data?.message || `${response.status} ${response.statusText}`;
-      throw new Error(String(message));
+      const error = new Error(String(message));
+      error.status = response.status;
+      error.code = data?.error?.status || data?.error?.code || data?.code || '';
+      error.payload = data;
+      throw error;
     }
     return data;
   } catch (error) {
@@ -231,7 +235,7 @@ export async function testDirectProvider({ provider, model, apiKey, ollamaUrl })
 }
 
 
-const FALLBACK_MODELS = {
+const SUGGESTED_MODELS = {
   ollama: [],
   gemini: ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-pro-preview'],
   openai: ['gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.4-mini', 'gpt-4.1-mini'],
@@ -243,42 +247,62 @@ function uniqueModels(list = []) {
   return [...new Set(list.map(x => String(x || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
 }
 
-/** List models available to the user's actual key/account when the provider exposes it. */
-export async function listAvailableModels({ provider, connection = 'direct', apiKey = '', bridgeUrl = '', ollamaUrl = 'http://127.0.0.1:11434' }) {
-  if (provider === 'local') return [];
+export function suggestedModels(provider) {
+  return uniqueModels(SUGGESTED_MODELS[provider] || []);
+}
+
+/**
+ * Return both the model list and whether that list was actually verified against
+ * the user's account/API/Ollama. A static catalog is useful for manual entry,
+ * but MUST NOT be treated as proof that a model is currently available.
+ */
+export async function listAvailableModelsDetailed({ provider, connection = 'direct', apiKey = '', bridgeUrl = '', ollamaUrl = 'http://127.0.0.1:11434' }) {
+  if (provider === 'local') return { models:[], verified:true, source:'local', warning:'' };
   try {
     if (connection === 'bridge') {
       const base = String(bridgeUrl || '').replace(/\/$/, '');
-      const data = await jsonFetch(`${base}/api/models/${encodeURIComponent(provider)}`, { method: 'GET' }, 12000);
+      const data = await jsonFetch(`${base}/api/models/${encodeURIComponent(provider)}`, { method:'GET' }, 12000);
       const models = uniqueModels(data.models || []);
-      return models.length ? models : (FALLBACK_MODELS[provider] || []);
+      // Old bridge versions did not expose `verified`; fail safe and do not
+      // allow those lists to drive automatic fallback proposals.
+      const verified = data.verified === true;
+      return { models, verified, source:data.source || 'bridge', warning:data.warning || (verified ? '' : 'Bridge chưa xác nhận danh sách model này bằng API hiện tại.') };
     }
     if (provider === 'ollama') {
       if (location.protocol === 'https:' && !/^https:\/\//i.test(ollamaUrl)) throw new Error('HTTPS chặn Ollama HTTP cục bộ');
       const base = String(ollamaUrl || 'http://127.0.0.1:11434').replace(/\/$/, '');
       const data = await jsonFetch(`${base}/api/tags`, { method:'GET' }, 8000);
-      return uniqueModels((data.models || []).map(x => x.name || x.model));
+      return { models:uniqueModels((data.models || []).map(x => x.name || x.model)), verified:true, source:'ollama', warning:'' };
     }
-    if (!apiKey) return FALLBACK_MODELS[provider] || [];
+    if (!apiKey) {
+      return { models:suggestedModels(provider), verified:false, source:'catalog', warning:'Chưa có API key để xác minh model thực tế của tài khoản.' };
+    }
     if (provider === 'gemini') {
       const data = await jsonFetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000', { headers:{ 'x-goog-api-key':apiKey } }, 12000);
       const models = (data.models || []).filter(m => !m.supportedGenerationMethods || m.supportedGenerationMethods.includes('generateContent')).map(m => String(m.name || '').replace(/^models\//,''));
-      return uniqueModels(models);
+      return { models:uniqueModels(models), verified:true, source:'gemini-api', warning:'' };
     }
     if (provider === 'openai') {
       const data = await jsonFetch('https://api.openai.com/v1/models', { headers:{ Authorization:`Bearer ${apiKey}` } }, 12000);
-      return uniqueModels((data.data || []).map(x => x.id).filter(id => /^(gpt-|o\d|chat-)/.test(id)));
+      return { models:uniqueModels((data.data || []).map(x => x.id).filter(id => /^(gpt-|o\d|chat-)/.test(id))), verified:true, source:'openai-api', warning:'' };
     }
     if (provider === 'claude') {
       const data = await jsonFetch('https://api.anthropic.com/v1/models?limit=100', { headers:{ 'x-api-key':apiKey, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' } }, 12000);
-      return uniqueModels((data.data || []).map(x => x.id));
+      return { models:uniqueModels((data.data || []).map(x => x.id)), verified:true, source:'anthropic-api', warning:'' };
     }
     if (provider === 'grok') {
       const data = await jsonFetch('https://api.x.ai/v1/models', { headers:{ Authorization:`Bearer ${apiKey}` } }, 12000);
-      return uniqueModels((data.data || data.models || []).map(x => x.id || x.name));
+      return { models:uniqueModels((data.data || data.models || []).map(x => x.id || x.name)), verified:true, source:'xai-api', warning:'' };
     }
   } catch (error) {
-    console.warn('Model listing failed; using fallback catalog.', error);
+    console.warn('Model listing failed; returning unverified suggestions only.', error);
+    return { models:suggestedModels(provider), verified:false, source:'catalog', warning:error?.message || 'Không xác minh được danh sách model.' };
   }
-  return FALLBACK_MODELS[provider] || [];
+  return { models:suggestedModels(provider), verified:false, source:'catalog', warning:'Nhà cung cấp chưa hỗ trợ xác minh danh sách model.' };
+}
+
+/** Backward-compatible list-only helper. */
+export async function listAvailableModels(options) {
+  const result = await listAvailableModelsDetailed(options);
+  return result.models;
 }

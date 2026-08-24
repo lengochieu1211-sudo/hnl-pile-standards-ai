@@ -1,6 +1,13 @@
-# HNL Pile Standards AI v1.11.0
+# HNL Pile Standards AI v1.11.2
 
 
+
+## v1.11.2 — Windows Build Hash Guard · LF/CRLF Safe
+
+- Sửa GitHub Actions Windows fail 3 test do checkout chuyển `src/search.js` từ LF sang CRLF làm SHA-256 thay đổi dù logic không đổi.
+- Thêm `.gitattributes` khóa LF cho source/test và CRLF cho BAT/PowerShell phù hợp Windows.
+- Golden hash test chuẩn hóa CRLF → LF trước khi băm; vẫn FAIL nếu nội dung search brain thật sự bị thay đổi.
+- Đã mô phỏng chính hash CRLF `c0c900...` từ log GitHub và xác nhận 145/145 test PASS sau bản sửa.
 
 ## v1.11.0 — Deep 3-TCVN Code Packs · Verified Tables · Excel Calculation Trace
 

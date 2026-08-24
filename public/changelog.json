@@ -1,6 +1,17 @@
 {
-  "current": "1.11.0",
+  "current": "1.11.2",
   "releases": [
+    {
+      "version": "1.11.2",
+      "date": "2026-08-24",
+      "title": "Windows Build Hash Guard · LF/CRLF Safe",
+      "changes": [
+        "Sửa 3 test hash search brain FAIL trên GitHub Actions Windows do LF bị checkout thành CRLF, không phải thay đổi logic RAG.",
+        "Thêm .gitattributes để giữ LF ổn định cho JS/MJS/CJS/JSON/Markdown/YAML/HTML/CSS.",
+        "Hash guard chuẩn hóa CRLF về LF trước SHA-256, vẫn phát hiện mọi thay đổi logic/nội dung thực tế trong src/search.js.",
+        "Mô phỏng đúng hash Windows c0c900... và xác nhận toàn bộ 145 test PASS."
+      ]
+    },
     {
       "version": "1.11.0",
       "date": "2026-08-24",

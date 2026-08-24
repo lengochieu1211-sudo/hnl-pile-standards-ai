@@ -37,6 +37,6 @@ test('golden: appendix query can reach late pages', () => {
 });
 
 test('golden: proven search brain hash is immutable', () => {
-  const bytes=fs.readFileSync(new URL('../src/search.js', import.meta.url));
-  assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),'f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2');
+  const source=fs.readFileSync(new URL('../src/search.js', import.meta.url),'utf8').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  assert.equal(crypto.createHash('sha256').update(source,'utf8').digest('hex'),'f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2');
 });

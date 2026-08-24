@@ -1009,16 +1009,16 @@ test('v1.9.26 page-range parser stays outside the v1.9.23 search brain', () => {
 
 
 test('v1.9.26 freezes the proven v1.9.23 search brain byte-for-byte', () => {
-  const searchSource = fs.readFileSync(new URL('../src/search.js', import.meta.url));
-  const hash = crypto.createHash('sha256').update(searchSource).digest('hex');
+  const searchSource = fs.readFileSync(new URL('../src/search.js', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+  const hash = crypto.createHash('sha256').update(searchSource, 'utf8').digest('hex');
   assert.equal(hash, 'f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2');
   assert.match(source, /EXACT v1\.9\.23 lookup algorithm/);
   assert.doesNotMatch(source, /Fresh PDF\.js rescue bypasses stale\/poor IndexedDB text[\s\S]*async function runLookup/);
 });
 
 test('v1.10.0 keeps the proven v1.9.23 search brain hash unchanged', () => {
-  const searchSource = fs.readFileSync(new URL('../src/search.js', import.meta.url));
-  const hash = crypto.createHash('sha256').update(searchSource).digest('hex');
+  const searchSource = fs.readFileSync(new URL('../src/search.js', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+  const hash = crypto.createHash('sha256').update(searchSource, 'utf8').digest('hex');
   assert.equal(hash, 'f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2');
 });
 

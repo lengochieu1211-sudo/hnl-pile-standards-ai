@@ -1,2 +1,13 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# HNL cross-platform text policy. Search brain MUST stay LF on every checkout.
+src/search.js text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.ps1 text eol=crlf
+*.bat text eol=crlf

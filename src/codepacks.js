@@ -1,4 +1,4 @@
-// HNL Built-in Code Pack index v1.11.0
+// HNL Built-in Code Pack index v1.11.2
 // Contains structured metadata, formula/table routing and only a limited set of formulas
 // that were visually/textually verified. It intentionally does NOT embed the full copyrighted PDF text.
 

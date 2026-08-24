@@ -6,7 +6,7 @@ Ví dụ:
 
 ```json
 {
-  "version": "1.11.0",
+  "version": "1.11.2",
   "target": "web",
   "builtAt": "2026-08-22T23:15:00.000Z",
   "source": "GitHub Actions",

@@ -1,6 +1,18 @@
 {
-  "current": "1.25.4",
+  "current": "1.25.5",
   "releases": [
+    {
+      "version": "1.25.5",
+      "date": "2026-08-24",
+      "title": "Chat-to-Calculation-to-Excel + Math Display Fix",
+      "changes": [
+        "Hỏi đáp kỹ thuật luôn hiện hành động rõ ràng: Xuất Excel, Bổ sung dữ liệu/Mở trong Tính và Xem nguồn tính theo trạng thái workflow.",
+        "Đề bài từ Hỏi đáp được chuyển sang Calculation Engine; có thể bổ sung trực tiếp trong tab Tính rồi chạy lại mà không nhập lại từ đầu.",
+        "Excel từ Hỏi đáp lấy payload deterministic của Calculation Engine và tiếp tục dùng Lean Formula-Only exporter.",
+        "Sửa renderer công thức cho LaTeX inline dạng $...$, \\(...\\), \\approx, \\text{kN}, chỉ số dưới/trên; không còn lộ chuỗi LaTeX thô như ảnh lỗi.",
+        "Giữ safety gate: REVIEW/INDEXED không xuất Excel số học; VERIFIED thiếu dữ liệu chỉ cho bổ sung dữ liệu."
+      ]
+    },
     {
       "version": "1.25.4",
       "date": "2026-08-24",

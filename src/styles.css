@@ -1456,3 +1456,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .image-review-table{display:grid;gap:4px;margin-top:7px}.image-review-row{display:grid;grid-template-columns:minmax(130px,1fr) minmax(90px,150px) 48px 42px;align-items:center;gap:5px;padding:5px 6px;border:1px solid #d9e7f3;border-radius:8px;background:#fff}.image-review-row.attention{border-color:#e3bd70;background:#fffaf0}.image-review-row>span{min-width:0;display:flex;flex-direction:column}.image-review-row b{font-size:9.7px}.image-review-row small{font-size:8px;color:#7b8795;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.image-review-row input{min-width:0;width:100%;height:28px;border:1px solid var(--line-dark);border-radius:6px;padding:0 6px;font-size:10.5px}.image-review-row em{font-style:normal;font-size:8.5px;color:#667085}.image-review-row strong{font-size:8.5px;text-align:right;color:#386c95}
 .image-review-warnings{display:grid;gap:3px;margin-top:6px;color:#8a5a00;font-size:8.8px}.image-review-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:8px}.image-review-foot{margin-top:6px;color:#6f7d8c;font-size:8.5px;line-height:1.35}.image-input-chip{border-color:#9ec5e5!important;background:#eef7ff!important;color:#245682!important}
 @container assistant (max-width:430px){.image-engineering-review{max-height:52vh}.image-review-row{grid-template-columns:minmax(100px,1fr) minmax(80px,120px) 40px}.image-review-row strong{display:none}.chat-image-chip{max-width:170px}}
+
+/* HNL v1.25.5 — Chat → Calculation → Excel actions */
+.engineering-answer-actions{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin:10px 0 4px;padding:8px 9px;border:1px solid #dbe4ec;border-radius:10px;background:#f8fafc}
+.engineering-action-btn{min-height:32px}
+.engineering-status-chip{display:inline-flex;align-items:center;min-height:28px;padding:0 8px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.02em}
+.engineering-status-chip.verified{background:#e2f0d9;color:#315b25;border:1px solid #c6e0b4}
+.engineering-status-chip.review{background:#fff2cc;color:#795900;border:1px solid #f0d98a}
+.chat-calc-transfer{border:1px solid #b7c9dc;background:linear-gradient(180deg,#fbfdff,#f7fbff)}
+.chat-calc-transfer textarea{width:100%;min-height:92px;resize:vertical;line-height:1.45}
+@container assistant (max-width:430px){.engineering-answer-actions{gap:5px;padding:7px}.engineering-action-btn{flex:1 1 auto}.engineering-status-chip{width:100%;justify-content:center}}

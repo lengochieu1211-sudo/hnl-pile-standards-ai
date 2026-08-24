@@ -26,11 +26,13 @@ jobs:
         with:
           node-version: 22
 
-      - name: Bootstrap package-lock when missing
+      - name: Sync package-lock with app version
         shell: bash
         run: |
-          if [ ! -f package-lock.json ]; then
-            echo "package-lock.json chưa có trong repo; tạo lock tạm cho run này."
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          LOCK_VERSION=$(node -e "try{process.stdout.write(require('./package-lock.json').version||'')}catch(e){}")
+          if [ ! -f package-lock.json ] || [ "$LOCK_VERSION" != "$PKG_VERSION" ]; then
+            echo "Tạo/cập nhật lock tạm: v${LOCK_VERSION:-missing} → v$PKG_VERSION"
             npm install --package-lock-only --ignore-scripts --no-audit --no-fund
           fi
           test -f package-lock.json

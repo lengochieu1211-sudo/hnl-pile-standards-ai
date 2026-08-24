@@ -1,10 +1,10 @@
-name: HNL v1.25.4 RC Final Gate
+name: HNL v1.25.5 RC Final Gate
 
 on:
   push:
     branches:
       - main
-      - release/v1.25.4-rc
+      - release/v1.25.5-rc
   workflow_dispatch:
 
 permissions:
@@ -31,13 +31,17 @@ jobs:
       - id: lock
         shell: bash
         run: |
-          if [ -f package-lock.json ]; then
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          LOCK_VERSION=$(node -e "try{process.stdout.write(require('./package-lock.json').version||'')}catch(e){}")
+          if [ -f package-lock.json ] && [ "$LOCK_VERSION" = "$PKG_VERSION" ]; then
             echo "created=false" >> "$GITHUB_OUTPUT"
-            echo "package-lock.json đã có sẵn."
+            echo "package-lock.json đã đồng bộ v$PKG_VERSION."
             exit 0
           fi
+          echo "Tạo/cập nhật package-lock.json: lock=v${LOCK_VERSION:-missing} → package=v$PKG_VERSION"
           npm install --package-lock-only --ignore-scripts --no-audit --no-fund
           test -f package-lock.json
+          node -e "const p=require('./package.json'),l=require('./package-lock.json'); if(l.version!==p.version) throw new Error('package-lock version mismatch')"
           echo "created=true" >> "$GITHUB_OUTPUT"
 
       - name: Commit package-lock back to current branch
@@ -47,11 +51,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add package-lock.json
-          git commit -m "build: add package-lock for HNL v1.25.4 RC"
+          git commit -m "build: sync package-lock for HNL v1.25.5 RC"
           git push origin "HEAD:${GITHUB_REF_NAME}"
 
   linux-gate:
-    name: Clean checkout → npm ci → 275 tests → 1,130 Golden → ExcelJS → Web
+    name: Clean checkout → npm ci → 281 tests → 1,130 Golden → ExcelJS → Web
     needs: bootstrap-lock
     if: needs.bootstrap-lock.outputs.lock_created == 'false'
     runs-on: ubuntu-latest
@@ -82,10 +86,10 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: hnl-v1.25.4-web-golden-excel
+          name: hnl-v1.25.5-web-golden-excel
           path: |
             dist/**
-            artifacts/full-table-golden-v1.25.4.json
+            artifacts/full-table-golden-v1.25.5.json
             artifacts/excel-runtime-smoke/**
             package-lock.json
 
@@ -135,9 +139,9 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: hnl-v1.25.4-windows-setup-portable-excel
+          name: hnl-v1.25.5-windows-setup-portable-excel
           path: |
             release/*.exe
-            artifacts/full-table-golden-v1.25.4.json
+            artifacts/full-table-golden-v1.25.5.json
             artifacts/excel-runtime-smoke/**
             scripts/verify-excel-com.ps1

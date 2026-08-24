@@ -151,7 +151,7 @@ export async function export7888WorkflowWorkbook(input={}) {
     ['Sức kháng vật liệu','Phụ lục B · B.1–B.5','32–33','32–33','VERIFIED','A0 mm²; σ MPa; đổi N→kN; Pmax≤80% ngắn hạn.']
   ]); styleSheet(src);
   addImageInputProvenance(wb,input.imageProvenance);
-  const buf=await wb.xlsx.writeBuffer(); saveBlob(buf,`HNL_TCVN7888_${type}_D${D}_${cls}_v1.25.2.xlsx`);
+  const buf=await wb.xlsx.writeBuffer(); saveBlob(buf,`HNL_TCVN7888_${type}_D${D}_${cls}_v1.25.5.xlsx`);
 }
 export async function exportFormulaWorkbook(item, { values={}, codePack=null } = {}) {
   const mod=await import('exceljs'); const ExcelJS=mod.default || mod; const wb=new ExcelJS.Workbook(); wb.creator='HNL Pile Standards AI'; wb.created=new Date();
@@ -294,7 +294,7 @@ export async function exportDrivenPileWorkflowWorkbook(input = {}) {
   [['Sức chịu tải','TCVN 10304:2025','7.2.2.1 · CT (9)',31,31,'VERIFIED','Rk=γc(γRR·qb·A+uΣγRf·fi·hi)'],['q_b','TCVN 10304:2025','Bảng 2','32-33','32-33','VERIFIED','Sức kháng đơn vị dưới mũi'],['f_i','TCVN 10304:2025','Bảng 3','33-34','33-34','VERIFIED','Sức kháng đơn vị mặt bên; Excel tự chia phân đoạn h≤2m; z/IL trung gian nội suy tuyến tính, không ngoại suy ngoài bảng'],['Hệ số','TCVN 10304:2025','Bảng 4','34-35','34-35','VERIFIED','Hệ số theo phương pháp hạ cọc'],['Override','HNL','','','','MANUAL','Nếu người dùng nhập q_b/f_i/γ thì provenance đổi sang NHẬP TAY.']].forEach(r=>trace.addRow(r)); styleSheet(trace);
 
   addImageInputProvenance(wb,input.imageProvenance);
-  const buf=await wb.xlsx.writeBuffer(); saveBlob(buf,'HNL_TCVN10304_Coc_Dong_Ep_Workflow.xlsx');
+  const buf=await wb.xlsx.writeBuffer(); saveBlob(buf,'HNL_TCVN10304_Coc_Dong_Ep_Workflow_v1.25.5.xlsx');
 }
 
 // v1.24.0 - production workbooks for all VERIFIED TCVN 10304 chat workflows.
@@ -383,7 +383,7 @@ export async function export10304AdvancedWorkflowWorkbook(workflowId, input={}) 
     addInput('I_L',input.IL??0.4,'-','7.4.5.2: <0,5'); addInput('E nền',input.E??10,'MPa','7.4.5.2: >8 MPa'); addInput('Cát rời ngay dưới móng',input.looseSand??0,'m','7.4.5.3: không >1 m');
     calc.addRow(['Trạng thái','VERIFIED_METHOD','','TCVN 10304 không cho công thức đóng; yêu cầu mô hình tương tác cọc-đất-bè / tấm trên nền đàn hồi.']); src.addRows([['Bè-cọc','7.4.5.1-7.4.5.7','65-66','VERIFIED_METHOD','Excel là checklist/input-output mô hình, không tự sáng tác phản lực nền.']]);
   } else throw new Error('Workflow Excel chưa hỗ trợ.');
-  styleSheet(inp); styleSheet(calc); styleSheet(src); addImageInputProvenance(wb,input.imageProvenance); const buf=await wb.xlsx.writeBuffer(); saveBlob(buf,`HNL_TCVN10304_${workflowId}.xlsx`);
+  styleSheet(inp); styleSheet(calc); styleSheet(src); addImageInputProvenance(wb,input.imageProvenance); const buf=await wb.xlsx.writeBuffer(); saveBlob(buf,`HNL_TCVN10304_${workflowId}_v1.25.5.xlsx`);
 }
 
 // Professional TCVN 5574:2018 workflow workbook – v1.24.0 Detailing + Annexes.
@@ -426,7 +426,7 @@ async function export5574AnnexDLMWorkbook(workflowId,input={}){
   }
   addImageInputProvenance(wb,input.imageProvenance);
   for(const sh of wb.worksheets){sh.eachRow(r=>r.eachCell(c=>{c.alignment={vertical:'top',wrapText:true};}));}
-  const buf=await wb.xlsx.writeBuffer(); saveBlob(buf,`HNL_TCVN5574_${safeName(workflowId)}_v1.25.2.xlsx`);
+  const buf=await wb.xlsx.writeBuffer(); saveBlob(buf,`HNL_TCVN5574_${safeName(workflowId)}_v1.25.5.xlsx`);
 }
 
 export async function export5574WorkflowWorkbook(workflowId, input={}) {
@@ -443,7 +443,7 @@ export async function export5574WorkflowWorkbook(workflowId, input={}) {
   const resultCell=c=>{c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFC6E0B4'}};c.font={bold:true,size:12};};
   const note='Ô vàng = INPUT. Ô xanh nhạt = công thức Excel. Thay INPUT → Excel tự tính lại. Không sửa bảng nguồn nếu không chủ động chuyển thành nhập tay.';
 
-  const dash=wb.addWorksheet('00_TONG_QUAN'); title(dash,'HNL · TCVN 5574:2018 · WORKFLOW VERIFIED – v1.25.2','H');
+  const dash=wb.addWorksheet('00_TONG_QUAN'); title(dash,'HNL · TCVN 5574:2018 · WORKFLOW VERIFIED – v1.25.5','H');
   dash.addRow([]); dash.addRow(['Mục','Nội dung','','','','','','']); head(dash.getRow(3));
   const wfTitles={'5574-material':'Vật liệu bê tông/cốt thép','5574-bending-rect':'Uốn tiết diện chữ nhật/T/I','5574-eccentric':'Nén lệch tâm tiết diện chữ nhật','5574-shear':'Lực cắt','5574-torsion':'Xoắn thuần','5574-local':'Nén cục bộ','5574-punch':'Chọc thủng','5574-crack':'Nứt – uốn chữ nhật','5574-deformation':'Biến dạng/độ võng – không nứt/có nứt/trượt','5574-prestress':'Ứng suất trước – CT214 ma sát + CT216 từ biến','5574-anchorage':'Neo cốt thép – CT255–258','5574-lap-splice':'Nối chồng cốt thép – CT259','5574-circular':'Cột tiết diện tròn/vành khuyên – Phụ lục F','5574-annex-g':'Phụ lục G – Chốt bê tông','5574-corbel':'Phụ lục H – Công xôn ngắn'}; const wfTitle=wfTitles[workflowId]||workflowId;
   dash.addRows([
@@ -669,7 +669,7 @@ export async function export5574WorkflowWorkbook(workflowId, input={}) {
   try {if(workflowId!=='5574-material'){const row=chk.getRow(4); row.getCell(2).numFmt='0.000'; chk.addConditionalFormatting({ref:'B4',rules:[{type:'dataBar',cfvo:[{type:'num',value:0},{type:'num',value:1.5}],color:{argb:'FF5B9BD5'},showValue:true}]}); chk.addConditionalFormatting({ref:'D4',rules:[{type:'containsText',operator:'containsText',text:'KHÔNG',style:{fill:{type:'pattern',pattern:'solid',fgColor:{argb:'FFF4CCCC'}},font:{color:{argb:'FF9C0006'},bold:true}}},{type:'containsText',operator:'containsText',text:'ĐẠT',style:{fill:{type:'pattern',pattern:'solid',fgColor:{argb:'FFC6E0B4'}},font:{color:{argb:'FF006100'},bold:true}}}]});}} catch {}
 
   addImageInputProvenance(wb,input.imageProvenance);
-  const buf=await wb.xlsx.writeBuffer(); saveBlob(buf,`HNL_TCVN5574_${safeName(workflowId)}_v1.25.2.xlsx`);
+  const buf=await wb.xlsx.writeBuffer(); saveBlob(buf,`HNL_TCVN5574_${safeName(workflowId)}_v1.25.5.xlsx`);
 }
 
 

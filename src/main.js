@@ -1,4 +1,5 @@
 import './styles.css';
+import { normalizeMathDelimiters, latexReadableHtml, inlineMarkup, richTextHtml } from './math-render.js';
 import { renderPdfPage, renderPdfPageToBase64, renderPdfTextLayer, cropCanvasRegionToBase64, extractTextFromLayerRegion, ocrImageBase64Locally, clearPdfCache, reindexPdfText, scanPdfTextForPhrase, TEXT_INDEX_VERSION } from './pdf.js';
 import { expandInputItems, parseInputFile, fileToBase64, extractArchiveViaLocalBridge, isArchiveFile } from './ingest.js';
 import { saveDocument, getDocuments, deleteDocument, saveChatSession, getChatSessions, deleteChatSession, saveCalculation, getCalculations, deleteCalculation } from './db.js';
@@ -183,76 +184,7 @@ function loadJson(key, fallback) {
 function esc(value = '') {
   return String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c]));
 }
-function normalizeMathDelimiters(value = '') {
-  // Providers sometimes mix LaTeX delimiters, e.g. \\[ ... $$ or $$ ... \\].
-  // Normalize display delimiters before parsing so the UI never shows raw \\[ / $$ markers.
-  return String(value || '')
-    .replace(/\\\[/g, '$$$$')
-    .replace(/\\\]/g, '$$$$');
-}
-function latexReadableHtml(value = '') {
-  let out = esc(String(value || '').trim())
-    .replace(/\\left\b/g, '')
-    .replace(/\\right\b/g, '')
-    .replace(/\\,/g, ' ');
-  const symbols = {
-    gamma:'γ', Gamma:'Γ', alpha:'α', beta:'β', delta:'δ', Delta:'Δ', epsilon:'ε',
-    theta:'θ', lambda:'λ', mu:'μ', nu:'ν', rho:'ρ', sigma:'σ', Sigma:'Σ', tau:'τ',
-    phi:'φ', psi:'ψ', omega:'ω', Omega:'Ω', pi:'π', sum:'∑', prod:'∏', int:'∫',
-    cdot:'·', times:'×', pm:'±', le:'≤', leq:'≤', ge:'≥', geq:'≥', neq:'≠', approx:'≈', infty:'∞'
-  };
-  out = out.replace(/\\(?:text|mathrm|operatorname)\{([^{}]*)\}/g, '$1');
-  // Simple fractions are rendered as stacked MathML-like HTML without an external CDN.
-  for (let i = 0; i < 4; i++) {
-    const next = out.replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, '<span class="math-frac"><span>$1</span><span>$2</span></span>');
-    if (next === out) break;
-    out = next;
-  }
-  out = out.replace(/\\sqrt\{([^{}]+)\}/g, '√<span class="math-radicand">$1</span>');
-  out = out.replace(/\\([A-Za-z]+)/g, (m, name) => symbols[name] || name);
-  // Gemini/OpenAI often escape underscores (R\_k). Normalize first, then format indices.
-  out = out.replace(/\\_/g, '_').replace(/\\\^/g, '^');
-  out = out.replace(/_\{([^{}]+)\}/g, '<sub>$1</sub>');
-  out = out.replace(/\^\{([^{}]+)\}/g, '<sup>$1</sup>');
-  out = out.replace(/_([A-Za-z0-9]+)/g, '<sub>$1</sub>');
-  out = out.replace(/\^([A-Za-z0-9+-]+)/g, '<sup>$1</sup>');
-  out = out.replace(/[{}]/g, '');
-  return out;
-}
-function inlineMarkup(value = '') {
-  let raw = String(value || '');
-  const inlineMath = [];
-  raw = raw.replace(/\\\((.+?)\\\)/g, (_, tex) => `@@HNL_INLINE_MATH_${inlineMath.push(tex)-1}@@`);
-  let out = esc(raw);
-  out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
-  out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  out = out.replace(/__([^_]+)__/g, '<strong>$1</strong>');
-  out = out.replace(/@@HNL_INLINE_MATH_(\d+)@@/g, (_, i) => `<span class="math-inline">${latexReadableHtml(inlineMath[Number(i)] || '')}</span>`);
-  return out;
-}
-function richTextHtml(value = '') {
-  let normalized = normalizeMathDelimiters(value).replace(/\r/g, '');
-  const displayMath = [];
-  normalized = normalized.replace(/\$\$([\s\S]*?)\$\$/g, (_, tex) => `\n@@HNL_DISPLAY_MATH_${displayMath.push(tex)-1}@@\n`);
-  const lines = normalized.split('\n');
-  const out = [];
-  let list = [];
-  const flush = () => { if (list.length) { out.push(`<ul>${list.map(x => `<li>${inlineMarkup(x)}</li>`).join('')}</ul>`); list = []; } };
-  for (const raw of lines) {
-    const line = raw.trim();
-    if (!line) { flush(); continue; }
-    const math = line.match(/^@@HNL_DISPLAY_MATH_(\d+)@@$/);
-    if (math) { flush(); out.push(`<div class="math-display" role="math">${latexReadableHtml(displayMath[Number(math[1])] || '')}</div>`); continue; }
-    if (/^---+$/.test(line)) { flush(); out.push('<hr>'); continue; }
-    const h = line.match(/^(#{1,4})\s+(.+)$/);
-    if (h) { flush(); const n = Math.min(4, h[1].length); out.push(`<h${n}>${inlineMarkup(h[2])}</h${n}>`); continue; }
-    const bullet = line.match(/^(?:[-*•]|\d+[.)])\s+(.+)$/);
-    if (bullet) { list.push(bullet[1]); continue; }
-    flush(); out.push(`<p>${inlineMarkup(line)}</p>`);
-  }
-  flush();
-  return out.join('');
-}
+// Math rendering lives in ./math-render.js (v1.25.5).
 
 
 const DOC_CATEGORIES = Object.freeze([
@@ -1607,6 +1539,28 @@ function chatAttachmentHtml() {
   return `<div class="chat-attachment-strip">${items.map(x=>`<div class="chat-image-chip"><img src="${esc(x.previewUrl)}" alt=""><span><b>${esc(x.name)}</b><small>${fmtBytes(x.size)}</small></span><button data-remove-chat-image="${esc(x.id)}" title="Bỏ ảnh">×</button></div>`).join('')}</div>`;
 }
 
+const ENGINEERING_EXCEL_STANDARDS = ['TCVN 7888:2014','TCVN 10304:2025','TCVN 5574:2018'];
+
+function engineeringActionsHtml(message, index=-1) {
+  const meta=message?.engineering;
+  if(message?.role!=='ai' || index<0 || !meta?.workflowId) return '';
+  const status=String(meta.status||'');
+  const supportedStandard=ENGINEERING_EXCEL_STANDARDS.includes(meta.standard);
+  const verified=supportedStandard && status.startsWith('VERIFIED');
+  const methodOnly=status==='VERIFIED_METHOD';
+  const canExport=verified && Boolean(meta.canExport);
+  const excelLabel=methodOnly?'⇩ Xuất Excel phương pháp':'⇩ Xuất Excel tính toán';
+  const primary=canExport
+    ? `<button class="btn compact-btn primary engineering-action-btn" data-engineering-excel="${index}">${excelLabel}</button>`
+    : (verified ? `<button class="btn compact-btn warning engineering-action-btn" data-engineering-open-calc="${index}">＋ Bổ sung dữ liệu để xuất Excel</button>` : '');
+  return `<div class="engineering-answer-actions">
+    <span class="engineering-status-chip ${verified?'verified':'review'}">${esc(status||'ENGINEERING')}</span>
+    ${primary}
+    ${verified?`<button class="btn compact-btn engineering-action-btn" data-engineering-open-calc="${index}">Mở trong Tính</button>`:''}
+    <button class="btn compact-btn engineering-action-btn" data-engineering-source="${index}">Xem nguồn tính</button>
+  </div>`;
+}
+
 function messageHtml(message, index = -1) {
   const unique = [];
   const seen = new Set();
@@ -1617,13 +1571,13 @@ function messageHtml(message, index = -1) {
   const visible = unique.slice(0, 16);
   const chips = visible.map(h => `<button class="source-chip" data-hit-doc="${h.docId}" data-hit-page="${h.page}">${esc(h.standard || h.docName)} · P.${h.page}</button>`).join('');
   const evidence = message.role === 'ai' ? (message.evidence || null) : null;
-  const excelReady = message.role==='ai' && index>=0 && ['TCVN 7888:2014','TCVN 10304:2025','TCVN 5574:2018'].includes(message.engineering?.standard) && String(message.engineering?.status||'').startsWith('VERIFIED') && message.engineering?.canExport;
   const imageVerifiedCount = Array.isArray(message.engineering?.imageInput) ? message.engineering.imageInput.length : 0;
-  const evidenceHtml = message.role === 'ai' ? `<div class="answer-meta"><span class="method-chip">${esc(evidence?.method || (message.provider==='local'?'RAG':'Hybrid RAG'))}</span><span class="confidence-chip ${String(evidence?.confidence||'').toLowerCase()}">${esc(evidence?.confidence || 'Chưa kiểm tra')}</span>${unique.length?`<span class="source-count-chip">${unique.length} nguồn</span>`:''}${imageVerifiedCount?`<span class="source-count-chip image-input-chip">Ảnh xác nhận · ${imageVerifiedCount}</span>`:''}${excelReady?`<button class="text-link engineering-excel-btn" data-engineering-excel="${index}">⇩ Xuất Excel</button>`:''}${index>=0?`<button class="text-link" data-verify-message="${index}">Kiểm tra</button>`:''}</div>` : '';
-  return `<div class="message ${message.role === 'user' ? 'user' : 'ai'}">
+  const evidenceHtml = message.role === 'ai' ? `<div class="answer-meta"><span class="method-chip">${esc(evidence?.method || (message.provider==='local'?'RAG':'Hybrid RAG'))}</span><span class="confidence-chip ${String(evidence?.confidence||'').toLowerCase()}">${esc(evidence?.confidence || 'Chưa kiểm tra')}</span>${unique.length?`<span class="source-count-chip">${unique.length} nguồn</span>`:''}${imageVerifiedCount?`<span class="source-count-chip image-input-chip">Ảnh xác nhận · ${imageVerifiedCount}</span>`:''}${index>=0?`<button class="text-link" data-verify-message="${index}">Kiểm tra</button>`:''}</div>` : '';
+  return `<div class="message ${message.role === 'user' ? 'user' : 'ai'}" data-message-index="${index}">
     <div class="message-label">${message.role === 'user' ? 'Bạn' : 'HNL AI'}</div>
     ${evidenceHtml}
     <div class="answer-text rich-answer">${richTextHtml(message.text)}</div>
+    ${engineeringActionsHtml(message,index)}
     ${chips ? `<details class="source-details" ${unique.length <= 6 ? 'open' : ''}><summary>Nguồn đã dùng · ${unique.length} trang</summary><div class="source-chips">${chips}${unique.length > visible.length ? `<span class="source-more">+${unique.length - visible.length} nguồn khác</span>` : ''}</div></details>` : ''}
   </div>`;
 }
@@ -1876,11 +1830,117 @@ async function exportPile10304Excel() {
       input,result,question:'Tính trực tiếp từ Calculation Engine – cọc đóng/ép nhiều lớp'
     };
     await exportUnifiedEngineeringWorkbook(payload,{imageProvenance:[]});
-    showToast('Đã xuất Excel Production v1.25.0 từ Calculation Engine.', 'success');
+    showToast('Đã xuất Excel Production v1.25.5 từ Calculation Engine.', 'success');
   } catch(error){ showToast(`Không xuất được Excel Production: ${error.message}`,'error'); }
 }
 
+
+function engineeringResultFacts(result={}) {
+  const labels={
+    longTermKn:'Ra dài hạn',shortTermKn:'Ra ngắn hạn',pmaxKn:'Pmax',RkKn:'Rk',RdKn:'Rd',
+    tipResistanceKn:'R mũi',sideResistanceKn:'R ma sát',settlementM:'Độ lún',MuKnM:'Mu',
+    utilization:'Hệ số sử dụng',crackWidthMm:'Bề rộng nứt',deflectionMm:'Độ võng'
+  };
+  const unitFor=k=>/KnM$/i.test(k)?'kN.m':/Kn$/i.test(k)?'kN':/Mm$/i.test(k)?'mm':/settlementM$/i.test(k)?'m':'';
+  return Object.entries(result||{}).filter(([k,v])=>labels[k]&&Number.isFinite(Number(v))).slice(0,8).map(([k,v])=>({label:labels[k],value:Number(v),unit:unitFor(k)}));
+}
+
+function syncChatTransferToDedicatedCalculator(payload={}) {
+  const id=payload?.workflow?.id||'';
+  const input=payload?.input||payload?.result?.inputs||{};
+  if(id==='10304-driven'){
+    const base=ensurePile10304Draft();
+    const next={...base};
+    for(const key of ['shape','sideM','diameterM','lengthM','tipDepthM','method','gammaC','gammaK','qbOverride','gammaRR','gammaRf']){
+      if(input[key]!==undefined && input[key]!==null && input[key]!=='' && !Number.isNaN(input[key])) next[key]=input[key];
+    }
+    if(Array.isArray(input.layers)&&input.layers.length) next.layers=input.layers.map(x=>({...x}));
+    state.pile10304Draft=next;
+  }
+  if(id==='7888-material'){
+    const base=ensureCalcDraft();
+    const type=String(input.type||base.type||'PHC').toUpperCase();
+    const loadClass=String(input.loadClass||base.loadClass||'B').toUpperCase();
+    const diameter=Number(input.diameter??base.diameter??600);
+    const row=Number.isFinite(diameter)?lookupPileType7888(diameter,loadClass,type):null;
+    state.calcDraft={
+      ...base,type,loadClass,
+      diameter:Number.isFinite(diameter)?diameter:base.diameter,
+      thickness:Number(input.thicknessMm??row?.thickness??base.thickness),
+      sigmaCu:Number(input.sigmaCu??base.sigmaCu??(type==='PC'?60:80)),
+      sigmaCe:Number(input.sigmaCe??row?.effectiveStress??base.sigmaCe),
+      tableSource:row?(type==='NPH'?'Bảng 2':'Bảng 1'):'',
+      tablePage:row?(type==='NPH'?12:(diameter<=600?10:11)):null,
+      designation:row?.designation||''
+    };
+  }
+}
+
+function openEngineeringInCalculator(index) {
+  const message=state.chat[Number(index)];
+  const meta=message?.engineering;
+  if(!meta?.question) return showToast('Không tìm thấy đề bài kỹ thuật của câu trả lời này.', 'warning');
+  const payload=engineeringExcelPayload(meta.question);
+  if(!payload.recognized) return showToast('HNL chưa nhận diện được workflow kỹ thuật để chuyển sang Tính.', 'warning');
+  state.chatCalcTransfer={payload,index:Number(index),imageProvenance:Array.isArray(meta.imageInput)?meta.imageInput:[]};
+  syncChatTransferToDedicatedCalculator(payload);
+  state.tab='calc';
+  render();
+  queueMicrotask(()=>document.querySelector('.chat-calc-transfer')?.scrollIntoView({block:'start',behavior:'smooth'}));
+}
+
+function showEngineeringSources(index) {
+  const card=document.querySelector(`.message[data-message-index="${Number(index)}"]`);
+  const details=card?.querySelector('.source-details');
+  if(details){ details.open=true; details.scrollIntoView({block:'nearest',behavior:'smooth'}); }
+  else showToast('Câu trả lời này chưa có trang nguồn RAG để mở. Xem Điều/Bảng/Công thức trong workflow Tính.', 'info');
+}
+
+function chatCalcTransferHtml() {
+  const transfer=state.chatCalcTransfer;
+  const payload=transfer?.payload;
+  if(!payload?.recognized) return '';
+  const wf=payload.workflow||{}; const result=payload.result||{};
+  const ready=String(wf.status||'').startsWith('VERIFIED') && Boolean(result.ok||result.methodOnly);
+  const missing=Array.isArray(result.missing)?result.missing:[];
+  const facts=engineeringResultFacts(result);
+  return `<div class="panel-section chat-calc-transfer">
+    <div class="panel-section-title"><h3>Bài toán từ Hỏi đáp</h3><span>${esc(wf.standard||'')} · ${esc(wf.status||'')}</span></div>
+    <div class="notice ${ready?'success':'warning'}"><b>${esc(wf.title||wf.id||'Workflow kỹ thuật')}</b> · ${ready?'Calculation Engine đã đủ dữ liệu để xuất Excel.':'Chưa đủ dữ liệu để xuất Excel số học.'}</div>
+    <label class="field"><span>Đề bài chuẩn hóa · có thể bổ sung trực tiếp rồi tính lại</span><textarea id="chatCalcQuestionEdit" rows="4">${esc(payload.question||'')}</textarea><small>AI chỉ nhận diện dữ liệu; phép tính và Excel vẫn chạy lại bằng Calculation Engine deterministic.</small></label>
+    ${missing.length?`<div class="notice warning"><b>Cần bổ sung:</b><ul>${missing.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''}
+    ${facts.length?`<div class="metric-grid three">${facts.map(x=>`<div><span>${esc(x.label)}</span><b>${x.value.toLocaleString('vi-VN',{maximumFractionDigits:6})}${x.unit?` ${esc(x.unit)}`:''}</b></div>`).join('')}</div>`:''}
+    <div class="action-row"><button class="btn primary" id="chatCalcRecalcBtn">Tính lại từ đề bài</button>${ready?'<button class="btn" id="chatCalcExcelBtn">⇩ Xuất Excel tính toán</button>':''}<button class="btn" id="chatCalcBackBtn">← Hỏi đáp</button></div>
+    <div class="footnote">Nguồn workflow: ${esc(wf.source||'Xem provenance trong Excel')}. Khi workflow REVIEW/INDEXED, HNL không phát sinh Excel số học.</div>
+  </div>`;
+}
+
+function recalculateChatTransfer() {
+  const transfer=state.chatCalcTransfer; if(!transfer) return;
+  const question=String(document.querySelector('#chatCalcQuestionEdit')?.value||transfer.payload?.question||'').trim();
+  if(!question) return showToast('Hãy nhập/bổ sung đề bài trước khi tính lại.', 'warning');
+  const payload=engineeringExcelPayload(question);
+  if(!payload.recognized) return showToast('Đề bài sau chỉnh sửa chưa nhận diện được workflow kỹ thuật.', 'warning');
+  state.chatCalcTransfer={...transfer,payload};
+  syncChatTransferToDedicatedCalculator(payload);
+  render();
+  showToast(payload.result?.ok||payload.result?.methodOnly?'Calculation Engine đã đủ dữ liệu. Có thể xuất Excel.':'Đã tính lại; vẫn còn dữ liệu cần bổ sung.', payload.result?.ok||payload.result?.methodOnly?'success':'warning');
+}
+
+async function exportChatCalcTransferExcel() {
+  const transfer=state.chatCalcTransfer; const payload=transfer?.payload;
+  if(!payload?.recognized) return showToast('Không có workflow kỹ thuật để xuất Excel.', 'warning');
+  if(!String(payload.workflow?.status||'').startsWith('VERIFIED')) return showToast('Workflow chưa VERIFIED nên không được xuất Excel số học.', 'warning');
+  if(!(payload.result?.ok||payload.result?.methodOnly)) return showToast('Đề bài chưa đủ dữ liệu để xuất Excel.', 'warning');
+  try{
+    const imageProvenance=transfer.imageProvenance||[];
+    await exportUnifiedEngineeringWorkbook({...payload,imageProvenance},{imageProvenance});
+    showToast(`Đã xuất Excel v1.25.5: ${payload.workflow.title}.`,'success');
+  }catch(error){ showToast(`Không xuất được Excel: ${error.message}`,'error'); }
+}
+
 function calcHtml() {
+  const transferCard = chatCalcTransferHtml();
   const draft = ensureCalcDraft();
   const calcD = Number(draft.diameter || 600);
   const calcType = String(draft.type || 'PHC').toUpperCase();
@@ -1890,7 +1950,7 @@ function calcHtml() {
   const calcClass = classList.includes(String(draft.loadClass || '').toUpperCase()) ? String(draft.loadClass).toUpperCase() : (classList.includes('B') ? 'B' : classList[0]);
   const calcClassOptions = classList.map(x => `<option value="${x}" ${x === calcClass ? 'selected' : ''}>${x}</option>`).join('');
   const tableStatus = draft.tableSource ? `Đã nạp ${draft.tableSource}${draft.designation ? ` · ${draft.designation}` : ''}${draft.tablePage ? ` · trang ${draft.tablePage}` : ''}` : 'Giá trị đang nhập tay; bấm Nạp bảng để đồng bộ t và σce theo tiêu chuẩn.';
-  return `${pile10304Html()}
+  return `${transferCard}${pile10304Html()}
   <div class="panel-section">
     <div class="panel-section-title"><h3>Máy tính đã xác minh · TCVN 7888:2014</h3><span>Phụ lục B</span></div>
     <div class="notice">Bộ tính này được khóa theo công thức đã kiểm tra thủ công của TCVN 7888:2014. Kết quả không thay thế hồ sơ thiết kế.</div>
@@ -2164,6 +2224,11 @@ function bind() {
       if (el.id === 'cancelImageEngineering') { state.pendingImageExtraction=null; render(); return; }
       if (el.id === 'askBtn') { await askQuestion(); return; }
       if (el.matches('[data-engineering-excel]')) { await exportEngineeringMessageExcel(el.dataset.engineeringExcel); return; }
+      if (el.matches('[data-engineering-open-calc]')) { openEngineeringInCalculator(el.dataset.engineeringOpenCalc); return; }
+      if (el.matches('[data-engineering-source]')) { showEngineeringSources(el.dataset.engineeringSource); return; }
+      if (el.id === 'chatCalcRecalcBtn') { recalculateChatTransfer(); return; }
+      if (el.id === 'chatCalcExcelBtn') { await exportChatCalcTransferExcel(); return; }
+      if (el.id === 'chatCalcBackBtn') { state.tab='chat'; render(); return; }
       if (el.id === 'newChatBtn') { await persistCurrentChat(); startNewChat(); return; }
       if (el.id === 'exportHistoryBtn') { exportHistory(document.querySelector('#historyExportFormat')?.value || 'json'); return; }
       if (el.id === 'chatHistoryBtn') { state.chatHistoryOpen = !state.chatHistoryOpen; render(); return; }
@@ -3829,6 +3894,8 @@ async function askQuestion(questionOverride = '', options = {}) {
   const engineeringMeta = engineeringSolved.recognized ? {
     workflowId:engineeringSolved.workflow.id,title:engineeringSolved.workflow.title,standard:engineeringSolved.workflow.standard,
     status:engineeringSolved.workflow.status,question,canExport:Boolean(engineeringSolved.result?.ok || engineeringSolved.result?.methodOnly),
+    resultOk:Boolean(engineeringSolved.result?.ok),methodOnly:Boolean(engineeringSolved.result?.methodOnly),
+    missing:Array.isArray(engineeringSolved.result?.missing)?engineeringSolved.result.missing:[],
     imageInput
   } : null;
   const displayQuestion=String(options.displayQuestion||question);
@@ -3864,8 +3931,8 @@ async function exportEngineeringMessageExcel(index) {
   if(!String(payload.workflow.status||'').startsWith('VERIFIED')) return showToast(`Workflow ${payload.workflow.title} chưa VERIFIED, không được xuất Excel số học.`, 'warning');
   try {
     await exportUnifiedEngineeringWorkbook({...payload,imageProvenance},{imageProvenance});
-    showToast(`Đã xuất Excel Production v1.25.0: ${payload.workflow.title}.`, 'success');
-  } catch(error){ showToast(`Không xuất được Excel Production v1.25.0: ${error.message}`, 'error'); }
+    showToast(`Đã xuất Excel Production v1.25.5: ${payload.workflow.title}.`, 'success');
+  } catch(error){ showToast(`Không xuất được Excel Production v1.25.5: ${error.message}`, 'error'); }
 }
 
 

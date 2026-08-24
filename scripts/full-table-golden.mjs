@@ -150,7 +150,7 @@ export function summarizeFullTableGolden(cases){
 const self=fileURLToPath(import.meta.url);
 if(process.argv[1] && path.resolve(process.argv[1])===path.resolve(self)){
   const cases=buildFullTableGoldenCases(), summary=summarizeFullTableGolden(cases);
-  const out=process.argv[2]||path.resolve(path.dirname(self),'../artifacts/full-table-golden-v1.25.4.json');
+  const out=process.argv[2]||path.resolve(path.dirname(self),'../artifacts/full-table-golden-v1.25.5.json');
   fs.mkdirSync(path.dirname(out),{recursive:true}); fs.writeFileSync(out,JSON.stringify({version:'1.25.4',generatedAt:new Date().toISOString(),summary,cases},null,2));
   console.log(JSON.stringify(summary,null,2)); if(summary.fail) process.exitCode=1;
 }

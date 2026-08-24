@@ -32,13 +32,16 @@ jobs:
           "APP_VERSION=$version" >> $env:GITHUB_ENV
           Write-Host "HNL version: $version"
 
-      - name: Bootstrap package-lock when missing
+      - name: Sync package-lock with app version
         shell: pwsh
         run: |
-          if (-not (Test-Path package-lock.json)) {
-            Write-Host "package-lock.json chưa có trong repo; tạo lock tạm cho run này."
+          $pkgVersion = node -p "require('./package.json').version"
+          $lockVersion = ""
+          if (Test-Path package-lock.json) { $lockVersion = node -p "require('./package-lock.json').version || ''" }
+          if ((-not (Test-Path package-lock.json)) -or ($lockVersion -ne $pkgVersion)) {
+            Write-Host "Tạo/cập nhật lock tạm: v$lockVersion -> v$pkgVersion"
             npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-            if ($LASTEXITCODE -ne 0) { throw "Không tạo được package-lock.json" }
+            if ($LASTEXITCODE -ne 0) { throw "Không tạo/cập nhật được package-lock.json" }
           }
           if (-not (Test-Path package-lock.json)) { throw "Thiếu package-lock.json sau bootstrap" }
 

@@ -1,4 +1,14 @@
-# HNL Pile Standards AI v1.25.4
+# HNL Pile Standards AI v1.25.5
+
+## v1.25.5 — Chat-to-Calculation-to-Excel + Math Display Fix
+
+- Hỏi đáp kỹ thuật có thanh hành động ngay dưới câu trả lời: **Xuất Excel tính toán · Mở trong Tính · Xem nguồn tính**.
+- VERIFIED thiếu input không còn ẩn nút; HNL hiện **Bổ sung dữ liệu để xuất Excel** và chuyển nguyên đề bài sang tab Tính.
+- Tab Tính có thẻ **Bài toán từ Hỏi đáp**: sửa/bổ sung đề bài, chạy lại Calculation Engine, sau đó xuất Excel mà không nhập lại từ đầu.
+- Excel vẫn dùng **Lean Export + Formula-Only**; không lấy số AI viết trong đoạn chat làm kết quả chết.
+- Renderer mới hỗ trợ `$...$`, `\(...\)`, `$$...$$`, `\approx`, `\text{}`, chỉ số dưới/trên và dọn LaTeX thô.
+- REVIEW/INDEXED vẫn khóa Excel số học; VERIFIED METHOD chỉ xuất workbook phương pháp.
+
 
 ## v1.25.4 — Full Table Golden Benchmark
 

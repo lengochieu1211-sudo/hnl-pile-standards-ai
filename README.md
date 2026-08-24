@@ -1,4 +1,12 @@
-# HNL Pile Standards AI v1.25.6
+# HNL Pile Standards AI v1.25.7
+
+## v1.25.7 — Universal Formula Paste + Small Panel Responsive Fix
+
+- Nhận `sigma_cu`, `σcu`, `σ_{cu}` và mô tả “cường độ nén bê tông” như cùng một input.
+- Khắc phục công thức AI/PDF bị lộ token `frac/sigma/left/right/times` khi lớp trung gian mất dấu `\`.
+- Panel Tính/Hỏi đáp không còn tràn ngang ở màn hình nhỏ; địa chất nhiều lớp chuyển thành card responsive.
+- Bảng kết quả từng lớp chuyển thành card trên panel hẹp; nút hành động tự xuống dòng.
+
 
 ## v1.25.6 — Engineering Symbol & Formula Normalizer
 

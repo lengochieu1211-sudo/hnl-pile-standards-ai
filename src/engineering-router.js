@@ -78,7 +78,11 @@ function parse7888Material(question='') {
     const m=q.match(/\bNPH\s*[-:]?\s*(?:AB|A|B|C)?\s*[-/]?\s*(\d{3,4})\b/i); if(m) diameter=Number(m[1]);
   }
   const lengthM=grab(q,/(?:\bL\s*=?\s*|d[aà]i\s*)(\d+(?:[.,]\d+)?)\s*m\b/i);
-  const sigmaCu=grab(q,/(?:sigma\s*cu|σ\s*cu|cường\s*độ(?:\s*chịu)?\s*n[eé]n(?:\s*b[eê]\s*t[oô]ng)?|cuong\s*do\s*nen)\s*[=:]?\s*(\d+(?:[.,]\d+)?)\s*(?:MPa)?/i)
+  const sigmaCu=extractEngineeringNumber(q,[
+      'sigma_cu','sigmacu','sigma cu','σcu','σ_cu',
+      'cường độ nén bê tông','cường độ chịu nén bê tông','cường độ chịu nén',
+      'cuong do nen be tong','cuong do chiu nen be tong','cuong do chiu nen'
+    ],'(?:MPa|N/mm2)')
     ?? grab(q,/\b(?:R|f)c?\s*[=:]\s*(\d+(?:[.,]\d+)?)\s*MPa\b/i);
   return {type,loadClass:cls,diameter,lengthM,sigmaCu};
 }

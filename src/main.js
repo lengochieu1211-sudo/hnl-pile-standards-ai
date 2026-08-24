@@ -185,7 +185,7 @@ function loadJson(key, fallback) {
 function esc(value = '') {
   return String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c]));
 }
-// Math rendering lives in ./math-render.js (v1.25.6).
+// Math rendering lives in ./math-render.js (v1.25.7).
 
 
 const DOC_CATEGORIES = Object.freeze([
@@ -1831,7 +1831,7 @@ async function exportPile10304Excel() {
       input,result,question:'Tính trực tiếp từ Calculation Engine – cọc đóng/ép nhiều lớp'
     };
     await exportUnifiedEngineeringWorkbook(payload,{imageProvenance:[]});
-    showToast('Đã xuất Excel Production v1.25.6 từ Calculation Engine.', 'success');
+    showToast('Đã xuất Excel Production v1.25.7 từ Calculation Engine.', 'success');
   } catch(error){ showToast(`Không xuất được Excel Production: ${error.message}`,'error'); }
 }
 
@@ -1940,7 +1940,7 @@ async function exportChatCalcTransferExcel() {
   try{
     const imageProvenance=transfer.imageProvenance||[];
     await exportUnifiedEngineeringWorkbook({...payload,imageProvenance},{imageProvenance});
-    showToast(`Đã xuất Excel v1.25.6: ${payload.workflow.title}.`,'success');
+    showToast(`Đã xuất Excel v1.25.7: ${payload.workflow.title}.`,'success');
   }catch(error){ showToast(`Không xuất được Excel: ${error.message}`,'error'); }
 }
 
@@ -3914,7 +3914,7 @@ async function askQuestion(questionOverride = '', options = {}) {
 
   state.chatDraft = '';
   const imageInput=Array.isArray(options.imageProvenance)?options.imageProvenance:[];
-  // v1.25.6: keep the user's raw wording for chat/source search, but deterministic
+  // v1.25.7: keep the user's raw wording for chat/source search, but deterministic
   // parsing always consumes the normalized engineering view. This makes copy/paste
   // from PDF/Word/LaTeX robust without silently changing what the user asked.
   const normalizedQuestion=normalizeEngineeringText(question);
@@ -3959,8 +3959,8 @@ async function exportEngineeringMessageExcel(index) {
   if(!String(payload.workflow.status||'').startsWith('VERIFIED')) return showToast(`Workflow ${payload.workflow.title} chưa VERIFIED, không được xuất Excel số học.`, 'warning');
   try {
     await exportUnifiedEngineeringWorkbook({...payload,imageProvenance},{imageProvenance});
-    showToast(`Đã xuất Excel Production v1.25.6: ${payload.workflow.title}.`, 'success');
-  } catch(error){ showToast(`Không xuất được Excel Production v1.25.6: ${error.message}`, 'error'); }
+    showToast(`Đã xuất Excel Production v1.25.7: ${payload.workflow.title}.`, 'success');
+  } catch(error){ showToast(`Không xuất được Excel Production v1.25.7: ${error.message}`, 'error'); }
 }
 
 

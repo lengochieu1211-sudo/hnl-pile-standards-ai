@@ -1466,3 +1466,84 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .chat-calc-transfer{border:1px solid #b7c9dc;background:linear-gradient(180deg,#fbfdff,#f7fbff)}
 .chat-calc-transfer textarea{width:100%;min-height:92px;resize:vertical;line-height:1.45}
 @container assistant (max-width:430px){.engineering-answer-actions{gap:5px;padding:7px}.engineering-action-btn{flex:1 1 auto}.engineering-status-chip{width:100%;justify-content:center}}
+
+
+/* =========================================================
+   HNL v1.25.7 — Small assistant panel / calculation responsive hardening
+   No assistant-level horizontal overflow. Soil layers become cards on narrow width.
+   ========================================================= */
+.assistant-panel,
+.assistant-panel .panel-body,
+.assistant-panel .panel-section,
+.assistant-panel .verified-workflow-card,
+.assistant-panel .chat-calc-transfer,
+.assistant-panel .field,
+.assistant-panel textarea,
+.assistant-panel input,
+.assistant-panel select,
+.assistant-panel .notice,
+.assistant-panel .action-row,
+.assistant-panel .metric-grid,
+.assistant-panel .calc-result { box-sizing:border-box; min-width:0; max-width:100%; }
+.assistant-panel .panel-body { overflow-x:hidden; }
+.assistant-panel .panel-section-title { min-width:0; flex-wrap:wrap; align-items:flex-start; }
+.assistant-panel .panel-section-title h3,
+.assistant-panel .panel-section-title span,
+.assistant-panel .notice,
+.assistant-panel .footnote,
+.assistant-panel .calc-step p { overflow-wrap:anywhere; word-break:normal; }
+.assistant-panel .action-row { width:100%; }
+.assistant-panel .action-row .btn { flex:1 1 120px; }
+.chat-calc-transfer textarea { display:block; min-width:0!important; max-width:100%!important; width:100%!important; }
+
+@container assistant (max-width:520px){
+  .verified-workflow-card{padding:8px}
+  .grid2,.grid3,.metric-grid,.metric-grid.three{grid-template-columns:1fr!important}
+  .soil-table-head{align-items:flex-start;flex-direction:column}.soil-table-head small{text-align:left}
+  .soil-layer-header{display:none!important}
+  .soil-layer-list{display:grid;gap:7px;overflow-x:hidden!important;padding:0!important;max-width:100%}
+  .soil-layer-row{
+    display:grid!important;
+    grid-template-columns:34px minmax(0,1fr) minmax(0,1fr)!important;
+    grid-template-areas:
+      "idx from to"
+      "idx group group"
+      "idx type type"
+      "idx il fi";
+    gap:5px!important;
+    width:100%;max-width:100%;min-width:0!important;padding:6px!important;
+  }
+  .soil-layer-row .soil-index{grid-area:idx;align-self:stretch;display:flex;align-items:center;justify-content:center;background:#f4f7fa;border-radius:6px}
+  .soil-layer-row input:nth-of-type(1){grid-area:from}
+  .soil-layer-row input:nth-of-type(2){grid-area:to}
+  .soil-layer-row select:nth-of-type(1){grid-area:group}
+  .soil-layer-row select:nth-of-type(2){grid-area:type}
+  .soil-layer-row input:nth-of-type(3){grid-area:il}
+  .soil-layer-row input:nth-of-type(4){grid-area:fi}
+  .soil-layer-row input,.soil-layer-row select{font-size:11px!important;height:32px!important}
+  .calc-table-wrap{overflow-x:hidden!important;max-width:100%}
+  .calc-detail-table{min-width:0!important;width:100%!important;font-size:9.5px}
+  .calc-detail-table thead{display:none}
+  .calc-detail-table,.calc-detail-table tbody,.calc-detail-table tr,.calc-detail-table td{display:block;width:100%!important;box-sizing:border-box}
+  .calc-detail-table tr{border:1px solid #e1e7ee;border-radius:8px;padding:5px 7px;margin:0 0 6px;background:#fff}
+  .calc-detail-table td{border:0!important;padding:2px 0!important;text-align:left!important;white-space:normal!important;overflow-wrap:anywhere}
+  .calc-detail-table td:nth-child(1)::before{content:"Lớp: ";font-weight:800}
+  .calc-detail-table td:nth-child(2)::before{content:"Khoảng: ";font-weight:800}
+  .calc-detail-table td:nth-child(3)::before{content:"hᵢ: ";font-weight:800}
+  .calc-detail-table td:nth-child(4)::before{content:"z TB: ";font-weight:800}
+  .calc-detail-table td:nth-child(5)::before{content:"fᵢ: ";font-weight:800}
+  .calc-detail-table td:nth-child(6)::before{content:"γRf: ";font-weight:800}
+  .calc-detail-table td:nth-child(7)::before{content:"Rfi: ";font-weight:800}
+  .calc-detail-table td:nth-child(8)::before{content:"Nguồn: ";font-weight:800}
+}
+
+@container assistant (max-width:380px){
+  .assistant-panel>.tabs{grid-template-columns:repeat(2,minmax(0,1fr))!important;overflow:hidden!important}
+  .panel-body{padding:7px!important}
+  .panel-section-title h3{font-size:12px}
+  .panel-section-title span{font-size:9px;max-width:100%}
+  .soil-layer-row{grid-template-columns:30px minmax(0,1fr)!important;grid-template-areas:"idx from" "idx to" "idx group" "idx type" "idx il" "idx fi"}
+  .action-row .btn{flex:1 1 100%!important;width:100%}
+  .engineering-answer-actions .engineering-action-btn{flex:1 1 100%!important;width:100%}
+  .math-display{white-space:normal!important;overflow-wrap:anywhere!important;text-align:left!important;font-size:14px!important;padding:8px!important}
+}

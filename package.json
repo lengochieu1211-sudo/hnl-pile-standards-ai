@@ -1,7 +1,7 @@
 {
   "name": "hnl-pile-standards-ai",
   "private": true,
-  "version": "1.25.6",
+  "version": "1.25.7",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -23,7 +23,7 @@
     "check:version": "node scripts/check-version-sync.mjs",
     "check:search": "node scripts/check-search-brain.mjs",
     "fixtures:images": "node scripts/generate-image-fixtures.mjs",
-    "golden:tables": "node scripts/full-table-golden.mjs artifacts/full-table-golden-v1.25.6.json",
+    "golden:tables": "node scripts/full-table-golden.mjs artifacts/full-table-golden-v1.25.7.json",
     "excel:smoke": "node scripts/excel-runtime-smoke.mjs artifacts/excel-runtime-smoke"
   },
   "dependencies": {

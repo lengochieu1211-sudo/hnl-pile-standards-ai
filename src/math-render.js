@@ -13,6 +13,27 @@ export function normalizeMathDelimiters(value = '') {
     .replace(/\\\]/g, '$$$$');
 }
 
+
+function recoverStrippedLatexCommands(value='') {
+  // Some AI providers/JSON layers occasionally strip the leading backslash but leave
+  // command names (frac, sigma, left, right, times, approx...). Recover only in
+  // math-looking fragments to avoid rewriting ordinary Vietnamese prose.
+  let s=String(value||'');
+  if(!/(?:frac|sigma|gamma|left|right|times|cdot|approx|boxed|sqrt|sum|alpha|beta|phi|nu|epsilon|xi|zeta|theta|delta)/i.test(s)) return s;
+  // Recover compact fractions first so embedded command words become standalone tokens:
+  // fracsigma_cu3,5 -> \frac{sigma_cu}{3,5}.
+  s=s.replace(/\bfrac\s*([A-Za-z][A-Za-z_,'-]{1,20})\s*(\d+(?:[.,]\d+)?)/gi,'\\frac{$1}{$2}')
+     .replace(/\bfrac\s*(\d+(?:[.,]\d+)?)\s+(\d+(?:[.,]\d+)?)/gi,'\\frac{$1}{$2}');
+  // Safe symbol/operator commands. Run after fraction recovery so sigma/gamma inside
+  // recovered braces receive their leading slash too.
+  s=s.replace(/\b(approx|leq?|geq?|times|cdot|pm)(?=[^A-Za-z]|$)/g,'\\$1')
+     .replace(/\b(sigma|gamma|alpha|beta|phi|nu|epsilon|xi|zeta|theta|delta|sum|pi)(?=[_\s{(]|$)/g,'\\$1');
+  s=s.replace(/\b(left|right)\b/g,'\\$1');
+  // boxed is cosmetic; if braces were lost just drop the token instead of leaking it.
+  s=s.replace(/\bboxed(?=[A-Za-z0-9])/g,'');
+  return s;
+}
+
 function normalizeLatexSlashes(value='') {
   // Some providers return JSON-escaped LaTeX as two literal backslashes.
   // Collapse only before known LaTeX-ish tokens, never arbitrary paths.
@@ -20,7 +41,7 @@ function normalizeLatexSlashes(value='') {
 }
 
 export function latexReadableHtml(value = '') {
-  let out = esc(normalizeLatexSlashes(String(value || '').trim()))
+  let out = esc(normalizeLatexSlashes(recoverStrippedLatexCommands(String(value || '').trim())))
     .replace(/\\left\b/g, '')
     .replace(/\\right\b/g, '')
     .replace(/\\,/g, ' ')
@@ -68,7 +89,7 @@ function normalizeLooseLatex(value='') {
 }
 
 export function inlineMarkup(value = '') {
-  let raw = String(value || '');
+  let raw = recoverStrippedLatexCommands(String(value || ''));
   const inlineMath = [];
   raw = raw.replace(/\\\((.+?)\\\)/g, (_, tex) => `@@HNL_INLINE_MATH_${inlineMath.push(tex)-1}@@`);
   // By this stage display $$...$$ blocks have already been extracted by richTextHtml.

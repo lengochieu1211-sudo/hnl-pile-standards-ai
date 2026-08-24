@@ -1,6 +1,17 @@
 {
-  "current": "1.25.6",
+  "current": "1.25.7",
   "releases": [
+    {
+      "version": "1.25.7",
+      "date": "2026-08-24",
+      "title": "Universal Formula Paste + Small Panel Responsive Fix",
+      "changes": [
+        "Recognize sigma_cu/σcu/σ_{cu} and concrete compressive-strength wording as the same deterministic input.",
+        "Recover common stripped LaTeX command tokens before math rendering.",
+        "Remove assistant-panel horizontal overflow and switch soil-layer inputs/results to responsive cards on narrow widths.",
+        "Add regression tests for sigma_cu parsing and responsive CSS gates."
+      ]
+    },
     {
       "version": "1.25.6",
       "date": "2026-08-24",

@@ -1,10 +1,10 @@
-name: HNL v1.25.5 RC Final Gate
+name: HNL v1.25.6 RC Final Gate
 
 on:
   push:
     branches:
       - main
-      - release/v1.25.5-rc
+      - release/v1.25.6-rc
   workflow_dispatch:
 
 permissions:
@@ -51,11 +51,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add package-lock.json
-          git commit -m "build: sync package-lock for HNL v1.25.5 RC"
+          git commit -m "build: sync package-lock for HNL v1.25.6 RC"
           git push origin "HEAD:${GITHUB_REF_NAME}"
 
   linux-gate:
-    name: Clean checkout → npm ci → 281 tests → 1,130 Golden → ExcelJS → Web
+    name: Clean checkout → npm ci → 286 tests → 1,130 Golden → ExcelJS → Web
     needs: bootstrap-lock
     if: needs.bootstrap-lock.outputs.lock_created == 'false'
     runs-on: ubuntu-latest
@@ -86,10 +86,10 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: hnl-v1.25.5-web-golden-excel
+          name: hnl-v1.25.6-web-golden-excel
           path: |
             dist/**
-            artifacts/full-table-golden-v1.25.5.json
+            artifacts/full-table-golden-v1.25.6.json
             artifacts/excel-runtime-smoke/**
             package-lock.json
 
@@ -139,9 +139,9 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: hnl-v1.25.5-windows-setup-portable-excel
+          name: hnl-v1.25.6-windows-setup-portable-excel
           path: |
             release/*.exe
-            artifacts/full-table-golden-v1.25.5.json
+            artifacts/full-table-golden-v1.25.6.json
             artifacts/excel-runtime-smoke/**
             scripts/verify-excel-com.ps1

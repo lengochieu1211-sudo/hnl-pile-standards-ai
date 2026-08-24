@@ -1,4 +1,13 @@
-# HNL Pile Standards AI v1.25.5
+# HNL Pile Standards AI v1.25.6
+
+## v1.25.6 — Engineering Symbol & Formula Normalizer
+
+- Ô Hỏi đáp và “Bài toán từ Hỏi đáp” cho phép dán trực tiếp công thức từ PDF, Word, ChatGPT/Gemini hoặc LaTeX.
+- Clipboard normalizer xử lý `$...$`, `\(...\)`, `\frac{...}{...}`, `\text{...}`, chỉ số dưới/trên, ký hiệu Hy Lạp, dấu nhân/chia, dấu phẩy thập phân, `m²/mm²`, citation và ký tự ẩn.
+- Khi dán, HNL chèn bản kỹ thuật đã chuẩn hóa vào textarea; Router/Calculation Engine còn chuẩn hóa lại trước khi parse để tránh sai do nguồn clipboard.
+- Giữ nguyên câu hỏi người dùng trong lịch sử, đồng thời lưu `normalizedQuestion` riêng cho Calculation Engine và Excel.
+- Golden bắt buộc: `300×300 mm + A=A_p=0,09 m²` phải nhận `A=0,09 m²`, `u=1,2 m`, không hỏi lại diện tích mũi.
+
 
 ## v1.25.5 — Chat-to-Calculation-to-Excel + Math Display Fix
 

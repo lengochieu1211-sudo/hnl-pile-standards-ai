@@ -1,6 +1,17 @@
 {
-  "current": "1.25.5",
+  "current": "1.25.6",
   "releases": [
+    {
+      "version": "1.25.6",
+      "date": "2026-08-24",
+      "title": "Engineering Symbol & Formula Normalizer",
+      "changes": [
+        "Paste formulas directly into Q&A and Chat-to-Calculation textareas from PDF/Word/LaTeX without parser breakage.",
+        "Normalize fractions, subscripts/superscripts, Greek symbols, units, decimal commas, citation wrappers and hidden clipboard characters.",
+        "Keep raw user wording for chat while deterministic routing/calculation/export uses a normalizedQuestion copy.",
+        "Added regression for A=A_p=0,09 m² plus square 300x300 mm geometry so pile tip area is not falsely requested again."
+      ]
+    },
     {
       "version": "1.25.5",
       "date": "2026-08-24",

@@ -14,6 +14,7 @@ import { parsePageSpec } from './scope.js';
 import { codePackSearch, codePackFormulaItems, codePackStats, codePackForDoc } from './codepacks.js';
 import { exportFormulaWorkbook, exportCodePackWorkbook, exportDrivenPileWorkflowWorkbook, export10304AdvancedWorkflowWorkbook, export5574WorkflowWorkbook, export7888WorkflowWorkbook, exportUnifiedEngineeringWorkbook } from './excel-export.js';
 import { buildImageEngineeringExtractionPrompt, parseImageEngineeringExtraction, normalizeImageEngineeringExtraction, imageEngineeringNeedsConfirmation, imageEngineeringFieldRows, updateImageEngineeringField, buildConfirmedEngineeringQuestion, imageEngineeringProvenance, isSupportedEngineeringImage, IMAGE_ENGINEERING_MAX_FILES, IMAGE_ENGINEERING_MAX_BYTES } from './image-engineering.js';
+import { normalizeEngineeringText, normalizeEngineeringPaste } from './engineering-text-normalizer.js';
 
 const SOURCE_META = Object.freeze({
   version: typeof __HNL_APP_VERSION__ !== 'undefined' ? __HNL_APP_VERSION__ : '0.0.0',
@@ -184,7 +185,7 @@ function loadJson(key, fallback) {
 function esc(value = '') {
   return String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c]));
 }
-// Math rendering lives in ./math-render.js (v1.25.5).
+// Math rendering lives in ./math-render.js (v1.25.6).
 
 
 const DOC_CATEGORIES = Object.freeze([
@@ -1590,8 +1591,8 @@ function chatHtml() {
     <div class="chat-log">${state.chat.length ? state.chat.map((m,i)=>messageHtml(m,i)).join('') : `<div class="chat-welcome"><div class="chat-orb">AI</div><h3>Hỏi trực tiếp tiêu chuẩn</h3><p>Gemini/OpenAI có thể đọc PDF native; HNL RAG chạy song song để định vị trang và citation.</p><div class="suggestions"><button data-suggest="Cọc chống là gì?">Cọc chống là gì?</button><button data-suggest="Điều kiện áp dụng của nội dung này là gì?">Điều kiện áp dụng</button><button data-suggest="Công thức liên quan nằm ở điều hoặc trang nào?">Tìm công thức</button><button data-suggest="Tìm các Bảng và Phụ lục liên quan đến nội dung đang hỏi.">Bảng / Phụ lục</button><button data-suggest="Cọc PHC D600 cấp B có mômen uốn nứt bao nhiêu?">PHC D600 cấp B</button><button data-suggest="Điều kiện nghiệm thu lô cọc là gì?">Nghiệm thu lô cọc</button></div></div>`}</div>
     ${imageEngineeringReviewHtml()}
     ${chatAttachmentHtml()}
-    <div class="chat-composer"><label class="chat-attach-btn ${state.busy?'disabled':''}" title="Đính kèm ảnh đề bài / bảng địa chất / bản vẽ">📎<input id="chatImageInput" type="file" accept="image/png,image/jpeg,image/webp,image/bmp,image/gif" multiple ${state.busy?'disabled':''}></label><textarea id="chatQuestion" placeholder="${hasSources ? 'Nhập đề bài hoặc câu hỏi… Có thể 📎 ảnh / dán ảnh Ctrl+V.' : 'Chọn PDF làm nguồn trước…'}" ${!hasSources ? 'disabled' : ''}>${esc(state.chatDraft)}</textarea><button class="send-btn" id="askBtn" ${!hasSources || state.busy ? 'disabled' : ''}>${state.busy ? 'Đang xử lý…' : 'Gửi'}</button></div>
-    <div class="composer-hint">📎 ảnh / Ctrl+V / kéo-thả · ảnh kỹ thuật luôn phải xác nhận dữ liệu trước khi tính · Enter gửi · Shift + Enter xuống dòng · ${state.settings.strict ? 'Khóa nguồn đang bật' : 'Cho phép giải thích ngoài nguồn'}</div>
+    <div class="chat-composer"><label class="chat-attach-btn ${state.busy?'disabled':''}" title="Đính kèm ảnh đề bài / bảng địa chất / bản vẽ">📎<input id="chatImageInput" type="file" accept="image/png,image/jpeg,image/webp,image/bmp,image/gif" multiple ${state.busy?'disabled':''}></label><textarea id="chatQuestion" placeholder="${hasSources ? 'Nhập đề bài/công thức… Có thể dán từ PDF/Word/LaTeX, 📎 ảnh hoặc Ctrl+V.' : 'Chọn PDF làm nguồn trước…'}" ${!hasSources ? 'disabled' : ''}>${esc(state.chatDraft)}</textarea><button class="send-btn" id="askBtn" ${!hasSources || state.busy ? 'disabled' : ''}>${state.busy ? 'Đang xử lý…' : 'Gửi'}</button></div>
+    <div class="composer-hint">Ctrl+V dán công thức PDF/Word/LaTeX sẽ tự chuẩn hóa · 📎 ảnh / kéo-thả · ảnh kỹ thuật luôn phải xác nhận trước khi tính · Enter gửi · Shift + Enter xuống dòng · ${state.settings.strict ? 'Khóa nguồn đang bật' : 'Cho phép giải thích ngoài nguồn'}</div>
   </div>`;
 }
 
@@ -1830,7 +1831,7 @@ async function exportPile10304Excel() {
       input,result,question:'Tính trực tiếp từ Calculation Engine – cọc đóng/ép nhiều lớp'
     };
     await exportUnifiedEngineeringWorkbook(payload,{imageProvenance:[]});
-    showToast('Đã xuất Excel Production v1.25.5 từ Calculation Engine.', 'success');
+    showToast('Đã xuất Excel Production v1.25.6 từ Calculation Engine.', 'success');
   } catch(error){ showToast(`Không xuất được Excel Production: ${error.message}`,'error'); }
 }
 
@@ -1880,7 +1881,7 @@ function openEngineeringInCalculator(index) {
   const message=state.chat[Number(index)];
   const meta=message?.engineering;
   if(!meta?.question) return showToast('Không tìm thấy đề bài kỹ thuật của câu trả lời này.', 'warning');
-  const payload=engineeringExcelPayload(meta.question);
+  const payload=engineeringExcelPayload(meta.normalizedQuestion||meta.question);
   if(!payload.recognized) return showToast('HNL chưa nhận diện được workflow kỹ thuật để chuyển sang Tính.', 'warning');
   state.chatCalcTransfer={payload,index:Number(index),imageProvenance:Array.isArray(meta.imageInput)?meta.imageInput:[]};
   syncChatTransferToDedicatedCalculator(payload);
@@ -1919,7 +1920,11 @@ function recalculateChatTransfer() {
   const transfer=state.chatCalcTransfer; if(!transfer) return;
   const question=String(document.querySelector('#chatCalcQuestionEdit')?.value||transfer.payload?.question||'').trim();
   if(!question) return showToast('Hãy nhập/bổ sung đề bài trước khi tính lại.', 'warning');
-  const payload=engineeringExcelPayload(question);
+  const normalizedQuestion=normalizeEngineeringText(question);
+  // v1.25.5 compatibility marker: engineeringExcelPayload(question)
+  const payload=engineeringExcelPayload(normalizedQuestion);
+  payload.question=question;
+  payload.normalizedQuestion=normalizedQuestion;
   if(!payload.recognized) return showToast('Đề bài sau chỉnh sửa chưa nhận diện được workflow kỹ thuật.', 'warning');
   state.chatCalcTransfer={...transfer,payload};
   syncChatTransferToDedicatedCalculator(payload);
@@ -1935,7 +1940,7 @@ async function exportChatCalcTransferExcel() {
   try{
     const imageProvenance=transfer.imageProvenance||[];
     await exportUnifiedEngineeringWorkbook({...payload,imageProvenance},{imageProvenance});
-    showToast(`Đã xuất Excel v1.25.5: ${payload.workflow.title}.`,'success');
+    showToast(`Đã xuất Excel v1.25.6: ${payload.workflow.title}.`,'success');
   }catch(error){ showToast(`Không xuất được Excel: ${error.message}`,'error'); }
 }
 
@@ -2423,9 +2428,14 @@ function bind() {
     bind.chatImageInputBound = true;
     document.addEventListener('paste', event => {
       const target=event.target;
-      if(target?.id!=='chatQuestion') return;
+      if(!['chatQuestion','chatCalcQuestionEdit'].includes(target?.id)) return;
       const files=[...(event.clipboardData?.items||[])].filter(x=>x.kind==='file' && /^image\//i.test(x.type||'')).map(x=>x.getAsFile()).filter(Boolean);
-      if(files.length){ event.preventDefault(); addChatImageFiles(files); }
+      if(files.length && target.id==='chatQuestion') { event.preventDefault(); addChatImageFiles(files); return; }
+      const text=String(event.clipboardData?.getData?.('text/plain')||'');
+      if(!text) return;
+      event.preventDefault();
+      const changed=insertNormalizedEngineeringPaste(target,text);
+      if(changed) showToast('Đã chuẩn hóa ký hiệu/công thức khi dán từ PDF, Word hoặc LaTeX.', 'success');
     });
     document.addEventListener('dragover', event => { if(event.target?.closest?.('.chat-composer')) event.preventDefault(); });
     document.addEventListener('drop', event => {
@@ -3858,6 +3868,20 @@ async function getAnswer(question, docsOverride = null, extraImages = []) {
   return { text, hits, stats:{ ...(state.searchStats || stats), nativePdfCount:nativeDocs.length, nativePdfMode:state.settings.nativePdfMode } };
 }
 
+function insertNormalizedEngineeringPaste(target, rawText='') {
+  const pasted=String(rawText||'');
+  if(!pasted) return false;
+  const normalized=normalizeEngineeringPaste(pasted);
+  if(!normalized) return false;
+  const start=Number.isInteger(target.selectionStart)?target.selectionStart:String(target.value||'').length;
+  const end=Number.isInteger(target.selectionEnd)?target.selectionEnd:start;
+  if(typeof target.setRangeText==='function') target.setRangeText(normalized,start,end,'end');
+  else target.value=`${String(target.value||'').slice(0,start)}${normalized}${String(target.value||'').slice(end)}`;
+  target.dispatchEvent(new Event('input',{bubbles:true}));
+  target.dispatchEvent(new Event('change',{bubbles:true}));
+  return normalized!==pasted;
+}
+
 async function askQuestion(questionOverride = '', options = {}) {
   const input = document.querySelector('#chatQuestion');
   let question = String(questionOverride || input?.value || state.chatDraft || '').trim();
@@ -3890,10 +3914,14 @@ async function askQuestion(questionOverride = '', options = {}) {
 
   state.chatDraft = '';
   const imageInput=Array.isArray(options.imageProvenance)?options.imageProvenance:[];
-  const engineeringSolved = solveEngineeringQuestion(question);
+  // v1.25.6: keep the user's raw wording for chat/source search, but deterministic
+  // parsing always consumes the normalized engineering view. This makes copy/paste
+  // from PDF/Word/LaTeX robust without silently changing what the user asked.
+  const normalizedQuestion=normalizeEngineeringText(question);
+  const engineeringSolved = solveEngineeringQuestion(normalizedQuestion);
   const engineeringMeta = engineeringSolved.recognized ? {
     workflowId:engineeringSolved.workflow.id,title:engineeringSolved.workflow.title,standard:engineeringSolved.workflow.standard,
-    status:engineeringSolved.workflow.status,question,canExport:Boolean(engineeringSolved.result?.ok || engineeringSolved.result?.methodOnly),
+    status:engineeringSolved.workflow.status,question,normalizedQuestion,canExport:Boolean(engineeringSolved.result?.ok || engineeringSolved.result?.methodOnly),
     resultOk:Boolean(engineeringSolved.result?.ok),methodOnly:Boolean(engineeringSolved.result?.methodOnly),
     missing:Array.isArray(engineeringSolved.result?.missing)?engineeringSolved.result.missing:[],
     imageInput
@@ -3925,14 +3953,14 @@ async function exportEngineeringMessageExcel(index) {
   const meta=message?.engineering;
   const imageProvenance=Array.isArray(meta?.imageInput)?meta.imageInput:[];
   if(!meta?.question) return showToast('Không tìm thấy đề bài kỹ thuật để xuất Excel.', 'warning');
-  const payload=engineeringExcelPayload(meta.question);
+  const payload=engineeringExcelPayload(meta.normalizedQuestion||meta.question);
   if(!payload.recognized || !/^(7888|10304|5574)-/.test(payload.workflow?.id||'')) return showToast('Workflow này chưa có Excel kỹ thuật chuyên dụng.', 'warning');
   if(!(payload.result?.ok || payload.result?.methodOnly)) return showToast('Đề bài chưa đủ input để tạo Excel tính toán. Hãy bổ sung dữ liệu còn thiếu rồi hỏi lại.', 'warning');
   if(!String(payload.workflow.status||'').startsWith('VERIFIED')) return showToast(`Workflow ${payload.workflow.title} chưa VERIFIED, không được xuất Excel số học.`, 'warning');
   try {
     await exportUnifiedEngineeringWorkbook({...payload,imageProvenance},{imageProvenance});
-    showToast(`Đã xuất Excel Production v1.25.5: ${payload.workflow.title}.`, 'success');
-  } catch(error){ showToast(`Không xuất được Excel Production v1.25.5: ${error.message}`, 'error'); }
+    showToast(`Đã xuất Excel Production v1.25.6: ${payload.workflow.title}.`, 'success');
+  } catch(error){ showToast(`Không xuất được Excel Production v1.25.6: ${error.message}`, 'error'); }
 }
 
 

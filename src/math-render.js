@@ -1,4 +1,4 @@
-// HNL v1.25.5 — Offline-safe math renderer for AI engineering answers.
+// HNL v1.25.6 — Offline-safe math renderer for AI engineering answers.
 // Supports \(...\), $$...$$ and provider-style single-dollar inline math $...$.
 // It deliberately renders only a conservative LaTeX subset so raw tokens such as
 // \approx, \text{kN}, R_d or N_{d,max} never leak into the visible answer.

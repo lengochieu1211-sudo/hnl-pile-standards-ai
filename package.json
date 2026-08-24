@@ -1,7 +1,7 @@
 {
   "name": "hnl-pile-standards-ai",
   "private": true,
-  "version": "1.11.2",
+  "version": "1.25.4",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -15,13 +15,16 @@
     "bridge": "node bridge/server.mjs",
     "start": "node bridge/server.mjs",
     "offline": "npm run build:desktop && node bridge/server.mjs",
-    "test": "npm run check:version && npm run check:search && node --test tests/*.test.mjs",
+    "test": "npm run fixtures:images && npm run check:version && npm run check:search && node --test tests/*.test.mjs",
     "check:web": "npm run test && npm run build:web",
     "check:desktop": "npm run test && npm run build:desktop",
     "desktop": "npm run build:desktop && electron .",
     "dist:win": "npm run build:desktop && electron-builder --win nsis portable --publish never",
     "check:version": "node scripts/check-version-sync.mjs",
-    "check:search": "node scripts/check-search-brain.mjs"
+    "check:search": "node scripts/check-search-brain.mjs",
+    "fixtures:images": "node scripts/generate-image-fixtures.mjs",
+    "golden:tables": "node scripts/full-table-golden.mjs artifacts/full-table-golden-v1.25.4.json",
+    "excel:smoke": "node scripts/excel-runtime-smoke.mjs artifacts/excel-runtime-smoke"
   },
   "dependencies": {
     "cors": "2.8.5",
@@ -88,6 +91,6 @@
       "artifactName": "HNL-Pile-Standards-AI-Portable-${version}-${arch}.${ext}"
     }
   },
-  "description": "HNL Pile Standards AI - deep verified Code Packs for TCVN 7888:2014, TCVN 10304:2025 and TCVN 5574:2018, safe calculation/Excel export and proven v1.9.23 search brain.",
+  "description": "HNL Pile Standards AI - deep verified Code Packs for TCVN 7888:2014, TCVN 10304:2025 and TCVN 5574:2018, Image-to-Engineering confirmed inputs, safe calculation/Excel export and proven v1.9.23 search brain.",
   "author": "HNL"
 }

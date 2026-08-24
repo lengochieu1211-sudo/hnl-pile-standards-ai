@@ -26,14 +26,20 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
+      - name: Install locked dependencies
+        run: npm ci
 
       - name: Version Gate
         run: npm run check:version
 
       - name: Test core logic
         run: npm test
+
+      - name: Full Table Golden
+        run: npm run golden:tables
+
+      - name: ExcelJS runtime smoke
+        run: npm run excel:smoke
 
       - name: Build HNL Web
         run: npm run build:web

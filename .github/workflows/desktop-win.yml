@@ -32,14 +32,20 @@ jobs:
           "APP_VERSION=$version" >> $env:GITHUB_ENV
           Write-Host "HNL version: $version"
 
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
+      - name: Install locked dependencies
+        run: npm ci
 
       - name: Version Gate
         run: npm run check:version
 
       - name: Test core logic
         run: npm test
+
+      - name: Full Table Golden
+        run: npm run golden:tables
+
+      - name: ExcelJS runtime smoke
+        run: npm run excel:smoke
 
       - name: Validate Windows builder config
         shell: pwsh

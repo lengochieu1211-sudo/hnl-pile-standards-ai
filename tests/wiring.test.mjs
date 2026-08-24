@@ -1047,7 +1047,7 @@ test('v1.10.0 answer evidence reports read method confidence and source verifica
   assert.match(source, /Page Batch \+ RAG/);
   assert.match(source, /Vision \+ RAG/);
   assert.match(source, /OCR \+ RAG/);
-  assert.match(source, /Độ tin cậy:/);
+  assert.match(source, /confidence-chip/);
   assert.match(source, /data-verify-message/);
 });
 

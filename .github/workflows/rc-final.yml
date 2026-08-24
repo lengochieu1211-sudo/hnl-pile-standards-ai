@@ -1,0 +1,111 @@
+name: HNL v1.25.4 RC Final Gate
+
+on:
+  push:
+    branches: [ release/v1.25.4-rc ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+jobs:
+  bootstrap-lock:
+    name: Bootstrap package-lock once
+    runs-on: ubuntu-latest
+    outputs:
+      lock_created: ${{ steps.lock.outputs.created }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+        continue-on-error: true
+      - id: lock
+        shell: bash
+        run: |
+          if [ -f package-lock.json ]; then
+            echo "created=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          npm install --package-lock-only --ignore-scripts
+          echo "created=true" >> "$GITHUB_OUTPUT"
+      - name: Commit package-lock to RC branch
+        if: steps.lock.outputs.created == 'true'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git commit -m "build: lock dependencies for v1.25.4 RC"
+          git push origin HEAD:release/v1.25.4-rc
+
+  linux-gate:
+    name: Clean checkout → npm ci → 275 tests → 1,130 Golden → Web
+    needs: bootstrap-lock
+    if: needs.bootstrap-lock.outputs.lock_created == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          clean: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run golden:tables
+      - run: npm run excel:smoke
+      - run: npm run build:web
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hnl-v1.25.4-web-golden-excel
+          path: |
+            dist/**
+            artifacts/full-table-golden-v1.25.4.json
+            artifacts/excel-runtime-smoke/**
+            package-lock.json
+
+  windows-gate:
+    name: Windows Setup + Portable + ExcelJS runtime
+    needs: linux-gate
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          clean: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run golden:tables
+      - run: npm run excel:smoke
+      - run: npm run dist:win
+      - name: Microsoft Excel COM recalculation (when Excel is installed on runner)
+        id: excelcom
+        shell: pwsh
+        continue-on-error: true
+        run: ./scripts/verify-excel-com.ps1 -Dir artifacts/excel-runtime-smoke
+      - name: Record Excel COM availability
+        shell: pwsh
+        run: |
+          $status = "${{ steps.excelcom.outcome }}"
+          "Microsoft Excel COM step: $status" | Set-Content -Encoding UTF8 artifacts/excel-runtime-smoke/excel-com-status.txt
+          if ($status -ne "success") { Write-Host "GitHub-hosted runner does not guarantee Microsoft Excel. RC remains pending final real-Excel COM check on a machine with Excel installed." }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hnl-v1.25.4-windows-setup-portable-excel
+          path: |
+            release/*.exe
+            artifacts/full-table-golden-v1.25.4.json
+            artifacts/excel-runtime-smoke/**
+            scripts/verify-excel-com.ps1

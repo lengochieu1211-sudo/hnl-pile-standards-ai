@@ -1,6 +1,67 @@
-# HNL Pile Standards AI v1.11.2
+# HNL Pile Standards AI v1.25.4
+
+## v1.25.4 — Full Table Golden Benchmark
+
+- Chạy 1.130 Golden cases cho Bảng 2, 3, 4, 6, 7, 8, 12, 15, 16, 17: đúng mốc, giữa mốc, sát biên, ngoài biên, ô trống và category rời rạc.
+- Phát hiện và sửa lỗi engine nội suy 2D trên bảng thưa: Bảng 8 trước đây có thể bị BLOCK sai vì kiểm cả các cột IL không liên quan.
+- Sau sửa: 1.130/1.130 PASS; Bảng 8 đạt 121/121.
+- Benchmark JSON + Excel cell-by-cell là gate bắt buộc trước Release Candidate.
+
+## v1.25.3 — Interpolation & Table Audit
+
+- Thêm `src/interpolation-engine.js`: nội suy 1D/Bilinear strict, phân biệt EXACT / LINEAR / BOUNDARY-PLATEAU và cấm ngoại suy mặc định.
+- TCVN 10304 Bảng 2/3: nội suy theo độ sâu và IL; Bảng 3 tự chia thân cọc thành phân đoạn ≤2 m, giữ ranh giới lớp.
+- Bảng 4/6/12: bảng rời rạc, tuyệt đối không nội suy.
+- Bảng 7/8: nội suy 1D/2D đúng chú thích; khóa ngoài biên và ô gạch ngang.
+- Bảng 15: EXACT/EDGE-BAND, không tự nội suy nếu tiêu chuẩn không ghi; mốc trung gian yêu cầu override có provenance.
+- Bảng 16: nội suy tuyến tính theo qc chỉ trong đoạn có số; không đi xuyên ô “–”.
+- Bảng 17: kv/ζ0 dùng công thức; mv nội suy từng khoảng; không ngoại suy.
+- HNL Calculation Engine và Excel exporter dùng cùng chính sách bảng/biên; thêm regression test.
+
+## v1.25.2 — Lean Workbook Audit + True Recalculation
+
+- Audit lại exporter từng tiêu chuẩn: input thay đổi phải kéo theo bảng tra/công thức/kết quả.
+- TCVN 7888 không còn đóng băng `t`, `σce`, `Mcr`, bền cắt theo lần xuất; tất cả lookup từ `01_INPUT`.
+- Bỏ sheet benchmark QA khỏi workbook người dùng Phụ lục D/L/M.
+- Sửa ô kiểm tra TCVN 5574 từng là chuỗi `"=..."` thành công thức Excel thật.
+- Không đưa sheet workflow không liên quan vào file xuất.
+
+## v1.25.1 — Lean Export + Formula-Only Production
+
+- Chỉ xuất các sheet đúng workflow đang tính; không mang các sheet 7888/10304/5574 không liên quan.
+- Kết quả Production dùng công thức Excel liên kết input/bảng tra; không chép số HNL thành kết quả chết.
+- Golden Test/benchmark là QA nội bộ, không phải sheet kết quả người dùng.
+- Dữ liệu ảnh chỉ xuất provenance khi thật sự có input ảnh đã xác nhận.
+
+## v1.25.0 — Unified Production Excel Exporter
+
+- Mọi nút **Xuất Excel** đi qua một cổng `exportUnifiedEngineeringWorkbook()`, sau đó dispatch sang generator formula-only đúng workflow; workbook master chỉ là mẫu QA/tham chiếu, không được nhét nguyên vào file người dùng.
+- Workbook duy nhất giữ các module, biểu đồ, Golden Test, provenance và Image-to-Engineering bằng tiếng Việt có dấu.
+- Mỗi lần xuất chèn `LẦN XUẤT HIỆN TẠI TỪ HNL`: workflow, input chuẩn hóa, kết quả deterministic và nguồn ảnh đã xác nhận.
+- Các workflow REVIEW/INDEXED tiếp tục bị khóa; VERIFIED METHOD chỉ xuất khi router xác nhận phương pháp, không tự bịa số.
 
 
+
+
+## v1.24.0 — Image-to-Engineering Input · Confirm-before-Calculate
+
+- Ô chat hỗ trợ 📎 nhiều ảnh, dán ảnh Ctrl+V và kéo-thả; ảnh không còn chỉ được dùng để AI “nhìn rồi trả lời”.
+- Pipeline mới: OCR cục bộ khi trình duyệt hỗ trợ → AI Vision JSON schema → bảng dữ liệu có confidence/provenance → người dùng sửa/xác nhận → Universal Engineering Router → Calculation Engine deterministic → Excel.
+- Không có giá trị đọc từ ảnh nào được phép vào Calculation Engine trước bước xác nhận. Dữ liệu mờ phải để null/cảnh báo, không tự đoán chữ số.
+- Golden Image tests cho TCVN 7888, 10304 và 5574 xác nhận cùng dữ liệu sau confirmation cho cùng kết quả với text input.
+- Sửa router TCVN 5574: “tiết diện trong ảnh” không còn bị nhận nhầm thành “tiết diện tròn”.
+- Nút Xuất Excel trong chat hiển thị cho cả TCVN 7888/10304/5574 khi workflow Verified và input đã đủ.
+- Workbook xuất từ đề bài ảnh có thêm sheet `08_NGUON_ANH` để truy nguyên từng giá trị ảnh đã xác nhận; giá trị sửa tay không bị ghi sai thành “tra tiêu chuẩn”.
+- Golden Image/unit-integration v1.24.0 PASS; kiểm thử độ chính xác Vision live vẫn phải chạy bằng provider thật trước khi build Release Candidate.
+
+
+## v1.23.0 — Full 3-TCVN End-to-End Audit · TCVN 7888 AI→Excel
+
+- TCVN 7888:2014 được đưa vào Universal Engineering Router thực sự: đề bài tự nhiên PC/PHC/NPH → tra Bảng 1/2 → A0 → Phụ lục B → Pmax.
+- NPH-AB bị chặn, PC/PHC/NPH khóa ngưỡng σcu 60/80 MPa, cảnh báo chiều dài ngoài dải bảng nhưng không phủ nhận chú thích tiêu chuẩn cho phép thiết kế đặc biệt.
+- Nút Excel trong câu trả lời AI hỗ trợ cả TCVN 7888; workbook chuyên dụng có input, bảng tra, công thức thật, kết quả, thuyết minh và provenance.
+- Full regression giữ Search Brain v1.9.23 bất biến; bổ sung Golden Engineering cases cho cả 3 tiêu chuẩn và cross-check HNL ↔ Excel.
+- Build Web/EXE chỉ được coi PASS khi chạy được dependency/build thực tế; không hợp thức hóa `vite: not found`.
 
 ## v1.11.2 — Windows Build Hash Guard · LF/CRLF Safe
 
@@ -352,3 +413,10 @@ Hoặc dùng GitHub Actions → **Build HNL Desktop AI for Windows**.
 - Version Gate: **PASS**.
 - Syntax critical JS/MJS/CJS: **PASS**.
 - Xem `docs/FULL_UI_MODEL_AUDIT_V1.9.12.md`.
+
+## v1.22.0 — TCVN 5574 Annex D / L / M
+- Phụ lục D: D.1–D.4/D.6 + D.7 chạy Calculation Engine; D.5 vẫn yêu cầu Qan,j,0 có provenance.
+- Phụ lục L: Bảng L.1 mục 1–3 được số hóa; phần còn lại khóa.
+- Phụ lục M: M.4.1.3, các nhánh Bảng M.1 đã đối chiếu, M.2/Bảng M.2, M.3, M.4 có engine + Excel.
+- Chat TCVN 5574 đã có nút Xuất Excel cho workflow Verified/Verified Branch.
+- Gate: PDF → Engine → Excel benchmark → Verified; không nâng trạng thái giả.

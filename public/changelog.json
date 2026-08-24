@@ -1,6 +1,208 @@
 {
-  "current": "1.11.2",
+  "current": "1.25.4",
   "releases": [
+    {
+      "version": "1.25.4",
+      "date": "2026-08-24",
+      "title": "Full Table Golden Benchmark",
+      "changes": [
+        "Added 1,130 Golden cases across TCVN 10304 tables 2,3,4,6,7,8,12,15,16,17 covering exact/mid/boundary/outside/sparse-cell policies.",
+        "Fixed bilinear sparse-grid bug: Bảng 8 now evaluates only the requested IL bracket instead of unrelated blank columns.",
+        "Full benchmark now passes 1,130/1,130; results exported to JSON and Excel audit workbook.",
+        "Search brain remains unchanged."
+      ]
+    },
+    {
+      "version": "1.25.3",
+      "date": "2026-08-24",
+      "title": "Interpolation & Table Audit",
+      "changes": [
+        "Strict shared interpolation engine: exact, linear 1D, bilinear 2D, explicit boundary plateau, no silent extrapolation.",
+        "TCVN 10304 Tables 2/3/6/7/8/12/15/16/17 classified and synchronized between Calculation Engine and Excel.",
+        "Driven-pile side friction automatically splits soil layers into subsegments no thicker than 2 m.",
+        "CPT Table 15 intermediate values are blocked unless a sourced manual override is supplied; Table 16 uses local linear interpolation only through numeric cells.",
+        "Table 17 no longer clamps outside nu 0..0.5; mv interpolates locally and zeta0 nu=0.5 uses the verified limiting value 0.25."
+      ]
+    },
+    {
+      "version": "1.25.2",
+      "date": "2026-08-24",
+      "title": "Lean Workbook Audit + True Recalculation",
+      "changes": [
+        "TCVN 7888 workbook lookup values now recalculate from Type/Class/D using Excel formulas; no export-time frozen table results.",
+        "Removed QA benchmark sheet from TCVN 5574 Annex D/L/M user workbooks.",
+        "Fixed a TCVN 5574 result cell that contained formula text instead of a live Excel formula.",
+        "Production workbook audit gates check lean sheets, formula-only result paths and input-driven recalculation."
+      ]
+    },
+    {
+      "version": "1.25.1",
+      "date": "2026-08-24",
+      "title": "Lean Export + Formula-Only Production",
+      "changes": [
+        "Excel export now dispatches to the exact workflow workbook; unrelated standard/module sheets are not included.",
+        "Production result cells remain Excel formulas linked to input/table sheets instead of copying deterministic HNL numeric results as dead values.",
+        "Golden/benchmark data remains QA-only; Image provenance is included only when confirmed image input exists.",
+        "REVIEW/INDEXED numeric export remains blocked."
+      ]
+    },
+    {
+      "version": "1.25.0",
+      "date": "2026-08-24",
+      "title": "Unified Production Excel Exporter",
+      "changes": [
+        "All AI/Calculation Engine engineering exports use one v1.25.0 production workbook template.",
+        "Vietnamese workbook includes TCVN 7888, 10304, 5574 modules, charts, Golden Test and provenance.",
+        "Each export injects normalized input, deterministic result and confirmed image provenance into the unified workbook.",
+        "REVIEW/INDEXED numeric export remains blocked."
+      ]
+    },
+    {
+      "version": "1.24.0",
+      "date": "2026-08-24",
+      "title": "Image-to-Engineering Input · Confirm-before-Calculate",
+      "changes": [
+        "Chat supports image attach, paste and drag-drop.",
+        "Local OCR hint + Vision structured extraction + mandatory user confirmation before deterministic calculation.",
+        "Golden Image tests for TCVN 7888, TCVN 10304 and TCVN 5574.",
+        "Fixed false circular-section routing for phrase 'tiết diện trong ảnh'; TCVN 7888 Excel button is visible in AI chat."
+      ]
+    },
+    {
+      "version": "1.23.0",
+      "date": "2026-08-24",
+      "title": "Full 3-TCVN End-to-End Audit · TCVN 7888 AI-to-Excel",
+      "changes": [
+        "TCVN 7888 free-text deterministic workflow and safety gates.",
+        "TCVN 7888 specialized AI-to-Excel production workbook.",
+        "Golden Engineering benchmark matrix for all three standards.",
+        "Search brain hash remains unchanged; build status reported honestly."
+      ]
+    },
+    {
+      "version": "1.22.0",
+      "date": "2026-08-24",
+      "title": "TCVN 5574 Annex D / L / M verification pass",
+      "changes": [
+        "Phụ lục D: D.1-D.4/D.6 + D.7 verified branches; D.5 remains provenance-required input.",
+        "Phụ lục L: Bảng L.1 mục 1-3 verified lookup.",
+        "Phụ lục M: M.4.1.3, Bảng M.1-M.4 và M.2 verified branches.",
+        "Calculation Engine ↔ Excel benchmarks and router wiring added."
+      ]
+    },
+    {
+      "version": "1.21.0",
+      "date": "2026-08-24",
+      "title": "TCVN 5574 Detailing · Anchorage/Lap · Annex G/H · Annex F Safety Gate",
+      "changes": [
+        "Neo cốt thép CT (255)–(258): Rbond, L0,an, Lan và Ns với safety gate α.",
+        "Nối chồng CT (259): tự chọn α=1,2 kéo / 0,9 nén cho trường hợp thông thường; khóa d>40 mm.",
+        "Phụ lục G: chốt bê tông G.1–G.3; Phụ lục H: công xôn ngắn H.1 với giới hạn L1/h0≤0,9.",
+        "Phụ lục F: vành khuyên F.1–F.6 và tròn F.7–F.10 đã machine-verified; F.9/F.10 giải lặp hội tụ, benchmark HNL ↔ Excel.",
+        "Calculation Engine ↔ Excel benchmark bắt buộc trước khi VERIFIED."
+      ]
+    },
+    {
+      "version": "1.20.0",
+      "date": "2026-08-24",
+      "title": "TCVN 5574 Deep SLS · Cracked deformation · Shear deformation · Prestress friction/creep",
+      "changes": [
+        "Số hóa Bảng 6 Rb,ser/Rbt,ser; Bảng 12 Rs,ser; Bảng 17 acrc,u; Bảng 18 ma sát ứng suất trước.",
+        "Độ võng có nứt CT (186),(193)-(204) và biến dạng trượt CT (181)-(184) cho nhánh dầm tựa đơn tải đều.",
+        "Ứng suất trước: CT (214) ma sát + Bảng 18; CT (216) từ biến; nối vào tổng hao tổn.",
+        "Benchmark HNL ↔ Excel và safety gates cho nhánh SLS sâu."
+      ]
+    },
+    {
+      "version": "1.19.0",
+      "date": "2026-08-24",
+      "title": "TCVN 5574 Deep Verification Pass 1 · Material · Flexure · Eccentric · Shear · Torsion · Local · Punching",
+      "changes": [
+        "Xác minh sâu vật liệu và Es; εb2 ngắn hạn, CT (31)-(38) cho uốn chữ nhật/T/I.",
+        "Nén lệch tâm tiết diện chữ nhật: độ lệch tâm ngẫu nhiên và CT (40)-(48), có safety gate N<Ncr khi đủ dữ liệu uốn dọc.",
+        "Lực cắt: CT (88), (92)-(96); xoắn thuần: CT (102), (107), (109), (111)-(113).",
+        "Nén cục bộ không lưới: CT (116)-(118); chọc thủng do lực tập trung: CT (123)-(128).",
+        "Nối AI → deterministic workflow → Excel cho toàn bộ workflow TCVN 5574 đã VERIFIED trong pass này.",
+        "Excel production có input, bảng vật liệu, công thức thật, tính từng bước, kiểm tra, thuyết minh module-specific, provenance và chỉ báo trực quan."
+      ]
+    },
+    {
+      "version": "1.17.0",
+      "date": "2026-08-24",
+      "title": "TCVN 10304 full regression audit",
+      "items": [
+        "End-to-end unit/applicability audit",
+        "CT39/CT40 group settlement coverage",
+        "Excel-HNL benchmark hardening"
+      ]
+    },
+    {
+      "version": "1.16.0",
+      "date": "2026-08-24",
+      "title": "TCVN 10304 Construction Effects · AI-to-Excel Wiring",
+      "changes": [
+        "Đối chiếu trang 68-69: Bảng 18, CT (47) V=2π·α·δ và CT (48) Fc,min≥γc·Rk; nâng workflow ảnh hưởng thi công lên VERIFIED.",
+        "Bảng 18 được dùng để kiểm vận tốc dao động cho phép theo loại kết cấu và trạng thái cát/IL của đất sét.",
+        "AI chat lưu metadata workflow deterministic và hiển thị nút Xuất Excel ngay trên câu trả lời khi đề bài đủ input.",
+        "Đường AI → workflow → Excel được ánh xạ cho toàn bộ workflow TCVN 10304 trong registry; cọc đóng/ép dùng workbook nhiều lớp, các workflow còn lại dùng production exporter tương ứng."
+      ]
+    },
+    {
+      "version": "1.15.0",
+      "date": "2026-08-24",
+      "title": "TCVN 10304 Advanced Verification · Settlement & Dynamic",
+      "changes": [
+        "Thử động CT (22)-(24) được nối Calculation Engine deterministic.",
+        "Lún cọc đơn CT (30)-(35), Bảng 17; lún nhóm CT (36)-(40); móng khối quy ước CT (41)-(46) được chuyển sang workflow Verified có kiểm điều kiện và đơn vị.",
+        "Bè-cọc 7.4.5 được xác minh phương pháp nhưng giữ VERIFIED_METHOD vì tiêu chuẩn yêu cầu mô hình tương tác/numerical model, không có công thức đóng để tự bịa.",
+        "Thêm exporter Excel production cho dynamic, lún đơn, lún nhóm, khối quy ước và checklist bè-cọc."
+      ]
+    },
+    {
+      "version": "1.14.0",
+      "date": "2026-08-24",
+      "title": "Universal Engineering Router · Deterministic AI Math",
+      "changes": [
+        "Thêm router nhận dạng bài toán trên 3 TCVN và chọn workflow kỹ thuật trước khi gọi AI.",
+        "Kết quả số học VERIFIED do HNL Calculation Engine tạo; Gemini/OpenAI/Ollama chỉ diễn giải và phải giữ nguyên số.",
+        "Thêm parse đề bài cọc đóng/ép cơ bản, tra B30/CB400-V và workflow uốn chữ nhật TCVN 5574 CT (33)-(35).",
+        "Workflow REVIEW được định tuyến đúng Điều/Công thức/Bảng nhưng khóa tính số và Excel cho tới khi Verified."
+      ]
+    },
+    {
+      "version": "1.12.2",
+      "date": "2026-08-24",
+      "title": "Math/LaTeX renderer fix",
+      "changes": [
+        "Chuẩn hóa delimiter LaTeX bị AI trộn giữa \\\\[...\\\\] và $$...$$.",
+        "Render công thức kỹ thuật offline-safe: chỉ số dưới/trên, ký hiệu Hy Lạp, tổng, tích, phân số.",
+        "Prompt bắt buộc provider dùng delimiter nhất quán để tránh tái diễn lỗi ký tự công thức."
+      ]
+    },
+    {
+      "version": "1.12.1",
+      "date": "2026-08-24",
+      "title": "Compact AI header + readable answers",
+      "items": [
+        "Gom tên AI, trạng thái kết nối và số nguồn lên header nhỏ",
+        "Thu gọn Mới/Lịch sử, không che nội dung chat",
+        "Tăng cỡ chữ câu trả lời và ô nhập kỹ thuật",
+        "Giảm lặp provider/model trong từng message",
+        "Giữ composer ở đáy và chat cuộn độc lập"
+      ]
+    },
+    {
+      "version": "1.12.0",
+      "date": "2026-08-24",
+      "title": "Verified engineering workflow + overlap-free UI",
+      "items": [
+        "Nạp Bảng 2/3/4 TCVN 10304:2025",
+        "Workflow cọc đóng/ép nhiều lớp và Excel công thức",
+        "AI guardrail không bịa bảng/công thức",
+        "Thu gọn AI & kết nối, chat composer luôn ở đáy",
+        "Audit typography 1366x768/Windows 125%"
+      ]
+    },
     {
       "version": "1.11.2",
       "date": "2026-08-24",

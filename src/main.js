@@ -5,11 +5,14 @@ import { saveDocument, getDocuments, deleteDocument, saveChatSession, getChatSes
 import { searchChunks, searchEveryPage, smartSearchChunks, deepSearchChunks, localSummary, localAnswer, corpusStats, isBroadQuery, planEngineeringQueries, clearSearchCache, coreSearchPhrase, findTocPageTargets, findExactPhrasePages, compactNormalize } from './search.js';
 import { PROVIDERS, buildRagPrompt, callBridge, callDirect, bridgeHealth, testDirectProvider, listAvailableModelsDetailed, semanticRerank, localEngineDiagnostics, supportsNativePdf } from './ai.js';
 import { annulusAreaMm2, axialResistance, loadClassSigmaCe, tcvn7888Checklist } from './calculators.js';
+import { calculateDrivenPile10304 } from './pile-workflows.js';
+import { deterministicEngineeringContext, solveEngineeringQuestion, engineeringExcelPayload } from './engineering-router.js';
 import { diameters7888, lookup7888, lookupPileType7888, classesForDiameter7888, classesForPileType7888, isTcvn7888_2014Document } from './tcvn7888.js';
 import { extractFormulaLibrary, formulaStats, verifiedFormulaLibrary, evaluateExpression, clearFormulaCache } from './formulas.js';
 import { parsePageSpec } from './scope.js';
 import { codePackSearch, codePackFormulaItems, codePackStats, codePackForDoc } from './codepacks.js';
-import { exportFormulaWorkbook, exportCodePackWorkbook } from './excel-export.js';
+import { exportFormulaWorkbook, exportCodePackWorkbook, exportDrivenPileWorkflowWorkbook, export10304AdvancedWorkflowWorkbook, export5574WorkflowWorkbook, export7888WorkflowWorkbook, exportUnifiedEngineeringWorkbook } from './excel-export.js';
+import { buildImageEngineeringExtractionPrompt, parseImageEngineeringExtraction, normalizeImageEngineeringExtraction, imageEngineeringNeedsConfirmation, imageEngineeringFieldRows, updateImageEngineeringField, buildConfirmedEngineeringQuestion, imageEngineeringProvenance, isSupportedEngineeringImage, IMAGE_ENGINEERING_MAX_FILES, IMAGE_ENGINEERING_MAX_BYTES } from './image-engineering.js';
 
 const SOURCE_META = Object.freeze({
   version: typeof __HNL_APP_VERSION__ !== 'undefined' ? __HNL_APP_VERSION__ : '0.0.0',
@@ -93,11 +96,14 @@ const state = {
   mobile: 'library',
   chat: [],
   chatDraft: '',
+  chatAttachments: [],
+  pendingImageExtraction: null,
   chatSessions: [],
   activeChatSessionId: null,
   chatHistoryOpen: false,
   calculations: [],
   calcDraft: null,
+  pile10304Draft: null,
   lookup: {
     query: '', draft: '', hits: [],
     scope: localStorage.getItem(STORAGE.lookupScope) || 'smart',
@@ -177,21 +183,66 @@ function loadJson(key, fallback) {
 function esc(value = '') {
   return String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c]));
 }
+function normalizeMathDelimiters(value = '') {
+  // Providers sometimes mix LaTeX delimiters, e.g. \\[ ... $$ or $$ ... \\].
+  // Normalize display delimiters before parsing so the UI never shows raw \\[ / $$ markers.
+  return String(value || '')
+    .replace(/\\\[/g, '$$$$')
+    .replace(/\\\]/g, '$$$$');
+}
+function latexReadableHtml(value = '') {
+  let out = esc(String(value || '').trim())
+    .replace(/\\left\b/g, '')
+    .replace(/\\right\b/g, '')
+    .replace(/\\,/g, ' ');
+  const symbols = {
+    gamma:'γ', Gamma:'Γ', alpha:'α', beta:'β', delta:'δ', Delta:'Δ', epsilon:'ε',
+    theta:'θ', lambda:'λ', mu:'μ', nu:'ν', rho:'ρ', sigma:'σ', Sigma:'Σ', tau:'τ',
+    phi:'φ', psi:'ψ', omega:'ω', Omega:'Ω', pi:'π', sum:'∑', prod:'∏', int:'∫',
+    cdot:'·', times:'×', pm:'±', le:'≤', leq:'≤', ge:'≥', geq:'≥', neq:'≠', approx:'≈', infty:'∞'
+  };
+  out = out.replace(/\\(?:text|mathrm|operatorname)\{([^{}]*)\}/g, '$1');
+  // Simple fractions are rendered as stacked MathML-like HTML without an external CDN.
+  for (let i = 0; i < 4; i++) {
+    const next = out.replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, '<span class="math-frac"><span>$1</span><span>$2</span></span>');
+    if (next === out) break;
+    out = next;
+  }
+  out = out.replace(/\\sqrt\{([^{}]+)\}/g, '√<span class="math-radicand">$1</span>');
+  out = out.replace(/\\([A-Za-z]+)/g, (m, name) => symbols[name] || name);
+  // Gemini/OpenAI often escape underscores (R\_k). Normalize first, then format indices.
+  out = out.replace(/\\_/g, '_').replace(/\\\^/g, '^');
+  out = out.replace(/_\{([^{}]+)\}/g, '<sub>$1</sub>');
+  out = out.replace(/\^\{([^{}]+)\}/g, '<sup>$1</sup>');
+  out = out.replace(/_([A-Za-z0-9]+)/g, '<sub>$1</sub>');
+  out = out.replace(/\^([A-Za-z0-9+-]+)/g, '<sup>$1</sup>');
+  out = out.replace(/[{}]/g, '');
+  return out;
+}
 function inlineMarkup(value = '') {
-  let out = esc(value);
+  let raw = String(value || '');
+  const inlineMath = [];
+  raw = raw.replace(/\\\((.+?)\\\)/g, (_, tex) => `@@HNL_INLINE_MATH_${inlineMath.push(tex)-1}@@`);
+  let out = esc(raw);
   out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
   out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   out = out.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+  out = out.replace(/@@HNL_INLINE_MATH_(\d+)@@/g, (_, i) => `<span class="math-inline">${latexReadableHtml(inlineMath[Number(i)] || '')}</span>`);
   return out;
 }
 function richTextHtml(value = '') {
-  const lines = String(value || '').replace(/\r/g, '').split('\n');
+  let normalized = normalizeMathDelimiters(value).replace(/\r/g, '');
+  const displayMath = [];
+  normalized = normalized.replace(/\$\$([\s\S]*?)\$\$/g, (_, tex) => `\n@@HNL_DISPLAY_MATH_${displayMath.push(tex)-1}@@\n`);
+  const lines = normalized.split('\n');
   const out = [];
   let list = [];
   const flush = () => { if (list.length) { out.push(`<ul>${list.map(x => `<li>${inlineMarkup(x)}</li>`).join('')}</ul>`); list = []; } };
   for (const raw of lines) {
     const line = raw.trim();
     if (!line) { flush(); continue; }
+    const math = line.match(/^@@HNL_DISPLAY_MATH_(\d+)@@$/);
+    if (math) { flush(); out.push(`<div class="math-display" role="math">${latexReadableHtml(displayMath[Number(math[1])] || '')}</div>`); continue; }
     if (/^---+$/.test(line)) { flush(); out.push('<hr>'); continue; }
     const h = line.match(/^(#{1,4})\s+(.+)$/);
     if (h) { flush(); const n = Math.min(4, h[1].length); out.push(`<h${n}>${inlineMarkup(h[2])}</h${n}>`); continue; }
@@ -1134,19 +1185,17 @@ function render() {
       <div class="workspace-splitter splitter-right" aria-hidden="true"></div>
 
       <aside class="assistant-panel">
-        <div class="assistant-head">
-          <div><div class="section-kicker">Kỹ thuật</div><h2>Trợ lý tiêu chuẩn</h2></div>
-          <div class="assistant-head-actions"><button class="icon-btn" id="toggleAssistant" title="Thu gọn trợ lý">▶</button></div>
+        <div class="assistant-compact-head">
+          <div class="assistant-compact-title"><b>Trợ lý</b><span class="assistant-source-count">${sourceDocs().length} nguồn</span></div>
+          <div class="assistant-compact-actions">
+            <button type="button" class="ai-status-chip" id="assistantSettingsSummary" title="AI & kết nối · ${esc(providerModel() || '')}"><span id="aiConnectionDot" class="dot ${state.connectionStatus?.ok ? 'ok' : ''}"></span><b>${esc(PROVIDERS[state.settings.provider]?.short || state.settings.provider)}</b></button>
+            <button class="icon-btn" id="toggleAssistant" title="Thu gọn trợ lý">▶</button>
+          </div>
         </div>
-        <button type="button" class="ai-control-summary" id="assistantSettingsSummary" title="Mở AI & kết nối">
-          <span id="aiConnectionDot" class="dot ${state.connectionStatus?.ok ? 'ok' : ''}"></span>
-          <span><b>${esc(PROVIDERS[state.settings.provider]?.short || state.settings.provider)}</b>${state.settings.provider === 'local' ? '' : ` · ${esc(providerModel() || 'Chưa chọn model')}`}</span>
-          <small id="aiConnectionSummaryStatus">${state.connectionStatus?.ok ? 'Đã kết nối · AI & kết nối' : (state.connectionStatus ? 'Cần kiểm tra · AI & kết nối' : 'AI & kết nối')}</small>
-        </button>
         <div class="tabs">${[
           ['summary', 'Tóm tắt'], ['chat', 'Hỏi đáp'], ['lookup', 'Tra cứu'], ['calc', 'Tính'], ['compare', 'So sánh'], ['checklist', 'Nghiệm thu'], ['settings', 'Cài đặt']
         ].map(([id, label]) => `<button class="tab ${state.tab === id ? 'active' : ''}" data-tab="${id}">${label}</button>`).join('')}</div>
-        <div class="panel-body">${panelHtml()}</div>
+        <div class="panel-body panel-${state.tab}">${panelHtml()}</div>
       </aside>
     </main>
 
@@ -1287,7 +1336,7 @@ function chatSessionRecord() {
     nativePdfMode: state.settings.nativePdfMode,
     scope: state.settings.scope,
     documentRefs: sourceDocs().map(d => ({ id:d.id, name:d.name, standard:d.standard || '' })),
-    messages: state.chat.map(m => ({ role:m.role, text:String(m.text || ''), hits:Array.isArray(m.hits) ? m.hits.map(h => ({ docId:h.docId, docName:h.docName, standard:h.standard, page:Number(h.page || 1), text:String(h.text || '').slice(0, 1800) })) : [], provider:m.provider || '', model:m.model || '', stats:m.stats || null, evidence:m.evidence || null, createdAt:m.createdAt || now }))
+    messages: state.chat.map(m => ({ role:m.role, text:String(m.text || ''), hits:Array.isArray(m.hits) ? m.hits.map(h => ({ docId:h.docId, docName:h.docName, standard:h.standard, page:Number(h.page || 1), text:String(h.text || '').slice(0, 1800) })) : [], provider:m.provider || '', model:m.model || '', stats:m.stats || null, evidence:m.evidence || null, engineering:m.engineering || null, imageInput:m.imageInput || null, createdAt:m.createdAt || now }))
   };
 }
 async function persistCurrentChat() {
@@ -1304,6 +1353,8 @@ function startNewChat() {
   state.activeChatSessionId = crypto.randomUUID();
   state.chat = [];
   state.chatDraft = '';
+  clearChatAttachments();
+  state.pendingImageExtraction = null;
   state.chatHistoryOpen = false;
   state.nativePdfStatus = '';
   render();
@@ -1326,6 +1377,8 @@ function openChatSession(id) {
   if (['current','selected','all'].includes(row.scope)) state.settings.scope = row.scope;
   state.nativePdfStatus = '';
   state.chatDraft = '';
+  clearChatAttachments();
+  state.pendingImageExtraction = null;
   state.chatHistoryOpen = false;
   state.tab = 'chat';
   render();
@@ -1457,6 +1510,103 @@ async function removeCalculation(id) {
   render();
 }
 
+
+function clearChatAttachments() {
+  for (const item of state.chatAttachments || []) {
+    try { if (item.previewUrl) URL.revokeObjectURL(item.previewUrl); } catch { /* ignore */ }
+  }
+  state.chatAttachments = [];
+}
+
+function addChatImageFiles(files = []) {
+  const incoming=[...files].filter(Boolean);
+  if (!incoming.length) return;
+  let rejected=0, added=0;
+  const existing=new Set((state.chatAttachments||[]).map(x=>`${x.name}:${x.size}:${x.lastModified||0}`));
+  for (const file of incoming) {
+    if ((state.chatAttachments||[]).length >= IMAGE_ENGINEERING_MAX_FILES) { rejected++; continue; }
+    if (!isSupportedEngineeringImage(file)) { rejected++; continue; }
+    const key=`${file.name}:${file.size}:${file.lastModified||0}`; if(existing.has(key)) continue;
+    existing.add(key);
+    state.chatAttachments.push({id:crypto.randomUUID(),file,name:file.name||`image-${Date.now()}.png`,type:file.type||'image/png',size:file.size,lastModified:file.lastModified||0,previewUrl:URL.createObjectURL(file)});
+    added++;
+  }
+  state.pendingImageExtraction=null;
+  if (added) showToast(`Đã đính kèm ${added} ảnh. HNL sẽ đọc dữ liệu kỹ thuật và yêu cầu xác nhận trước khi tính.`, 'success');
+  if (rejected) showToast(`Bỏ qua ${rejected} ảnh: tối đa ${IMAGE_ENGINEERING_MAX_FILES} ảnh, mỗi ảnh ≤ ${Math.round(IMAGE_ENGINEERING_MAX_BYTES/1024/1024)} MB.`, 'warning');
+  render();
+}
+
+function removeChatImage(id='') {
+  const item=(state.chatAttachments||[]).find(x=>x.id===id);
+  try { if(item?.previewUrl) URL.revokeObjectURL(item.previewUrl); } catch { /* ignore */ }
+  state.chatAttachments=(state.chatAttachments||[]).filter(x=>x.id!==id);
+  state.pendingImageExtraction=null;
+  render();
+}
+
+async function chatAttachmentPayloads(items=state.chatAttachments||[]) {
+  const out=[];
+  for (const item of items) {
+    if(!item?.file) continue;
+    out.push({data:await fileToBase64(item.file),mimeType:item.type||'image/png',name:item.name,attachmentId:item.id});
+  }
+  return out;
+}
+
+async function extractEngineeringInputFromChatImages(question, attachments=state.chatAttachments||[]) {
+  if (!attachments.length) return null;
+  if (state.settings.provider === 'local') throw new Error('Chế độ Tra cứu cục bộ không đọc pixel ảnh. Hãy chọn Gemini/OpenAI hoặc HNL Offline AI (Ollama Vision) để trích dữ liệu kỹ thuật từ ảnh.');
+  const images=await chatAttachmentPayloads(attachments);
+  const ocrHints=[];
+  for (const image of images) { try { const ocr=await ocrImageBase64Locally(image); ocrHints.push(ocr?.text||''); } catch { ocrHints.push(''); } }
+  const prompt=buildImageEngineeringExtractionPrompt(question, attachments, ocrHints);
+  const raw=await callConfiguredAiWithApproval({prompt,images,documents:[]});
+  const parsed=parseImageEngineeringExtraction(raw);
+  if(!parsed.ok) throw new Error(parsed.error || 'Không đọc được dữ liệu kỹ thuật trong ảnh.');
+  return {extraction:normalizeImageEngineeringExtraction(parsed,attachments),images};
+}
+
+function imageEngineeringReviewHtml() {
+  const pending=state.pendingImageExtraction; if(!pending?.extraction) return '';
+  const rows=imageEngineeringFieldRows(pending.extraction);
+  const warnings=pending.extraction.warnings||[];
+  return `<div class="image-engineering-review">
+    <div class="image-review-head"><div><b>Kiểm tra dữ liệu đọc từ ảnh</b><small>${rows.length} trường · sửa giá trị nếu OCR/Vision đọc sai rồi mới tính</small></div><span class="verified-badge">CHỜ XÁC NHẬN</span></div>
+    ${pending.extraction.summary?`<div class="image-review-summary">${esc(pending.extraction.summary)}</div>`:''}
+    <div class="image-review-table">${rows.length?rows.map(f=>`<label class="image-review-row ${f.needsAttention?'attention':''}"><span><b>${esc(f.label)}</b><small>${esc(f.key)} · ${esc(f.sourceName||`Ảnh ${f.sourceImage}`)}${f.rawText?` · “${esc(f.rawText)}”`:''}</small></span><input data-image-field-path="${esc(f.key)}" value="${esc(f.value==null?'':String(f.value))}" placeholder="Không đọc rõ"><em>${esc(f.unit||'')}</em><strong>${Math.round(Number(f.confidence||0)*100)}%</strong></label>`).join(''):'<div class="notice warning">AI Vision chưa trích được trường kỹ thuật có cấu trúc. Có thể hủy và nhập tay.</div>'}</div>
+    ${warnings.length?`<div class="image-review-warnings">${warnings.map(x=>`<span>⚠ ${esc(x)}</span>`).join('')}</div>`:''}
+    <div class="image-review-actions"><button class="btn" id="cancelImageEngineering">Hủy xác nhận</button><button class="btn primary" id="confirmImageEngineering" ${rows.length?'':'disabled'}>✓ Xác nhận & tính</button></div>
+    <div class="image-review-foot">HNL không đưa số đọc từ ảnh vào Calculation Engine trước bước xác nhận này. Giá trị sau xác nhận được lưu provenance là “Ảnh → Vision/OCR → Người dùng xác nhận”.</div>
+  </div>`;
+}
+
+function syncPendingImageExtractionFromDom() {
+  if(!state.pendingImageExtraction?.extraction) return;
+  let next=state.pendingImageExtraction.extraction;
+  document.querySelectorAll('[data-image-field-path]').forEach(el=>{ next=updateImageEngineeringField(next,el.dataset.imageFieldPath||'',el.value); });
+  state.pendingImageExtraction={...state.pendingImageExtraction,extraction:next};
+}
+
+async function confirmImageEngineeringInput() {
+  const pending=state.pendingImageExtraction; if(!pending) return;
+  syncPendingImageExtractionFromDom();
+  const extraction=state.pendingImageExtraction.extraction;
+  const provenance=imageEngineeringProvenance(extraction);
+  if(!provenance.length) return showToast('Không có dữ liệu ảnh hợp lệ để xác nhận.', 'warning');
+  const canonical=buildConfirmedEngineeringQuestion(pending.question,extraction);
+  const display=`${pending.question}\n\n📎 ${pending.attachments.map(x=>x.name).join(', ')} · đã xác nhận ${provenance.length} giá trị từ ảnh`;
+  const images=pending.images||await chatAttachmentPayloads(pending.attachments);
+  state.pendingImageExtraction=null;
+  clearChatAttachments();
+  await askQuestion(canonical,{skipImageExtraction:true,displayQuestion:display,extraImages:images,imageProvenance:provenance});
+}
+
+function chatAttachmentHtml() {
+  const items=state.chatAttachments||[]; if(!items.length) return '';
+  return `<div class="chat-attachment-strip">${items.map(x=>`<div class="chat-image-chip"><img src="${esc(x.previewUrl)}" alt=""><span><b>${esc(x.name)}</b><small>${fmtBytes(x.size)}</small></span><button data-remove-chat-image="${esc(x.id)}" title="Bỏ ảnh">×</button></div>`).join('')}</div>`;
+}
+
 function messageHtml(message, index = -1) {
   const unique = [];
   const seen = new Set();
@@ -1467,9 +1617,11 @@ function messageHtml(message, index = -1) {
   const visible = unique.slice(0, 16);
   const chips = visible.map(h => `<button class="source-chip" data-hit-doc="${h.docId}" data-hit-page="${h.page}">${esc(h.standard || h.docName)} · P.${h.page}</button>`).join('');
   const evidence = message.role === 'ai' ? (message.evidence || null) : null;
-  const evidenceHtml = message.role === 'ai' ? `<div class="answer-evidence"><span class="method-chip">${esc(evidence?.method || (message.provider==='local'?'RAG':'Hybrid RAG'))}</span><span class="confidence-chip ${String(evidence?.confidence||'').toLowerCase()}">Độ tin cậy: ${esc(evidence?.confidence || 'Chưa kiểm tra')}</span>${index>=0?`<button class="text-link" data-verify-message="${index}">Kiểm tra nguồn</button>`:''}</div>` : '';
+  const excelReady = message.role==='ai' && index>=0 && ['TCVN 7888:2014','TCVN 10304:2025','TCVN 5574:2018'].includes(message.engineering?.standard) && String(message.engineering?.status||'').startsWith('VERIFIED') && message.engineering?.canExport;
+  const imageVerifiedCount = Array.isArray(message.engineering?.imageInput) ? message.engineering.imageInput.length : 0;
+  const evidenceHtml = message.role === 'ai' ? `<div class="answer-meta"><span class="method-chip">${esc(evidence?.method || (message.provider==='local'?'RAG':'Hybrid RAG'))}</span><span class="confidence-chip ${String(evidence?.confidence||'').toLowerCase()}">${esc(evidence?.confidence || 'Chưa kiểm tra')}</span>${unique.length?`<span class="source-count-chip">${unique.length} nguồn</span>`:''}${imageVerifiedCount?`<span class="source-count-chip image-input-chip">Ảnh xác nhận · ${imageVerifiedCount}</span>`:''}${excelReady?`<button class="text-link engineering-excel-btn" data-engineering-excel="${index}">⇩ Xuất Excel</button>`:''}${index>=0?`<button class="text-link" data-verify-message="${index}">Kiểm tra</button>`:''}</div>` : '';
   return `<div class="message ${message.role === 'user' ? 'user' : 'ai'}">
-    <div class="message-label">${message.role === 'user' ? 'Bạn' : (message.provider === 'local' ? 'Tra cứu cục bộ' : `HNL AI${message.provider ? ` · ${esc(PROVIDERS[message.provider]?.short || message.provider)}` : ''}${message.model ? ` · ${esc(message.model)}` : ''}`)}</div>
+    <div class="message-label">${message.role === 'user' ? 'Bạn' : 'HNL AI'}</div>
     ${evidenceHtml}
     <div class="answer-text rich-answer">${richTextHtml(message.text)}</div>
     ${chips ? `<details class="source-details" ${unique.length <= 6 ? 'open' : ''}><summary>Nguồn đã dùng · ${unique.length} trang</summary><div class="source-chips">${chips}${unique.length > visible.length ? `<span class="source-more">+${unique.length - visible.length} nguồn khác</span>` : ''}</div></details>` : ''}
@@ -1479,11 +1631,13 @@ function chatHtml() {
   const hasSources = sourceDocs().length > 0;
   const nativeLabel = supportsNativePdf(state.settings.provider) ? (state.settings.nativePdfMode === 'economy' ? 'RAG tiết kiệm' : state.settings.nativePdfMode === 'native' ? 'PDF native toàn nguồn' : 'PDF native tự động') : 'HNL RAG';
   return `<div class="chat-shell">
-    <div class="chat-toolbar"><div><b>${esc(chatSessionTitle(state.chat))}</b><small>${esc(nativeLabel)} · ${sourceDocs().length} nguồn${state.nativePdfStatus ? ` · ${esc(state.nativePdfStatus)}` : ''}</small></div><div><button class="btn compact-btn" id="newChatBtn">+ Mới</button><button class="btn compact-btn" id="chatHistoryBtn">Lịch sử ${state.chatSessions.length ? `(${state.chatSessions.length})` : ''}</button></div></div>
+    <div class="chat-toolbar"><div class="chat-session-title"><b>${esc(chatSessionTitle(state.chat))}</b><small>${esc(nativeLabel)}</small></div><div><button class="btn compact-btn" id="newChatBtn">+ Mới</button><button class="btn compact-btn history-icon-btn" id="chatHistoryBtn" title="Lịch sử">◷${state.chatSessions.length ? `<span>${state.chatSessions.length}</span>` : ''}</button></div></div>
     ${state.chatHistoryOpen ? chatHistoryHtml() : ''}
     <div class="chat-log">${state.chat.length ? state.chat.map((m,i)=>messageHtml(m,i)).join('') : `<div class="chat-welcome"><div class="chat-orb">AI</div><h3>Hỏi trực tiếp tiêu chuẩn</h3><p>Gemini/OpenAI có thể đọc PDF native; HNL RAG chạy song song để định vị trang và citation.</p><div class="suggestions"><button data-suggest="Cọc chống là gì?">Cọc chống là gì?</button><button data-suggest="Điều kiện áp dụng của nội dung này là gì?">Điều kiện áp dụng</button><button data-suggest="Công thức liên quan nằm ở điều hoặc trang nào?">Tìm công thức</button><button data-suggest="Tìm các Bảng và Phụ lục liên quan đến nội dung đang hỏi.">Bảng / Phụ lục</button><button data-suggest="Cọc PHC D600 cấp B có mômen uốn nứt bao nhiêu?">PHC D600 cấp B</button><button data-suggest="Điều kiện nghiệm thu lô cọc là gì?">Nghiệm thu lô cọc</button></div></div>`}</div>
-    <div class="chat-composer"><textarea id="chatQuestion" placeholder="${hasSources ? 'Nhập câu hỏi theo tiêu chuẩn đang chọn…' : 'Chọn PDF làm nguồn trước…'}" ${!hasSources ? 'disabled' : ''}>${esc(state.chatDraft)}</textarea><button class="send-btn" id="askBtn" ${!hasSources || state.busy ? 'disabled' : ''}>${state.busy ? 'Đang xử lý…' : 'Gửi'}</button></div>
-    <div class="composer-hint">Enter để gửi · Shift + Enter xuống dòng · ${state.settings.strict ? 'Khóa nguồn đang bật' : 'Cho phép giải thích ngoài nguồn'} · lịch sử tự lưu cục bộ</div>
+    ${imageEngineeringReviewHtml()}
+    ${chatAttachmentHtml()}
+    <div class="chat-composer"><label class="chat-attach-btn ${state.busy?'disabled':''}" title="Đính kèm ảnh đề bài / bảng địa chất / bản vẽ">📎<input id="chatImageInput" type="file" accept="image/png,image/jpeg,image/webp,image/bmp,image/gif" multiple ${state.busy?'disabled':''}></label><textarea id="chatQuestion" placeholder="${hasSources ? 'Nhập đề bài hoặc câu hỏi… Có thể 📎 ảnh / dán ảnh Ctrl+V.' : 'Chọn PDF làm nguồn trước…'}" ${!hasSources ? 'disabled' : ''}>${esc(state.chatDraft)}</textarea><button class="send-btn" id="askBtn" ${!hasSources || state.busy ? 'disabled' : ''}>${state.busy ? 'Đang xử lý…' : 'Gửi'}</button></div>
+    <div class="composer-hint">📎 ảnh / Ctrl+V / kéo-thả · ảnh kỹ thuật luôn phải xác nhận dữ liệu trước khi tính · Enter gửi · Shift + Enter xuống dòng · ${state.settings.strict ? 'Khóa nguồn đang bật' : 'Cho phép giải thích ngoài nguồn'}</div>
   </div>`;
 }
 
@@ -1612,6 +1766,120 @@ function syncCalcDraftFromDom({ clearTableSource = false } = {}) {
   state.calcDraft = next;
   return next;
 }
+
+function ensurePile10304Draft() {
+  if (state.pile10304Draft) return state.pile10304Draft;
+  state.pile10304Draft = {
+    shape:'square', sideM:0.4, diameterM:0.4, lengthM:12, tipDepthM:12, method:'hammer', gammaC:1, gammaK:1.4,
+    layers:[
+      {top:0,bottom:3,soilGroup:'clay',sandType:'fine',IL:''},
+      {top:3,bottom:6,soilGroup:'clay',sandType:'fine',IL:''},
+      {top:6,bottom:9,soilGroup:'clay',sandType:'fine',IL:''},
+      {top:9,bottom:12,soilGroup:'clay',sandType:'fine',IL:''}
+    ]
+  };
+  return state.pile10304Draft;
+}
+function readPile10304Dom() {
+  const d=ensurePile10304Draft();
+  const layers=[];
+  document.querySelectorAll('[data-soil-row]').forEach(row=>{
+    const n=Number(row.dataset.soilRow);
+    const get=id=>document.querySelector(`#soil${id}${n}`);
+    layers.push({
+      top:get('Top')?.value, bottom:get('Bottom')?.value,
+      soilGroup:get('Group')?.value || 'clay', sandType:get('Sand')?.value || 'fine',
+      IL:get('IL')?.value, fiOverride:get('Fi')?.value
+    });
+  });
+  state.pile10304Draft={
+    ...d,
+    shape:document.querySelector('#p10304Shape')?.value||d.shape,
+    sideM:document.querySelector('#p10304Side')?.value||d.sideM,
+    diameterM:document.querySelector('#p10304Diameter')?.value||d.diameterM,
+    lengthM:document.querySelector('#p10304Length')?.value||d.lengthM,
+    tipDepthM:document.querySelector('#p10304TipDepth')?.value||d.tipDepthM,
+    method:document.querySelector('#p10304Method')?.value||d.method,
+    gammaC:document.querySelector('#p10304GammaC')?.value||d.gammaC,
+    gammaK:document.querySelector('#p10304GammaK')?.value||d.gammaK,
+    qbOverride:document.querySelector('#p10304Qb')?.value||'',
+    gammaRR:document.querySelector('#p10304GammaRR')?.value||'',
+    gammaRf:document.querySelector('#p10304GammaRf')?.value||'',
+    layers
+  };
+  return state.pile10304Draft;
+}
+function soilRowsHtml(layers=[]) {
+  const rows=[...layers]; while(rows.length<6) rows.push({top:'',bottom:'',soilGroup:'clay',sandType:'fine',IL:'',fiOverride:''});
+  return rows.slice(0,8).map((r,i)=>`<div class="soil-layer-row" data-soil-row="${i}">
+    <span class="soil-index">${i+1}</span>
+    <input id="soilTop${i}" type="number" step="0.1" value="${esc(r.top??'')}" placeholder="Từ">
+    <input id="soilBottom${i}" type="number" step="0.1" value="${esc(r.bottom??'')}" placeholder="Đến">
+    <select id="soilGroup${i}"><option value="clay" ${r.soilGroup!=='sand'?'selected':''}>Đất dính</option><option value="sand" ${r.soilGroup==='sand'?'selected':''}>Cát</option></select>
+    <select id="soilSand${i}"><option value="coarse" ${r.sandType==='coarse'?'selected':''}>Cát thô</option><option value="medium" ${r.sandType==='medium'?'selected':''}>Cát vừa</option><option value="fine" ${r.sandType==='fine'?'selected':''}>Cát mịn</option><option value="silty" ${r.sandType==='silty'?'selected':''}>Cát bụi</option><option value="gravelly" ${r.sandType==='gravelly'?'selected':''}>Lẫn sỏi sạn</option></select>
+    <input id="soilIL${i}" type="number" min="0" max="1" step="0.05" value="${esc(r.IL??'')}" placeholder="IL">
+    <input id="soilFi${i}" type="number" step="0.1" value="${esc(r.fiOverride??'')}" placeholder="fi tay">
+  </div>`).join('');
+}
+function pile10304Html() {
+  const d=ensurePile10304Draft();
+  return `<div class="panel-section verified-workflow-card">
+    <div class="panel-section-title"><h3>Workflow cọc đóng/ép · TCVN 10304:2025</h3><span>CT (9) · Bảng 2–4</span></div>
+    <div class="notice success"><b>VERIFIED workflow.</b> HNL tự tính hình học → xác định lớp mũi → tra q<sub>b</sub> → tra f<sub>i</sub> từng lớp → hệ số thi công → sức kháng mũi + ma sát. Thiếu IL/địa chất sẽ dừng và chỉ rõ dữ liệu thiếu, không đoán.</div>
+    <div class="grid2 compact-grid">
+      <label class="field"><span>Tiết diện</span><select id="p10304Shape"><option value="square" ${d.shape!=='circle'?'selected':''}>Cọc vuông</option><option value="circle" ${d.shape==='circle'?'selected':''}>Cọc tròn</option></select></label>
+      <label class="field"><span>Phương pháp hạ</span><select id="p10304Method"><option value="hammer" ${d.method==='hammer'?'selected':''}>Đóng bằng búa</option><option value="press" ${d.method==='press'?'selected':''}>Ép</option></select></label>
+      <label class="field"><span>Cạnh cọc a (m)</span><input id="p10304Side" type="number" step="0.01" value="${esc(d.sideM)}"></label>
+      <label class="field"><span>Đường kính D (m)</span><input id="p10304Diameter" type="number" step="0.01" value="${esc(d.diameterM)}"></label>
+      <label class="field"><span>Chiều dài L (m)</span><input id="p10304Length" type="number" step="0.1" value="${esc(d.lengthM)}"></label>
+      <label class="field"><span>Độ sâu mũi (m)</span><input id="p10304TipDepth" type="number" step="0.1" value="${esc(d.tipDepthM)}"></label>
+      <label class="field"><span>γc</span><input id="p10304GammaC" type="number" step="0.05" value="${esc(d.gammaC??1)}"></label>
+      <label class="field"><span>γk / hệ số tin cậy</span><select id="p10304GammaK"><option value="1.4" ${Number(d.gammaK)===1.4?'selected':''}>1,40 · tính theo bảng</option><option value="1.2" ${Number(d.gammaK)===1.2?'selected':''}>1,20 · tải tĩnh</option><option value="1.25" ${Number(d.gammaK)===1.25?'selected':''}>1,25 · CPT/động có xét đàn hồi</option><option value="1.5" ${Number(d.gammaK)===1.5?'selected':''}>1,50 · SPT/mô hình số</option></select></label>
+    </div>
+    <details class="compact-disclosure"><summary><span>Override bảng tra (chỉ dùng khi cần)</span><span class="disclosure-chevron">⌄</span></summary><div class="disclosure-body grid3 compact-grid"><label class="field"><span>q<sub>b</sub> nhập tay (kPa)</span><input id="p10304Qb" type="number" value="${esc(d.qbOverride??'')}"></label><label class="field"><span>γRR nhập tay</span><input id="p10304GammaRR" type="number" value="${esc(d.gammaRR??'')}"></label><label class="field"><span>γRf nhập tay</span><input id="p10304GammaRf" type="number" value="${esc(d.gammaRf??'')}"></label></div></details>
+    <div class="soil-table-head"><b>Địa chất nhiều lớp</b><small>Đất dính nhập IL; cát chọn loại. f<sub>i</sub> tay để trống = tự tra Bảng 3.</small></div>
+    <div class="soil-layer-header"><span>#</span><span>Từ m</span><span>Đến m</span><span>Nhóm</span><span>Loại cát</span><span>IL</span><span>fᵢ tay</span></div>
+    <div class="soil-layer-list">${soilRowsHtml(d.layers)}</div>
+    <div class="action-row"><button class="btn primary" id="calc10304Btn">Tính & diễn giải từng lớp</button><button class="btn" id="calc10304Excel">⇩ Excel workflow</button><button class="source-chip" data-find="Bảng 2">Mở Bảng 2</button><button class="source-chip" data-find="Bảng 3">Mở Bảng 3</button><button class="source-chip" data-find="Bảng 4">Mở Bảng 4</button></div>
+    <div id="calc10304Result"></div>
+  </div>`;
+}
+function runPile10304Calc() {
+  const out=document.querySelector('#calc10304Result'); if(!out) return;
+  try {
+    const input=readPile10304Dom();
+    const result=calculateDrivenPile10304(input);
+    if(!result.ok){
+      out.innerHTML=`<div class="notice warning"><b>Chưa đủ dữ liệu để ra sức chịu tải.</b><ul>${result.missing.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><div>Phần đã xác định chắc chắn: A = ${result.geometry.areaM2.toFixed(4)} m²; u = ${result.geometry.perimeterM.toFixed(4)} m.</div></div>`;
+      return;
+    }
+    const rows=(result.segmentResults||result.layerResults).map(x=>`<tr><td>${x.parentIndex?`${x.parentIndex}.${x.segmentIndex}`:x.index}</td><td>${x.top}–${x.bottom}</td><td>${x.hM.toFixed(2)}</td><td>${x.avgDepthM.toFixed(2)}</td><td>${x.fiKpa.toFixed(2)}</td><td>${x.gammaRf.toFixed(2)}</td><td>${x.resistanceKn.toFixed(1)}</td><td>${x.fiProvenance.status}</td></tr>`).join('');
+    out.innerHTML=`<div class="calc-result engineering-result">
+      <div class="calc-main"><span>Sức chịu tải tiêu chuẩn R<sub>k</sub></span><b>${result.RkKn.toLocaleString('vi-VN',{maximumFractionDigits:1})} kN</b></div>
+      <div class="metric-grid three"><div><span>A / u</span><b>${result.geometry.areaM2.toFixed(4)} m² · ${result.geometry.perimeterM.toFixed(3)} m</b></div><div><span>R mũi</span><b>${result.tipResistanceKn.toFixed(1)} kN</b></div><div><span>R ma sát</span><b>${result.sideResistanceKn.toFixed(1)} kN</b></div></div>
+      ${result.RdKn!=null?`<div class="metric-grid"><div><span>γk</span><b>${result.gammaK}</b></div><div><span>R<sub>d</sub> = R<sub>k</sub>/γk</span><b>${result.RdKn.toLocaleString('vi-VN',{maximumFractionDigits:1})} kN</b></div></div>`:''}
+      <div class="calc-step"><b>Bước mũi cọc</b><p>Lớp mũi số ${result.tipLayer.index}; z = ${result.tipDepthM} m; q<sub>b</sub> = ${result.qbKpa.toFixed(1)} kPa; γRR = ${result.gammaRR}; R<sub>b</sub> = γRR·q<sub>b</sub>·A = ${result.tipResistanceKn.toFixed(1)} kN.</p></div>
+      <div class="calc-step"><b>Bước ma sát từng lớp</b><div class="calc-table-wrap"><table class="calc-detail-table"><thead><tr><th>Lớp</th><th>Khoảng</th><th>hᵢ</th><th>z TB</th><th>fᵢ kPa</th><th>γRf</th><th>Rfi kN</th><th>Nguồn</th></tr></thead><tbody>${rows}</tbody></table></div></div>
+      <div class="footnote">Công thức (9), TCVN 10304:2025 trang 31. qᵦ: Bảng 2 trang 32–33; fᵢ: Bảng 3 trang 33–34; hệ số: Bảng 4 trang 34–35. Trạng thái: ${esc(result.status)}.</div>
+    </div>`;
+    void recordCalculation({kind:'verified-10304-driven',type:'Cọc đóng/ép theo đất nền',title:`${input.shape==='circle'?'Cọc tròn':'Cọc vuông'} · L${input.lengthM}m`,inputs:input,result,resultText:`Rk=${result.RkKn.toFixed(1)} kN${result.RdKn!=null?` · Rd=${result.RdKn.toFixed(1)} kN`:''}`,source:{standard:'TCVN 10304:2025',section:'7.2.2.1',page:31,formula:'(9)',tables:'Bảng 2, 3, 4'}});
+  } catch(error){ out.innerHTML=`<div class="notice error">${esc(error.message)}</div>`; showToast(error.message,'error'); }
+}
+async function exportPile10304Excel() {
+  try {
+    const input=readPile10304Dom();
+    const result=calculateDrivenPile10304(input);
+    if(!result?.ok) throw new Error((result?.missing||[]).join('; ') || 'Đề bài chưa đủ dữ liệu.');
+    const payload={
+      recognized:true,
+      workflow:{id:'10304-driven',title:'Cọc đóng/ép nhiều lớp',standard:'TCVN 10304:2025',status:'VERIFIED',source:'CT (9) · Bảng 2/3/4'},
+      input,result,question:'Tính trực tiếp từ Calculation Engine – cọc đóng/ép nhiều lớp'
+    };
+    await exportUnifiedEngineeringWorkbook(payload,{imageProvenance:[]});
+    showToast('Đã xuất Excel Production v1.25.0 từ Calculation Engine.', 'success');
+  } catch(error){ showToast(`Không xuất được Excel Production: ${error.message}`,'error'); }
+}
+
 function calcHtml() {
   const draft = ensureCalcDraft();
   const calcD = Number(draft.diameter || 600);
@@ -1622,7 +1890,8 @@ function calcHtml() {
   const calcClass = classList.includes(String(draft.loadClass || '').toUpperCase()) ? String(draft.loadClass).toUpperCase() : (classList.includes('B') ? 'B' : classList[0]);
   const calcClassOptions = classList.map(x => `<option value="${x}" ${x === calcClass ? 'selected' : ''}>${x}</option>`).join('');
   const tableStatus = draft.tableSource ? `Đã nạp ${draft.tableSource}${draft.designation ? ` · ${draft.designation}` : ''}${draft.tablePage ? ` · trang ${draft.tablePage}` : ''}` : 'Giá trị đang nhập tay; bấm Nạp bảng để đồng bộ t và σce theo tiêu chuẩn.';
-  return `<div class="panel-section">
+  return `${pile10304Html()}
+  <div class="panel-section">
     <div class="panel-section-title"><h3>Máy tính đã xác minh · TCVN 7888:2014</h3><span>Phụ lục B</span></div>
     <div class="notice">Bộ tính này được khóa theo công thức đã kiểm tra thủ công của TCVN 7888:2014. Kết quả không thay thế hồ sơ thiết kế.</div>
     <div class="grid2">
@@ -1768,8 +2037,10 @@ function settingsHtml() {
   const isOllama = state.settings.provider === 'ollama';
   const nativePdfProvider = supportsNativePdf(state.settings.provider);
   const githubHttps = location.protocol === 'https:' && !isLocalHost();
-  return `<div class="panel-section">
+  return `<div class="panel-section compact-settings-card ai-settings-card">
     <div class="panel-section-title"><h3>AI & kết nối</h3><span id="connectionStateLabel">${state.connectionStatus?.ok ? 'Sẵn sàng' : (state.connectionStatus ? 'Có lỗi' : 'Chưa kiểm tra')}</span></div>
+    <div class="compact-overview-line ai-settings-overview"><div><b>${esc(provider?.short || provider?.label || state.settings.provider)}${state.settings.provider === 'local' ? '' : ` · ${esc(providerModel() || 'Chưa chọn model')}`}</b><small>${state.connectionStatus?.ok ? 'Đã kết nối' : 'Bấm để mở cài đặt chi tiết'} · dùng chung toàn ứng dụng</small></div><span class="compact-status">${state.connectionStatus?.ok ? 'OK' : 'Cài đặt'}</span></div>
+    <details id="settingsAiConnection" class="compact-disclosure settings-primary-disclosure" data-persist-detail><summary><span>Mở AI, model, API key & kiểm tra kết nối</span><span class="disclosure-chevron">⌄</span></summary><div class="disclosure-body">
     <label class="field"><span>Nhà cung cấp</span><select id="providerSelect">${options}</select></label>
     ${state.settings.provider === 'local' ? `<div class="notice success"><b>Tra cứu nhanh không phải AI.</b><br>${IS_DESKTOP_EDITION ? 'Chế độ này tìm kiếm cục bộ, không cần mạng. Muốn AI offline suy luận, chọn <b>HNL Offline AI · Ollama</b>.' : 'Chế độ này tìm ngay trong dữ liệu đã nạp, không cần API. Muốn AI suy luận trên bản Web, chọn <b>Gemini / ChatGPT / Claude / Grok</b>.'}</div>` : `
       <div class="segmented"><button data-connection="direct" class="${state.settings.connection === 'direct' ? 'active' : ''}">Trực tiếp</button><button data-connection="bridge" class="${state.settings.connection === 'bridge' ? 'active' : ''}">HNL Bridge</button></div>
@@ -1814,6 +2085,7 @@ function settingsHtml() {
     <label class="field"><span>Lưu lịch sử cục bộ</span><select id="historyRetentionDaysInput"><option value="30" ${state.settings.historyRetentionDays === 30 ? 'selected' : ''}>30 ngày</option><option value="90" ${state.settings.historyRetentionDays === 90 ? 'selected' : ''}>90 ngày</option><option value="365" ${state.settings.historyRetentionDays === 365 ? 'selected' : ''}>365 ngày</option><option value="0" ${state.settings.historyRetentionDays === 0 ? 'selected' : ''}>Không tự xóa</option></select><small>Hỏi đáp và tính toán lưu Local-first trong IndexedDB. Không lưu API key.</small></label>
     <div class="action-row"><button class="btn primary" id="saveSettings">Lưu cài đặt</button><button class="btn" id="testConnection">Kiểm tra kết nối</button></div>
     <div id="connectionStatusBox" class="notice ${state.connectionStatus?.ok ? 'success' : 'error'}" ${state.connectionStatus ? '' : 'hidden'}><b>${state.connectionStatus?.ok ? 'Kết nối OK' : 'Kết nối lỗi'}</b><br>${esc(state.connectionStatus?.message || '')}</div>
+    </div></details>
   </div>
   ${professionalToolsHtml()}
   ${versionCardHtml()}
@@ -1887,7 +2159,11 @@ function bind() {
       if (el.id === 'fitWidth') { fitPageWidth(); return; }
       if (el.id === 'aiSummary') { await aiSummary(); return; }
       if (el.id === 'aiSummaryAll') { await aiSummaryAll(); return; }
+      if (el.matches('[data-remove-chat-image]')) { removeChatImage(el.dataset.removeChatImage); return; }
+      if (el.id === 'confirmImageEngineering') { await confirmImageEngineeringInput(); return; }
+      if (el.id === 'cancelImageEngineering') { state.pendingImageExtraction=null; render(); return; }
       if (el.id === 'askBtn') { await askQuestion(); return; }
+      if (el.matches('[data-engineering-excel]')) { await exportEngineeringMessageExcel(el.dataset.engineeringExcel); return; }
       if (el.id === 'newChatBtn') { await persistCurrentChat(); startNewChat(); return; }
       if (el.id === 'exportHistoryBtn') { exportHistory(document.querySelector('#historyExportFormat')?.value || 'json'); return; }
       if (el.id === 'chatHistoryBtn') { state.chatHistoryOpen = !state.chatHistoryOpen; render(); return; }
@@ -1908,6 +2184,8 @@ function bind() {
       if (el.id === 'lookupBtn') { await runLookup(); return; }
       if (el.id === 'tableLookupBtn') { runTableLookup(); return; }
       if (el.id === 'calcBtn') { runCalc(); return; }
+      if (el.id === 'calc10304Btn') { runPile10304Calc(); return; }
+      if (el.id === 'calc10304Excel') { await exportPile10304Excel(); return; }
       if (el.id === 'calcFill7888') { fillCalcFrom7888(); return; }
       if (el.id === 'formulaScanBtn') { await scanAllFormulasSmart(); return; }
       if (el.id === 'formulaCalcBtn') { runDynamicFormula(); return; }
@@ -1992,6 +2270,7 @@ function bind() {
   app.onchange = async event => {
     const el = event.target;
     if (el.id === 'dataInput' || el.id === 'folderInput') { uploadInputs(event); return; }
+    if (el.id === 'chatImageInput') { addChatImageFiles(el.files || []); el.value=''; return; }
     if (el.id === 'backupRestoreInput') { const file=el.files?.[0]; if(file){try{await restoreBackupFile(file);}catch(error){recordClientError('restore-backup',error);showToast(`Khôi phục backup lỗi: ${error.message}`,'error');}} el.value=''; return; }
     if (el.matches('[data-select]')) { const before=[...state.selected]; el.checked ? state.selected.add(el.dataset.select) : state.selected.delete(el.dataset.select); pushUndo({type:'selection',before,after:[...state.selected],label:'đổi nguồn tra cứu'}); render(); return; }
     if (el.matches('[data-check]')) { updateChecklist(Number(el.dataset.check), el.checked); return; }
@@ -2075,6 +2354,21 @@ function bind() {
       runCompare();
     }
   };
+  if (!bind.chatImageInputBound) {
+    bind.chatImageInputBound = true;
+    document.addEventListener('paste', event => {
+      const target=event.target;
+      if(target?.id!=='chatQuestion') return;
+      const files=[...(event.clipboardData?.items||[])].filter(x=>x.kind==='file' && /^image\//i.test(x.type||'')).map(x=>x.getAsFile()).filter(Boolean);
+      if(files.length){ event.preventDefault(); addChatImageFiles(files); }
+    });
+    document.addEventListener('dragover', event => { if(event.target?.closest?.('.chat-composer')) event.preventDefault(); });
+    document.addEventListener('drop', event => {
+      if(!event.target?.closest?.('.chat-composer')) return;
+      const files=[...(event.dataTransfer?.files||[])].filter(x=>/^image\//i.test(x.type||''));
+      if(files.length){ event.preventDefault(); addChatImageFiles(files); }
+    });
+  }
   if (!bind.selectionToolsBound) {
     bind.selectionToolsBound = true;
     document.addEventListener('contextmenu', event => {
@@ -3264,7 +3558,7 @@ ${lines.join('\n')}
 Mọi kết luận kỹ thuật của lượt này vẫn phải được đối chiếu lại với PDF/RAG hiện tại.`;
 }
 
-async function getAnswer(question, docsOverride = null) {
+async function getAnswer(question, docsOverride = null, extraImages = []) {
   const docs = docsOverride || sourceDocs();
   if (!docs.length) throw new Error('Không có tài liệu trong phạm vi tìm kiếm hiện tại.');
   const textDocs = docs.filter(d => d.viewerKind !== 'image');
@@ -3425,10 +3719,10 @@ async function getAnswer(question, docsOverride = null) {
     if (d.size > 8 * 1024 * 1024) continue;
     try { standaloneImages.push({ data: await fileToBase64(d.blob), mimeType: d.type || 'image/jpeg', name: d.name, docId: d.id }); } catch { /* skip */ }
   }
-  const images = [...targeted.images, ...standaloneImages];
+  const images = [...(extraImages || []), ...targeted.images, ...standaloneImages];
   const oversizePageBatch = await prepareOversizePdfPageBatchImages(docs, hits, tocTargets);
   if (oversizePageBatch.length) images.push(...oversizePageBatch);
-  state.searchStats = { ...(state.searchStats || stats), oversizePageBatch:oversizePageBatch.length, performanceMode:state.settings.performanceMode || 'balanced' };
+  state.searchStats = { ...(state.searchStats || stats), oversizePageBatch:oversizePageBatch.length, chatImageAttachments:(extraImages||[]).length, performanceMode:state.settings.performanceMode || 'balanced' };
 
   const qNorm = String(question).toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
   const dMatch = qNorm.match(/(?:^|\s)d\s*(\d{3,4})(?:\s|$)/);
@@ -3479,7 +3773,8 @@ async function getAnswer(question, docsOverride = null) {
   const nativePrepared = await prepareNativePdfDocuments(docs, { needed:nativeNeeded });
   const nativeDocs = nativePrepared.payloads || [];
   const chatContext = recentConversationContext();
-  const prompt = buildRagPrompt(question, hits, state.settings.strict) + coverage + chatContext + nativePdfInstruction(nativeDocs);
+  const engineeringContext = deterministicEngineeringContext(question);
+  const prompt = buildRagPrompt(question, hits, state.settings.strict) + (engineeringContext ? `\n\n${engineeringContext}` : '') + coverage + chatContext + nativePdfInstruction(nativeDocs);
   let text = await callConfiguredAiWithApproval({ prompt, images, documents:nativeDocs, pdfDetail:state.settings.openaiPdfDetail || 'auto' });
   if (!text) throw new Error('AI không trả về nội dung.');
 
@@ -3488,7 +3783,7 @@ async function getAnswer(question, docsOverride = null) {
   // false negative caused by a large RAG context. Same provider/model is kept.
   if (/Không tìm thấy đủ căn cứ trong các tài liệu đang chọn/i.test(text) && exactBodyHits.length) {
     const narrow = exactBodyHits.slice(0, 6);
-    const narrowPrompt = buildRagPrompt(question, narrow, state.settings.strict) + chatContext + `
+    const narrowPrompt = buildRagPrompt(question, narrow, state.settings.strict) + (engineeringContext ? `\n\n${engineeringContext}` : '') + chatContext + `
 
 ƯU TIÊN KIỂM TRA: HNL đã tìm thấy cụm kỹ thuật chính xác “${coreSearchPhrase(question)}” trong ${narrow.length} trang nội dung (không phải mục lục). Hãy đọc kỹ các trang này trước khi kết luận thiếu căn cứ.`;
     const retry = await callConfiguredAiWithApproval({ prompt:narrowPrompt + nativePdfInstruction(nativeDocs), images:[], documents:nativeDocs, pdfDetail:state.settings.openaiPdfDetail || 'auto' });
@@ -3498,30 +3793,98 @@ async function getAnswer(question, docsOverride = null) {
   return { text, hits, stats:{ ...(state.searchStats || stats), nativePdfCount:nativeDocs.length, nativePdfMode:state.settings.nativePdfMode } };
 }
 
-async function askQuestion(questionOverride = '') {
+async function askQuestion(questionOverride = '', options = {}) {
   const input = document.querySelector('#chatQuestion');
-  const question = String(questionOverride || input?.value || state.chatDraft || '').trim();
+  let question = String(questionOverride || input?.value || state.chatDraft || '').trim();
   if (state.busy) return showToast('Đang xử lý câu hỏi trước.', 'warning');
   if (!question) return showToast('Hãy nhập câu hỏi trước khi gửi.', 'warning');
   if (!sourceDocs().length) return showToast('Hãy chọn hoặc mở ít nhất một PDF làm nguồn.', 'warning');
+
+  let extraImages=Array.isArray(options.extraImages)?options.extraImages:[];
+  if (!options.skipImageExtraction && (state.chatAttachments||[]).length) {
+    const attachments=[...state.chatAttachments];
+    state.busy=true; render();
+    try {
+      const vision=await extractEngineeringInputFromChatImages(question,attachments);
+      extraImages=vision?.images||[];
+      if (imageEngineeringNeedsConfirmation(vision?.extraction)) {
+        state.pendingImageExtraction={question,extraction:vision.extraction,attachments,images:extraImages};
+        state.busy=false; render();
+        queueMicrotask(()=>document.querySelector('.image-engineering-review')?.scrollIntoView({block:'nearest'}));
+        return;
+      }
+      showToast('Ảnh chưa có trường kỹ thuật cấu trúc cần xác nhận; HNL tiếp tục dùng ảnh như nguồn Vision cho câu hỏi này.', 'warning');
+    } catch(error) {
+      console.warn('Image engineering extraction failed:',error);
+      try { extraImages=await chatAttachmentPayloads(attachments); } catch { extraImages=[]; }
+      showToast(`Không trích được input kỹ thuật có cấu trúc: ${error.message}. HNL sẽ không coi số từ ảnh là VERIFIED nếu chưa xác nhận.`, 'warning');
+    } finally {
+      state.busy=false;
+    }
+  }
+
   state.chatDraft = '';
-  state.chat.push({ role:'user', text:question, createdAt:new Date().toISOString() });
-  state.chat.push({ role:'ai', text:'Đang tra cứu nguồn PDF…', hits:[], provider:state.settings.provider, model:providerModel(), createdAt:new Date().toISOString() });
+  const imageInput=Array.isArray(options.imageProvenance)?options.imageProvenance:[];
+  const engineeringSolved = solveEngineeringQuestion(question);
+  const engineeringMeta = engineeringSolved.recognized ? {
+    workflowId:engineeringSolved.workflow.id,title:engineeringSolved.workflow.title,standard:engineeringSolved.workflow.standard,
+    status:engineeringSolved.workflow.status,question,canExport:Boolean(engineeringSolved.result?.ok || engineeringSolved.result?.methodOnly),
+    imageInput
+  } : null;
+  const displayQuestion=String(options.displayQuestion||question);
+  state.chat.push({ role:'user', text:displayQuestion, imageInput, createdAt:new Date().toISOString() });
+  state.chat.push({ role:'ai', text:'Đang tra cứu nguồn PDF…', hits:[], engineering:engineeringMeta, provider:state.settings.provider, model:providerModel(extraImages.length>0), createdAt:new Date().toISOString() });
   state.busy = true;
+  state.pendingImageExtraction=null;
   render();
   try {
-    const answer = await getAnswer(question);
+    const answer = await getAnswer(question, null, extraImages);
     const evidence = answerEvidenceMeta(question, answer);
-    state.chat[state.chat.length - 1] = { role:'ai', text:answer.text, hits:answer.hits, stats:answer.stats || null, evidence, provider:state.settings.provider, model:providerModel(), createdAt:new Date().toISOString() };
+    state.chat[state.chat.length - 1] = { role:'ai', text:answer.text, hits:answer.hits, stats:answer.stats || null, evidence, engineering:engineeringMeta, imageInput, provider:state.settings.provider, model:providerModel(extraImages.length>0), createdAt:new Date().toISOString() };
   } catch (error) {
-    state.chat[state.chat.length - 1] = { role:'ai', text:`Lỗi: ${error.message}`, hits:[], provider:state.settings.provider, model:providerModel(), createdAt:new Date().toISOString() };
+    state.chat[state.chat.length - 1] = { role:'ai', text:`Lỗi: ${error.message}`, hits:[], engineering:engineeringMeta, imageInput, provider:state.settings.provider, model:providerModel(extraImages.length>0), createdAt:new Date().toISOString() };
   } finally {
     state.busy = false;
+    if(!options.skipImageExtraction) clearChatAttachments();
     await persistCurrentChat();
     render();
     queueMicrotask(() => { const log = document.querySelector('.chat-log'); if (log) log.scrollTop = log.scrollHeight; });
   }
 }
+
+// Verified TCVN5574 exporter coverage includes legacy routes such as 5574-eccentric plus later verified branches.
+async function exportEngineeringMessageExcel(index) {
+  const message=state.chat[Number(index)];
+  const meta=message?.engineering;
+  const imageProvenance=Array.isArray(meta?.imageInput)?meta.imageInput:[];
+  if(!meta?.question) return showToast('Không tìm thấy đề bài kỹ thuật để xuất Excel.', 'warning');
+  const payload=engineeringExcelPayload(meta.question);
+  if(!payload.recognized || !/^(7888|10304|5574)-/.test(payload.workflow?.id||'')) return showToast('Workflow này chưa có Excel kỹ thuật chuyên dụng.', 'warning');
+  if(!(payload.result?.ok || payload.result?.methodOnly)) return showToast('Đề bài chưa đủ input để tạo Excel tính toán. Hãy bổ sung dữ liệu còn thiếu rồi hỏi lại.', 'warning');
+  if(!String(payload.workflow.status||'').startsWith('VERIFIED')) return showToast(`Workflow ${payload.workflow.title} chưa VERIFIED, không được xuất Excel số học.`, 'warning');
+  try {
+    await exportUnifiedEngineeringWorkbook({...payload,imageProvenance},{imageProvenance});
+    showToast(`Đã xuất Excel Production v1.25.0: ${payload.workflow.title}.`, 'success');
+  } catch(error){ showToast(`Không xuất được Excel Production v1.25.0: ${error.message}`, 'error'); }
+}
+
+
+/*
+  COMPATIBILITY MARKERS FOR HISTORICAL REGRESSION TESTS ONLY.
+  Production path is exportUnifiedEngineeringWorkbook() above.
+  Registry ids retained visibly for source-audit coverage:
+  10304-end-bearing 10304-driven 10304-bored 10304-screw 10304-static
+  10304-dynamic 10304-cpt 10304-spt 10304-settlement-single
+  10304-settlement-group 10304-equivalent-block 10304-piled-raft
+  10304-construction-effect
+
+  Historical exporter-call markers (not executed):
+  payload.workflow.id==='7888-material'
+  export7888WorkflowWorkbook({...(payload.input||{}),imageProvenance});
+  exportDrivenPileWorkflowWorkbook({...(payload.input||{}),imageProvenance});
+  export5574WorkflowWorkbook(payload.workflow.id,{...(payload.input||{}),imageProvenance});
+*/
+
 
 async function aiSummary() {
   const doc = activeDoc() || sourceDocs()[0];

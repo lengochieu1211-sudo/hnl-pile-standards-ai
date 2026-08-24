@@ -5,12 +5,15 @@ import { saveDocument, getDocuments, deleteDocument, saveChatSession, getChatSes
 import { searchChunks, searchEveryPage, smartSearchChunks, deepSearchChunks, localSummary, localAnswer, corpusStats, isBroadQuery, planEngineeringQueries, clearSearchCache, coreSearchPhrase, findTocPageTargets, findExactPhrasePages, compactNormalize } from './search.js';
 import { PROVIDERS, buildRagPrompt, callBridge, callDirect, bridgeHealth, testDirectProvider, listAvailableModelsDetailed, semanticRerank, localEngineDiagnostics, supportsNativePdf } from './ai.js';
 import { annulusAreaMm2, axialResistance, loadClassSigmaCe, tcvn7888Checklist } from './calculators.js';
-import { diameters7888, lookup7888, classesForDiameter7888 } from './tcvn7888.js';
+import { diameters7888, lookup7888, lookupPileType7888, classesForDiameter7888, classesForPileType7888, isTcvn7888_2014Document } from './tcvn7888.js';
 import { extractFormulaLibrary, formulaStats, verifiedFormulaLibrary, evaluateExpression, clearFormulaCache } from './formulas.js';
+import { parsePageSpec } from './scope.js';
+import { codePackSearch, codePackFormulaItems, codePackStats, codePackForDoc } from './codepacks.js';
+import { exportFormulaWorkbook, exportCodePackWorkbook } from './excel-export.js';
 
 const SOURCE_META = Object.freeze({
   version: typeof __HNL_APP_VERSION__ !== 'undefined' ? __HNL_APP_VERSION__ : '0.0.0',
-  release: 'Runtime RAG Rescue · Stable Native Mode · Compact AI Settings'
+  release: 'Professional Workspace · Stable v1.9.23 Search Brain'
 });
 
 let APP_META = {
@@ -51,7 +54,18 @@ const STORAGE = {
   rightWidth: 'hnl.rightWidth.v194',
   nativePdfMode: 'hnl.nativePdfMode.v1921',
   openaiPdfDetail: 'hnl.openaiPdfDetail.v1921',
-  historyRetentionDays: 'hnl.historyRetentionDays.v1921'
+  historyRetentionDays: 'hnl.historyRetentionDays.v1921',
+  lookupScope: 'hnl.lookupScope.v1925',
+  lookupPages: 'hnl.lookupPages.v1925',
+  formulaScope: 'hnl.formulaScope.v1925',
+  formulaPages: 'hnl.formulaPages.v1925',
+  performanceMode: 'hnl.performanceMode.v1100',
+  fieldMode: 'hnl.fieldMode.v1100',
+  libraryQuery: 'hnl.libraryQuery.v1100',
+  libraryFilter: 'hnl.libraryFilter.v1100',
+  workspace: 'hnl.workspace.v1100',
+  crashLog: 'hnl.crashLog.v1100',
+  chatHistoryQuery: 'hnl.chatHistoryQuery.v1100'
 };
 
 const state = {
@@ -83,7 +97,12 @@ const state = {
   activeChatSessionId: null,
   chatHistoryOpen: false,
   calculations: [],
-  lookup: { query: '', draft: '', hits: [] },
+  calcDraft: null,
+  lookup: {
+    query: '', draft: '', hits: [],
+    scope: localStorage.getItem(STORAGE.lookupScope) || 'smart',
+    pages: localStorage.getItem(STORAGE.lookupPages) || ''
+  },
   compare: { query: '', draft: '', text: '', hits: [] },
   tableResult: null,
   checklist: loadJson(STORAGE.checklist, {}),
@@ -101,7 +120,9 @@ const state = {
     semanticRerank: localStorage.getItem(STORAGE.semanticRerank) !== 'false',
     nativePdfMode: localStorage.getItem(STORAGE.nativePdfMode) || 'balanced',
     openaiPdfDetail: localStorage.getItem(STORAGE.openaiPdfDetail) || 'auto',
-    historyRetentionDays: Number(localStorage.getItem(STORAGE.historyRetentionDays) || 365)
+    historyRetentionDays: Number(localStorage.getItem(STORAGE.historyRetentionDays) || 365),
+    performanceMode: localStorage.getItem(STORAGE.performanceMode) || 'balanced',
+    fieldMode: localStorage.getItem(STORAGE.fieldMode) === 'true'
   },
   progress: null,
   toast: null,
@@ -120,13 +141,24 @@ const state = {
   formulaSelection: localStorage.getItem(STORAGE.formulaSelection) || '',
   formulaQuery: '',
   formulaScanMode: localStorage.getItem(STORAGE.formulaScanMode) || 'auto',
+  formulaScanScope: localStorage.getItem(STORAGE.formulaScope) || 'page',
+  formulaScanPages: localStorage.getItem(STORAGE.formulaPages) || '',
   archivePasswordCache: new Map(),
   archiveEngines: null,
   archiveEngineError: '',
   buildInfoLoaded: false,
   updateStatus: null,
   changelog: [],
-  nativePdfStatus: ''
+  nativePdfStatus: '',
+  libraryQuery: localStorage.getItem(STORAGE.libraryQuery) || '',
+  libraryFilter: localStorage.getItem(STORAGE.libraryFilter) || 'all',
+  bookmarkPanelOpen: false,
+  historyQuery: localStorage.getItem(STORAGE.chatHistoryQuery) || '',
+  documentHealth: null,
+  crashLog: loadJson(STORAGE.crashLog, []),
+  undoStack: [],
+  redoStack: [],
+  compareMode: 'compare'
 };
 
 if (!PROVIDERS[state.settings.provider] || (!IS_DESKTOP_EDITION && state.settings.provider === 'ollama')) state.settings.provider = 'local';
@@ -136,6 +168,8 @@ if (new URLSearchParams(location.search).get('offline') === '1' && ['localhost',
   state.settings.bridgeUrl = location.origin;
 }
 const app = document.querySelector('#app');
+window.addEventListener('error', event => recordClientError('window-error', event.error || event.message));
+window.addEventListener('unhandledrejection', event => recordClientError('unhandledrejection', event.reason || 'Promise rejected'));
 
 function loadJson(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key) || '') || fallback; } catch { return fallback; }
@@ -169,6 +203,267 @@ function richTextHtml(value = '') {
   return out.join('');
 }
 
+
+const DOC_CATEGORIES = Object.freeze([
+  ['standard','Tiêu chuẩn / TCVN'],
+  ['design','Thiết kế'],
+  ['method','Biện pháp / Thi công'],
+  ['acceptance','Nghiệm thu / QAQC'],
+  ['report','Báo cáo / Thí nghiệm'],
+  ['other','Khác']
+]);
+const PERFORMANCE_PROFILES = Object.freeze({
+  light:{ label:'Nhẹ', observerMargin:420, retrievalScale:.72, visualPageLimit:4, renderScale:1.25 },
+  balanced:{ label:'Cân bằng', observerMargin:900, retrievalScale:1, visualPageLimit:8, renderScale:1.45 },
+  strong:{ label:'Mạnh', observerMargin:1500, retrievalScale:1.22, visualPageLimit:12, renderScale:1.65 }
+});
+function performanceProfile() { return PERFORMANCE_PROFILES[state.settings.performanceMode] || PERFORMANCE_PROFILES.balanced; }
+function inferDocCategory(doc = {}) {
+  const text = `${doc.standard || ''} ${doc.name || ''} ${doc.sourcePath || ''}`.toLocaleLowerCase('vi');
+  if (/tcvn|qcvn|iso|astm|en\s?\d|tiêu chuẩn|standard/.test(text)) return 'standard';
+  if (/thiết kế|design|shop|calculation|tính toán|foundation|móng/.test(text)) return 'design';
+  if (/biện pháp|method|method statement|thi công|施工/.test(text)) return 'method';
+  if (/nghiệm thu|qa\/?qc|checklist|inspection|itp/.test(text)) return 'acceptance';
+  if (/báo cáo|report|thí nghiệm|test result|pile test/.test(text)) return 'report';
+  return 'other';
+}
+function docMeta(doc) {
+  if (!doc) return { pinned:false, category:'other', bookmarks:[], highlights:[], notes:[], tags:[] };
+  if (!doc.hnlMeta || typeof doc.hnlMeta !== 'object') doc.hnlMeta = {};
+  if (!Array.isArray(doc.hnlMeta.bookmarks)) doc.hnlMeta.bookmarks = [];
+  if (!Array.isArray(doc.hnlMeta.highlights)) doc.hnlMeta.highlights = [];
+  if (!Array.isArray(doc.hnlMeta.notes)) doc.hnlMeta.notes = [];
+  if (!Array.isArray(doc.hnlMeta.tags)) doc.hnlMeta.tags = [];
+  if (!DOC_CATEGORIES.some(([id]) => id === doc.hnlMeta.category)) doc.hnlMeta.category = inferDocCategory(doc);
+  doc.hnlMeta.pinned = Boolean(doc.hnlMeta.pinned);
+  return doc.hnlMeta;
+}
+function categoryLabel(id='other') { return DOC_CATEGORIES.find(([x]) => x === id)?.[1] || 'Khác'; }
+function filteredLibraryDocs() {
+  const q = String(state.libraryQuery || '').trim().toLocaleLowerCase('vi');
+  const filter = state.libraryFilter || 'all';
+  return [...state.docs].filter(doc => {
+    const meta = docMeta(doc);
+    if (filter === 'pinned' && !meta.pinned) return false;
+    if (filter !== 'all' && filter !== 'pinned' && meta.category !== filter) return false;
+    if (!q) return true;
+    return `${doc.standard || ''} ${doc.name || ''} ${doc.sourcePath || ''} ${meta.tags.join(' ')}`.toLocaleLowerCase('vi').includes(q);
+  }).sort((a,b) => Number(docMeta(b).pinned) - Number(docMeta(a).pinned) || String(a.standard || a.name).localeCompare(String(b.standard || b.name), 'vi'));
+}
+function cloneMeta(meta) { return JSON.parse(JSON.stringify(meta || {})); }
+function pushUndo(action) {
+  state.undoStack.push(action);
+  if (state.undoStack.length > 20) state.undoStack.shift();
+  state.redoStack = [];
+}
+async function applyUndoAction(action, direction='undo') {
+  if (!action) return;
+  if (action.type === 'selection') {
+    state.selected = new Set(direction === 'undo' ? action.before : action.after);
+  } else if (action.type === 'doc-meta') {
+    const doc = state.docs.find(d => d.id === action.id);
+    if (doc) { doc.hnlMeta = cloneMeta(direction === 'undo' ? action.before : action.after); await saveDocument(doc); }
+  } else if (action.type === 'delete-doc') {
+    if (direction === 'undo') {
+      if (!state.docs.some(d => d.id === action.doc.id)) {
+        state.docs.splice(Math.min(action.index, state.docs.length), 0, action.doc);
+        await saveDocument(action.doc);
+        if (action.selected) state.selected.add(action.doc.id);
+        state.activeDocId = action.activeDocId || action.doc.id;
+      }
+    } else {
+      await deleteDocument(action.doc.id);
+      state.docs = state.docs.filter(d => d.id !== action.doc.id);
+      state.selected.delete(action.doc.id);
+      if (state.activeDocId === action.doc.id) state.activeDocId = state.docs[0]?.id || null;
+    }
+  }
+  clearFormulaCache();
+  clearSearchCache();
+  render();
+}
+async function undoLast() {
+  const action = state.undoStack.pop();
+  if (!action) return showToast('Không có thao tác để hoàn tác.', 'info');
+  await applyUndoAction(action, 'undo');
+  state.redoStack.push(action);
+  showToast(`Đã hoàn tác: ${action.label || 'thao tác gần nhất'}.`, 'success');
+}
+async function redoLast() {
+  const action = state.redoStack.pop();
+  if (!action) return showToast('Không có thao tác để làm lại.', 'info');
+  await applyUndoAction(action, 'redo');
+  state.undoStack.push(action);
+  showToast(`Đã làm lại: ${action.label || 'thao tác'}.`, 'success');
+}
+function saveWorkspace() {
+  try {
+    const payload = {
+      activeDocId:state.activeDocId, page:state.page, zoom:state.zoom, tab:state.tab, mobile:state.mobile,
+      readerMode:state.readerMode, selected:[...state.selected], scope:state.settings.scope, activeChatSessionId:state.activeChatSessionId,
+      leftCollapsed:state.leftCollapsed, rightCollapsed:state.rightCollapsed, layout:state.layout,
+      lookup:{ scope:state.lookup.scope, pages:state.lookup.pages }, formula:{ scope:state.formulaScanScope, pages:state.formulaScanPages },
+      savedAt:new Date().toISOString()
+    };
+    localStorage.setItem(STORAGE.workspace, JSON.stringify(payload));
+  } catch {}
+}
+function restoreWorkspace() {
+  const w = loadJson(STORAGE.workspace, null);
+  if (!w) return;
+  const ids = new Set(state.docs.map(d => d.id));
+  if (w.activeDocId && ids.has(w.activeDocId)) state.activeDocId = w.activeDocId;
+  state.page = Math.max(1, Number(w.page || 1));
+  state.zoom = Math.min(2.5, Math.max(.45, Number(w.zoom || state.zoom)));
+  if (['summary','chat','lookup','calc','compare','checklist','settings'].includes(w.tab)) state.tab = w.tab;
+  if (['library','viewer','assistant'].includes(w.mobile)) state.mobile = w.mobile;
+  if (['continuous','single'].includes(w.readerMode)) state.readerMode = w.readerMode;
+  if (Array.isArray(w.selected)) state.selected = new Set(w.selected.filter(id => ids.has(id)));
+  if (['all','selected','active'].includes(w.scope)) state.settings.scope = w.scope;
+  if (w.activeChatSessionId) state.activeChatSessionId=String(w.activeChatSessionId);
+  if (w.layout) state.layout = { left:Math.min(390,Math.max(240,Number(w.layout.left)||state.layout.left)), right:Math.min(560,Math.max(330,Number(w.layout.right)||state.layout.right)) };
+  state.leftCollapsed = Boolean(w.leftCollapsed); state.rightCollapsed = Boolean(w.rightCollapsed);
+  if (w.lookup && ['smart','region','page','pages','document','selected','library'].includes(w.lookup.scope)) { state.lookup.scope=w.lookup.scope; state.lookup.pages=String(w.lookup.pages||''); }
+  if (w.formula && ['region','page','pages','document','selected','library'].includes(w.formula.scope)) { state.formulaScanScope=w.formula.scope; state.formulaScanPages=String(w.formula.pages||''); }
+}
+function standardFamilyKey(doc={}) {
+  return String(doc.standard || doc.name || '').toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d')
+    .replace(/\b(?:19|20)\d{2}\b/g,'').replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim().slice(0,90);
+}
+function relatedDocumentVersions(doc) {
+  const key = standardFamilyKey(doc); if (key.length < 5) return [];
+  return state.docs.filter(x => x.id !== doc.id && standardFamilyKey(x) === key && x.fingerprint !== doc.fingerprint);
+}
+function standardYear(doc={}) {
+  const years=[...`${doc.standard||''} ${doc.name||''}`.matchAll(/((?:19|20)\d{2})/g)].map(m=>Number(m[1]));
+  return years.length ? Math.max(...years) : 0;
+}
+function relatedVersionLabel(doc) {
+  const related=relatedDocumentVersions(doc); if(!related.length) return '';
+  const year=standardYear(doc), newest=Math.max(0,...related.map(standardYear));
+  if(year && newest>year) return `Có bản mới hơn ${newest}`;
+  if(year && related.some(x=>standardYear(x)&&standardYear(x)<year)) return 'Có bản cũ hơn';
+  return 'Có phiên bản khác';
+}
+function documentHealth(doc = activeDoc()) {
+  if (!doc) return null;
+  const raw = rawTextPageCount(doc), usable = usableTextPageCount(doc), pages = Number(doc.pageCount || 0);
+  const meta = docMeta(doc); const related = relatedDocumentVersions(doc);
+  const nativeLimit = 50 * 1024 * 1024;
+  const textRatio = pages ? usable / pages : 0;
+  const rawRatio = pages ? raw / pages : 0;
+  const staleIndex = Number(doc.textIndexVersion||0) < TEXT_INDEX_VERSION;
+  const score = Math.max(0, Math.min(100, Math.round(
+    (doc.blob || doc.viewerKind !== 'pdf' ? 45 : 25) +
+    (staleIndex ? 0 : 20) +
+    Math.min(20, textRatio * 20) + Math.min(10, rawRatio * 10) +
+    (doc.sourcePath || doc.name ? 5 : 0)
+  )));
+  const label = staleIndex ? 'Cần lập chỉ mục lại' : textRatio >= .7 ? 'Text tốt' : textRatio >= .3 ? 'PDF hỗn hợp' : 'Scan/ảnh · OCR khi cần';
+  return {
+    id:doc.id, name:doc.standard || doc.name, pages, size:doc.size || 0, rawTextPages:raw, usableTextPages:usable,
+    scanPages:Math.max(0,pages-usable), textChars:Number(doc.textChars||0), indexVersion:Number(doc.textIndexVersion||0), currentIndexVersion:TEXT_INDEX_VERSION,
+    staleIndex, score, label, nativeEligible:Boolean(doc.viewerKind==='pdf' && (doc.size||0) <= nativeLimit),
+    nativeReason:(doc.size||0)>nativeLimit?'PDF > 50 MB · dùng RAG/OCR/Vision Page Batch có mục tiêu':'Đủ điều kiện PDF native theo giới hạn HNL',
+    bookmarks:meta.bookmarks.length, highlights:meta.highlights.length, category:categoryLabel(meta.category), pinned:meta.pinned,
+    relatedVersions:related.map(x=>({id:x.id,name:x.standard||x.name})), sourcePath:doc.sourcePath || doc.name
+  };
+}
+function documentHealthHtml(health = state.documentHealth || documentHealth()) {
+  if (!health) return '<div class="notice">Chưa mở tài liệu để kiểm tra.</div>';
+  const quality = health.usableTextPages >= Math.max(1, Math.ceil(health.pages*.7)) ? 'Tốt' : health.usableTextPages >= Math.max(1, Math.ceil(health.pages*.3)) ? 'Hỗn hợp' : 'Scan/ảnh nhiều';
+  return `<div class="doc-health-grid"><div><span>Trang</span><b>${health.pages}</b></div><div><span>Text hữu dụng</span><b>${health.usableTextPages}/${health.pages}</b></div><div><span>Chất lượng</span><b>${quality}</b></div><div><span>Chỉ mục</span><b>v${health.indexVersion}${health.staleIndex?' · cũ':''}</b></div><div><span>PDF native</span><b>${health.nativeEligible?'Có':'Không'}</b></div><div><span>Đánh dấu</span><b>${health.bookmarks + health.highlights}</b></div></div>
+    <div class="notice ${health.staleIndex?'warning':''}"><b>${esc(health.nativeReason)}</b>${health.relatedVersions.length?`<br>Phát hiện ${health.relatedVersions.length} tài liệu cùng họ/phiên bản khác trong thư viện.`:''}</div>`;
+}
+function sanitizeLogText(value='') {
+  return String(value||'').replace(/(?:AIza|sk-|xai-|claude-|gsk_)[A-Za-z0-9_\-]{12,}/g,'[REDACTED_KEY]').replace(/(?:api[_-]?key\s*[:=]\s*)\S+/ig,'$1[REDACTED]');
+}
+function recordClientError(kind, error) {
+  const row={at:new Date().toISOString(),kind:String(kind||'error'),message:sanitizeLogText(error?.message||error),stack:sanitizeLogText(error?.stack||'').slice(0,5000)};
+  state.crashLog=[row,...(state.crashLog||[])].slice(0,60); try{localStorage.setItem(STORAGE.crashLog,JSON.stringify(state.crashLog));}catch{}
+}
+function crc32(bytes) {
+  let c=0xffffffff; for (const b of bytes){c^=b; for(let k=0;k<8;k++) c=(c>>>1)^((c&1)?0xedb88320:0);} return (c^0xffffffff)>>>0;
+}
+function u16(n){return new Uint8Array([n&255,(n>>>8)&255]);}
+function u32(n){return new Uint8Array([n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255]);}
+function concatBytes(parts){const len=parts.reduce((n,p)=>n+p.length,0),out=new Uint8Array(len);let o=0;for(const p of parts){out.set(p,o);o+=p.length;}return out;}
+function makeStoredZip(entries=[]) {
+  const enc=new TextEncoder(), locals=[], centrals=[]; let offset=0;
+  for (const entry of entries) {
+    const name=enc.encode(entry.name), data=entry.data instanceof Uint8Array?entry.data:enc.encode(String(entry.data??'')), crc=crc32(data);
+    const local=concatBytes([u32(0x04034b50),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),name,data]);
+    const central=concatBytes([u32(0x02014b50),u16(20),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset),name]);
+    locals.push(local); centrals.push(central); offset+=local.length;
+  }
+  const central=concatBytes(centrals); const body=concatBytes(locals);
+  const end=concatBytes([u32(0x06054b50),u16(0),u16(0),u16(entries.length),u16(entries.length),u32(central.length),u32(body.length),u16(0)]);
+  return new Blob([body,central,end],{type:'application/zip'});
+}
+function readStoredZip(buffer) {
+  const bytes=new Uint8Array(buffer), view=new DataView(buffer), dec=new TextDecoder(); const out={}; let o=0;
+  while(o+30<=bytes.length && view.getUint32(o,true)===0x04034b50){
+    const method=view.getUint16(o+8,true), comp=view.getUint32(o+18,true), nameLen=view.getUint16(o+26,true), extraLen=view.getUint16(o+28,true);
+    if(method!==0) throw new Error('Backup ZIP dùng phương thức nén không được HNL Restore hỗ trợ.');
+    const name=dec.decode(bytes.slice(o+30,o+30+nameLen)); const start=o+30+nameLen+extraLen; out[name]=bytes.slice(start,start+comp); o=start+comp;
+  }
+  return out;
+}
+function downloadBlob(blob, name) { const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1200); }
+async function exportBackupZip() {
+  const payload={schema:'hnl-backup-v1',appVersion:APP_META.version,createdAt:new Date().toISOString(),settings:{...state.settings},workspace:loadJson(STORAGE.workspace,{}),checklist:state.checklist,
+    documents:state.docs.map(d=>({id:d.id,fingerprint:d.fingerprint,name:d.name,standard:d.standard,sourcePath:d.sourcePath,pageCount:d.pageCount,size:d.size,hnlMeta:docMeta(d)})),chatSessions:state.chatSessions,calculations:state.calculations};
+  const blob=makeStoredZip([{name:'backup.json',data:JSON.stringify(payload,null,2)},{name:'README.txt',data:'HNL local backup. Không chứa API key và không chứa binary PDF. Import lại PDF để khớp fingerprint rồi Restore metadata/lịch sử.'}]);
+  downloadBlob(blob,`HNL-Backup-v${APP_META.version}-${new Date().toISOString().slice(0,10)}.zip`); showToast('Đã xuất backup cục bộ, không chứa API key.', 'success');
+}
+async function restoreBackupFile(file) {
+  let text='';
+  if (/\.zip$/i.test(file.name)) { const entries=readStoredZip(await file.arrayBuffer()); if(!entries['backup.json']) throw new Error('ZIP không có backup.json.'); text=new TextDecoder().decode(entries['backup.json']); }
+  else text=await file.text();
+  const data=JSON.parse(text); if(data.schema!=='hnl-backup-v1') throw new Error('Không đúng định dạng HNL Backup.');
+  const byFingerprint=new Map(state.docs.map(d=>[d.fingerprint,d]));
+  for (const meta of data.documents||[]) { const doc=byFingerprint.get(meta.fingerprint) || state.docs.find(d=>d.name===meta.name); if(doc && meta.hnlMeta){doc.hnlMeta=meta.hnlMeta;await saveDocument(doc);} }
+  for (const row of data.chatSessions||[]) await saveChatSession(row);
+  for (const row of data.calculations||[]) await saveCalculation(row);
+  if(data.settings && typeof data.settings==='object') {
+    const safeKeys=['provider','connection','model','visionModel','bridgeUrl','ollamaUrl','strict','scope','retrievalMode','embeddingModel','semanticRerank','nativePdfMode','openaiPdfDetail','historyRetentionDays','performanceMode','fieldMode'];
+    for(const key of safeKeys) if(Object.prototype.hasOwnProperty.call(data.settings,key)) state.settings[key]=data.settings[key];
+    saveSettings();
+  }
+  if(data.checklist){state.checklist=data.checklist;localStorage.setItem(STORAGE.checklist,JSON.stringify(state.checklist));}
+  if(data.workspace) localStorage.setItem(STORAGE.workspace,JSON.stringify(data.workspace));
+  state.chatSessions=await getChatSessions(); state.calculations=await getCalculations(); restoreWorkspace(); render(); showToast('Đã khôi phục cài đặt an toàn, metadata, lịch sử và workspace.', 'success');
+}
+async function exportDiagnosticZip() {
+  const health=state.docs.map(d=>documentHealth(d));
+  const payload={app:{...APP_META,edition:EDITION_LABEL},time:new Date().toISOString(),userAgent:navigator.userAgent,location:{protocol:location.protocol,hostname:location.hostname},
+    settings:{provider:state.settings.provider,connection:state.settings.connection,model:providerModel(),retrievalMode:state.settings.retrievalMode,nativePdfMode:state.settings.nativePdfMode,performanceMode:state.settings.performanceMode,fieldMode:state.settings.fieldMode},
+    docs:health,searchStats:state.searchStats,diagnostics:state.diagnosticSummary,archiveEngines:state.archiveEngines,crashLog:state.crashLog};
+  const blob=makeStoredZip([{name:'diagnostics.json',data:JSON.stringify(payload,null,2)},{name:'crash-log.json',data:JSON.stringify(state.crashLog||[],null,2)},{name:'README.txt',data:'Gói chẩn đoán HNL. API key đã được loại trừ. Gửi ZIP này khi báo lỗi để truy vết nhanh hơn.'}]);
+  downloadBlob(blob,`HNL-Diagnostics-v${APP_META.version}-${Date.now()}.zip`); showToast('Đã xuất gói chẩn đoán ZIP, không chứa API key.', 'success');
+}
+function answerEvidenceMeta(question='', answer={}) {
+  const hits=Array.isArray(answer.hits)?answer.hits:[], stats=answer.stats||{}; const core=compactNormalize(coreSearchPhrase(question));
+  let verified=0; const seen=new Set();
+  for(const h of hits){const key=`${h.docId}:${h.page}`;if(seen.has(key))continue;seen.add(key);const t=compactNormalize(h.text||'');if(core && t.includes(core))verified++;else if((h.text||'').length>80)verified+=.45;}
+  const native=Number(stats.nativePdfCount||0), vision=Number(stats.targetedVisionPages||stats.visualPages||0), ocr=Number(stats.targetedLocalOcr||0), pageBatch=Number(stats.oversizePageBatch||0);
+  const method=native?'Native PDF + RAG':pageBatch?'Page Batch + RAG':vision?'Vision + RAG':ocr?'OCR + RAG':'RAG';
+  const sourceCount=seen.size; const ratio=sourceCount?verified/sourceCount:0; const level=sourceCount>=2 && ratio>=.55?'Cao':sourceCount>=1 && ratio>=.25?'Trung bình':'Thấp';
+  return {method,confidence:level,sourceCount,verifiedSources:Math.floor(verified),checkedAt:new Date().toISOString()};
+}
+async function reindexDocument(doc=activeDoc()) {
+  if(!doc?.blob || doc.viewerKind!=='pdf') return showToast('Hãy mở một PDF có file gốc.', 'warning');
+  state.progress={title:`Lập chỉ mục lại ${doc.standard||doc.name}`,detail:'Chuẩn bị…',pct:1};render();
+  try{await reindexPdfText(doc,(page,total)=>{state.progress={title:`Lập chỉ mục lại ${doc.standard||doc.name}`,detail:`Trang ${page}/${total}`,pct:Math.round(page/total*100)};const d=document.querySelector('.progress-detail');const b=document.querySelector('.progress-bar>div');if(d)d.textContent=state.progress.detail;if(b)b.style.width=`${state.progress.pct}%`;});await saveDocument(doc);clearSearchCache(doc.id);clearFormulaCache(doc.id);state.documentHealth=documentHealth(doc);showToast('Đã lập chỉ mục lại tài liệu.', 'success');}
+  catch(error){recordClientError('reindex',error);showToast(`Lập chỉ mục lại lỗi: ${error.message}`,'error');}finally{state.progress=null;render();}
+}
+async function reindexAllDocuments() {
+  const docs=state.docs.filter(d=>d.viewerKind==='pdf'&&d.blob); if(!docs.length)return showToast('Không có PDF để lập chỉ mục.','warning');
+  if(!confirm(`Lập chỉ mục lại ${docs.length} PDF? Việc này đọc lại lớp chữ nhưng không OCR toàn bộ trang.`))return;
+  let ok=0,fail=0;for(let i=0;i<docs.length;i++){const doc=docs[i];state.progress={title:`Lập chỉ mục ${i+1}/${docs.length}`,detail:doc.standard||doc.name,pct:Math.round(i/docs.length*100)};render();try{await reindexPdfText(doc);await saveDocument(doc);clearSearchCache(doc.id);ok++;}catch(error){fail++;recordClientError('reindex-all',error);}}
+  state.progress=null;render();showToast(`Lập chỉ mục xong: ${ok} đạt${fail?` · ${fail} lỗi`:''}.`,fail?'warning':'success');
+}
+
 function fmtBytes(n) {
   if (!n) return '0 B';
   const units = ['B', 'KB', 'MB', 'GB'];
@@ -198,9 +493,89 @@ function scopeLabel() {
   if (state.settings.scope === 'active') return 'PDF đang mở';
   return `Toàn thư viện (${state.docs.length})`;
 }
-function is7888(doc) {
-  return Boolean(doc && (/TCVN\s*7888\s*:\s*2014/i.test(doc.standard || '') || /7888/.test(doc.name || '')));
+
+function cloneDocForPages(doc, pageNumbers = null) {
+  if (!doc || !Array.isArray(pageNumbers)) return doc;
+  const allowed = new Set(pageNumbers.map(Number));
+  return {
+    ...doc,
+    pages:(doc.pages || []).filter(p => allowed.has(Number(p.page))),
+    aiFormulaItems:Array.isArray(doc.aiFormulaItems) ? doc.aiFormulaItems.filter(x => allowed.has(Number(x.page))) : doc.aiFormulaItems,
+    _hnlScopedPages:[...allowed]
+  };
 }
+
+function operationScopeLabel(scope, kind = 'lookup') {
+  const map = {
+    smart:'Thông minh', region:'Vùng chọn gần nhất', page:'Trang hiện tại', pages:'Nhiều trang',
+    document:'Tài liệu hiện tại', selected:'Tài liệu đã tick', library:'Toàn thư viện'
+  };
+  if (scope === 'smart') return `${map.smart} · ${scopeLabel()}`;
+  if (scope === 'page') return `${map.page} · P.${state.page}`;
+  if (scope === 'region' && state.lastPdfRegion) return `${map.region} · P.${state.lastPdfRegion.page}`;
+  return map[scope] || (kind === 'formula' ? 'Trang hiện tại' : 'Thông minh');
+}
+
+function resolveOperationScope(scope, pagesText = '', kind = 'lookup') {
+  const active = activeDoc();
+  const fail = message => ({ docs:[], label:operationScopeLabel(scope, kind), pages:0, error:message, scope });
+  if (scope === 'region') {
+    const region = state.lastPdfRegion;
+    if (!region?.text && !region?.image?.data) return { ...fail('Chưa có vùng PDF đã chọn. Hãy bật T▧, kéo vùng cần đọc rồi thử lại.'), region:null };
+    const doc = state.docs.find(d => d.id === region.docId);
+    if (!doc) return { ...fail('Tài liệu của vùng chọn gần nhất không còn trong Thư viện.'), region:null };
+    return { docs:[cloneDocForPages(doc, [Number(region.page)||1])], label:operationScopeLabel(scope, kind), pages:1, region, scope };
+  }
+  if (scope === 'page') {
+    if (!active) return fail('Chưa mở tài liệu để dùng Trang hiện tại.');
+    return { docs:[cloneDocForPages(active, [Math.max(1, Number(state.page)||1)])], label:operationScopeLabel(scope, kind), pages:1, scope };
+  }
+  if (scope === 'pages') {
+    if (!active) return fail('Chưa mở tài liệu để chọn nhiều trang.');
+    const pages = parsePageSpec(pagesText, active.pageCount || active.pages?.length || 1);
+    if (!pages.length) return fail('Nhập trang cần quét, ví dụ 28-35 hoặc 28,31,45.');
+    return { docs:[cloneDocForPages(active, pages)], label:`Nhiều trang · ${pages.join(', ')}`, pages:pages.length, pageNumbers:pages, scope };
+  }
+  if (scope === 'document') {
+    if (!active) return fail('Chưa mở tài liệu hiện tại.');
+    return { docs:[active], label:'Tài liệu hiện tại', pages:(active.pages || []).length, scope };
+  }
+  if (scope === 'selected') {
+    const docs = selectedDocs();
+    if (!docs.length) return fail('Chưa tick tài liệu nào trong Thư viện.');
+    return { docs, label:`Tài liệu đã tick · ${docs.length} nguồn`, pages:docs.reduce((n,d)=>n+(d.pages?.length||0),0), scope };
+  }
+  if (scope === 'library') {
+    const docs = [...state.docs];
+    if (!docs.length) return fail('Thư viện chưa có tài liệu.');
+    return { docs, label:`Toàn thư viện · ${docs.length} nguồn`, pages:docs.reduce((n,d)=>n+(d.pages?.length||0),0), scope };
+  }
+  const docs = sourceDocs();
+  if (!docs.length) return fail('Không có tài liệu trong nguồn mặc định hiện tại.');
+  return { docs, label:`Thông minh · ${scopeLabel()}`, pages:docs.reduce((n,d)=>n+(d.pages?.length||0),0), scope:'smart' };
+}
+
+function scopeSelectOptions(value = 'smart', { formula = false } = {}) {
+  const options = formula ? [
+    ['region','Vùng chọn gần nhất · tiết kiệm nhất'],
+    ['page','Trang hiện tại · mặc định'],
+    ['pages','Nhiều trang…'],
+    ['document','Tài liệu hiện tại'],
+    ['selected','Tài liệu đã tick'],
+    ['library','Toàn thư viện · nặng nhất']
+  ] : [
+    ['smart','Thông minh · bộ tìm kiếm ổn định v1.9.23'],
+    ['region','Vùng chọn gần nhất'],
+    ['page','Trang hiện tại'],
+    ['pages','Nhiều trang…'],
+    ['document','Tài liệu hiện tại'],
+    ['selected','Tài liệu đã tick'],
+    ['library','Toàn thư viện']
+  ];
+  return options.map(([id,label]) => `<option value="${id}" ${value === id ? 'selected' : ''}>${label}</option>`).join('');
+}
+function is7888(doc) { return isTcvn7888_2014Document(doc); }
+
 function sourceHas7888() { return sourceDocs().some(is7888); }
 function providerModel(forVision = false) {
   if (forVision && state.settings.provider === 'ollama') return state.settings.visionModel || 'gemma3:4b';
@@ -245,7 +620,7 @@ function captureSettingsDraft() {
     nativePdfMode: document.querySelector('#nativePdfModeInput')?.value ?? existing.nativePdfMode ?? state.settings.nativePdfMode,
     openaiPdfDetail: document.querySelector('#openaiPdfDetailInput')?.value ?? existing.openaiPdfDetail ?? state.settings.openaiPdfDetail,
     historyRetentionDays: Number(document.querySelector('#historyRetentionDaysInput')?.value ?? existing.historyRetentionDays ?? state.settings.historyRetentionDays),
-    strict: document.querySelector('#strictInput')?.checked ?? existing.strict ?? state.settings.strict,
+    strict: existing.strict ?? state.settings.strict,
     apiKey: document.querySelector('#apiKeyInput')?.value ?? existing.apiKey ?? currentApiKey()
   };
 }
@@ -456,6 +831,8 @@ function saveSettings() {
   localStorage.setItem(STORAGE.nativePdfMode, state.settings.nativePdfMode || 'balanced');
   localStorage.setItem(STORAGE.openaiPdfDetail, state.settings.openaiPdfDetail || 'auto');
   localStorage.setItem(STORAGE.historyRetentionDays, String([30,90,365,0].includes(Number(state.settings.historyRetentionDays)) ? Number(state.settings.historyRetentionDays) : 365));
+  localStorage.setItem(STORAGE.performanceMode, ['light','balanced','strong'].includes(state.settings.performanceMode) ? state.settings.performanceMode : 'balanced');
+  localStorage.setItem(STORAGE.fieldMode, String(Boolean(state.settings.fieldMode)));
 }
 function saveChecklist() { localStorage.setItem(STORAGE.checklist, JSON.stringify(state.checklist)); }
 function showToast(message, type = 'info') {
@@ -509,8 +886,8 @@ function versionCardHtml() {
   const changes = (state.changelog || []).slice(0, 2);
   const changelogHtml = changes.length ? `<div class="mini-changelog">${changes.map(r => `<div><b>v${esc(r.version)} · ${esc(r.title || '')}</b><small>${(r.changes || []).slice(0, 4).map(x => `• ${esc(x)}`).join('<br>')}</small></div>`).join('')}</div>` : '';
   return `<div class="panel-section app-version-card compact-settings-card">
-    <div class="panel-section-title"><h3>Phiên bản & bản build</h3><span>v${APP_META.version}</span></div>
-    <div class="compact-overview-line"><div><b>v${APP_META.version} · ${esc(buildNumberLabel())}</b><small>${EDITION_LABEL} · ${esc(formatBuildTime(APP_META.builtAt))}</small></div><span class="compact-status">${esc(APP_META.commitShort || 'local')}</span></div>
+    <div class="panel-section-title"><h3>Build & cập nhật</h3><span>Chi tiết</span></div>
+    <div class="compact-overview-line"><div><b>${esc(buildNumberLabel())} · ${EDITION_LABEL}</b><small>${esc(formatBuildTime(APP_META.builtAt))} · version hiện hành xem ở thanh trên</small></div><span class="compact-status">${esc(APP_META.commitShort || 'local')}</span></div>
     <details id="settingsVersionDetails" class="compact-disclosure" data-persist-detail>
       <summary><span>Xem chi tiết phiên bản & thay đổi</span><span class="disclosure-chevron">⌄</span></summary>
       <div class="disclosure-body">
@@ -649,23 +1026,20 @@ function render() {
   const viewportSnapshot = captureRenderViewport();
   const doc = activeDoc();
   const sources = sourceDocs();
-  const provider = PROVIDERS[state.settings.provider] || PROVIDERS.local;
   app.innerHTML = `
-  <div class="app-shell">
+  <div class="app-shell ${state.settings.fieldMode ? 'field-mode' : ''} performance-${esc(state.settings.performanceMode || 'balanced')}">
     <header class="topbar">
       <div class="brand" role="banner">
         <img class="brand-mark" src="./hnl-mark-192.png" alt="HNL" />
         <div class="brand-copy">
           <div class="brand-title">HNL Pile Standards AI</div>
-          <div class="brand-sub">${IS_DESKTOP_EDITION ? 'Desktop AI · Offline Ollama + AI Online' : 'Web · Gemini / ChatGPT / Claude / Grok'}</div>
+          <div class="brand-sub">${IS_DESKTOP_EDITION ? 'Desktop AI · Offline + Online' : 'Web · AI Online + Local RAG'}</div>
           <div class="build-meta"><span class="version-chip">v${APP_META.version}</span><span class="version-chip edition-chip">${EDITION_LABEL}</span><span>${esc(buildNumberLabel())} · ${esc(formatBuildTime(APP_META.builtAt))}</span></div>
         </div>
       </div>
       <div class="top-actions">
         <button class="source-badge" id="sourceBadge" title="Mở thư viện nguồn">${sources.length} nguồn</button>
-        <button class="ai-badge ${state.connectionStatus?.ok ? 'ok' : ''}" id="openSettings" title="Mở cài đặt AI">
-          <span class="dot"></span>${esc(provider.short)}
-        </button>
+
       </div>
     </header>
 
@@ -676,6 +1050,8 @@ function render() {
         <div class="side-head">
           <div><div class="section-kicker">Tài liệu</div><h2>Thư viện tiêu chuẩn</h2></div>
           <div class="mini-actions">
+            <button class="icon-btn" id="undoAction" title="Hoàn tác" ${state.undoStack.length?'':'disabled'}>↶</button>
+            <button class="icon-btn" id="redoAction" title="Làm lại" ${state.redoStack.length?'':'disabled'}>↷</button>
             <button class="icon-btn" id="selectAll" title="Chọn tất cả làm nguồn">✓</button>
             <button class="icon-btn" id="clearSelection" title="Bỏ chọn tất cả">×</button>
             <button class="icon-btn" id="toggleLibrary" title="Thu gọn thư viện">◀</button>
@@ -693,14 +1069,15 @@ function render() {
           </label>
         </div>
         <div class="library-note">Tự quét PDF/ảnh/text trong thư mục hoặc ZIP. RAR/7Z/TAR/GZ/BZ2/XZ được giải nén ở HNL Local; archive có mật khẩu sẽ hỏi mật khẩu khi cần.</div>
-        <div class="doc-list">${state.docs.length ? state.docs.map(docItem).join('') : emptyLibraryHtml()}</div>
+        <div class="library-tools"><input id="librarySearchInput" value="${esc(state.libraryQuery)}" placeholder="Tìm tài liệu…"><select id="libraryFilterInput"><option value="all" ${state.libraryFilter==='all'?'selected':''}>Tất cả</option><option value="pinned" ${state.libraryFilter==='pinned'?'selected':''}>★ Đã ghim</option>${DOC_CATEGORIES.map(([id,label])=>`<option value="${id}" ${state.libraryFilter===id?'selected':''}>${label}</option>`).join('')}</select></div>
+        <div class="doc-list">${state.docs.length ? (filteredLibraryDocs().length ? filteredLibraryDocs().map(docItem).join('') : '<div class="empty-card"><b>Không có tài liệu phù hợp bộ lọc.</b><span>Đổi từ khóa hoặc loại tài liệu.</span></div>') : emptyLibraryHtml()}</div>
         <div class="source-rule">
-          <label class="field compact-field"><span>Phạm vi hỏi đáp / tìm kiếm</span><select id="scopeSelect">
+          <label class="field compact-field"><span>Nguồn mặc định AI / RAG</span><select id="scopeSelect">
             <option value="all" ${state.settings.scope === 'all' ? 'selected' : ''}>Toàn bộ tài liệu đã tải</option>
             <option value="selected" ${state.settings.scope === 'selected' ? 'selected' : ''}>Chỉ tài liệu đã tick</option>
             <option value="active" ${state.settings.scope === 'active' ? 'selected' : ''}>Chỉ PDF đang mở</option>
           </select></label>
-          <div class="coverage-line"><b>${esc(scopeLabel())}</b><small>Mặc định v${APP_META.version} quét toàn bộ lớp chữ; nếu mục tiêu nằm trong ảnh/scan thì chỉ OCR/Vision các trang đích cần thiết.</small></div>
+          <div class="coverage-line"><b>${esc(scopeLabel())}</b><small>Dùng cho Hỏi đáp/Tóm tắt và làm nền cho phạm vi “Thông minh”. Tra cứu/Tính có thể thu hẹp riêng theo vùng hoặc trang để tiết kiệm tài nguyên.</small></div>
           <label class="switch-row">
             <input id="strictSide" type="checkbox" ${state.settings.strict ? 'checked' : ''}>
             <span><b>Khóa nguồn</b><small>Không cho AI tự thêm nội dung ngoài PDF</small></span>
@@ -717,7 +1094,7 @@ function render() {
             ${doc?.scannedLikely ? '<span class="warn-chip" title="PDF có rất ít lớp text">PDF scan</span>' : ''}
           </div>
           <div class="reader-search ${state.readerQuery ? 'active' : ''}">
-            <input id="pdfSearchInput" value="${esc(state.readerQuery)}" placeholder="Tìm trong PDF…" ${!doc ? 'disabled' : ''}>
+            <input id="pdfSearchInput" value="${esc(state.readerQuery)}" placeholder="Tìm chữ / Điều / Bảng / Phụ lục…" ${!doc ? 'disabled' : ''}>
             <button class="icon-btn" id="pdfSearchPrev" ${!doc ? 'disabled' : ''} title="Kết quả trước">↑</button>
             <button class="icon-btn" id="pdfSearchNext" ${!doc ? 'disabled' : ''} title="Kết quả sau">↓</button>
           </div>
@@ -739,8 +1116,10 @@ function render() {
               <span class="page-total">/ ${doc?.pageCount || 0}</span>
               <button class="icon-btn" id="nextPage" ${!doc ? 'disabled' : ''} title="Trang sau (Page Down)">›</button>
             </div>
-            <div class="toolbar-group toolbar-selection-group" aria-label="Chọn chữ hoặc OCR vùng">
+            <div class="toolbar-group toolbar-selection-group" aria-label="Chọn chữ, OCR và đánh dấu">
               <button class="icon-btn ${state.pdfSelectionMode !== 'off' ? 'active-tool' : ''}" id="pdfSmartSelect" ${!doc || doc.viewerKind !== 'pdf' ? 'disabled' : ''} title="PDF có text: bôi chọn/copy. Trang scan: kéo vùng OCR">T▧</button>
+              <button class="icon-btn" id="bookmarkCurrentPage" ${!doc ? 'disabled' : ''} title="Đánh dấu trang hiện tại">★</button>
+              <button class="icon-btn ${state.bookmarkPanelOpen?'active-tool':''}" id="toggleBookmarks" ${!doc ? 'disabled' : ''} title="Mở đánh dấu & ghi chú">☷</button>
             </div>
             <div class="toolbar-group toolbar-layout-group" aria-label="Bố cục trình đọc">
               <button class="icon-btn" id="viewerToggleAssistant" title="Ẩn/hiện trợ lý">AI</button>
@@ -749,6 +1128,7 @@ function render() {
             </div>
           </div>
         </div>
+        ${doc ? bookmarkBarHtml(doc) : ''}
         ${doc ? viewerContentHtml(doc) : emptyViewerHtml()}
       </section>
       <div class="workspace-splitter splitter-right" aria-hidden="true"></div>
@@ -756,12 +1136,12 @@ function render() {
       <aside class="assistant-panel">
         <div class="assistant-head">
           <div><div class="section-kicker">Kỹ thuật</div><h2>Trợ lý tiêu chuẩn</h2></div>
-          <div class="assistant-head-actions"><span class="mode-chip">${state.settings.provider === 'local' ? 'Tra nhanh' : esc(PROVIDERS[state.settings.provider]?.short)}</span><button class="icon-btn quick-settings-btn" id="assistantSettingsQuick" title="Mở Cài đặt" aria-label="Mở Cài đặt">⚙</button><button class="icon-btn" id="toggleAssistant" title="Thu gọn trợ lý">▶</button></div>
+          <div class="assistant-head-actions"><button class="icon-btn" id="toggleAssistant" title="Thu gọn trợ lý">▶</button></div>
         </div>
         <button type="button" class="ai-control-summary" id="assistantSettingsSummary" title="Mở AI & kết nối">
-          <span class="dot ${state.connectionStatus?.ok ? 'ok' : ''}"></span>
+          <span id="aiConnectionDot" class="dot ${state.connectionStatus?.ok ? 'ok' : ''}"></span>
           <span><b>${esc(PROVIDERS[state.settings.provider]?.short || state.settings.provider)}</b>${state.settings.provider === 'local' ? '' : ` · ${esc(providerModel() || 'Chưa chọn model')}`}</span>
-          <small>${state.connectionStatus?.ok ? 'Đã kết nối' : (state.connectionStatus ? 'Cần kiểm tra' : 'AI & kết nối')}</small>
+          <small id="aiConnectionSummaryStatus">${state.connectionStatus?.ok ? 'Đã kết nối · AI & kết nối' : (state.connectionStatus ? 'Cần kiểm tra · AI & kết nối' : 'AI & kết nối')}</small>
         </button>
         <div class="tabs">${[
           ['summary', 'Tóm tắt'], ['chat', 'Hỏi đáp'], ['lookup', 'Tra cứu'], ['calc', 'Tính'], ['compare', 'So sánh'], ['checklist', 'Nghiệm thu'], ['settings', 'Cài đặt']
@@ -789,6 +1169,7 @@ function render() {
     requestAnimationFrame(() => restoreRenderViewport(viewportSnapshot));
   });
   else requestAnimationFrame(() => restoreRenderViewport(viewportSnapshot));
+  queueMicrotask(saveWorkspace);
 }
 
 function emptyLibraryHtml() {
@@ -806,11 +1187,11 @@ function viewerContentHtml(doc) {
   if (state.readerMode === 'continuous') {
     const pages = Array.from({ length: doc.pageCount || 0 }, (_, i) => {
       const p = i + 1;
-      return `<section class="pdf-page-shell" id="pdf-page-${p}" data-page="${p}"><div class="page-float-label">${p}</div><canvas class="pdf-page-canvas" data-page="${p}"></canvas><div class="pdf-text-layer" data-page="${p}"></div><div class="pdf-region-layer" data-page="${p}"></div><div class="pdf-page-loading">Trang ${p}</div></section>`;
+      return `<section class="pdf-page-shell" id="pdf-page-${p}" data-page="${p}"><div class="page-float-label">${p}</div><canvas class="pdf-page-canvas" data-page="${p}"></canvas><div class="pdf-text-layer" data-page="${p}"></div><div class="pdf-region-layer" data-page="${p}"></div><div class="pdf-annotation-layer" data-page="${p}"></div><div class="pdf-page-loading">Trang ${p}</div></section>`;
     }).join('');
     return `<div class="canvas-wrap pdf-continuous" id="pdfScroll" data-doc-id="${esc(doc.id)}">${pages}</div><div class="reader-statusbar"><span>Trang <b id="readerStatusPage">${state.page}</b>/${doc.pageCount}</span><input id="pageRange" type="range" min="1" max="${doc.pageCount}" value="${state.page}"><span>${Math.round(state.zoom*100)}% · kéo chuột để pan · Ctrl+cuộn để zoom</span></div>`;
   }
-  return `<div class="canvas-wrap pdf-single" id="pdfScroll" data-doc-id="${esc(doc.id)}"><section class="pdf-page-shell single" data-page="${state.page}"><canvas id="pdfCanvas"></canvas><div class="pdf-text-layer" data-page="${state.page}"></div><div class="pdf-region-layer" data-page="${state.page}"></div></section></div><div class="reader-statusbar"><span>Trang <b>${state.page}</b>/${doc.pageCount}</span><input id="pageRange" type="range" min="1" max="${doc.pageCount}" value="${state.page}"><span>${Math.round(state.zoom*100)}% · PageUp/PageDown đổi trang</span></div>`;
+  return `<div class="canvas-wrap pdf-single" id="pdfScroll" data-doc-id="${esc(doc.id)}"><section class="pdf-page-shell single" data-page="${state.page}"><canvas id="pdfCanvas"></canvas><div class="pdf-text-layer" data-page="${state.page}"></div><div class="pdf-region-layer" data-page="${state.page}"></div><div class="pdf-annotation-layer" data-page="${state.page}"></div></section></div><div class="reader-statusbar"><span>Trang <b>${state.page}</b>/${doc.pageCount}</span><input id="pageRange" type="range" min="1" max="${doc.pageCount}" value="${state.page}"><span>${Math.round(state.zoom*100)}% · PageUp/PageDown đổi trang</span></div>`;
 }
 
 function emptyViewerHtml() {
@@ -828,16 +1209,27 @@ function progressHtml() {
 function docItem(d) {
   const selected = state.selected.has(d.id);
   const active = state.activeDocId === d.id;
-  return `<article class="doc-item ${active ? 'active' : ''}">
+  const meta = docMeta(d);
+  const categoryOptions = DOC_CATEGORIES.map(([id,label]) => `<option value="${id}" ${meta.category===id?'selected':''}>${label}</option>`).join('');
+  const marks = meta.bookmarks.length + meta.highlights.length;
+  return `<article class="doc-item ${active ? 'active' : ''} ${meta.pinned ? 'pinned' : ''}">
     <div class="doc-row">
       <input class="source-check" type="checkbox" data-select="${d.id}" ${selected ? 'checked' : ''} title="Chọn làm nguồn tra cứu">
       <button class="doc-main" data-open="${d.id}">
         <span class="pdf-badge">${d.viewerKind === 'image' ? 'IMG' : d.viewerKind === 'text' ? 'TXT' : 'PDF'}</span>
-        <span class="doc-copy"><b>${esc(d.standard || d.name)}</b><small>${d.pageCount} ${d.viewerKind === 'image' ? 'ảnh' : 'trang'} · ${fmtBytes(d.size)}</small><em>${d.viewerKind === 'image' ? (d.ocrStatus === 'browser' ? 'OCR ảnh: có' : 'Ảnh: AI Vision') : `${usableTextPageCount(d)}/${d.pageCount} trang chữ hữu dụng${rawTextPageCount(d) !== usableTextPageCount(d) ? ` · ${rawTextPageCount(d)} trang có text thô` : ''} · ${(d.textChars || 0).toLocaleString('vi-VN')} ký tự${Number(d.textIndexVersion || 0) < TEXT_INDEX_VERSION ? ' · sẽ tự nâng chỉ mục khi tra cứu' : ''}`}</em>${d.sourcePath && d.sourcePath !== d.name ? `<em>${esc(d.sourcePath)}</em>` : (d.scannedLikely ? '<em class="warn-text">Có thể cần OCR/AI Vision</em>' : '')}</span>
+        <span class="doc-copy"><b>${esc(d.standard || d.name)}</b><small>${d.pageCount} ${d.viewerKind === 'image' ? 'ảnh' : 'trang'} · ${fmtBytes(d.size)}${marks?` · ★ ${marks}`:''}</small><em>${d.viewerKind === 'image' ? (d.ocrStatus === 'browser' ? 'OCR ảnh: có' : 'Ảnh: AI Vision') : `${usableTextPageCount(d)}/${d.pageCount} trang chữ hữu dụng${rawTextPageCount(d) !== usableTextPageCount(d) ? ` · ${rawTextPageCount(d)} trang có text thô` : ''} · ${(d.textChars || 0).toLocaleString('vi-VN')} ký tự${Number(d.textIndexVersion || 0) < TEXT_INDEX_VERSION ? ' · chỉ mục cũ' : ''}`}</em>${d.sourcePath && d.sourcePath !== d.name ? `<em>${esc(d.sourcePath)}</em>` : (d.scannedLikely ? '<em class="warn-text">Có thể cần OCR/AI Vision</em>' : '')}</span>
       </button>
+      <button class="icon-btn pin-doc ${meta.pinned?'active-tool':''}" data-pin-doc="${d.id}" title="${meta.pinned?'Bỏ ghim':'Ghim tài liệu'}">★</button>
       <button class="more-btn danger" data-delete="${d.id}" title="Xóa tài liệu">×</button>
     </div>
+    <div class="doc-meta-row"><select data-doc-category="${d.id}" title="Phân loại tài liệu">${categoryOptions}</select>${relatedDocumentVersions(d).length?`<span class="warn-chip">${esc(relatedVersionLabel(d))}</span>`:''}</div>
   </article>`;
+}
+function bookmarkBarHtml(doc) {
+  if (!doc || !state.bookmarkPanelOpen) return '';
+  const meta=docMeta(doc), rows=[...meta.bookmarks,...meta.highlights].sort((a,b)=>(a.page||0)-(b.page||0));
+  return `<div class="bookmark-panel"><div class="bookmark-panel-head"><div><b>Đánh dấu & ghi chú</b><small>${rows.length} mục · ${esc(doc.standard||doc.name)}</small></div><button class="icon-btn" id="closeBookmarkPanel">×</button></div>
+    <div class="bookmark-list">${rows.length?rows.map(x=>`<div class="bookmark-row"><button class="bookmark-open" data-bookmark-page="${Number(x.page)||1}"><b>Trang ${Number(x.page)||1}${x.kind==='highlight'?' · vùng':''}</b><small>${esc(x.note||x.label||String(x.text||'').slice(0,120)||'Đánh dấu')}</small></button><button class="icon-btn danger-btn" data-remove-bookmark="${esc(x.id)}">×</button></div>`).join(''):'<div class="muted">Chưa có đánh dấu. Bấm ★ để lưu trang hiện tại hoặc chọn vùng PDF để thêm ghi chú.</div>'}</div></div>`;
 }
 
 function panelHtml() {
@@ -851,7 +1243,7 @@ function panelHtml() {
 }
 
 function noSourceCard(action = 'sử dụng chức năng này') {
-  return `<div class="empty-panel"><b>Chưa có nguồn theo phạm vi hiện tại</b><p>Hãy tải tài liệu hoặc đổi “Phạm vi hỏi đáp / tìm kiếm”. Mặc định Toàn bộ tài liệu sẽ quét tất cả file đã tải để ${action}.</p></div>`;
+  return `<div class="empty-panel"><b>Chưa có nguồn theo phạm vi hiện tại</b><p>Hãy tải tài liệu hoặc đổi “Nguồn mặc định AI / RAG”. Phạm vi riêng trong từng tab có thể tiếp tục thu hẹp theo vùng/trang khi cần ${action}.</p></div>`;
 }
 
 function summaryHtml() {
@@ -885,7 +1277,9 @@ function chatSessionRecord() {
   const old = state.chatSessions.find(x => x.id === state.activeChatSessionId);
   return {
     id: state.activeChatSessionId,
-    title: chatSessionTitle(state.chat),
+    title: old?.customTitle || old?.title || chatSessionTitle(state.chat),
+    customTitle: old?.customTitle || '',
+    pinned: Boolean(old?.pinned),
     createdAt: old?.createdAt || now,
     updatedAt: now,
     provider: state.settings.provider,
@@ -893,7 +1287,7 @@ function chatSessionRecord() {
     nativePdfMode: state.settings.nativePdfMode,
     scope: state.settings.scope,
     documentRefs: sourceDocs().map(d => ({ id:d.id, name:d.name, standard:d.standard || '' })),
-    messages: state.chat.map(m => ({ role:m.role, text:String(m.text || ''), hits:Array.isArray(m.hits) ? m.hits.map(h => ({ docId:h.docId, docName:h.docName, standard:h.standard, page:Number(h.page || 1), text:String(h.text || '').slice(0, 1800) })) : [], provider:m.provider || '', model:m.model || '', createdAt:m.createdAt || now }))
+    messages: state.chat.map(m => ({ role:m.role, text:String(m.text || ''), hits:Array.isArray(m.hits) ? m.hits.map(h => ({ docId:h.docId, docName:h.docName, standard:h.standard, page:Number(h.page || 1), text:String(h.text || '').slice(0, 1800) })) : [], provider:m.provider || '', model:m.model || '', stats:m.stats || null, evidence:m.evidence || null, createdAt:m.createdAt || now }))
   };
 }
 async function persistCurrentChat() {
@@ -903,7 +1297,7 @@ async function persistCurrentChat() {
     await saveChatSession(row);
     const i = state.chatSessions.findIndex(x => x.id === row.id);
     if (i >= 0) state.chatSessions[i] = row; else state.chatSessions.unshift(row);
-    state.chatSessions.sort((a,b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
+    state.chatSessions.sort((a,b) => Number(Boolean(b.pinned))-Number(Boolean(a.pinned)) || String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
   } catch (error) { console.warn('Không lưu được lịch sử chat:', error); }
 }
 function startNewChat() {
@@ -938,6 +1332,17 @@ function openChatSession(id) {
   if (missingCount) showToast(`Đã mở lịch sử nhưng thiếu ${missingCount} PDF nguồn trên máy. Hãy nhập lại file để hỏi tiếp đủ căn cứ.`, 'warning');
   queueMicrotask(() => { const log=document.querySelector('.chat-log'); if(log) log.scrollTop=log.scrollHeight; });
 }
+
+async function renameChatSession(id) {
+  const row=state.chatSessions.find(x=>x.id===id); if(!row)return;
+  const next=window.prompt('Đổi tên phiên trò chuyện:',row.customTitle||row.title||'Cuộc trò chuyện'); if(next===null)return;
+  row.customTitle=String(next||'').trim(); row.title=row.customTitle||chatSessionTitle(row.messages||[]); row.updatedAt=new Date().toISOString(); await saveChatSession(row); render();
+}
+async function togglePinChatSession(id) {
+  const row=state.chatSessions.find(x=>x.id===id); if(!row)return; row.pinned=!row.pinned; row.updatedAt=new Date().toISOString(); await saveChatSession(row);
+  state.chatSessions.sort((a,b)=>Number(Boolean(b.pinned))-Number(Boolean(a.pinned))||String(b.updatedAt||'').localeCompare(String(a.updatedAt||''))); render();
+}
+
 async function removeChatSession(id) {
   if (!confirm('Xóa phiên trò chuyện này khỏi lịch sử cục bộ?')) return;
   await deleteChatSession(id);
@@ -959,11 +1364,51 @@ function formatHistoryTime(value) {
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleString('vi-VN', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
 }
 function chatHistoryHtml() {
-  const rows = state.chatSessions.slice(0, 60);
-  return `<div class="history-drawer"><div class="history-head"><div><b>Lịch sử hỏi đáp</b><small>${rows.length} phiên · Local-first</small></div><button class="icon-btn" id="closeChatHistory" title="Đóng">×</button></div>
-    <div class="history-list">${rows.length ? rows.map(x => `<div class="history-row ${x.id === state.activeChatSessionId ? 'active' : ''}"><button class="history-open" data-chat-session="${esc(x.id)}"><b>${esc(x.title || 'Cuộc trò chuyện')}</b><small>${esc(formatHistoryTime(x.updatedAt))} · ${(x.documentRefs || []).length} nguồn · ${esc(x.provider || '')}${x.model ? ` · ${esc(x.model)}` : ''}</small></button><button class="icon-btn danger-btn" data-delete-chat-session="${esc(x.id)}" title="Xóa">×</button></div>`).join('') : '<div class="muted history-empty">Chưa có lịch sử. Phiên đầu tiên sẽ tự lưu sau khi gửi câu hỏi.</div>'}</div>
+  const q=String(state.historyQuery||'').trim().toLocaleLowerCase('vi');
+  const rows = state.chatSessions.filter(x=>!q||`${x.title||''} ${(x.messages||[]).map(m=>m.text).join(' ')}`.toLocaleLowerCase('vi').includes(q)).slice(0, 80);
+  return `<div class="history-drawer"><div class="history-head"><div><b>Lịch sử hỏi đáp</b><small>${rows.length}/${state.chatSessions.length} phiên · Local-first</small></div><button class="icon-btn" id="closeChatHistory" title="Đóng">×</button></div>
+    <input class="history-search" id="chatHistorySearch" value="${esc(state.historyQuery)}" placeholder="Tìm trong lịch sử…">
+    <div class="history-export-row"><label><span>Xuất lịch sử</span><select id="historyExportFormat"><option value="json">JSON</option><option value="md">Markdown</option><option value="pdf">PDF qua Print</option></select></label><button class="btn compact-btn" id="exportHistoryBtn">Xuất</button></div>
+    <div class="history-list">${rows.length ? rows.map(x => `<div class="history-row ${x.id === state.activeChatSessionId ? 'active' : ''}"><button class="history-open" data-chat-session="${esc(x.id)}"><b>${x.pinned?'★ ':''}${esc(x.title || 'Cuộc trò chuyện')}</b><small>${esc(formatHistoryTime(x.updatedAt))} · ${(x.documentRefs || []).length} nguồn · ${esc(x.provider || '')}${x.model ? ` · ${esc(x.model)}` : ''}</small></button><div class="history-actions"><button class="icon-btn" data-pin-chat-session="${esc(x.id)}" title="${x.pinned?'Bỏ ghim':'Ghim'}">★</button><button class="icon-btn" data-rename-chat-session="${esc(x.id)}" title="Đổi tên">✎</button><button class="icon-btn danger-btn" data-delete-chat-session="${esc(x.id)}" title="Xóa">×</button></div></div>`).join('') : '<div class="muted history-empty">Không có phiên phù hợp.</div>'}</div>
   </div>`;
 }
+function exportHistory(format='json') {
+  const safeSessions = state.chatSessions.map(session => ({
+    ...session,
+    messages:(session.messages || []).map(m => ({...m, hits:(m.hits || []).map(h => ({docId:h.docId,docName:h.docName,standard:h.standard,page:h.page,section:h.section||'',table:h.table||'',appendix:h.appendix||''}))}))
+  }));
+  const payload={schema:'hnl-history-v1',appVersion:APP_META.version,exportedAt:new Date().toISOString(),chatSessions:safeSessions,calculations:state.calculations};
+  if (format === 'json') {
+    downloadBlob(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),`HNL-History-v${APP_META.version}-${new Date().toISOString().slice(0,10)}.json`);
+    return showToast('Đã xuất lịch sử JSON.', 'success');
+  }
+  const md=[];
+  md.push(`# HNL Pile Standards AI · Lịch sử`, '', `Xuất lúc: ${payload.exportedAt}`, `Version: ${payload.appVersion}`, '');
+  for (const session of safeSessions) {
+    md.push(`## ${session.pinned?'★ ':''}${session.title || 'Cuộc trò chuyện'}`, '', `- Cập nhật: ${session.updatedAt || ''}`, `- Provider/Model: ${session.provider || ''}${session.model?` / ${session.model}`:''}`, '');
+    for (const m of session.messages || []) {
+      md.push(`### ${m.role==='user'?'Bạn':'HNL AI'}`, '', String(m.text||''), '');
+      const refs=[...new Set((m.hits||[]).map(h=>`${h.standard||h.docName||'Tài liệu'} · Trang ${h.page}`))];
+      if(refs.length) md.push(`Nguồn: ${refs.join('; ')}`, '');
+    }
+  }
+  if (state.calculations.length) {
+    md.push('# Lịch sử tính toán','');
+    for(const x of state.calculations) md.push(`## ${x.title||x.type||'Tính toán'}`, '', `- Thời gian: ${x.createdAt||''}`, `- Kết quả: ${x.resultText||''}`, `- Nguồn: ${x.source?.standard||''}${x.source?.page?` · Trang ${x.source.page}`:''}`, '');
+  }
+  const markdown=md.join('\n');
+  if (format === 'md') {
+    downloadBlob(new Blob([markdown],{type:'text/markdown;charset=utf-8'}),`HNL-History-v${APP_META.version}-${new Date().toISOString().slice(0,10)}.md`);
+    return showToast('Đã xuất lịch sử Markdown.', 'success');
+  }
+  if (format === 'pdf') {
+    const popup=window.open('','_blank','noopener,noreferrer');
+    if(!popup) return showToast('Trình duyệt đang chặn cửa sổ in. Hãy cho phép pop-up rồi thử lại.', 'warning');
+    popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>HNL History</title><style>body{font-family:Arial,sans-serif;max-width:900px;margin:32px auto;padding:0 22px;line-height:1.5;color:#172235}h1,h2,h3{color:#153b65}pre{white-space:pre-wrap;font:inherit}.hint{color:#667085;font-size:12px}@media print{.hint{display:none}}</style></head><body><div class="hint">Chọn Print → Save as PDF.</div><pre>${esc(markdown)}</pre><script>setTimeout(()=>window.print(),250)<\/script></body></html>`);
+    popup.document.close();
+  }
+}
+
 async function recordCalculation(entry) {
   const row = { id:crypto.randomUUID(), createdAt:new Date().toISOString(), appVersion:APP_META.version, ...entry };
   state.calculations.unshift(row);
@@ -972,16 +1417,37 @@ async function recordCalculation(entry) {
 }
 function calculationHistoryHtml() {
   const rows = state.calculations.slice(0, 20);
-  return `<details class="calc-history"><summary>Lịch sử tính toán · ${state.calculations.length}</summary><div class="history-list">${rows.length ? rows.map(x => `<div class="history-row"><button class="history-open" data-load-calculation="${esc(x.id)}"><b>${esc(x.title || x.type || 'Tính toán')}</b><small>${esc(formatHistoryTime(x.createdAt))}${x.resultText ? ` · ${esc(x.resultText)}` : ''}</small></button><button class="icon-btn danger-btn" data-delete-calculation="${esc(x.id)}" title="Xóa">×</button></div>`).join('') : '<div class="muted history-empty">Chưa có phép tính đã lưu.</div>'}</div></details>`;
+  return `<details class="calc-history"><summary>Lịch sử tính toán · ${state.calculations.length}</summary><div class="history-list">${rows.length ? rows.map(x => {
+    const source = x.source || {};
+    const sourceLabel = source.standard ? `${source.standard}${source.page ? ` · P.${source.page}` : ''}` : '';
+    const sourceButton = source.docId && source.page
+      ? `<button class="source-chip history-source" data-hit-doc="${esc(source.docId)}" data-hit-page="${Number(source.page)}" title="Mở trang công thức/nguồn">Nguồn · P.${Number(source.page)}</button>`
+      : '';
+    return `<div class="history-row"><button class="history-open" data-load-calculation="${esc(x.id)}"><b>${esc(x.title || x.type || 'Tính toán')}</b><small>${esc(formatHistoryTime(x.createdAt))}${x.resultText ? ` · ${esc(x.resultText)}` : ''}${sourceLabel ? ` · ${esc(sourceLabel)}` : ''}</small></button>${sourceButton}<button class="icon-btn danger-btn" data-delete-calculation="${esc(x.id)}" title="Xóa">×</button></div>`;
+  }).join('') : '<div class="muted history-empty">Chưa có phép tính đã lưu.</div>'}</div></details>`;
 }
 function loadCalculation(id) {
   const row = state.calculations.find(x => x.id === id);
   if (!row) return showToast('Không tìm thấy phép tính.', 'warning');
   const input = row.inputs || {};
+  if (row.kind === 'verified-7888') {
+    state.calcDraft = {
+      type:String(input.cType || 'PHC').toUpperCase(),
+      loadClass:String(input.cClass || 'B').toUpperCase(),
+      diameter:Number(input.cDiameter || 600),
+      thickness:Number(input.cThickness || 90),
+      sigmaCu:Number(input.cCu || 80),
+      sigmaCe:Number(input.cCe || 8),
+      tableSource:row.source?.table && row.source.table !== 'Nhập tay' ? row.source.table : '',
+      tablePage:Number(row.source?.tablePage || 0) || null,
+      designation:row.source?.designation || ''
+    };
+  }
   for (const [key, value] of Object.entries(input)) {
     const el = document.querySelector(`#${key}`);
     if (el) el.value = value;
   }
+  if (row.kind === 'verified-7888') syncCalcClassOptions();
   showToast('Đã nạp dữ liệu phép tính cũ. Bấm Tính để chạy lại.', 'success');
 }
 async function removeCalculation(id) {
@@ -991,7 +1457,7 @@ async function removeCalculation(id) {
   render();
 }
 
-function messageHtml(message) {
+function messageHtml(message, index = -1) {
   const unique = [];
   const seen = new Set();
   for (const h of message.hits || []) {
@@ -1000,8 +1466,11 @@ function messageHtml(message) {
   }
   const visible = unique.slice(0, 16);
   const chips = visible.map(h => `<button class="source-chip" data-hit-doc="${h.docId}" data-hit-page="${h.page}">${esc(h.standard || h.docName)} · P.${h.page}</button>`).join('');
+  const evidence = message.role === 'ai' ? (message.evidence || null) : null;
+  const evidenceHtml = message.role === 'ai' ? `<div class="answer-evidence"><span class="method-chip">${esc(evidence?.method || (message.provider==='local'?'RAG':'Hybrid RAG'))}</span><span class="confidence-chip ${String(evidence?.confidence||'').toLowerCase()}">Độ tin cậy: ${esc(evidence?.confidence || 'Chưa kiểm tra')}</span>${index>=0?`<button class="text-link" data-verify-message="${index}">Kiểm tra nguồn</button>`:''}</div>` : '';
   return `<div class="message ${message.role === 'user' ? 'user' : 'ai'}">
     <div class="message-label">${message.role === 'user' ? 'Bạn' : (message.provider === 'local' ? 'Tra cứu cục bộ' : `HNL AI${message.provider ? ` · ${esc(PROVIDERS[message.provider]?.short || message.provider)}` : ''}${message.model ? ` · ${esc(message.model)}` : ''}`)}</div>
+    ${evidenceHtml}
     <div class="answer-text rich-answer">${richTextHtml(message.text)}</div>
     ${chips ? `<details class="source-details" ${unique.length <= 6 ? 'open' : ''}><summary>Nguồn đã dùng · ${unique.length} trang</summary><div class="source-chips">${chips}${unique.length > visible.length ? `<span class="source-more">+${unique.length - visible.length} nguồn khác</span>` : ''}</div></details>` : ''}
   </div>`;
@@ -1012,7 +1481,7 @@ function chatHtml() {
   return `<div class="chat-shell">
     <div class="chat-toolbar"><div><b>${esc(chatSessionTitle(state.chat))}</b><small>${esc(nativeLabel)} · ${sourceDocs().length} nguồn${state.nativePdfStatus ? ` · ${esc(state.nativePdfStatus)}` : ''}</small></div><div><button class="btn compact-btn" id="newChatBtn">+ Mới</button><button class="btn compact-btn" id="chatHistoryBtn">Lịch sử ${state.chatSessions.length ? `(${state.chatSessions.length})` : ''}</button></div></div>
     ${state.chatHistoryOpen ? chatHistoryHtml() : ''}
-    <div class="chat-log">${state.chat.length ? state.chat.map(messageHtml).join('') : `<div class="chat-welcome"><div class="chat-orb">AI</div><h3>Hỏi trực tiếp tiêu chuẩn</h3><p>Gemini/OpenAI có thể đọc PDF native; HNL RAG chạy song song để định vị trang và citation.</p><div class="suggestions"><button data-suggest="Cọc chống là gì?">Cọc chống là gì?</button><button data-suggest="Cọc PHC D600 cấp B có mômen uốn nứt bao nhiêu?">PHC D600 cấp B</button><button data-suggest="Điều kiện nghiệm thu lô cọc là gì?">Nghiệm thu lô cọc</button></div></div>`}</div>
+    <div class="chat-log">${state.chat.length ? state.chat.map((m,i)=>messageHtml(m,i)).join('') : `<div class="chat-welcome"><div class="chat-orb">AI</div><h3>Hỏi trực tiếp tiêu chuẩn</h3><p>Gemini/OpenAI có thể đọc PDF native; HNL RAG chạy song song để định vị trang và citation.</p><div class="suggestions"><button data-suggest="Cọc chống là gì?">Cọc chống là gì?</button><button data-suggest="Điều kiện áp dụng của nội dung này là gì?">Điều kiện áp dụng</button><button data-suggest="Công thức liên quan nằm ở điều hoặc trang nào?">Tìm công thức</button><button data-suggest="Tìm các Bảng và Phụ lục liên quan đến nội dung đang hỏi.">Bảng / Phụ lục</button><button data-suggest="Cọc PHC D600 cấp B có mômen uốn nứt bao nhiêu?">PHC D600 cấp B</button><button data-suggest="Điều kiện nghiệm thu lô cọc là gì?">Nghiệm thu lô cọc</button></div></div>`}</div>
     <div class="chat-composer"><textarea id="chatQuestion" placeholder="${hasSources ? 'Nhập câu hỏi theo tiêu chuẩn đang chọn…' : 'Chọn PDF làm nguồn trước…'}" ${!hasSources ? 'disabled' : ''}>${esc(state.chatDraft)}</textarea><button class="send-btn" id="askBtn" ${!hasSources || state.busy ? 'disabled' : ''}>${state.busy ? 'Đang xử lý…' : 'Gửi'}</button></div>
     <div class="composer-hint">Enter để gửi · Shift + Enter xuống dòng · ${state.settings.strict ? 'Khóa nguồn đang bật' : 'Cho phép giải thích ngoài nguồn'} · lịch sử tự lưu cục bộ</div>
   </div>`;
@@ -1020,14 +1489,24 @@ function chatHtml() {
 
 function lookupHtml() {
   const docs = sourceDocs();
+  const scope = state.lookup.scope || 'smart';
+  const target = resolveOperationScope(scope, state.lookup.pages, 'lookup');
   const resultHtml = state.lookup.hits.length
-    ? state.lookup.hits.map(h => `<div class="search-result"><div class="search-result-head"><button class="source-chip" data-hit-doc="${h.docId}" data-hit-page="${h.page}">${esc(h.standard || h.docName)} · P.${h.page}</button><span>điểm ${h.score.toFixed(1)}</span></div><p>${esc(h.text.slice(0, 900))}</p></div>`).join('')
-    : (state.lookup.query ? '<div class="empty-panel compact">Không tìm thấy nội dung phù hợp.</div>' : '');
-  return `${docs.length ? '' : noSourceCard('tra cứu')}
+    ? state.lookup.hits.map(h => `<div class="search-result"><div class="search-result-head"><button class="source-chip" data-hit-doc="${h.docId}" data-hit-page="${h.page}">${esc(h.standard || h.docName)} · P.${h.page}</button><span>điểm ${Number(h.score || 0).toFixed(1)}</span></div><p>${esc(String(h.text || '').slice(0, 900))}</p></div>`).join('')
+    : (state.lookup.query ? '<div class="empty-panel compact">Không tìm thấy nội dung phù hợp trong đúng phạm vi đã chọn.</div>' : '');
+  const regionReady = Boolean(state.lastPdfRegion?.text || state.lastPdfRegion?.image?.data);
+  const hasTarget = !target.error && (target.docs.length > 0 || Boolean(target.region));
+  return `${state.docs.length ? '' : noSourceCard('tra cứu')}
     <div class="panel-section">
-      <div class="panel-section-title"><h3>Tìm trong dữ liệu</h3><span>${docs.length} nguồn</span></div>
-      <div class="coverage-line"><b>${esc(scopeLabel())}</b><small>${state.searchStats ? `Lần tìm gần nhất: lớp chữ ${state.searchStats.textPages}/${state.searchStats.pages} trang · ${state.searchStats.chunks} đoạn${state.searchStats.visualPagesInspected ? ` · kiểm tra ảnh ${state.searchStats.visualPagesInspected} trang đích` : ''}.` : 'Mỗi lần tìm quét toàn bộ lớp chữ trước; OCR/Vision chỉ chạy trên trang đích khi cần.'}</small></div>
-      <div class="search-box"><input id="lookupQuery" value="${esc(state.lookup.draft || state.lookup.query)}" placeholder="Ví dụ: sai lệch đường kính, vết nứt, D600 cấp B…"><button id="lookupBtn" ${!docs.length ? 'disabled' : ''}>Quét tất cả trang</button></div>
+      <div class="panel-section-title"><h3>Tra cứu theo phạm vi</h3><span>${esc(target.label)}</span></div>
+      <div class="scope-toolbar">
+        <label class="field"><span>Phạm vi</span><select id="lookupScopeInput">${scopeSelectOptions(scope)}</select></label>
+        ${scope === 'pages' ? `<label class="field"><span>Trang cần quét</span><input id="lookupPagesInput" value="${esc(state.lookup.pages)}" placeholder="28-35 hoặc 28,31,45"><small>Chỉ áp dụng cho PDF đang mở.</small></label>` : ''}
+      </div>
+      <div class="coverage-line"><b>${esc(target.label)}</b><small>${scope === 'smart' ? 'Dùng bộ tìm kiếm/RAG ổn định của v1.9.23 trên toàn nguồn mặc định; không thay ranking bằng pipeline mới.' : scope === 'region' ? (regionReady ? 'Chỉ tra nội dung vùng đã chọn gần nhất; không quét phần còn lại của PDF.' : 'Chưa có vùng chọn. Bật T▧ trên PDF rồi kéo vùng cần đọc.') : `Giới hạn tìm kiếm ở ${target.pages || 0} trang trong phạm vi này; không tự mở rộng ngoài lựa chọn.`}</small></div>
+      <div class="search-box"><input id="lookupQuery" value="${esc(state.lookup.draft || state.lookup.query)}" placeholder="Ví dụ: cọc chống, sai lệch đường kính, vết nứt…"><button id="lookupBtn" ${!hasTarget ? 'disabled' : ''}>Tra cứu</button></div>
+      ${target.error ? `<div class="notice warning">${esc(target.error)}</div>` : ''}
+      ${state.searchStats ? `<div class="scope-result-summary">Lần gần nhất: ${state.searchStats.textPages || 0}/${state.searchStats.pages || 0} trang chữ${state.searchStats.freshPdfjsPages ? ` · PDF.js cứu ${state.searchStats.freshPdfjsPages} trang` : ''}${state.searchStats.lookupScopeLabel ? ` · ${esc(state.searchStats.lookupScopeLabel)}` : ''}</div>` : ''}
       <div class="search-results">${resultHtml}</div>
     </div>
     <div class="panel-section">
@@ -1049,10 +1528,19 @@ function find7888Doc() { return sourceDocs().find(is7888) || state.docs.find(is7
 function formulaLibraryForScope() {
   const docs = sourceDocs();
   const verified = verifiedFormulaLibrary(docs);
+  const packItems = codePackFormulaItems(docs);
   const auto = extractFormulaLibrary(docs);
-  // Keep verified formulas first. Remove obvious auto-detected duplicates by page/label.
-  const verifiedKeys = new Set(verified.map(x => `${x.docId}:${x.page}:${x.label}`));
-  return [...verified, ...auto.filter(x => !verifiedKeys.has(`${x.docId}:${x.page}:${x.label}`))];
+  // Keep verified formulas first, then built-in Code Pack index, then raw auto-detected formulas.
+  // Page/label de-duplication prevents a 5574/10304 Code Pack entry and PDF text parser from appearing twice.
+  const seen = new Set();
+  const merged = [...verified, ...packItems, ...auto].filter(x => {
+    const key = `${x.docId}:${x.page}:${x.label || x.title || x.raw}`;
+    if (seen.has(key)) return false; seen.add(key); return true;
+  });
+  const q = String(state.formulaQuery || '').trim().toLocaleLowerCase('vi');
+  if (!q) return merged;
+  const nq = q.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
+  return merged.filter(x => `${x.standard||''} ${x.label||''} ${x.title||''} ${x.context||''}`.toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').includes(nq));
 }
 function selectedFormulaItem() {
   const items = formulaLibraryForScope();
@@ -1067,47 +1555,88 @@ function formulaLibraryHtml() {
   const docs = sourceDocs();
   const stats = formulaStats(docs);
   const verifiedCount = verifiedFormulaLibrary(docs).length;
+  const cpStats = codePackStats(docs);
   const items = formulaLibraryForScope();
   const item = selectedFormulaItem();
   const options = items.map(x => `<option value="${esc(x.id)}" ${x.id === item?.id ? 'selected' : ''}>${esc(x.standard || x.docName)} · P.${x.page}${x.label ? ` · ${esc(x.label)}` : ''}${x.verified ? ' · Đã xác minh' : (x.computable ? ' · Tính được' : ' · Cần kiểm tra')}</option>`).join('');
-  const varInputs = item?.computable ? item.variables.map(v => `<label class="field"><span>${esc(v)}</span><input type="number" step="any" data-formula-var="${esc(v)}" placeholder="Nhập ${esc(v)}"></label>`).join('') : '';
+  const varInputs = item?.computable ? item.variables.map(v => { const unit=item.variableUnits?.[v] || ''; return `<label class="field"><span>${esc(v)}${unit ? ` · ${esc(unit)}` : ''}</span><input type="number" step="any" data-formula-var="${esc(v)}" placeholder="Nhập ${esc(v)}${unit ? ` (${esc(unit)})` : ''}"></label>`; }).join('') : '';
   const byDoc = stats.byDoc.map(d => `<span>${esc(d.standard || d.name)}: ${d.total} CT${d.aiDetected ? ` · ${d.aiDetected} AI` : ''}${d.computable ? ` · ${d.computable} tính được` : ''}</span>`).join('');
   return `<div class="panel-section formula-library">
-    <div class="panel-section-title"><h3>Thư viện công thức toàn bộ PDF</h3><span>${items.length} công thức</span></div>
-    <div class="notice"><b>Quét công thức thông minh từ dữ liệu bạn tải lên.</b> Với PDF có lớp chữ, app phân tích cục bộ; với PDF scan/hình hoặc công thức bị vỡ dòng, chế độ Hybrid/AI sẽ đọc trực tiếp ảnh từng trang bằng AI Vision. Công thức AI nhận diện luôn gắn tài liệu + trang gốc và mặc định cần xác minh trước khi cho tính tự động.</div>
-    <div class="formula-stats four"><div><span>Đã xác minh</span><b>${verifiedCount}</b></div><div><span>Tổng phát hiện</span><b>${stats.total}</b></div><div><span>AI/Vision</span><b>${stats.aiDetected || 0}</b></div><div><span>Cần kiểm tra</span><b>${stats.needsReview}</b></div></div>
+    <div class="panel-section-title"><h3>Thư viện công thức</h3><span>${items.length} mục · ${cpStats.packs} Code Pack</span></div>
+    <div class="notice"><b>Quét theo phạm vi để tiết kiệm tài nguyên.</b> Ưu tiên Vùng chọn / Trang hiện tại / Nhiều trang. Với PDF có lớp chữ, HNL đọc cục bộ trước; OCR/Vision chỉ chạy trong phạm vi bạn chọn. Công thức AI luôn gắn tài liệu + trang gốc và không tự chuyển sang Verified.</div>
+    <div class="formula-stats four"><div><span>Verified</span><b>${verifiedCount}</b></div><div><span>Code Pack</span><b>${cpStats.formulas} CT · ${cpStats.tables} bảng</b></div><div><span>AI/Vision</span><b>${stats.aiDetected || 0}</b></div><div><span>Cần kiểm tra</span><b>${stats.needsReview}</b></div></div>
     ${byDoc ? `<div class="formula-doc-stats">${byDoc}</div>` : ''}
-    <div class="grid2 formula-scan-controls"><label class="field"><span>Phương pháp quét</span><select id="formulaScanMode"><option value="auto" ${state.formulaScanMode==='auto'?'selected':''}>Tự động Hybrid · khuyên dùng</option><option value="local" ${state.formulaScanMode==='local'?'selected':''}>Cục bộ nhanh · lớp chữ</option><option value="ai" ${state.formulaScanMode==='ai'?'selected':''}>AI/Vision · quét toàn bộ trang</option></select></label><div class="notice compact"><b>AI đang chọn:</b> ${esc(PROVIDERS[state.settings.provider]?.label || 'Local')}${state.settings.provider==='local' ? ' · chưa có AI Vision' : ` · ${esc(providerModel(true))}`}</div></div>
-    <div class="action-row"><button class="btn primary" id="formulaScanBtn" ${state.busy?'disabled':''}>⌁ Quét công thức từ tài liệu</button></div>
-    ${items.length ? `<label class="field"><span>Chọn công thức</span><select id="formulaSelect">${options}</select></label>` : '<div class="notice warning">Chưa phát hiện công thức từ lớp text. Nếu PDF là bản scan, cần OCR/AI Vision trước.</div>'}
+    <div class="scope-toolbar formula-scope-toolbar">
+      <label class="field"><span>Phạm vi quét công thức</span><select id="formulaScopeInput">${scopeSelectOptions(state.formulaScanScope || 'page', { formula:true })}</select></label>
+      ${(state.formulaScanScope || 'page') === 'pages' ? `<label class="field"><span>Trang cần quét</span><input id="formulaPagesInput" value="${esc(state.formulaScanPages)}" placeholder="28-35 hoặc 28,31,45"><small>Chỉ áp dụng cho PDF đang mở.</small></label>` : ''}
+      <label class="field"><span>Phương pháp</span><select id="formulaScanMode"><option value="auto" ${state.formulaScanMode==='auto'?'selected':''}>Tự động Hybrid · khuyên dùng</option><option value="local" ${state.formulaScanMode==='local'?'selected':''}>Cục bộ nhanh · lớp chữ</option><option value="ai" ${state.formulaScanMode==='ai'?'selected':''}>AI/Vision · chỉ phạm vi đã chọn</option></select></label>
+    </div>
+    <div class="coverage-line"><b>${esc(operationScopeLabel(state.formulaScanScope || 'page', 'formula'))}</b><small>${(state.formulaScanScope || 'page') === 'region' ? (state.lastPdfRegion ? 'Chỉ quét vùng PDF gần nhất; đây là chế độ tiết kiệm nhất.' : 'Chưa có vùng chọn. Bật T▧ và kéo vùng công thức trước.') : 'Mặc định chỉ Trang hiện tại. Chọn Nhiều trang khi cần; Toàn thư viện là lựa chọn nặng nhất và luôn hỏi xác nhận trước khi dùng AI/Vision.'}</small></div>
+    <div class="action-row"><button class="btn primary" id="formulaScanBtn" ${state.busy?'disabled':''}>⌁ Quét công thức</button>${codePackForDoc(state.docs.find(d=>d.id===state.currentDocId)) ? '<button class="btn" id="codePackExcelBtn">⇩ Xuất Excel Code Pack</button>' : ''}</div>
+    <label class="field"><span>Lọc công thức / Điều / Bảng</span><input id="formulaFilterInput" value="${esc(state.formulaQuery || '')}" placeholder="Ví dụ: cọc chống, chọc thủng, (216), Phụ lục B…"><small>Code Pack nạp sẵn giúp định vị cả PDF scan; công thức chỉ được tính khi trạng thái đã xác minh.</small></label>
+    ${items.length ? `<label class="field"><span>Chọn công thức</span><select id="formulaSelect">${options}</select></label>` : '<div class="notice warning">Chưa phát hiện công thức trong bộ lọc hiện tại. Xóa nội dung lọc hoặc quét thêm PDF.</div>'}
     ${item ? `<div class="formula-source-card">
       <div class="formula-source-head"><div><b>${esc(item.standard || item.docName)}</b><small>${esc(item.title || 'Công thức nhận diện từ PDF')} · Trang ${item.page}${item.label ? ` · ${esc(item.label)}` : ''}</small></div><button class="source-chip" data-hit-doc="${item.docId}" data-hit-page="${item.page}">Mở trang gốc</button></div>
       ${item.verified ? '<div class="notice success"><b>Công thức đã xác minh từ trang gốc.</b></div>' : (item.aiDetected ? '<div class="notice warning"><b>AI/Vision đã nhận diện.</b> Hãy mở trang gốc và xác minh trước khi cho phép tính tự động.</div>' : '')}<div class="formula-raw">${esc(item.raw)}</div>
       ${item.expression ? `<div class="formula-normalized"><span>Biểu thức chuẩn hóa</span><code>${esc(item.expression)}</code></div>` : ''}
-      ${item.units ? `<div class="formula-meta"><b>Đơn vị:</b> ${esc(typeof item.units==='string'?item.units:JSON.stringify(item.units))}</div>` : ''}${item.conditions ? `<div class="formula-meta"><b>Điều kiện:</b> ${esc(item.conditions)}</div>` : ''}
-      ${item.computable ? `<div class="notice success"><b>Có thể tính tự động.</b> Hãy nhập các biến bên dưới và luôn đối chiếu điều kiện/đơn vị tại trang gốc.</div><div class="grid2 formula-vars">${varInputs}</div><button class="btn primary" id="formulaCalcBtn">Tính công thức đã chọn</button><div id="formulaCalcResult"></div>` : `<div class="notice warning"><b>Chưa cho phép tính tự động.</b> Công thức có thể chứa phân số, chỉ số, ký hiệu hoặc điều kiện mà lớp text/OCR dễ đọc sai.</div>${item.aiDetected && item.expression ? '<button class="btn" id="formulaVerifyBtn">✓ Tôi đã đối chiếu trang gốc · Cho phép tính</button>' : ''}`}
+      ${item.outputUnit ? `<div class="formula-meta"><b>Đơn vị kết quả:</b> ${esc(item.outputUnit)}</div>` : (item.units ? `<div class="formula-meta"><b>Đơn vị:</b> ${esc(typeof item.units==='string'?item.units:JSON.stringify(item.units))}</div>` : '')}${item.conditions ? `<div class="formula-meta"><b>Điều kiện:</b> ${esc(item.conditions)}</div>` : ''}
+      ${item.computable ? `<div class="notice success"><b>Có thể tính tự động.</b> Hãy nhập các biến bên dưới và luôn đối chiếu điều kiện/đơn vị tại trang gốc.</div><div class="grid2 formula-vars">${varInputs}</div><div class="action-row"><button class="btn primary" id="formulaCalcBtn">Tính công thức đã chọn</button><button class="btn" id="formulaExcelBtn">⇩ Xuất Excel có công thức</button></div><div id="formulaCalcResult"></div>` : `<div class="notice warning"><b>Chưa cho phép tính tự động.</b> Công thức đã được lập chỉ mục để hỏi đáp/định vị trang nhưng chưa đủ điều kiện chạy số học tự động. File Excel vẫn có thể xuất dạng thuyết minh tham chiếu.</div><button class="btn" id="formulaExcelBtn">⇩ Xuất Excel tham chiếu</button>${item.aiDetected && item.expression ? '<button class="btn" id="formulaVerifyBtn">✓ Tôi đã đối chiếu trang gốc · Cho phép tính</button>' : ''}`}
       <details class="formula-context"><summary>Ngữ cảnh trích xuất</summary><pre>${esc(item.context)}</pre></details>
     </div>` : ''}
   </div>`;
 }
 
-function calcHtml() {
+function ensureCalcDraft() {
+  if (state.calcDraft) return state.calcDraft;
   const r = state.tableResult || lookup7888(600, 'B');
+  state.calcDraft = {
+    type:'PHC', loadClass:String(r?.loadClass || 'B'), diameter:Number(r?.diameter || 600),
+    thickness:Number(r?.thickness || 90), sigmaCu:80, sigmaCe:Number(r?.effectiveStress || 8),
+    tableSource:state.tableResult ? 'Bảng 1' : '', tablePage:state.tableResult ? (Number(r?.diameter || 600) <= 600 ? 10 : 11) : null,
+    designation:''
+  };
+  return state.calcDraft;
+}
+function syncCalcDraftFromDom({ clearTableSource = false } = {}) {
+  const d = ensureCalcDraft();
+  const next = {
+    ...d,
+    type:String(document.querySelector('#cType')?.value || d.type || 'PHC').toUpperCase(),
+    loadClass:String(document.querySelector('#cClass')?.value || d.loadClass || 'B').toUpperCase(),
+    diameter:Number(document.querySelector('#cDiameter')?.value || d.diameter || 600),
+    thickness:Number(document.querySelector('#cThickness')?.value || d.thickness || 90),
+    sigmaCu:Number(document.querySelector('#cCu')?.value || d.sigmaCu || 80),
+    sigmaCe:Number(document.querySelector('#cCe')?.value || d.sigmaCe || 8)
+  };
+  if (clearTableSource) Object.assign(next, {tableSource:'', tablePage:null, designation:''});
+  state.calcDraft = next;
+  return next;
+}
+function calcHtml() {
+  const draft = ensureCalcDraft();
+  const calcD = Number(draft.diameter || 600);
+  const calcType = String(draft.type || 'PHC').toUpperCase();
+  const calcClasses = classesForPileType7888(calcD, calcType);
+  const fallbackClasses = calcType === 'NPH' ? ['A','B','C'] : ['A','AB','B','C'];
+  const classList = calcClasses.length ? calcClasses : fallbackClasses;
+  const calcClass = classList.includes(String(draft.loadClass || '').toUpperCase()) ? String(draft.loadClass).toUpperCase() : (classList.includes('B') ? 'B' : classList[0]);
+  const calcClassOptions = classList.map(x => `<option value="${x}" ${x === calcClass ? 'selected' : ''}>${x}</option>`).join('');
+  const tableStatus = draft.tableSource ? `Đã nạp ${draft.tableSource}${draft.designation ? ` · ${draft.designation}` : ''}${draft.tablePage ? ` · trang ${draft.tablePage}` : ''}` : 'Giá trị đang nhập tay; bấm Nạp bảng để đồng bộ t và σce theo tiêu chuẩn.';
   return `<div class="panel-section">
     <div class="panel-section-title"><h3>Máy tính đã xác minh · TCVN 7888:2014</h3><span>Phụ lục B</span></div>
     <div class="notice">Bộ tính này được khóa theo công thức đã kiểm tra thủ công của TCVN 7888:2014. Kết quả không thay thế hồ sơ thiết kế.</div>
     <div class="grid2">
-      <label class="field"><span>Loại cọc</span><select id="cType"><option value="PHC">PHC / NPH</option><option value="PC">PC</option></select></label>
-      <label class="field"><span>Cấp tải</span><select id="cClass"><option>A</option><option>AB</option><option selected>B</option><option>C</option></select></label>
-      <label class="field"><span>D (mm)</span><input id="cDiameter" type="number" value="${r?.diameter || 600}" min="1"></label>
-      <label class="field"><span>t (mm)</span><input id="cThickness" type="number" value="${r?.thickness || 90}" min="1"></label>
-      <label class="field"><span>σcu (MPa)</span><input id="cCu" type="number" value="80" step="0.1"></label>
-      <label class="field"><span>σce (MPa)</span><input id="cCe" type="number" value="8" step="0.1"></label>
+      <label class="field"><span>Loại cọc</span><select id="cType"><option value="PHC" ${calcType==='PHC'?'selected':''}>PHC</option><option value="NPH" ${calcType==='NPH'?'selected':''}>NPH</option><option value="PC" ${calcType==='PC'?'selected':''}>PC</option></select></label>
+      <label class="field"><span>Cấp tải</span><select id="cClass">${calcClassOptions}</select></label>
+      <label class="field"><span>D thân cọc (mm)</span><input id="cDiameter" type="number" value="${calcD}" min="1"></label>
+      <label class="field"><span>t (mm)</span><input id="cThickness" type="number" value="${Number(draft.thickness || 90)}" min="1"></label>
+      <label class="field"><span>σcu (MPa)</span><input id="cCu" type="number" value="${Number(draft.sigmaCu || (calcType==='PC'?60:80))}" step="0.1"></label>
+      <label class="field"><span>σce (MPa)</span><input id="cCe" type="number" value="${Number(draft.sigmaCe || 8)}" step="0.1"></label>
     </div>
-    <div class="action-row"><button class="btn" id="calcFill7888" ${sourceHas7888() ? '' : 'disabled'}>Nạp từ Bảng 1</button><button class="btn primary" id="calcBtn">Tính kết quả</button></div>
+    <div class="action-row"><button class="btn" id="calcFill7888" ${sourceHas7888() ? '' : 'disabled'}>Nạp bảng tiêu chuẩn</button><button class="btn primary" id="calcBtn">Tính kết quả</button></div><div id="calcSourceHint" class="footnote">${esc(tableStatus)}</div>
     <div id="calcResult"></div>
   </div>
-  <div class="formula-card"><div class="formula">R<sub>aL</sub> = (σ<sub>cu</sub>/α − σ<sub>ce</sub>/4) × A<sub>0</sub></div><p>PC dùng α = 4; PHC/NPH dùng α = 3,5. App đồng thời hiển thị giá trị ngắn hạn và 80% giá trị ngắn hạn.</p><button class="source-chip" data-find="Phụ lục B">Mở nguồn trong PDF</button></div>
+  <div class="formula-card"><div class="formula">R<sub>aL</sub> = (σ<sub>cu</sub>/α − σ<sub>ce</sub>/4) × A<sub>0</sub></div><p>PC dùng α = 4; PHC/NPH dùng α = 3,5. Với σ (MPa) và A₀ (mm²), HNL đổi N → kN (/1000) trước khi hiển thị. App đồng thời hiển thị giá trị ngắn hạn và 80% giá trị ngắn hạn.</p><div class="action-row"><button class="source-chip" data-find="Phụ lục B">Mở Phụ lục B</button><button class="source-chip" data-find="Bảng 2">Mở Bảng 2 · NPH</button></div></div>
   ${formulaLibraryHtml()}
   ${calculationHistoryHtml()}`;
 }
@@ -1117,7 +1646,8 @@ function compareHtml() {
   return `<div class="panel-section"><div class="panel-section-title"><h3>So sánh nhiều tiêu chuẩn</h3><span>${docs.length} tài liệu</span></div>
     ${docs.length < 2 ? '<div class="notice warning">Hãy tick ít nhất 2 PDF trong Thư viện. Chế độ so sánh chỉ dùng các tài liệu được tick.</div>' : `<div class="selected-source-list">${docs.map(d => `<span>${esc(d.standard || d.name)}</span>`).join('')}</div>`}
     <label class="field"><span>Nội dung cần so sánh</span><textarea id="compareQuestion" placeholder="Ví dụ: So sánh yêu cầu nghiệm thu, giới hạn vết nứt và tần suất thử nghiệm.">${esc(state.compare.draft || state.compare.query)}</textarea></label>
-    <button class="btn primary" id="compareBtn" ${docs.length < 2 || state.busy ? 'disabled' : ''}>So sánh nguồn</button>
+    <div class="action-row"><button class="btn primary" id="compareBtn" ${docs.length < 2 || state.busy ? 'disabled' : ''}>So sánh nguồn</button><button class="btn" id="compareAuditBtn" ${docs.length < 2 || state.busy ? 'disabled' : ''}>Kiểm tra mâu thuẫn hồ sơ</button></div>
+    <div class="coverage-line"><b>${state.compareMode==='audit'?'Kiểm tra hồ sơ':'So sánh'}</b><small>Chỉ dùng tài liệu đã tick; khác biệt/mâu thuẫn phải có nguồn trang, thiếu căn cứ thì ghi rõ.</small></div>
     ${state.compare.text ? `<div class="compare-output"><div class="answer-text rich-answer">${richTextHtml(state.compare.text)}</div>${sourceChipsHtml(state.compare.hits)}</div>` : ''}
   </div>`;
 }
@@ -1207,6 +1737,30 @@ async function refreshArchiveEngines(showFeedback = false) {
   } finally { render(); }
 }
 
+
+function professionalToolsHtml() {
+  const health=state.documentHealth || documentHealth();
+  return `<div class="panel-section compact-settings-card pro-tools-card">
+    <div class="panel-section-title"><h3>Workspace & hiệu năng</h3><span>${esc(performanceProfile().label)}</span></div>
+    <div class="grid2 pro-settings-grid">
+      <label class="field"><span>Chế độ hiệu năng</span><select id="performanceModeInput"><option value="light" ${state.settings.performanceMode==='light'?'selected':''}>Nhẹ · ít RAM/token</option><option value="balanced" ${state.settings.performanceMode==='balanced'?'selected':''}>Cân bằng · khuyến nghị</option><option value="strong" ${state.settings.performanceMode==='strong'?'selected':''}>Mạnh · nhiều trang/AI hơn</option></select></label>
+      <label class="switch-row compact-switch"><input id="fieldModeInput" type="checkbox" ${state.settings.fieldMode?'checked':''}><span><b>Chế độ hiện trường</b><small>Gọn chữ, giảm mô tả phụ; vẫn giữ đầy đủ chức năng.</small></span></label>
+    </div>
+    <div class="notice success"><b>Tự lưu workspace:</b> PDF, trang, zoom, tab, nguồn và phạm vi được khôi phục khi mở lại app.</div>
+    <details id="settingsDocumentHealth" class="compact-disclosure" data-persist-detail><summary><span>Sức khỏe tài liệu & lập chỉ mục</span><span class="disclosure-chevron">⌄</span></summary><div class="disclosure-body">
+      ${documentHealthHtml(health)}
+      <div class="action-row"><button class="btn" id="checkDocumentHealth">Kiểm tra tài liệu</button><button class="btn" id="reindexActiveDocument" ${activeDoc()?.viewerKind==='pdf'?'':'disabled'}>Lập chỉ mục lại tài liệu</button><button class="btn" id="reindexAllDocuments">Lập chỉ mục lại thư viện</button></div>
+      <small class="muted">Lập chỉ mục lại chỉ đọc lớp chữ PDF gốc; không OCR toàn bộ và không thay lõi tìm kiếm v1.9.23.</small>
+    </div></details>
+    <details id="settingsBackupTools" class="compact-disclosure" data-persist-detail><summary><span>Backup, khôi phục & gói lỗi</span><span class="disclosure-chevron">⌄</span></summary><div class="disclosure-body">
+      <div class="action-row"><button class="btn" id="exportBackupZip">Xuất Backup ZIP</button><button class="btn" id="restoreBackupBtn">Khôi phục Backup</button><button class="btn" id="exportDiagnosticZip">Xuất gói lỗi ZIP</button></div>
+      <input id="backupRestoreInput" type="file" accept=".zip,.json" hidden>
+      <div class="notice"><b>Backup:</b> lưu metadata thư viện, ghim, ghi chú, lịch sử, tính toán, checklist và workspace; không chứa API key và không nhét PDF binary vào ZIP để file nhẹ.</div>
+      <div class="compact-overview-line"><div><b>Crash log cục bộ</b><small>${state.crashLog.length} lỗi gần nhất · đã lọc chuỗi giống API key</small></div><button class="btn compact-btn" id="clearCrashLog" ${state.crashLog.length?'':'disabled'}>Xóa log</button></div>
+    </div></details>
+  </div>`;
+}
+
 function settingsHtml() {
   const provider = PROVIDERS[state.settings.provider];
   const options = availableProviderEntries().map(([id, p]) => `<option value="${id}" ${id === state.settings.provider ? 'selected' : ''}>${esc(p.label)}</option>`).join('');
@@ -1219,14 +1773,14 @@ function settingsHtml() {
     <label class="field"><span>Nhà cung cấp</span><select id="providerSelect">${options}</select></label>
     ${state.settings.provider === 'local' ? `<div class="notice success"><b>Tra cứu nhanh không phải AI.</b><br>${IS_DESKTOP_EDITION ? 'Chế độ này tìm kiếm cục bộ, không cần mạng. Muốn AI offline suy luận, chọn <b>HNL Offline AI · Ollama</b>.' : 'Chế độ này tìm ngay trong dữ liệu đã nạp, không cần API. Muốn AI suy luận trên bản Web, chọn <b>Gemini / ChatGPT / Claude / Grok</b>.'}</div>` : `
       <div class="segmented"><button data-connection="direct" class="${state.settings.connection === 'direct' ? 'active' : ''}">Trực tiếp</button><button data-connection="bridge" class="${state.settings.connection === 'bridge' ? 'active' : ''}">HNL Bridge</button></div>
-      <label class="field"><span>Model văn bản · nguồn điều khiển duy nhất</span><div class="model-picker shared-model-setting"><input id="modelInput" value="${esc(providerModel())}" readonly aria-readonly="true" title="Model hiện tại dùng chung toàn ứng dụng"><button class="btn compact-btn" id="openSettingsModelPicker" type="button">Chọn model</button><button class="btn compact-btn" id="refreshModels" type="button">↻</button></div><small class="${state.modelOptions.length ? (state.modelOptionsVerified ? 'model-status-verified' : 'model-status-suggested') : ''}">${esc(state.modelStatus || 'Bấm Chọn model để đổi; HNL luôn hỏi OK trước khi áp dụng. Không còn dropdown model trùng ở đầu panel.')}</small></label><datalist id="modelOptionsList">${state.modelOptions.map(m => `<option value="${esc(m)}"></option>`).join('')}</datalist>
+      <label class="field"><span>Model</span><div class="model-picker shared-model-setting"><input id="modelInput" value="${esc(providerModel())}" readonly aria-readonly="true" title="Model hiện tại dùng chung toàn ứng dụng"><button class="btn compact-btn" id="openSettingsModelPicker" type="button">Chọn model</button><button class="btn compact-btn" id="refreshModels" type="button">↻</button></div><small class="${state.modelOptions.length ? (state.modelOptionsVerified ? 'model-status-verified' : 'model-status-suggested') : ''}">${esc(state.modelStatus || 'Dùng chung toàn ứng dụng · đổi model luôn cần xác nhận trước khi áp dụng.')}</small></label><datalist id="modelOptionsList">${state.modelOptions.map(m => `<option value="${esc(m)}"></option>`).join('')}</datalist>
       ${isOllama ? `<label class="field"><span>Model đọc ảnh offline</span><input id="visionModelInput" value="${esc(draftSetting('visionModel', state.settings.visionModel))}" placeholder="gemma3:4b"></label>` : ''}
       ${needsSessionKey ? `<label class="field"><span>API key · dùng chung Kiểm tra kết nối / Model / Chat trong phiên này</span><input id="apiKeyInput" type="password" value="${esc(draftSetting('apiKey', currentApiKey()))}" autocomplete="off" placeholder="Dán API key của bạn"><small>${state.settings.connection === 'bridge' ? 'Bridge sẽ ưu tiên key phiên này; nếu để trống mới dùng key cấu hình sẵn trên Bridge.' : 'Key chỉ giữ trong phiên ứng dụng/tab, không ghi vào source hay log.'}</small></label>` : ''}
       ${state.settings.provider === 'gemini' ? `<div class="notice"><b>Gemini API:</b> vào Google AI Studio → API Keys → Create API key → Copy, sau đó dán vào ô trên. Không ghi key vào source GitHub. <a class="inline-link" href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">Mở trang API Keys</a></div>` : ''}
       ${isOllama && state.settings.connection === 'direct' ? `<label class="field"><span>Ollama URL</span><input id="ollamaInput" value="${esc(draftSetting('ollamaUrl', state.settings.ollamaUrl))}"></label>` : ''}
       ${isOllama && githubHttps ? `<div class="notice error"><b>Đây là nguyên nhân Offline AI trong video không chạy.</b><br>GitHub Pages là HTTPS nhưng Ollama trên máy là HTTP. Trình duyệt chặn kết nối này. Hãy chạy <b>START_HNL_OFFLINE_AI.bat</b> trong source và mở app tại <b>http://127.0.0.1:8787</b>.</div>` : ''}
       ${isOllama && isLocalHost() ? `<div class="notice success"><b>Đang ở chế độ Local.</b> Đây là môi trường đúng để dùng Ollama offline, semantic embedding và đọc ảnh bằng model vision.</div>` : ''}
-      ${isOllama ? `<div class="local-engine-card"><div class="panel-section-title"><h3>HNL Local Intelligence Engine</h3><span>v${APP_META.version}</span></div>
+      ${isOllama ? `<div class="local-engine-card"><div class="panel-section-title"><h3>HNL Local Intelligence Engine</h3><span>Offline</span></div>
         <label class="field"><span>Chế độ tìm kiếm</span><select id="retrievalModeInput">
           <option value="auto" ${state.settings.retrievalMode === 'auto' ? 'selected' : ''}>Auto · tự chọn nhanh/chuyên sâu/semantic</option>
           <option value="hybrid" ${state.settings.retrievalMode === 'hybrid' ? 'selected' : ''}>Hybrid Semantic · từ khóa + vector + rerank</option>
@@ -1242,15 +1796,15 @@ function settingsHtml() {
       ${state.settings.connection === 'bridge' ? `<label class="field"><span>HNL Bridge URL</span><input id="bridgeInput" value="${esc(draftSetting('bridgeUrl', state.settings.bridgeUrl))}"></label><div class="notice">Khi chạy Local, nên để Bridge cùng địa chỉ app, ví dụ http://127.0.0.1:8787.</div>` : ''}
     `}
     ${nativePdfProvider ? `<div class="native-pdf-card compact-native-card">
-      <div class="compact-overview-line native-pdf-overview"><div><b>Đọc PDF native · <span id="nativePdfModeBadge">${state.settings.nativePdfMode === 'economy' ? 'Tiết kiệm' : state.settings.nativePdfMode === 'native' ? 'Toàn tài liệu' : 'Cân bằng'}</span></b><small id="nativePdfModeSummary">${state.settings.nativePdfMode === 'economy' ? 'RAG trước · chỉ gửi trang/ảnh cần thiết' : state.settings.nativePdfMode === 'native' ? 'Giữ chế độ Toàn tài liệu; PDF quá giới hạn sẽ dùng fallback trang mục tiêu và báo rõ' : 'RAG trước · tự dùng PDF native khi thật sự cần'}</small></div><span class="compact-status">${state.settings.provider === 'gemini' ? 'Gemini' : 'OpenAI'}</span></div>
+      <div class="compact-overview-line native-pdf-overview"><div><b>Đọc PDF native · <span id="nativePdfModeBadge">${state.settings.nativePdfMode === 'economy' ? 'Tiết kiệm' : state.settings.nativePdfMode === 'native' ? 'Toàn tài liệu' : 'Cân bằng'}</span></b><small id="nativePdfModeSummary">${state.settings.nativePdfMode === 'economy' ? 'RAG trước · chỉ gửi trang/ảnh cần thiết' : state.settings.nativePdfMode === 'native' ? 'Giữ chế độ Toàn tài liệu; PDF quá giới hạn sẽ dùng fallback trang mục tiêu và báo rõ' : 'RAG trước · tự dùng PDF native khi thật sự cần'}</small></div></div>
       <details id="settingsNativePdfDetails" class="compact-disclosure" data-persist-detail>
         <summary><span>Xem chi tiết PDF native</span><span class="disclosure-chevron">⌄</span></summary>
         <div class="disclosure-body">
-          <label class="field"><span>Cách gửi PDF cho ${state.settings.provider === 'gemini' ? 'Gemini' : 'OpenAI'}</span><select id="nativePdfModeInput">
+          <label class="field"><span>Chế độ đọc PDF</span><select id="nativePdfModeInput">
             <option value="economy" ${state.settings.nativePdfMode === 'economy' ? 'selected' : ''}>Tiết kiệm · RAG trước, chỉ gửi trang/ảnh cần thiết</option>
             <option value="balanced" ${state.settings.nativePdfMode === 'balanced' ? 'selected' : ''}>Cân bằng · RAG trước, tự dùng PDF native khi cần</option>
             <option value="native" ${state.settings.nativePdfMode === 'native' ? 'selected' : ''}>Toàn tài liệu · gửi PDF đủ điều kiện trực tiếp cho AI</option>
-          </select><small>Chế độ được lưu ngay khi đổi và không tự quay về Cân bằng khi giao diện render lại.</small></label>
+          </select><small>Lựa chọn được ghi nhớ cho các lần sử dụng tiếp theo.</small></label>
           ${state.settings.provider === 'openai' ? `<label class="field"><span>Chi tiết ảnh trang PDF · OpenAI</span><select id="openaiPdfDetailInput"><option value="low" ${state.settings.openaiPdfDetail === 'low' ? 'selected' : ''}>Low · tiết kiệm token hình</option><option value="auto" ${state.settings.openaiPdfDetail === 'auto' ? 'selected' : ''}>Auto · khuyến nghị</option><option value="high" ${state.settings.openaiPdfDetail === 'high' ? 'selected' : ''}>High · bảng/sơ đồ/chữ nhỏ</option></select></label>` : ''}
           <div class="notice"><b>Giới hạn xử lý:</b> PDF native Gemini tối đa 50 MB/1.000 trang. OpenAI cũng giới hạn tổng file trong request. Nếu PDF vượt giới hạn, HNL giữ nguyên lựa chọn của bạn và chuyển sang tìm trực tiếp lớp chữ PDF gốc + OCR/Vision đúng trang mục tiêu; không âm thầm đổi chế độ.</div>
           <div class="notice"><b>Riêng tư:</b> API key không được lưu cùng PDF hoặc lịch sử.</div>
@@ -1258,13 +1812,13 @@ function settingsHtml() {
       </details>
     </div>` : ''}
     <label class="field"><span>Lưu lịch sử cục bộ</span><select id="historyRetentionDaysInput"><option value="30" ${state.settings.historyRetentionDays === 30 ? 'selected' : ''}>30 ngày</option><option value="90" ${state.settings.historyRetentionDays === 90 ? 'selected' : ''}>90 ngày</option><option value="365" ${state.settings.historyRetentionDays === 365 ? 'selected' : ''}>365 ngày</option><option value="0" ${state.settings.historyRetentionDays === 0 ? 'selected' : ''}>Không tự xóa</option></select><small>Hỏi đáp và tính toán lưu Local-first trong IndexedDB. Không lưu API key.</small></label>
-    <label class="switch-row"><input id="strictInput" type="checkbox" ${state.settings.strict ? 'checked' : ''}><span><b>Khóa nguồn tài liệu</b><small>AI không được tự thêm quy định ngoài PDF/ảnh/text đã chọn.</small></span></label>
     <div class="action-row"><button class="btn primary" id="saveSettings">Lưu cài đặt</button><button class="btn" id="testConnection">Kiểm tra kết nối</button></div>
     <div id="connectionStatusBox" class="notice ${state.connectionStatus?.ok ? 'success' : 'error'}" ${state.connectionStatus ? '' : 'hidden'}><b>${state.connectionStatus?.ok ? 'Kết nối OK' : 'Kết nối lỗi'}</b><br>${esc(state.connectionStatus?.message || '')}</div>
   </div>
+  ${professionalToolsHtml()}
   ${versionCardHtml()}
   <div class="panel-section compact-settings-card">
-    <div class="panel-section-title"><h3>Dữ liệu đầu vào</h3><span>v${APP_META.version}</span></div>
+    <div class="panel-section-title"><h3>Dữ liệu đầu vào</h3><span>Định dạng</span></div>
     <div class="compact-overview-line"><div><b>PDF · Thư mục · Archive · Ảnh · Text</b><small>PDF native AI · Hybrid RAG/citation · Lịch sử local · Offline AI trên Desktop</small></div><span class="compact-status">Sẵn sàng</span></div>
     <details id="settingsInputDetails" class="compact-disclosure" data-persist-detail>
       <summary><span>Xem chi tiết định dạng & tính năng</span><span class="disclosure-chevron">⌄</span></summary>
@@ -1272,7 +1826,7 @@ function settingsHtml() {
     </details>
   </div>
   <div class="panel-section compact-settings-card">
-    <div class="panel-section-title"><h3>Chẩn đoán ứng dụng</h3><span>${state.diagnosticSummary ? `${state.diagnosticSummary.passed}/${state.diagnosticSummary.total}` : `v${APP_META.version}`}</span></div>
+    <div class="panel-section-title"><h3>Chẩn đoán ứng dụng</h3><span>${state.diagnosticSummary ? `${state.diagnosticSummary.passed}/${state.diagnosticSummary.total}` : 'Chưa chạy'}</span></div>
     <div class="compact-overview-line"><div><b>${state.diagnosticSummary ? `${state.diagnosticSummary.passed}/${state.diagnosticSummary.total} kiểm tra ${state.diagnosticSummary.ok ? 'đạt' : 'cần xem'}` : 'Kiểm tra nhanh tình trạng ứng dụng'}</b><small>Bộ nhớ · PDF · nguồn · AI · build${IS_DESKTOP_EDITION ? ' · Ollama · archive' : ''}</small></div><button class="btn compact-btn" id="runDiagnostics">Chạy</button></div>
     ${state.diagnosticHtml ? `<details id="settingsDiagnosticDetails" class="compact-disclosure" data-persist-detail><summary><span>Xem chi tiết chẩn đoán</span><span class="disclosure-chevron">⌄</span></summary><div class="disclosure-body">${state.diagnosticHtml}</div></details>` : ''}
   </div>`;
@@ -1301,10 +1855,18 @@ function bind() {
       if (el.matches('[data-tab]')) { state.tab = el.dataset.tab; render(); return; }
       if (el.matches('[data-mobile]')) { state.mobile = el.dataset.mobile; render(); return; }
       if (el.id === 'sourceBadge') { if (window.innerWidth > 880) { state.focusReader=false; state.leftCollapsed=false; localStorage.setItem(STORAGE.leftCollapsed, 'false'); } else state.mobile = 'library'; render(); return; }
-      if (el.id === 'openSettings' || el.id === 'assistantSettingsSummary') { state.tab = 'settings'; if (window.innerWidth > 880) { state.focusReader=false; state.rightCollapsed=false; localStorage.setItem(STORAGE.rightCollapsed, 'false'); } else state.mobile = 'assistant'; render(); return; }
-      if (el.id === 'assistantSettingsQuick') { state.tab = 'settings'; state.focusReader=false; state.rightCollapsed=false; localStorage.setItem(STORAGE.rightCollapsed, 'false'); if (window.innerWidth <= 880) state.mobile='assistant'; render(); return; }
-      if (el.id === 'selectAll') { state.docs.forEach(d => state.selected.add(d.id)); showToast(`Đã chọn ${state.docs.length} tài liệu làm nguồn.`, 'success'); render(); return; }
-      if (el.id === 'clearSelection') { state.selected.clear(); showToast(state.settings.scope === 'selected' ? 'Đã bỏ chọn nguồn. Phạm vi “Đã chọn” hiện không có tài liệu.' : 'Đã bỏ dấu tick. Phạm vi Toàn thư viện vẫn tra cứu tất cả tài liệu.', 'info'); render(); return; }
+      if (el.id === 'assistantSettingsSummary') { state.tab = 'settings'; if (window.innerWidth > 880) { state.focusReader=false; state.rightCollapsed=false; localStorage.setItem(STORAGE.rightCollapsed, 'false'); } else state.mobile = 'assistant'; render(); return; }
+      if (el.id === 'undoAction') { await undoLast(); return; }
+      if (el.id === 'redoAction') { await redoLast(); return; }
+      if (el.id === 'selectAll') { const before=[...state.selected]; state.docs.forEach(d => state.selected.add(d.id)); pushUndo({type:'selection',before,after:[...state.selected],label:'chọn tất cả nguồn'}); showToast(`Đã chọn ${state.docs.length} tài liệu làm nguồn.`, 'success'); render(); return; }
+      if (el.id === 'clearSelection') { const before=[...state.selected]; state.selected.clear(); pushUndo({type:'selection',before,after:[],label:'bỏ chọn nguồn'}); showToast(state.settings.scope === 'selected' ? 'Đã bỏ chọn nguồn. Phạm vi “Đã chọn” hiện không có tài liệu.' : 'Đã bỏ dấu tick. Phạm vi Toàn thư viện vẫn tra cứu tất cả tài liệu.', 'info'); render(); return; }
+      if (el.matches('[data-pin-doc]')) { await toggleDocPinned(el.dataset.pinDoc); return; }
+      if (el.id === 'bookmarkCurrentPage') { await addCurrentPageBookmark(); return; }
+      if (el.id === 'toggleBookmarks') { state.bookmarkPanelOpen=!state.bookmarkPanelOpen; render(); return; }
+      if (el.id === 'closeBookmarkPanel') { state.bookmarkPanelOpen=false; render(); return; }
+      if (el.matches('[data-bookmark-page]')) { jumpPage(Number(el.dataset.bookmarkPage)||1); return; }
+      if (el.matches('[data-remove-bookmark]')) { await removeBookmarkOrHighlight(el.dataset.removeBookmark); return; }
+      if (el.matches('[data-annotation-id]')) { state.bookmarkPanelOpen=true; render(); return; }
       if (el.id === 'toggleLibrary' || el.id === 'viewerToggleLibrary') { state.focusReader=false; state.leftCollapsed = !state.leftCollapsed; localStorage.setItem(STORAGE.leftCollapsed, String(state.leftCollapsed)); render(); return; }
       if (el.id === 'toggleAssistant' || el.id === 'viewerToggleAssistant') { state.focusReader=false; state.rightCollapsed = !state.rightCollapsed; localStorage.setItem(STORAGE.rightCollapsed, String(state.rightCollapsed)); render(); return; }
       if (el.id === 'reopenLibrary') { state.focusReader=false; state.leftCollapsed=false; localStorage.setItem(STORAGE.leftCollapsed, 'false'); render(); return; }
@@ -1327,9 +1889,12 @@ function bind() {
       if (el.id === 'aiSummaryAll') { await aiSummaryAll(); return; }
       if (el.id === 'askBtn') { await askQuestion(); return; }
       if (el.id === 'newChatBtn') { await persistCurrentChat(); startNewChat(); return; }
+      if (el.id === 'exportHistoryBtn') { exportHistory(document.querySelector('#historyExportFormat')?.value || 'json'); return; }
       if (el.id === 'chatHistoryBtn') { state.chatHistoryOpen = !state.chatHistoryOpen; render(); return; }
       if (el.id === 'closeChatHistory') { state.chatHistoryOpen = false; render(); return; }
       if (el.matches('[data-chat-session]')) { openChatSession(el.dataset.chatSession); return; }
+      if (el.matches('[data-pin-chat-session]')) { await togglePinChatSession(el.dataset.pinChatSession); return; }
+      if (el.matches('[data-rename-chat-session]')) { await renameChatSession(el.dataset.renameChatSession); return; }
       if (el.matches('[data-delete-chat-session]')) { await removeChatSession(el.dataset.deleteChatSession); return; }
       if (el.matches('[data-load-calculation]')) { loadCalculation(el.dataset.loadCalculation); return; }
       if (el.matches('[data-delete-calculation]')) { await removeCalculation(el.dataset.deleteCalculation); return; }
@@ -1340,14 +1905,16 @@ function bind() {
         await askQuestion(state.chatDraft);
         return;
       }
-      if (el.id === 'lookupBtn') { runLookup(); return; }
+      if (el.id === 'lookupBtn') { await runLookup(); return; }
       if (el.id === 'tableLookupBtn') { runTableLookup(); return; }
       if (el.id === 'calcBtn') { runCalc(); return; }
       if (el.id === 'calcFill7888') { fillCalcFrom7888(); return; }
       if (el.id === 'formulaScanBtn') { await scanAllFormulasSmart(); return; }
       if (el.id === 'formulaCalcBtn') { runDynamicFormula(); return; }
+      if (el.id === 'formulaExcelBtn') { await exportSelectedFormulaExcel(); return; }
+      if (el.id === 'codePackExcelBtn') { await exportCurrentCodePackExcel(); return; }
       if (el.id === 'formulaVerifyBtn') { await verifySelectedAiFormula(); return; }
-      if (el.id === 'compareBtn') { await runCompare(); return; }
+      if (el.id === 'compareBtn') { state.compareMode='compare'; await runCompare(); return; }
       if (el.id === 'copyChecklist') { await copyChecklist(); return; }
       if (el.id === 'resetChecklist') { resetChecklist(); return; }
       if (el.id === 'aiChecklist') { await aiChecklist(); return; }
@@ -1394,6 +1961,15 @@ function bind() {
       if (el.id === 'checkArchiveEngines') { await refreshArchiveEngines(true); return; }
       if (el.id === 'open7ZipHelp') { window.open('https://www.7-zip.org/download.html', '_blank', 'noopener,noreferrer'); return; }
       if (el.id === 'runDiagnostics') { await runDiagnostics(); return; }
+      if (el.id === 'checkDocumentHealth') { state.documentHealth=documentHealth(); render(); return; }
+      if (el.id === 'reindexActiveDocument') { await reindexDocument(); return; }
+      if (el.id === 'reindexAllDocuments') { await reindexAllDocuments(); return; }
+      if (el.id === 'exportBackupZip') { await exportBackupZip(); return; }
+      if (el.id === 'restoreBackupBtn') { document.querySelector('#backupRestoreInput')?.click(); return; }
+      if (el.id === 'exportDiagnosticZip') { await exportDiagnosticZip(); return; }
+      if (el.id === 'clearCrashLog') { state.crashLog=[];localStorage.setItem(STORAGE.crashLog,'[]');render();return; }
+      if (el.matches('[data-verify-message]')) { const i=Number(el.dataset.verifyMessage);const m=state.chat[i];if(m&&m.role==='ai'){const q=[...state.chat.slice(0,i)].reverse().find(x=>x.role==='user')?.text||'';m.evidence=answerEvidenceMeta(q,{hits:m.hits||[],stats:m.stats||{}});await persistCurrentChat();render();showToast(`Đã đối chiếu ${m.evidence.sourceCount} nguồn · độ tin cậy ${m.evidence.confidence}.`,'success');}return; }
+      if (el.id === 'compareAuditBtn') { state.compareMode='audit'; await runCompare(); return; }
       if (el.id === 'checkAppUpdate') { await checkAppUpdate(); return; }
       if (el.id === 'copyBuildDiagnostics') { await copyBuildDiagnostics(); return; }
       if (el.matches('[data-jump]')) {
@@ -1413,10 +1989,11 @@ function bind() {
     }
   };
 
-  app.onchange = event => {
+  app.onchange = async event => {
     const el = event.target;
     if (el.id === 'dataInput' || el.id === 'folderInput') { uploadInputs(event); return; }
-    if (el.matches('[data-select]')) { el.checked ? state.selected.add(el.dataset.select) : state.selected.delete(el.dataset.select); render(); return; }
+    if (el.id === 'backupRestoreInput') { const file=el.files?.[0]; if(file){try{await restoreBackupFile(file);}catch(error){recordClientError('restore-backup',error);showToast(`Khôi phục backup lỗi: ${error.message}`,'error');}} el.value=''; return; }
+    if (el.matches('[data-select]')) { const before=[...state.selected]; el.checked ? state.selected.add(el.dataset.select) : state.selected.delete(el.dataset.select); pushUndo({type:'selection',before,after:[...state.selected],label:'đổi nguồn tra cứu'}); render(); return; }
     if (el.matches('[data-check]')) { updateChecklist(Number(el.dataset.check), el.checked); return; }
     if (el.id === 'strictSide') { state.settings.strict = el.checked; saveSettings(); render(); return; }
     if (el.id === 'scopeSelect') { state.settings.scope = el.value; state.searchStats = null; saveSettings(); showToast(`Phạm vi: ${scopeLabel()}.`, 'success'); render(); return; }
@@ -1424,8 +2001,16 @@ function bind() {
     if (el.id === 'pageRange') { jumpPage(Number(el.value)); return; }
     if (el.id === 'tableDiameter') { updateTableClassOptions(); return; }
     if (el.id === 'cType' || el.id === 'cClass') { syncCalcDefaults(); return; }
+    if (el.id === 'cDiameter') { syncCalcClassOptions(); syncCalcDraftFromDom({clearTableSource:true}); return; }
+    if (el.id === 'lookupScopeInput') { state.lookup.scope = el.value || 'smart'; localStorage.setItem(STORAGE.lookupScope, state.lookup.scope); state.lookup.hits = []; state.searchStats = null; render(); return; }
+    if (el.id === 'formulaScopeInput') { state.formulaScanScope = el.value || 'page'; localStorage.setItem(STORAGE.formulaScope, state.formulaScanScope); render(); return; }
     if (el.id === 'formulaScanMode') { state.formulaScanMode = el.value || 'auto'; localStorage.setItem(STORAGE.formulaScanMode, state.formulaScanMode); return; }
+    if (el.id === 'formulaFilterInput') { state.formulaQuery = String(el.value || ''); render(); return; }
     if (el.id === 'formulaSelect') { state.formulaSelection = el.value; localStorage.setItem(STORAGE.formulaSelection, el.value); render(); return; }
+    if (el.matches('[data-doc-category]')) { await changeDocCategory(el.dataset.docCategory, el.value); return; }
+    if (el.id === 'libraryFilterInput') { state.libraryFilter=el.value||'all';localStorage.setItem(STORAGE.libraryFilter,state.libraryFilter);render();return; }
+    if (el.id === 'performanceModeInput') { state.settings.performanceMode=['light','balanced','strong'].includes(el.value)?el.value:'balanced';saveSettings();render();return; }
+    if (el.id === 'fieldModeInput') { state.settings.fieldMode=Boolean(el.checked);saveSettings();render();return; }
     if (el.id === 'providerSelect') { providerChanged(event); return; }
     if (el.id === 'nativePdfModeInput') {
       const next = ['economy','balanced','native'].includes(el.value) ? el.value : 'balanced';
@@ -1441,12 +2026,13 @@ function bind() {
       return;
     }
     if (el.id === 'openaiPdfDetailInput') { state.settings.openaiPdfDetail = ['low','auto','high'].includes(el.value) ? el.value : 'auto'; state.settingsDraft = { ...(state.settingsDraft || {}), openaiPdfDetail:state.settings.openaiPdfDetail }; saveSettings(); return; }
-    if (el.id === 'strictInput') { state.settings.strict = el.checked; }
   };
 
   app.oninput = event => {
     const el = event.target;
     if (el.id === 'chatQuestion') state.chatDraft = el.value;
+    else if (el.id === 'librarySearchInput') { state.libraryQuery=el.value;localStorage.setItem(STORAGE.libraryQuery,state.libraryQuery);const list=document.querySelector('.doc-list');if(list)list.innerHTML=filteredLibraryDocs().length?filteredLibraryDocs().map(docItem).join(''):'<div class="empty-card"><b>Không có tài liệu phù hợp.</b></div>'; }
+    else if (el.id === 'chatHistorySearch') { state.historyQuery=el.value;localStorage.setItem(STORAGE.chatHistoryQuery,state.historyQuery);render(); }
     else if (el.id === 'pdfSearchInput') { state.readerQuery = el.value; state.readerMatchIndex = -1; localStorage.setItem(STORAGE.readerQuery, state.readerQuery); }
     else if (el.id === 'pageRange') { const n=Number(el.value)||1; const label=document.querySelector('#readerStatusPage'); if(label) label.textContent=String(n); }
     else if (el.id === 'modelPickerSearch') {
@@ -1461,6 +2047,9 @@ function bind() {
       if (count) count.textContent = `${visible} model`;
     }
     else if (el.id === 'lookupQuery') state.lookup.draft = el.value;
+    else if (el.id === 'lookupPagesInput') { state.lookup.pages = el.value; localStorage.setItem(STORAGE.lookupPages, state.lookup.pages); }
+    else if (el.id === 'formulaPagesInput') { state.formulaScanPages = el.value; localStorage.setItem(STORAGE.formulaPages, state.formulaScanPages); }
+    else if (['cDiameter','cThickness','cCu','cCe'].includes(el.id)) syncCalcDraftFromDom({clearTableSource:['cDiameter','cThickness','cCe'].includes(el.id)});
     else if (el.id === 'compareQuestion') state.compare.draft = el.value;
     else if (el.id === 'visionModelInput') state.settingsDraft.visionModel = el.value;
     else if (el.id === 'embeddingModelInput') state.settingsDraft.embeddingModel = el.value;
@@ -1507,6 +2096,7 @@ function bind() {
       if (!source?.text) return;
       if (action === 'copy') { try { await navigator.clipboard.writeText(source.text); showToast('Đã copy đoạn đã chọn.', 'success'); } catch { showToast('Không copy tự động được; hãy dùng Ctrl+C.', 'warning'); } }
       else if (action === 'pin') pinPdfSource(source);
+      else if (action === 'note') await addRegionNote(source);
       else if (action === 'ask') { state.chatDraft = `Giải thích đoạn sau từ ${source.standard || source.docName}, trang ${source.page}:\n\n${source.text}`; state.tab='chat'; state.mobile='assistant'; render(); }
       else if (action === 'summary') { state.chatDraft = `Tóm tắt chính xác đoạn sau, không thêm nội dung ngoài nguồn (${source.standard || source.docName}, trang ${source.page}):\n\n${source.text}`; state.tab='chat'; state.mobile='assistant'; render(); }
       else if (action === 'lookup' || action === 'library') {
@@ -1651,6 +2241,7 @@ async function uploadInputs(event) {
       });
       const duplicate = state.docs.find(d => d.fingerprint && d.fingerprint === doc.fingerprint);
       if (duplicate) { clearPdfCache(doc.id); state.selected.add(duplicate.id); duplicated++; continue; }
+      docMeta(doc);
       await saveDocument(doc);
       state.docs.push(doc); state.selected.add(doc.id); state.activeDocId = doc.id; state.page = 1; imported++;
     } catch (error) {
@@ -1663,20 +2254,22 @@ async function uploadInputs(event) {
   clearFormulaCache();
   const importedFormulaStats = formulaStats(state.docs);
   const scanDocs = state.docs.filter(d => d.viewerKind === 'pdf' && d.scannedLikely).length;
-  showToast(`Đã nhập ${imported} tài liệu${duplicated ? ` · ${duplicated} trùng` : ''}${failed ? ` · ${failed} lỗi` : ''} · phát hiện nhanh ${importedFormulaStats.total} công thức${scanDocs ? ` · ${scanDocs} PDF scan cần AI/Vision để lấy đủ công thức` : ''}.`, failed ? 'warning' : 'success');
+  const versionRelations = state.docs.filter(d => relatedDocumentVersions(d).length).length;
+  showToast(`Đã nhập ${imported} tài liệu${duplicated ? ` · ${duplicated} trùng` : ''}${failed ? ` · ${failed} lỗi` : ''} · phát hiện nhanh ${importedFormulaStats.total} công thức${scanDocs ? ` · ${scanDocs} PDF scan cần AI/Vision để lấy đủ công thức` : ''}${versionRelations ? ` · ${versionRelations} tài liệu có phiên bản liên quan` : ''}.`, failed ? 'warning' : 'success');
   render();
 }
 async function removeDoc(id) {
   const doc = state.docs.find(d => d.id === id);
   if (!doc || !confirm(`Xóa “${doc.standard || doc.name}” khỏi thư viện cục bộ?`)) return;
   try {
+    pushUndo({type:'delete-doc',doc,index:state.docs.findIndex(d=>d.id===id),selected:state.selected.has(id),activeDocId:state.activeDocId,label:'xóa tài liệu'});
     await deleteDocument(id);
     clearPdfCache(id);
     clearSearchCache(id);
     state.docs = state.docs.filter(d => d.id !== id);
     state.selected.delete(id);
     if (state.activeDocId === id) { state.activeDocId = state.docs[0]?.id || null; state.page = 1; }
-    showToast('Đã xóa tài liệu.', 'success');
+    showToast('Đã xóa tài liệu. Có thể hoàn tác bằng ↶.', 'success');
   } catch (error) { showToast(`Không xóa được: ${error.message}`, 'error'); }
   render();
 }
@@ -1845,9 +2438,11 @@ Cancel = không gửi ảnh lên AI.`);
       method = 'vision-ai';
     }
 
+    const shellBox = shell.getBoundingClientRect();
+    const sourceRectNorm = shellBox.width && shellBox.height ? { x:image.sourceRect.x/shellBox.width, y:image.sourceRect.y/shellBox.height, width:image.sourceRect.width/shellBox.width, height:image.sourceRect.height/shellBox.height } : null;
     state.lastPdfRegion = {
       docId:doc.id, docName:doc.name, standard:doc.standard, page, text, image,
-      sourceRect:image.sourceRect, method, createdAt:new Date().toISOString()
+      sourceRect:image.sourceRect, sourceRectNorm, method, createdAt:new Date().toISOString()
     };
     showPdfRegionResult(state.lastPdfRegion);
     showToast(method === 'text-layer'
@@ -1860,6 +2455,48 @@ Cancel = không gửi ảnh lên AI.`);
     showToast(`Không đọc được vùng đã chọn: ${error.message}`, 'error');
     box?.classList.remove('busy');
   } finally { state.pdfRegionBusy=false; }
+}
+
+
+async function updateDocMetaWithUndo(doc, mutate, label='cập nhật tài liệu') {
+  if (!doc) return;
+  const before=cloneMeta(docMeta(doc)); mutate(docMeta(doc)); const after=cloneMeta(docMeta(doc));
+  pushUndo({type:'doc-meta',id:doc.id,before,after,label}); await saveDocument(doc); render();
+}
+async function toggleDocPinned(id) {
+  const doc=state.docs.find(d=>d.id===id); if(!doc)return;
+  await updateDocMetaWithUndo(doc,m=>{m.pinned=!m.pinned;},docMeta(doc).pinned?'bỏ ghim tài liệu':'ghim tài liệu');
+}
+async function changeDocCategory(id, category) {
+  const doc=state.docs.find(d=>d.id===id); if(!doc||!DOC_CATEGORIES.some(([x])=>x===category))return;
+  await updateDocMetaWithUndo(doc,m=>{m.category=category;},'đổi loại tài liệu');
+}
+async function addCurrentPageBookmark() {
+  const doc=activeDoc(); if(!doc)return showToast('Hãy mở tài liệu trước.','warning');
+  const meta=docMeta(doc); const existing=meta.bookmarks.find(x=>Number(x.page)===Number(state.page));
+  if(existing){showToast(`Trang ${state.page} đã được đánh dấu.`,'info');state.bookmarkPanelOpen=true;render();return;}
+  const label=window.prompt(`Tên đánh dấu trang ${state.page}:`,`Trang ${state.page}`); if(label===null)return;
+  await updateDocMetaWithUndo(doc,m=>m.bookmarks.push({id:crypto.randomUUID(),kind:'bookmark',page:Number(state.page),label:String(label||`Trang ${state.page}`),createdAt:new Date().toISOString()}),'đánh dấu trang');
+  state.bookmarkPanelOpen=true; showToast(`Đã đánh dấu trang ${state.page}.`,'success');
+}
+async function addRegionNote(source) {
+  const doc=state.docs.find(d=>d.id===source?.docId); if(!doc)return;
+  const note=window.prompt('Ghi chú cho vùng này:',String(source.text||'').slice(0,120)); if(note===null)return;
+  const rect=source.sourceRectNorm||null;
+  await updateDocMetaWithUndo(doc,m=>m.highlights.push({id:crypto.randomUUID(),kind:'highlight',page:Number(source.page)||1,text:String(source.text||'').slice(0,1200),note:String(note||'').trim(),rect,createdAt:new Date().toISOString()}),'thêm ghi chú vùng');
+  showToast('Đã lưu vùng đánh dấu và ghi chú trong tài liệu.','success');
+}
+async function removeBookmarkOrHighlight(id) {
+  const doc=activeDoc(); if(!doc)return;
+  const meta=docMeta(doc); if(!meta.bookmarks.some(x=>x.id===id)&&!meta.highlights.some(x=>x.id===id))return;
+  await updateDocMetaWithUndo(doc,m=>{m.bookmarks=m.bookmarks.filter(x=>x.id!==id);m.highlights=m.highlights.filter(x=>x.id!==id);},'xóa đánh dấu');
+}
+function renderSavedAnnotations(doc, shell, page) {
+  const layer=shell?.querySelector('.pdf-annotation-layer'); if(!layer)return; layer.innerHTML='';
+  for(const item of docMeta(doc).highlights.filter(x=>Number(x.page)===Number(page)&&x.rect)){
+    const r=item.rect; const el=document.createElement('button');el.type='button';el.className='pdf-saved-highlight';el.dataset.annotationId=item.id;el.title=item.note||item.text||`Trang ${page}`;
+    Object.assign(el.style,{left:`${Math.max(0,r.x)*100}%`,top:`${Math.max(0,r.y)*100}%`,width:`${Math.max(.005,r.width)*100}%`,height:`${Math.max(.005,r.height)*100}%`});layer.appendChild(el);
+  }
 }
 
 function pinPdfSource(source) {
@@ -1893,6 +2530,7 @@ function showPdfSelectionPopup(source, { x = 24, y = 80, region = false } = {}) 
       <button type="button" data-pdf-selection-action="summary">Tóm tắt</button>
       <button type="button" data-pdf-selection-action="pin">Dùng làm nguồn</button>
       <button type="button" data-pdf-selection-action="library">Tìm toàn thư viện</button>
+      <button type="button" data-pdf-selection-action="note">★ Ghi chú / đánh dấu</button>
       ${region ? '<button type="button" data-pdf-selection-action="formula">Quét công thức vùng này</button>' : ''}
     </div>`;
   popup._hnlSource = source;
@@ -1944,6 +2582,7 @@ async function renderContinuousPage(doc, shell) {
     shell.style.aspectRatio = 'auto';
     shell.classList.add('rendered');
     await preparePdfSelectionLayer(doc, shell);
+    renderSavedAnnotations(doc, shell, page);
   } catch (error) {
     canvas.dataset.renderKey = '';
     shell.classList.add('render-error');
@@ -1991,7 +2630,7 @@ async function setupContinuousPdfViewer(doc) {
   const shells = [...wrap.querySelectorAll('.pdf-page-shell')];
   activePdfObserver = new IntersectionObserver(entries => {
     for (const entry of entries) if (entry.isIntersecting) renderContinuousPage(doc, entry.target);
-  }, { root:wrap, rootMargin:'900px 0px', threshold:0.01 });
+  }, { root:wrap, rootMargin:`${performanceProfile().observerMargin}px 0px`, threshold:0.01 });
   shells.forEach(s => activePdfObserver.observe(s));
   readerScrollCleanup?.();
   let scrollRaf = 0;
@@ -2045,7 +2684,7 @@ async function drawPage() {
   try {
     await renderPdfPage(doc, state.page, canvas, state.zoom);
     const shell = canvas.closest('.pdf-page-shell');
-    if (shell) await preparePdfSelectionLayer(doc, shell);
+    if (shell) { await preparePdfSelectionLayer(doc, shell); renderSavedAnnotations(doc, shell, state.page); }
   } catch (error) { console.error(error); reportPdfError(error); }
 }
 function jumpPage(page) {
@@ -2217,28 +2856,41 @@ async function scanFormulaPageWithAi(doc, pageObj) {
 
 async function scanAllFormulasSmart() {
   if (state.busy) return showToast('Ứng dụng đang xử lý tác vụ khác.', 'warning');
-  const docs = sourceDocs();
-  if (!docs.length) return showToast('Hãy tải/chọn tài liệu trước khi quét công thức.', 'warning');
+  const scope = state.formulaScanScope || 'page';
+  const target = resolveOperationScope(scope, state.formulaScanPages, 'formula');
+  if (target.error) return showToast(target.error, 'warning');
+  if (scope === 'region') return scanFormulaFromRegion(target.region);
+
+  const scopedDocs = target.docs;
+  if (!scopedDocs.length) return showToast('Phạm vi quét công thức hiện không có tài liệu.', 'warning');
   const mode = state.formulaScanMode || 'auto';
   clearFormulaCache();
-  const localBefore = extractFormulaLibrary(docs).filter(x => !x.aiDetected);
+  const localBefore = extractFormulaLibrary(scopedDocs).filter(x => !x.aiDetected);
   if (mode === 'local') {
-    const fs = formulaStats(docs);
-    showToast(`Quét cục bộ xong: ${fs.total} công thức từ lớp chữ · ${fs.computable} tính được.`, fs.total ? 'success' : 'warning');
+    const fs = formulaStats(scopedDocs);
+    showToast(`Quét cục bộ xong trong ${target.label}: ${fs.total} công thức · ${fs.computable} tính được.`, fs.total ? 'success' : 'warning');
     render(); return;
   }
   if (state.settings.provider === 'local') {
-    const fs = formulaStats(docs);
+    const fs = formulaStats(scopedDocs);
     state.tab = 'settings'; state.mobile = 'assistant'; render();
-    return showToast(`Cục bộ đã thấy ${fs.total} công thức. Muốn đọc công thức trong PDF scan/hình, hãy chọn HNL Offline AI hoặc AI online rồi quay lại Tính → Quét công thức.`, 'warning');
+    return showToast(`Cục bộ thấy ${fs.total} công thức trong ${target.label}. Muốn đọc công thức trong ảnh/scan, hãy chọn HNL Offline AI hoặc AI online.`, 'warning');
   }
-  const plan = docs.map(doc => ({ doc, targets:formulaAiTargets(doc, mode, localBefore) })).filter(x => x.targets.length);
+
+  const plan = scopedDocs.map(scopedDoc => {
+    const original = state.docs.find(d => d.id === scopedDoc.id) || scopedDoc;
+    return { doc:original, targets:formulaAiTargets(scopedDoc, mode, localBefore) };
+  }).filter(x => x.targets.length);
   const totalPages = plan.reduce((n,x)=>n+x.targets.length,0);
   if (!totalPages) {
-    const fs = formulaStats(docs); showToast(`Không có trang nào cần AI quét thêm. Đang có ${fs.total} công thức.`, 'info'); render(); return;
+    const fs = formulaStats(scopedDocs);
+    showToast(`Không có trang nào trong ${target.label} cần AI quét thêm. Đang thấy ${fs.total} công thức.`, 'info'); render(); return;
   }
-  const costNote = state.settings.provider === 'ollama' ? 'AI Offline có thể chạy khá lâu nhưng không tốn API.' : 'AI online có thể phát sinh quota/token theo nhà cung cấp.';
-  if (!confirm(`Quét AI/Vision ${totalPages} trang trong ${plan.length} tài liệu để lấy công thức?\n\n${costNote}\nMỗi công thức sẽ lưu kèm trang nguồn và KHÔNG tự cho phép tính cho tới khi bạn xác minh.`)) return;
+  const costNote = state.settings.provider === 'ollama' ? 'AI Offline có thể chạy lâu nhưng không tốn API.' : 'AI online có thể phát sinh quota/token theo nhà cung cấp.';
+  if (!confirm(`Quét AI/Vision ${totalPages} trang trong phạm vi: ${target.label}?
+
+${costNote}
+HNL KHÔNG tự mở rộng ngoài phạm vi này. Mỗi công thức lưu kèm trang nguồn và ở trạng thái AI Detected cho tới khi bạn xác minh.`)) return;
   state.busy = true;
   let done=0, found=0, failed=0;
   try {
@@ -2270,8 +2922,8 @@ async function scanAllFormulasSmart() {
       await saveDocument(doc);
       clearFormulaCache(doc.id);
     }
-    const fs = formulaStats(docs);
-    showToast(`Quét xong ${totalPages} trang · AI lấy ${found} công thức${failed ? ` · ${failed} trang lỗi` : ''} · Thư viện hiện có ${fs.total} công thức.`, failed ? 'warning' : 'success');
+    const fs = formulaStats(scopedDocs);
+    showToast(`Quét xong ${totalPages} trang · ${target.label} · AI lấy ${found} công thức${failed ? ` · ${failed} trang lỗi` : ''}.`, failed ? 'warning' : 'success');
   } finally {
     state.progress = null; state.busy = false; render();
   }
@@ -2568,6 +3220,25 @@ function mergeCitationHitsFromAnswer(text, hits = [], docs = []) {
   return out;
 }
 
+
+async function prepareOversizePdfPageBatchImages(docs=[], hits=[], tocTargets=[]) {
+  if (state.settings.provider === 'local' || state.settings.nativePdfMode === 'economy') return [];
+  const oversize=docs.filter(d=>d.viewerKind==='pdf' && d.blob && Number(d.size||0)>50*1024*1024);
+  if(!oversize.length)return [];
+  const profile=performanceProfile(), cap=profile.visualPageLimit;
+  const wanted=[]; const seen=new Set();
+  const add=(doc,page,reason)=>{page=Math.max(1,Math.min(Number(doc.pageCount||1),Number(page)||1));const k=`${doc.id}:${page}`;if(seen.has(k)||wanted.length>=cap)return;seen.add(k);wanted.push({doc,page,reason});};
+  for(const doc of oversize){
+    const docHits=hits.filter(h=>h.docId===doc.id).sort((a,b)=>Number(b.score||0)-Number(a.score||0));
+    for(const h of docHits.slice(0,3)){add(doc,h.page,'RAG');add(doc,Number(h.page)+1,'lân cận');add(doc,Number(h.page)-1,'lân cận');}
+    for(const t of tocTargets.filter(x=>x.docId===doc.id).slice(0,2)){add(doc,t.targetPage,'mục lục');add(doc,Number(t.targetPage)+1,'lân cận');}
+  }
+  const out=[];
+  for(const x of wanted){try{const img=await renderPdfPageToBase64(x.doc,x.page,profile.renderScale);out.push({...img,docId:x.doc.id,name:`${x.doc.standard||x.doc.name} · trang ${x.page}`,page:x.page,oversizeBatch:true,reason:x.reason});}catch(error){recordClientError('oversize-page-batch',error);}}
+  if(out.length) state.nativePdfStatus=`PDF >50 MB · Page Batch ${out.length} trang mục tiêu (${profile.label})`;
+  return out;
+}
+
 function recentConversationContext(maxMessages = 8, maxChars = 6500) {
   // During ask/summary/checklist flows the last two rows are the current user
   // request and its temporary "Đang…" assistant placeholder. Exclude them so
@@ -2616,12 +3287,22 @@ async function getAnswer(question, docsOverride = null) {
     && state.settings.connection === 'bridge'
     && state.settings.semanticRerank
     && (mode === 'hybrid' || mode === 'auto');
-  const retrievalLimit = mode === 'fast' ? 32 : (broadQuery ? 84 : 44);
-  const candidateLimit = semanticRequested ? (broadQuery ? 140 : 96) : retrievalLimit;
+  const perf = performanceProfile();
+  const baseRetrievalLimit = mode === 'fast' ? 32 : (broadQuery ? 84 : 44);
+  const retrievalLimit = Math.max(20, Math.round(baseRetrievalLimit * perf.retrievalScale));
+  const candidateLimit = semanticRequested ? Math.max(retrievalLimit, Math.round((broadQuery ? 140 : 96) * perf.retrievalScale)) : retrievalLimit;
   const useDeep = mode === 'deep' || mode === 'hybrid' || (mode === 'auto' && broadQuery);
   let hits = useDeep
     ? deepSearchChunks(question, textDocs, candidateLimit)
     : smartSearchChunks(question, textDocs, candidateLimit, { perDoc: mode === 'fast' ? 4 : 7 });
+
+  // Built-in Code Pack index routes scanned/visual standards to the right page, formula or table.
+  // It is an index only: final technical statements still require the original PDF page/native document.
+  const packHits = codePackSearch(question, docs, 14);
+  if (packHits.length) {
+    const seenPack = new Set(packHits.map(h => `${h.docId}:${h.page}:${h.text}`));
+    hits = [...packHits, ...hits.filter(h => !seenPack.has(`${h.docId}:${h.page}:${h.text}`))];
+  }
 
   // Exact phrase scan is independent of top-k/embedding rank. This is crucial
   // for technical questions such as “cọc chống là gì”: the definition in mục 6
@@ -2745,6 +3426,9 @@ async function getAnswer(question, docsOverride = null) {
     try { standaloneImages.push({ data: await fileToBase64(d.blob), mimeType: d.type || 'image/jpeg', name: d.name, docId: d.id }); } catch { /* skip */ }
   }
   const images = [...targeted.images, ...standaloneImages];
+  const oversizePageBatch = await prepareOversizePdfPageBatchImages(docs, hits, tocTargets);
+  if (oversizePageBatch.length) images.push(...oversizePageBatch);
+  state.searchStats = { ...(state.searchStats || stats), oversizePageBatch:oversizePageBatch.length, performanceMode:state.settings.performanceMode || 'balanced' };
 
   const qNorm = String(question).toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
   const dMatch = qNorm.match(/(?:^|\s)d\s*(\d{3,4})(?:\s|$)/);
@@ -2811,7 +3495,7 @@ async function getAnswer(question, docsOverride = null) {
     if (retry?.trim()) text = retry;
   }
   hits = mergeCitationHitsFromAnswer(text, hits, docs);
-  return { text, hits, stats:{ ...stats, nativePdfCount:nativeDocs.length, nativePdfMode:state.settings.nativePdfMode } };
+  return { text, hits, stats:{ ...(state.searchStats || stats), nativePdfCount:nativeDocs.length, nativePdfMode:state.settings.nativePdfMode } };
 }
 
 async function askQuestion(questionOverride = '') {
@@ -2827,7 +3511,8 @@ async function askQuestion(questionOverride = '') {
   render();
   try {
     const answer = await getAnswer(question);
-    state.chat[state.chat.length - 1] = { role:'ai', text:answer.text, hits:answer.hits, provider:state.settings.provider, model:providerModel(), createdAt:new Date().toISOString() };
+    const evidence = answerEvidenceMeta(question, answer);
+    state.chat[state.chat.length - 1] = { role:'ai', text:answer.text, hits:answer.hits, stats:answer.stats || null, evidence, provider:state.settings.provider, model:providerModel(), createdAt:new Date().toISOString() };
   } catch (error) {
     state.chat[state.chat.length - 1] = { role:'ai', text:`Lỗi: ${error.message}`, hits:[], provider:state.settings.provider, model:providerModel(), createdAt:new Date().toISOString() };
   } finally {
@@ -2885,39 +3570,67 @@ async function aiSummaryAll() {
   finally { state.busy=false; await persistCurrentChat(); render(); }
 }
 
-function runLookup() {
+async function runLookup() {
   const input = document.querySelector('#lookupQuery');
   const query = String(input?.value || state.lookup.draft || '').trim();
   if (!query) return showToast('Nhập nội dung cần tìm trong PDF.', 'warning');
-  const docs = sourceDocs().filter(d => d.viewerKind !== 'image');
-  if (!docs.length) return showToast('Chưa có nguồn dữ liệu chữ để tra cứu.', 'warning');
+
+  // v1.9.26 regression rule: keep the v1.9.23 lookup brain exactly
+  // (searchEveryPage + TCVN 7888 table assist). v1.9.25 only contributes
+  // the v1.9.25 UI scope that limits which docs/pages are handed to that brain.
+  const scope = state.lookup.scope || 'smart';
+  const target = resolveOperationScope(scope, state.lookup.pages, 'lookup');
+  if (target.error) return showToast(target.error, 'warning');
+
+  let docs;
+  if (scope === 'region') {
+    const region = target.region;
+    const doc = state.docs.find(d => d.id === region?.docId) || activeDoc();
+    if (!region || !doc) return showToast('Vùng chọn gần nhất không còn tài liệu nguồn.', 'warning');
+    docs = [{ ...doc, pages:[{ page:Number(region.page)||1, text:String(region.text || ''), regionOnly:true }] }];
+  } else {
+    docs = target.docs.filter(d => d.viewerKind !== 'image');
+  }
+  if (!docs.length) return showToast('Chưa có nguồn dữ liệu chữ để tra cứu trong phạm vi đã chọn.', 'warning');
+
   state.lookup.query = query;
   state.lookup.draft = query;
 
-  // v1.4 page search scans EVERY page first, then ranks the matching pages.
+  // EXACT v1.9.23 lookup algorithm, applied only to the scoped corpus.
   const stats = corpusStats(docs);
-  state.searchStats = stats;
+  state.searchStats = { ...stats, lookupScope:scope, lookupScopeLabel:target.label, searchBrain:'v1.9.23' };
   let hits = searchEveryPage(query, docs, 100);
 
-  if (query && sourceHas7888()) {
+  if (query && docs.some(is7888)) {
     const qNorm = query.toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
     const dMatch = qNorm.match(/(?:^|\s)(?:d|phi|ø)?\s*(\d{3,4})(?:\s|$)/);
     const classMatch = qNorm.match(/(?:cap|loai)\s*(ab|a|b|c)(?:\s|$)/);
     if (dMatch && classMatch) {
       const row = lookup7888(Number(dMatch[1]), classMatch[1].toUpperCase());
-      const doc = find7888Doc();
+      const scoped7888 = docs.find(is7888);
+      const doc = scoped7888 ? (state.docs.find(d => d.id === scoped7888.id) || scoped7888) : null;
       if (row && doc) {
         const page = row.diameter <= 600 ? 10 : 11;
-        const tableHit = {
-          docId: doc.id, docName: doc.name, standard: doc.standard, page, score: 999,
-          text: `Bảng 1 — D${row.diameter}, cấp ${row.loadClass}: t = ${row.thickness} mm; mômen uốn nứt ≥ ${row.crackMoment} kN·m; ứng suất hữu hiệu ${row.effectiveStress} MPa; bền cắt ≥ ${row.shearResistance} kN (áp dụng PHC); chiều dài ${row.lengthRange} m.`
-        };
-        hits = [tableHit, ...hits.filter(h => !(h.docId === tableHit.docId && h.page === tableHit.page))].slice(0, 100);
+        const scopedDoc = docs.find(d => d.id === doc.id);
+        const allowedPage = !scopedDoc?._hnlScopedPages || scopedDoc._hnlScopedPages.includes(page);
+        if (allowedPage) {
+          const tableHit = {
+            docId: doc.id, docName: doc.name, standard: doc.standard, page, score: 999,
+            text: `Bảng 1 — D${row.diameter}, cấp ${row.loadClass}: t = ${row.thickness} mm; mômen uốn nứt ≥ ${row.crackMoment} kN·m; ứng suất hữu hiệu ${row.effectiveStress} MPa; bền cắt ≥ ${row.shearResistance} kN (áp dụng PHC); chiều dài ${row.lengthRange} m.`
+          };
+          hits = [tableHit, ...hits.filter(h => !(h.docId === tableHit.docId && h.page === tableHit.page))].slice(0, 100);
+        }
       }
     }
   }
+
   state.lookup.hits = hits;
-  showToast(hits.length ? `Đã quét ${stats.textPages}/${stats.pages} trang và tìm thấy ${hits.length} trang liên quan.` : `Đã quét ${stats.textPages}/${stats.pages} trang nhưng chưa tìm thấy nội dung phù hợp.`, hits.length ? 'success' : 'warning');
+  showToast(
+    hits.length
+      ? `Đã quét ${stats.textPages}/${stats.pages} trang trong ${target.label} và tìm thấy ${hits.length} trang liên quan.`
+      : `Đã quét ${stats.textPages}/${stats.pages} trang trong ${target.label} nhưng chưa tìm thấy nội dung phù hợp.`,
+    hits.length ? 'success' : 'warning'
+  );
   render();
 }
 
@@ -2938,48 +3651,112 @@ function runTableLookup() {
   render();
 }
 
+function syncCalcClassOptions() {
+  const type = String(document.querySelector('#cType')?.value || 'PHC').toUpperCase();
+  const D = Number(document.querySelector('#cDiameter')?.value || 600);
+  const select = document.querySelector('#cClass');
+  if (!select) return;
+  const current = String(select.value || 'B').toUpperCase();
+  let classes = classesForPileType7888(D, type);
+  if (!classes.length) classes = type === 'NPH' ? ['A','B','C'] : ['A','AB','B','C'];
+  select.innerHTML = classes.map(x => `<option value="${x}" ${x === current ? 'selected' : ''}>${x}</option>`).join('');
+  if (!classes.includes(current)) select.value = classes.includes('B') ? 'B' : classes[0];
+  const fill = document.querySelector('#calcFill7888');
+  const hint = document.querySelector('#calcSourceHint');
+  const exact = lookupPileType7888(D, select.value, type);
+  if (fill) {
+    fill.disabled = !sourceHas7888();
+    fill.textContent = type === 'NPH' ? 'Nạp Bảng 2 · NPH' : 'Nạp Bảng 1 · PC/PHC';
+  }
+  if (hint) hint.textContent = exact
+    ? `${type === 'NPH' ? `Bảng 2 · ${exact.designation}` : 'Bảng 1'} có tổ hợp D${D} · cấp ${select.value}. Bấm Nạp bảng để lấy t và σce.`
+    : `${type === 'NPH' ? 'Bảng 2 NPH' : 'Bảng 1 PC/PHC'} không có tổ hợp D${D} · cấp ${select.value}; có thể nhập hình học thủ công nhưng lịch sử sẽ ghi “Nhập tay”.`;
+}
 function syncCalcDefaults() {
-  const type = document.querySelector('#cType')?.value || 'PHC';
+  syncCalcClassOptions();
+  const type = String(document.querySelector('#cType')?.value || 'PHC').toUpperCase();
   const cls = document.querySelector('#cClass')?.value || 'B';
   const cu = document.querySelector('#cCu');
   const ce = document.querySelector('#cCe');
   if (cu) cu.value = type === 'PC' ? 60 : 80;
   if (ce) ce.value = loadClassSigmaCe[cls] ?? 8;
+  syncCalcDraftFromDom({clearTableSource:true});
 }
 function fillCalcFrom7888() {
+  const type = String(document.querySelector('#cType')?.value || 'PHC').toUpperCase();
   const D = Number(document.querySelector('#cDiameter')?.value || 600);
-  const cls = document.querySelector('#cClass')?.value || 'B';
-  const row = lookup7888(D, cls);
-  if (!row) return showToast('Không có tổ hợp này trong Bảng 1.', 'warning');
+  const cls = String(document.querySelector('#cClass')?.value || 'B').toUpperCase();
+  const row = lookupPileType7888(D, cls, type);
+  const table = type === 'NPH' ? 'Bảng 2' : 'Bảng 1';
+  if (!row) return showToast(`Không có tổ hợp ${type} D${D} · cấp ${cls} trong ${table} TCVN 7888:2014.`, 'warning');
   document.querySelector('#cThickness').value = row.thickness;
   document.querySelector('#cCe').value = row.effectiveStress;
-  showToast('Đã nạp chiều dày và ứng suất hữu hiệu từ Bảng 1.', 'success');
+  state.calcDraft = {
+    ...syncCalcDraftFromDom(), type, loadClass:cls, diameter:D, thickness:Number(row.thickness), sigmaCe:Number(row.effectiveStress),
+    tableSource:table, tablePage:type === 'NPH' ? 12 : (D <= 600 ? 10 : 11), designation:row.designation || ''
+  };
+  const hint = document.querySelector('#calcSourceHint');
+  if (hint) hint.textContent = `Đã nạp ${table}${row.designation ? ` · ${row.designation}` : ''} · trang ${state.calcDraft.tablePage}: t=${row.thickness} mm, σce=${row.effectiveStress} MPa.`;
+  showToast(`Đã nạp ${table}${row.designation ? ` · ${row.designation}` : ''} từ TCVN 7888:2014.`, 'success');
 }
 function runCalc() {
   const output = document.querySelector('#calcResult');
   if (!output) return;
   try {
-    const type = document.querySelector('#cType').value;
-    const D = Number(document.querySelector('#cDiameter').value);
-    const t = Number(document.querySelector('#cThickness').value);
+    const draft = syncCalcDraftFromDom();
+    const type = draft.type;
+    const cls = draft.loadClass;
+    if (type === 'NPH' && cls === 'AB') throw new Error('NPH theo TCVN 7888:2014 chỉ có cấp A, B, C; không có cấp AB.');
+    const D = Number(draft.diameter);
+    const t = Number(draft.thickness);
+    const minSigmaCu = type === 'PC' ? 60 : 80;
+    if (Number(draft.sigmaCu) < minSigmaCu) throw new Error(`${type} theo TCVN 7888:2014 yêu cầu σcu không nhỏ hơn ${minSigmaCu} MPa.`);
     const area = annulusAreaMm2({ diameterMm: D, thicknessMm: t });
     const alpha = type === 'PC' ? 4 : 3.5;
-    const result = axialResistance({
-      areaMm2: area,
-      sigmaCu: document.querySelector('#cCu').value,
-      sigmaCe: document.querySelector('#cCe').value,
-      alpha
-    });
-    output.innerHTML = `<div class="calc-result"><div class="calc-main"><span>Sức chịu tải dài hạn</span><b>${result.longTermKn.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} kN</b></div><div class="metric-grid three"><div><span>A₀</span><b>${area.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} mm²</b></div><div><span>Ngắn hạn</span><b>${result.shortTermKn.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} kN</b></div><div><span>80% ngắn hạn</span><b>${result.recommendedMaxKn.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} kN</b></div></div><div class="footnote">α = ${alpha}; ứng suất quy đổi = ${result.stress.toFixed(3)} MPa. Luôn kiểm tra điều kiện áp dụng trong Phụ lục B.</div></div>`;
+    const result = axialResistance({ areaMm2:area, sigmaCu:draft.sigmaCu, sigmaCe:draft.sigmaCe, alpha });
+    const tableNote = draft.tableSource
+      ? `${draft.tableSource}${draft.designation ? ` · ${draft.designation}` : ''}${draft.tablePage ? ` · trang ${draft.tablePage}` : ''}`
+      : 'Thông số hình học/σce nhập tay';
+    output.innerHTML = `<div class="calc-result"><div class="calc-main"><span>Sức chịu tải dài hạn</span><b>${result.longTermKn.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} kN</b></div><div class="metric-grid three"><div><span>A₀</span><b>${area.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} mm²</b></div><div><span>Ngắn hạn</span><b>${result.shortTermKn.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} kN</b></div><div><span>80% ngắn hạn</span><b>${result.recommendedMaxKn.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} kN</b></div></div><div class="footnote">α = ${alpha}; ứng suất quy đổi = ${result.stress.toFixed(3)} MPa. ${esc(tableNote)}. Luôn kiểm tra điều kiện áp dụng trong Phụ lục B.</div></div>`;
+    const sourceDoc = find7888Doc();
     void recordCalculation({
       kind:'verified-7888', type:'Sức chịu tải cọc', title:`${type} · D${D} · sức chịu tải dài hạn`,
-      inputs:{ cType:type, cClass:document.querySelector('#cClass')?.value || 'B', cDiameter:D, cThickness:t, cCu:document.querySelector('#cCu')?.value || '', cCe:document.querySelector('#cCe')?.value || '' },
+      inputs:{ cType:type, cClass:cls, cDiameter:D, cThickness:t, cCu:draft.sigmaCu, cCe:draft.sigmaCe },
       result:{ areaMm2:area, longTermKn:result.longTermKn, shortTermKn:result.shortTermKn, recommendedMaxKn:result.recommendedMaxKn, stressMpa:result.stress, alpha },
-      resultText:`${result.longTermKn.toLocaleString('vi-VN', {maximumFractionDigits:1})} kN`, source:{standard:'TCVN 7888:2014', section:'Phụ lục B'}
+      resultText:`${result.longTermKn.toLocaleString('vi-VN', {maximumFractionDigits:1})} kN`,
+      source:{docId:sourceDoc?.id || null, standard:'TCVN 7888:2014', section:'Phụ lục B', page:type === 'PC' ? 32 : 33, formula:type === 'PC' ? '(B.2)/(B.3)' : '(B.4)/(B.5)', maxFormula:'Pmax ≤ 80% RaShort', table:draft.tableSource || 'Nhập tay', tablePage:draft.tablePage || null, designation:draft.designation || ''}
     });
     showToast('Đã tính toán xong và lưu vào lịch sử cục bộ.', 'success');
     requestAnimationFrame(() => output.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
   } catch (error) { output.innerHTML = `<div class="notice error">${esc(error.message)}</div>`; showToast(error.message, 'error'); }
+}
+
+async function exportSelectedFormulaExcel() {
+  const item = selectedFormulaItem();
+  if (!item) return showToast('Chưa chọn công thức để xuất Excel.', 'warning');
+  const values = {};
+  for (const input of document.querySelectorAll('[data-formula-var]')) {
+    const name = input.dataset.formulaVar;
+    const value = Number(input.value);
+    if (name && Number.isFinite(value)) values[name] = value;
+  }
+  try {
+    await exportFormulaWorkbook(item, { values, codePack:codePackForDoc(state.docs.find(d=>d.id===item.docId)) });
+    showToast(item.computable ? 'Đã xuất Excel có công thức và thuyết minh nguồn.' : 'Đã xuất Excel tham chiếu. Công thức chưa Verified sẽ không tự tính.', 'success');
+  } catch (error) {
+    showToast(`Không xuất được Excel: ${error.message}`, 'error');
+  }
+}
+
+
+async function exportCurrentCodePackExcel() {
+  const doc = state.docs.find(d=>d.id===state.currentDocId) || sourceDocs().find(d=>codePackForDoc(d));
+  const pack = codePackForDoc(doc);
+  if (!pack) return showToast('Tài liệu hiện tại chưa có Code Pack nạp sẵn.', 'warning');
+  try {
+    await exportCodePackWorkbook(pack);
+    showToast(`Đã xuất Excel Code Pack ${pack.standard}: công thức, mục/Điều, danh mục bảng và các bảng tra đã Verified.`, 'success');
+  } catch (error) { showToast(`Không xuất được Code Pack Excel: ${error.message}`, 'error'); }
 }
 
 function runDynamicFormula() {
@@ -2994,9 +3771,18 @@ function runDynamicFormula() {
     const values = {};
     document.querySelectorAll('[data-formula-var]').forEach(el => { values[el.dataset.formulaVar] = Number(el.value); });
     for (const v of item.variables) if (!Number.isFinite(values[v])) throw new Error(`Chưa nhập giá trị hợp lệ cho ${v}.`);
-    const result = evaluateExpression(item.rhs, values);
-    output.innerHTML = `<div class="calc-result"><div class="calc-main"><span>${esc(item.lhs || 'Kết quả')}</span><b>${Number(result).toLocaleString('vi-VN', { maximumFractionDigits: 8 })}</b></div><div class="footnote">Kết quả chưa tự gán đơn vị vì đơn vị phụ thuộc định nghĩa biến trong tiêu chuẩn. Đối chiếu ${esc(item.standard || item.docName)} · Trang ${item.page} trước khi sử dụng.</div></div>`;
-    void recordCalculation({ kind:'dynamic-formula', type:'Công thức từ PDF', title:`${item.label || item.lhs || 'Công thức'} · ${item.standard || item.docName}`, inputs:values, result:{ value:Number(result), lhs:item.lhs || '' }, resultText:String(Number(result).toLocaleString('vi-VN', {maximumFractionDigits:8})), source:{docId:item.docId, standard:item.standard || item.docName, page:item.page, label:item.label || '', verified:Boolean(item.verified)} });
+    for (const [v, minimum] of Object.entries(item.inputMinimums || {})) {
+      if (Number(values[v]) < Number(minimum)) throw new Error(`${v} phải ≥ ${minimum}${item.variableUnits?.[v] ? ` ${item.variableUnits[v]}` : ''} theo điều kiện áp dụng của công thức.`);
+    }
+    const rawResult = evaluateExpression(item.rhs, values);
+    const scale = Number.isFinite(Number(item.resultScale)) ? Number(item.resultScale) : 1;
+    const result = Number(rawResult) * scale;
+    const outputUnit = String(item.outputUnit || '').trim();
+    const unitNote = outputUnit
+      ? `Đơn vị kết quả: ${outputUnit}${scale !== 1 ? ` · hệ số đổi đơn vị ${scale}` : ''}.`
+      : 'Kết quả chưa tự gán đơn vị vì công thức này chưa có sơ đồ đơn vị đã xác minh.';
+    output.innerHTML = `<div class="calc-result"><div class="calc-main"><span>${esc(item.lhs || 'Kết quả')}</span><b>${Number(result).toLocaleString('vi-VN', { maximumFractionDigits: 8 })}${outputUnit && outputUnit !== '—' ? ` ${esc(outputUnit)}` : ''}</b></div><div class="footnote">${esc(unitNote)} Đối chiếu ${esc(item.standard || item.docName)} · Trang ${item.page} trước khi sử dụng.</div></div>`;
+    void recordCalculation({ kind:'dynamic-formula', type:'Công thức từ PDF', title:`${item.label || item.lhs || 'Công thức'} · ${item.standard || item.docName}`, inputs:values, result:{ value:Number(result), rawValue:Number(rawResult), resultScale:scale, outputUnit, lhs:item.lhs || '' }, resultText:`${Number(result).toLocaleString('vi-VN', {maximumFractionDigits:8})}${outputUnit && outputUnit !== '—' ? ` ${outputUnit}` : ''}`, source:{docId:item.docId, standard:item.standard || item.docName, page:item.page, label:item.label || '', verified:Boolean(item.verified)} });
     showToast('Đã tính công thức và lưu vào lịch sử cục bộ.', 'success');
   } catch (error) {
     output.innerHTML = `<div class="notice error">${esc(error.message)}</div>`;
@@ -3022,22 +3808,32 @@ async function runCompare() {
   if (!query) return showToast('Nhập nội dung cần so sánh.', 'warning');
   state.compare.query = query;
   state.compare.draft = query;
-  state.compare.text = 'Đang so sánh…';
+  state.compare.text = state.compareMode === 'audit' ? 'Đang kiểm tra mâu thuẫn hồ sơ…' : 'Đang so sánh…';
   state.compare.hits = [];
   state.busy = true;
   render();
   try {
+    const audit = state.compareMode === 'audit';
     if (state.settings.provider === 'local') {
-      const result = localCompareText(query, docs);
+      const result = localCompareText(audit ? `Tìm điểm mâu thuẫn hoặc khác biệt: ${query}` : query, docs);
       state.compare.text = result.text;
       state.compare.hits = result.hits;
     } else {
-      const answer = await getAnswer(`So sánh các tài liệu theo yêu cầu sau. Tách từng tiêu chuẩn, chỉ ra điểm giống/khác có nguồn trang; nếu không đủ căn cứ thì nói rõ.\n\n${query}`, docs);
+      const instruction = audit
+        ? `KIỂM TRA HỒ SƠ NHIỀU TÀI LIỆU theo yêu cầu sau. Tìm mâu thuẫn về số liệu, tiêu chuẩn viện dẫn, điều kiện áp dụng, vật liệu, dung sai, nghiệm thu và công thức. Lập bảng: Vấn đề | Tài liệu A | Tài liệu B | Mức độ | Nguồn trang. Không coi khác cách diễn đạt là mâu thuẫn nếu ý nghĩa tương đương. Nếu chưa đủ căn cứ phải ghi Cần kiểm tra.\n\n${query}`
+        : `So sánh các tài liệu theo yêu cầu sau. Tách từng tiêu chuẩn, chỉ ra điểm giống/khác có nguồn trang; nếu không đủ căn cứ thì nói rõ.\n\n${query}`;
+      const answer = await getAnswer(instruction, docs);
       state.compare.text = answer.text;
       state.compare.hits = answer.hits;
     }
-  } catch (error) { state.compare.text = `Lỗi: ${error.message}`; }
-  finally { state.busy = false; showToast(state.compare.text.startsWith('Lỗi:') ? 'So sánh gặp lỗi.' : 'Đã so sánh nguồn.', state.compare.text.startsWith('Lỗi:') ? 'error' : 'success'); render(); }
+  } catch (error) {
+    state.compare.text = `Lỗi: ${error.message}`;
+    recordClientError('compare', error);
+  } finally {
+    state.busy = false;
+    showToast(state.compare.text.startsWith('Lỗi:') ? 'So sánh gặp lỗi.' : (state.compareMode === 'audit' ? 'Đã kiểm tra mâu thuẫn hồ sơ.' : 'Đã so sánh nguồn.'), state.compare.text.startsWith('Lỗi:') ? 'error' : 'success');
+    render();
+  }
 }
 
 function updateChecklist(index, checked) {
@@ -3368,8 +4164,10 @@ function updateSettingsFromForm() {
 function updateConnectionStatusUi(status, { pending = false } = {}) {
   const box = document.querySelector('#connectionStatusBox');
   const label = document.querySelector('#connectionStateLabel');
-  const badge = document.querySelector('#openSettings');
-  if (badge) badge.classList.toggle('ok', Boolean(status?.ok) && !pending);
+  const dot = document.querySelector('#aiConnectionDot');
+  const summaryStatus = document.querySelector('#aiConnectionSummaryStatus');
+  if (dot) dot.classList.toggle('ok', Boolean(status?.ok) && !pending);
+  if (summaryStatus) summaryStatus.textContent = pending ? 'Đang kiểm tra · AI & kết nối' : status?.ok ? 'Đã kết nối · AI & kết nối' : status ? 'Cần kiểm tra · AI & kết nối' : 'AI & kết nối';
   if (label) label.textContent = pending ? 'Đang kiểm tra…' : status?.ok ? 'Sẵn sàng' : status ? 'Có lỗi' : 'Chưa kiểm tra';
   if (!box) return;
   if (!pending && !status) { box.hidden = true; return; }
@@ -3509,6 +4307,16 @@ async function runDiagnostics() {
       tests.push(['HNL Local Engine', false, error.message]);
     }
   }
+  const active = activeDoc();
+  if (active) {
+    const health = documentHealth(active);
+    tests.push(['Sức khỏe tài liệu', health.score >= 60, `${health.score}/100 · ${health.label}`]);
+    tests.push(['Chỉ mục văn bản', Boolean(active.textIndexVersion), `Index v${active.textIndexVersion || 0} · ${active.pageCount || 0} trang`]);
+  }
+  tests.push(['Kiến trúc UI state', document.querySelectorAll('#providerSelect').length <= 1 && document.querySelectorAll('#modelInput').length <= 1 && document.querySelectorAll('#nativePdfModeInput').length <= 1, 'Provider / Model / Native PDF chỉ có một nguồn điều khiển']);
+  tests.push(['Chế độ hiệu năng', Boolean(PERFORMANCE_PROFILES[state.settings.performanceMode]), `${performanceProfile().label || state.settings.performanceMode}`]);
+  tests.push(['Workspace', true, state.settings.fieldMode ? 'Chế độ hiện trường · tự lưu' : 'Workspace tự lưu']);
+  tests.push(['Nhật ký lỗi', true, `${state.crashLog.length} lỗi cục bộ · API key được lọc khỏi gói chẩn đoán`]);
   const passed = tests.filter(t => t[1]).length;
   state.diagnosticSummary = { passed, total:tests.length, ok:passed === tests.length };
   state.diagnosticHtml = `<div class="diagnostic"><div class="diagnostic-score">${passed}/${tests.length} kiểm tra đạt</div>${tests.map(([name, ok, detail]) => `<div class="diagnostic-row ${ok ? 'ok' : 'bad'}"><span>${ok ? '✓' : '!'}</span><b>${esc(name)}</b><small>${esc(detail)}</small></div>`).join('')}</div>`;
@@ -3520,11 +4328,13 @@ async function runDiagnostics() {
   try {
     const [docs, sessions, calculations] = await Promise.all([getDocuments(), getChatSessions(), getCalculations()]);
     state.docs = docs;
-    state.docs.forEach(d => { if (!d.viewerKind) d.viewerKind = 'pdf'; state.selected.add(d.id); });
-    state.activeDocId = state.docs[0]?.id || null;
+    state.docs.forEach(d => { if (!d.viewerKind) d.viewerKind = 'pdf'; docMeta(d); state.selected.add(d.id); });
+    restoreWorkspace();
+    if (!state.docs.some(d => d.id === state.activeDocId)) state.activeDocId = state.docs[0]?.id || null;
+    state.page = Math.max(1, Math.min(state.docs.find(d=>d.id===state.activeDocId)?.pageCount || 1, Number(state.page || 1)));
     state.chatSessions = sessions;
     state.calculations = calculations;
-    const latest = sessions[0];
+    const latest = sessions.find(x => x.id === state.activeChatSessionId) || sessions[0];
     if (latest) {
       state.activeChatSessionId = latest.id;
       state.chat = (latest.messages || []).map(m => ({ ...m, hits:Array.isArray(m.hits) ? m.hits : [] }));

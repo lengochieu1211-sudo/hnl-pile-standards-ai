@@ -1,4 +1,80 @@
-# HNL Pile Standards AI v1.9.23
+# HNL Pile Standards AI v1.11.0
+
+
+
+## v1.11.0 — Deep 3-TCVN Code Packs · Verified Tables · Excel Calculation Trace
+
+- Nạp sẵn Code Pack sâu cho **TCVN 7888:2014**, **TCVN 10304:2025** và **TCVN 5574:2018** để AI định vị Điều/Bảng/Công thức ngay cả khi PDF scan hoặc text layer kém.
+- Giữ nguyên byte-for-byte `src/search.js` của v1.9.23; Code Pack chỉ bổ sung chỉ mục ưu tiên và không thay bộ não RAG đã tra đúng “cọc chống”.
+- TCVN 7888 có 18 công thức được lập chỉ mục; B.1–B.5 được xác minh, Bảng 1/Bảng 2 có dữ liệu cấu trúc và NPH vẫn chỉ A/B/C.
+- TCVN 10304 có 48 công thức chính và 18 bảng được lập chỉ mục; chỉ các biểu thức/bảng đã đối chiếu rõ mới được đánh dấu Verified, phần còn lại dùng để định vị/giải thích và mở trang nguồn.
+- TCVN 5574 có hơn 300 công thức đánh số được lập chỉ mục sâu; các công thức text extraction chưa đủ rõ không tự chạy số học. Bảng vật liệu Verified gồm Rb/Rbt/Eb và Rs/Rsc/Rsw.
+- Thêm **Xuất Excel công thức**: sheet Hướng dẫn, Tính toán, Thuyết minh và Bảng tra; mục chưa Verified chỉ xuất tham chiếu, tuyệt đối không tạo công thức Excel chạy.
+- Thêm **Xuất Excel Code Pack** cho toàn tiêu chuẩn: danh mục công thức, Điều/Phụ lục, danh mục bảng và bảng tra Verified cấu trúc.
+- Bảng tra vật liệu TCVN 5574 sửa đúng B30: Rb=17 MPa, Rbt=1,15 MPa, Eb=32 500 MPa; CB400-V: Rs/Rsc=350 MPa, Rsw=280 MPa.
+
+
+## v1.10.2 — Runtime Acceptance · NPH Table 2 · Verified Source Guard
+
+- Bổ sung dữ liệu **Bảng 2 NPH** đã đối chiếu trực tiếp TCVN 7888:2014 trang 12; Máy tính có thể nạp đúng t/σce cho NPH, không mượn Bảng 1 và không có cấp AB.
+- Khóa nhận diện tiêu chuẩn cho công cụ **Verified**: chỉ mở TCVN 7888 calculator/formula khi metadata hoặc nội dung PDF xác nhận rõ `TCVN 7888:2014`; tên file chỉ chứa `7888` hoặc bản `2008` không còn được coi là đủ bằng chứng.
+- Giữ dữ liệu Máy tính qua full-render bằng `calcDraft`; chỉnh tay D/t/σce tự xóa nhãn nguồn bảng để lịch sử không ghi sai “Bảng 1/Bảng 2”.
+- Lịch sử tính hiển thị nguồn và có nút nhảy thẳng về trang công thức; metadata tách trang công thức với trang Bảng 1/Bảng 2 và ký hiệu NPH Dk-D.
+- Khóa điều kiện áp dụng Phụ lục B: PC không cho tính với σcu < 60 MPa; PHC/NPH không cho tính với σcu < 80 MPa. Các công thức Verified B.2–B.5 cũng mang guard tối thiểu tương ứng.
+- Giữ nguyên byte-for-byte `src/search.js` của v1.9.23 và Golden Test `cọc chống`, `cọc ma sát`, TOC và Phụ lục cuối tài liệu.
+- Runtime Acceptance tăng regression cho NPH Bảng 2, edition guard, unit conversion, source linkage, UI state, archive/offline, version/workflow và responsive.
+
+
+## v1.10.1 — Calculation Integrity · Unit-safe Formula · NPH Logic Audit
+
+- Sửa lỗi đơn vị trong Thư viện công thức Phụ lục B: MPa × mm² sinh N, nay công thức B.1–B.5 đổi đúng sang kN trước khi hiển thị/lưu lịch sử; thêm đơn vị từng biến và đơn vị kết quả.
+- Tách PC / PHC / NPH trong Máy tính; NPH chỉ cho cấp A/B/C theo TCVN 7888:2014 và không còn tự nạp nhầm dữ liệu Bảng 1.
+- Máy tính TCVN 7888 lưu liên kết nguồn đầy đủ hơn: docId, Phụ lục B, trang, nhãn công thức và Bảng 1/Bảng 2.
+- Khóa cứng công thức AI/Vision: metadata cũ `allowCompute` không thể bỏ qua trạng thái; chỉ `verified=true` sau xác nhận trang gốc mới được tính tự động.
+- Giữ nguyên byte-for-byte `src/search.js` của v1.9.23 và toàn bộ Golden Test “cọc chống”.
+- Tăng Version Gate cho Service Worker/runtime version; pin phiên bản dependency trực tiếp để giảm trôi build khi chưa có package-lock.
+- Audit lại responsive 1366/125%/150%, state, button delegation, workflow Web/Windows và logic chức năng.
+
+
+## v1.10.0 — Professional Workspace · Stable v1.9.23 Search Brain
+
+- Giữ nguyên `src/search.js` của v1.9.23 — lõi đã tra đúng ca thực tế “cọc chống”; regression test khóa hash để tránh sửa nhầm.
+- Thêm Workspace chuyên nghiệp: ghim/phân loại tài liệu, bookmark & ghi chú vùng PDF, tự khôi phục đúng PDF/trang/zoom/tab/phạm vi khi mở lại.
+- Thêm Sức khỏe tài liệu, lập chỉ mục lại một PDF/toàn thư viện, phát hiện tài liệu cùng họ/phiên bản và gói chẩn đoán ZIP đã lọc API key.
+- Thêm bằng chứng câu trả lời: hiển thị RAG/OCR/Vision/Native/Page Batch, mức tin cậy và nút Kiểm tra nguồn.
+- PDF lớn trên 50 MB dùng Page Batch trang mục tiêu theo RAG/TOC, không tự gửi/quét toàn bộ tài liệu.
+- Lịch sử Hỏi đáp hỗ trợ tìm, ghim, đổi tên và xuất JSON/Markdown/PDF qua Print; lịch sử Tính vẫn Local-first.
+- Thêm So sánh tiêu chuẩn + Kiểm tra mâu thuẫn hồ sơ, Chế độ hiện trường, Hiệu năng Nhẹ/Cân bằng/Mạnh, Undo/Redo và Backup/Restore.
+- Windows workflow thêm smoke test Portable sau build; thiếu runtime/build-info/version khớp sẽ FAIL.
+
+## v1.9.26 — v1.9.23 Search Brain · v1.9.25 Unified Scope/UI
+
+- **Khóa lõi tìm kiếm/RAG theo v1.9.23** — bản đã tra được trường hợp thực tế “cọc chống”. `src/search.js` được giữ byte-for-byte từ v1.9.23.
+- **Giữ giao diện/phạm vi v1.9.25** — Tra cứu và Công thức vẫn có Vùng chọn, Trang hiện tại, Nhiều trang, Tài liệu hiện tại, Tài liệu đã tick và Toàn thư viện; Tra cứu có thêm Thông minh.
+- Parser phạm vi trang được tách sang `src/scope.js`, không sửa `src/search.js`, tránh làm thay đổi tokenizer/ranking/exact/TOC logic đã chạy ổn.
+- Tra cứu ở mọi phạm vi đưa đúng tập tài liệu/trang đã chọn vào **thuật toán `searchEveryPage` của v1.9.23**; không chồng thêm một pipeline ranking mới.
+- Giữ UI de-duplication: Provider/Model/trạng thái kết nối chỉ có một nguồn điều khiển, PDF Native compact, UI State Guard, Offline AI, archive và lịch sử.
+- Regression guard kiểm tra hash lõi `src/search.js` và wiring `searchBrain: v1.9.23` để lần sau không vô tình thay đổi bộ não tìm kiếm.
+
+## v1.9.25 — Unified Smart Scope · Formula/Lookup Target Scan · Professional UI
+
+- **Tra cứu có Phạm vi riêng:** Thông minh / Vùng chọn / Trang hiện tại / Nhiều trang / Tài liệu hiện tại / Tài liệu đã tick / Toàn thư viện. Không tự mở rộng ngoài phạm vi người dùng chọn.
+- **Công thức có Phạm vi quét riêng:** Vùng chọn / Trang hiện tại (mặc định) / Nhiều trang / Tài liệu hiện tại / Tài liệu đã tick / Toàn thư viện. OCR/Vision chỉ chạy trong phạm vi đã chọn.
+- **Tiết kiệm tài nguyên:** Tra cứu Thông minh ưu tiên exact/RAG/text trước, Fresh PDF.js khi index cũ/poor, sau đó chỉ Local OCR vài trang đích từ mục lục khi cần; tab Tra cứu không tự Vision toàn tài liệu.
+- **Quét công thức theo vùng:** dùng vùng T▧ gần nhất, lưu ảnh nguồn + trang và luôn ở trạng thái AI Detected cho tới khi người dùng xác minh.
+- **Một khái niệm “Nguồn mặc định AI/RAG”** ở Thư viện; các tab Tra cứu/Tính có thể thu hẹp riêng theo vùng/trang để tránh nhầm giữa nguồn và phạm vi thao tác.
+- Giữ toàn bộ dọn UI v1.9.24: provider/model chỉ hiển thị một lần, Native PDF compact, một công tắc Khóa nguồn, responsive 3 panel và UI State Guard.
+
+
+## v1.9.24 — Professional UI De-duplication · Single AI Status · Responsive Cleanup
+
+- Provider/model/trạng thái kết nối chỉ hiển thị một lần trong khối AI & kết nối của Trợ lý; bỏ badge AI trùng ở topbar và chip provider trùng ở tiêu đề panel.
+- Bỏ nút bánh răng mở Cài đặt bị trùng; khối AI & kết nối và tab Cài đặt là hai điểm điều hướng rõ ràng, không lặp badge trạng thái.
+- Khóa nguồn chỉ còn một công tắc nhanh tại Thư viện; Cài đặt không tạo công tắc thứ hai cho cùng state.
+- Đọc PDF native giữ dạng compact; bỏ badge provider lặp, đổi nội dung kỹ thuật/debug thành mô tả người dùng ngắn gọn.
+- Giảm lặp version ở các card phụ; version chi tiết chỉ nằm ở topbar và Phiên bản & bản build.
+- Dọn CSS AI quickbar/model bar cũ đã không còn render, giảm nguy cơ rule cũ xung đột responsive.
+- Kiểm tra lại bố cục 3 panel, toolbar PDF theo container width và tab AI 4→3→2 cột khi panel hẹp.
 
 
 

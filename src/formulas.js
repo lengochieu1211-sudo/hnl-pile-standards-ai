@@ -1,3 +1,5 @@
+import { isTcvn7888_2014Document } from './tcvn7888.js';
+
 const FORMULA_CACHE = new Map();
 
 function normSpace(s='') { return String(s).replace(/\u00a0/g, ' ').replace(/[ \t]+/g, ' ').trim(); }
@@ -199,10 +201,13 @@ function normalizeAiFormula(doc, item={}, index=0) {
     units: item.units || '',
     conditions: item.conditions || '',
     confidence: Number.isFinite(confidence) ? confidence : null,
-    computable: (Boolean(item.verified) || Boolean(item.allowCompute)) && reParsed.computable,
+    // AI/Vision formulas are never calculator-eligible until the user explicitly verifies the source page.
+    // Legacy allowCompute is intentionally ignored unless verified=true, preventing stale/imported metadata from bypassing the gate.
+    computable: Boolean(item.verified) && reParsed.computable,
     verified: Boolean(item.verified),
     aiDetected: true,
-    reviewRequired: !Boolean(item.verified)
+    reviewRequired: !Boolean(item.verified),
+    status: Boolean(item.verified) ? 'Verified' : 'AI Detected'
   };
 }
 
@@ -330,33 +335,33 @@ export function evaluateExpression(expr, values={}) {
 }
 
 const VERIFIED_7888 = [
-  { key:'7.4-mass', page:18, label:'m', title:'Khối lượng cọc PC/PHC', lhs:'m', rhs:'2.6*pi*L*t*(D-t)', variables:['L','t','D'] },
-  { key:'7.4-1', page:18, label:'(1)', title:'Tải trọng uốn gây nứt tính toán', lhs:'P', rhs:'(40*M-g*m*L)/(2*(3*L-5))', variables:['M','g','m','L'] },
-  { key:'7.4-2', page:19, label:'(2)', title:'Mômen uốn nứt thực tế', lhs:'M', rhs:'g*m*L/40+P*(3*L-5)/20', variables:['g','m','L','P'] },
-  { key:'7.5-3', page:20, label:'(3)', title:'Tải trọng uốn từ trên xuống P(+)', lhs:'Pplus', rhs:'4/(L1-1)*(M-g*m*(2*L1-L)/8-n*N)', variables:['L1','M','g','m','L','n','N'] },
-  { key:'7.5-4', page:20, label:'(4)', title:'Tải trọng uốn từ dưới lên P(-)', lhs:'Pminus', rhs:'4/(L1-1)*(M+g*m*(2*L1-L)/8-n*N)+m*g', variables:['L1','M','g','m','L','n','N'] },
-  { key:'7.5-5', page:23, label:'(5)', title:'Mômen uốn nứt lớn nhất thực tế', lhs:'M', rhs:'g*m*(2*L1-L)/8+P*(L1-1)/4+n*N3', variables:['g','m','L1','L','P','n','N3'] },
-  { key:'7.6-6', page:24, label:'(6)', title:'Tải trọng cắt tính toán', lhs:'P', rhs:'2*Q', variables:['Q'] },
-  { key:'7.6-7', page:24, label:'(7)', title:'Tải trọng cắt theo sơ đồ Hình 7', lhs:'P', rhs:'Q*(2*a+b)/b', variables:['Q','a','b'] },
-  { key:'7.6-a', page:25, label:'a', title:'Khẩu độ cắt', lhs:'a', rhs:'D-t/2', variables:['D','t'] },
-  { key:'A-nprime', page:30, label:"n'", title:'Tỷ lệ môđun đàn hồi tại truyền ứng suất', lhs:'nPrime', rhs:'Ep/Ecp', variables:['Ep','Ecp'] },
-  { key:'A1', page:30, label:'(A.1)', title:'Ứng suất căng tính toán của thép', lhs:'sigmaPt', rhs:'((1-k/2)*sigmaPi)/(1+nPrime*(Ap/Ac))', variables:['k','sigmaPi','nPrime','Ap','Ac'] },
-  { key:'A2', page:30, label:'(A.2)', title:'Ứng suất nén ban đầu của bê tông', lhs:'sigmaCpt', rhs:'sigmaPt*Ap/Ac', variables:['sigmaPt','Ap','Ac'] },
-  { key:'A-n', page:31, label:'n', title:'Tỷ lệ môđun đàn hồi thép/bê tông', lhs:'n', rhs:'Ep/Ec', variables:['Ep','Ec'] },
-  { key:'A3', page:31, label:'(A.3)', title:'Tổn thất ứng suất do từ biến và co ngót', lhs:'deltaSigmaPsi', rhs:'(n*psi*sigmaCpt+Ep*epsilonS)/(1+(n*sigmaCpt/sigmaPt)*(1+psi/2))', variables:['n','psi','sigmaCpt','Ep','epsilonS','sigmaPt'] },
-  { key:'A4', page:31, label:'(A.4)', title:'Tổn thất ứng suất do chùng ứng suất', lhs:'deltaSigmaR', rhs:'0.5*k*sigmaPt', variables:['k','sigmaPt'] },
-  { key:'A5', page:31, label:'(A.5)', title:'Ứng suất hữu hiệu trong thép chủ', lhs:'sigmaPe', rhs:'sigmaPt-(deltaSigmaPsi+deltaSigmaR)', variables:['sigmaPt','deltaSigmaPsi','deltaSigmaR'] },
-  { key:'A6', page:31, label:'(A.6)', title:'Ứng suất hữu hiệu trong bê tông', lhs:'sigmaCe', rhs:'sigmaPe*Ap/Ac', variables:['sigmaPe','Ap','Ac'] },
-  { key:'B1', page:32, label:'(B.1)', title:'Sức kháng nén dọc trục tính toán', lhs:'Ra', rhs:'(sigmaCu/alpha-sigmaCe/4)*A0', variables:['sigmaCu','alpha','sigmaCe','A0'] },
-  { key:'B2', page:32, label:'(B.2)', title:'Sức chịu tải dài hạn PC', lhs:'RaL', rhs:'0.25*(sigmaCu-sigmaCe)*A0', variables:['sigmaCu','sigmaCe','A0'] },
-  { key:'B3', page:32, label:'(B.3)', title:'Sức chịu tải ngắn hạn PC', lhs:'RaShort', rhs:'0.5*(sigmaCu-sigmaCe)*A0', variables:['sigmaCu','sigmaCe','A0'] },
-  { key:'B4', page:33, label:'(B.4)', title:'Sức chịu tải dài hạn PHC/NPH', lhs:'RaL', rhs:'(sigmaCu/3.5-sigmaCe/4)*A0', variables:['sigmaCu','sigmaCe','A0'] },
-  { key:'B5', page:33, label:'(B.5)', title:'Sức chịu tải ngắn hạn PHC/NPH', lhs:'RaShort', rhs:'2*(sigmaCu/3.5-sigmaCe/4)*A0', variables:['sigmaCu','sigmaCe','A0'] },
-  { key:'B-Pmax', page:33, label:'Pmax', title:'Giới hạn tải làm việc thực tế tối đa', lhs:'Pmax', rhs:'0.8*RaShort', variables:['RaShort'] }
+  { key:'7.4-mass', page:18, label:'m', title:'Khối lượng cọc PC/PHC', lhs:'m', rhs:'2.6*pi*L*t*(D-t)', variables:['L','t','D'], variableUnits:{L:'m',t:'m',D:'m'}, outputUnit:'t', resultScale:1 },
+  { key:'7.4-1', page:18, label:'(1)', title:'Tải trọng uốn gây nứt tính toán', lhs:'P', rhs:'(40*M-g*m*L)/(2*(3*L-5))', variables:['M','g','m','L'], variableUnits:{M:'kN·m',g:'m/s²',m:'t',L:'m'}, outputUnit:'kN', resultScale:1 },
+  { key:'7.4-2', page:19, label:'(2)', title:'Mômen uốn nứt thực tế', lhs:'M', rhs:'g*m*L/40+P*(3*L-5)/20', variables:['g','m','L','P'], variableUnits:{g:'m/s²',m:'t',L:'m',P:'kN'}, outputUnit:'kN·m', resultScale:1 },
+  { key:'7.5-3', page:20, label:'(3)', title:'Tải trọng uốn từ trên xuống P(+)', lhs:'Pplus', rhs:'4/(L1-1)*(M-g*m*(2*L1-L)/8-n*N)', variables:['L1','M','g','m','L','n','N'], variableUnits:{L1:'m',M:'kN·m',g:'m/s²',m:'t',L:'m',n:'m',N:'kN'}, outputUnit:'kN', resultScale:1 },
+  { key:'7.5-4', page:20, label:'(4)', title:'Tải trọng uốn từ dưới lên P(-)', lhs:'Pminus', rhs:'4/(L1-1)*(M+g*m*(2*L1-L)/8-n*N)+m*g', variables:['L1','M','g','m','L','n','N'], variableUnits:{L1:'m',M:'kN·m',g:'m/s²',m:'t',L:'m',n:'m',N:'kN'}, outputUnit:'kN', resultScale:1 },
+  { key:'7.5-5', page:23, label:'(5)', title:'Mômen uốn nứt lớn nhất thực tế', lhs:'M', rhs:'g*m*(2*L1-L)/8+P*(L1-1)/4+n*N3', variables:['g','m','L1','L','P','n','N3'], variableUnits:{g:'m/s²',m:'t',L1:'m',L:'m',P:'kN',n:'m',N3:'kN'}, outputUnit:'kN·m', resultScale:1 },
+  { key:'7.6-6', page:24, label:'(6)', title:'Tải trọng cắt tính toán', lhs:'P', rhs:'2*Q', variables:['Q'], variableUnits:{Q:'kN'}, outputUnit:'kN', resultScale:1 },
+  { key:'7.6-7', page:24, label:'(7)', title:'Tải trọng cắt theo sơ đồ Hình 7', lhs:'P', rhs:'Q*(2*a+b)/b', variables:['Q','a','b'], variableUnits:{Q:'kN',a:'cùng đơn vị',b:'cùng đơn vị'}, outputUnit:'kN', resultScale:1 },
+  { key:'7.6-a', page:25, label:'a', title:'Khẩu độ cắt', lhs:'a', rhs:'D-t/2', variables:['D','t'], variableUnits:{D:'cùng đơn vị',t:'cùng đơn vị'}, outputUnit:'cùng đơn vị D,t', resultScale:1 },
+  { key:'A-nprime', page:30, label:"n'", title:'Tỷ lệ môđun đàn hồi tại truyền ứng suất', lhs:'nPrime', rhs:'Ep/Ecp', variables:['Ep','Ecp'], variableUnits:{Ep:'MPa',Ecp:'MPa'}, outputUnit:'—', resultScale:1 },
+  { key:'A1', page:30, label:'(A.1)', title:'Ứng suất căng tính toán của thép', lhs:'sigmaPt', rhs:'((1-k/2)*sigmaPi)/(1+nPrime*(Ap/Ac))', variables:['k','sigmaPi','nPrime','Ap','Ac'], variableUnits:{k:'—',sigmaPi:'MPa',nPrime:'—',Ap:'mm²',Ac:'mm²'}, outputUnit:'MPa', resultScale:1 },
+  { key:'A2', page:30, label:'(A.2)', title:'Ứng suất nén ban đầu của bê tông', lhs:'sigmaCpt', rhs:'sigmaPt*Ap/Ac', variables:['sigmaPt','Ap','Ac'], variableUnits:{sigmaPt:'MPa',Ap:'mm²',Ac:'mm²'}, outputUnit:'MPa', resultScale:1 },
+  { key:'A-n', page:31, label:'n', title:'Tỷ lệ môđun đàn hồi thép/bê tông', lhs:'n', rhs:'Ep/Ec', variables:['Ep','Ec'], variableUnits:{Ep:'MPa',Ec:'MPa'}, outputUnit:'—', resultScale:1 },
+  { key:'A3', page:31, label:'(A.3)', title:'Tổn thất ứng suất do từ biến và co ngót', lhs:'deltaSigmaPsi', rhs:'(n*psi*sigmaCpt+Ep*epsilonS)/(1+(n*sigmaCpt/sigmaPt)*(1+psi/2))', variables:['n','psi','sigmaCpt','Ep','epsilonS','sigmaPt'], variableUnits:{n:'—',psi:'—',sigmaCpt:'MPa',Ep:'MPa',epsilonS:'—',sigmaPt:'MPa'}, outputUnit:'MPa', resultScale:1 },
+  { key:'A4', page:31, label:'(A.4)', title:'Tổn thất ứng suất do chùng ứng suất', lhs:'deltaSigmaR', rhs:'0.5*k*sigmaPt', variables:['k','sigmaPt'], variableUnits:{k:'—',sigmaPt:'MPa'}, outputUnit:'MPa', resultScale:1 },
+  { key:'A5', page:31, label:'(A.5)', title:'Ứng suất hữu hiệu trong thép chủ', lhs:'sigmaPe', rhs:'sigmaPt-(deltaSigmaPsi+deltaSigmaR)', variables:['sigmaPt','deltaSigmaPsi','deltaSigmaR'], variableUnits:{sigmaPt:'MPa',deltaSigmaPsi:'MPa',deltaSigmaR:'MPa'}, outputUnit:'MPa', resultScale:1 },
+  { key:'A6', page:31, label:'(A.6)', title:'Ứng suất hữu hiệu trong bê tông', lhs:'sigmaCe', rhs:'sigmaPe*Ap/Ac', variables:['sigmaPe','Ap','Ac'], variableUnits:{sigmaPe:'MPa',Ap:'mm²',Ac:'mm²'}, outputUnit:'MPa', resultScale:1 },
+  { key:'B1', page:32, label:'(B.1)', title:'Sức kháng nén dọc trục tính toán', lhs:'Ra', rhs:'(sigmaCu/alpha-sigmaCe/4)*A0', variables:['sigmaCu','alpha','sigmaCe','A0'], variableUnits:{sigmaCu:'MPa',alpha:'—',sigmaCe:'MPa',A0:'mm²'}, outputUnit:'kN', resultScale:0.001, conditions:'A0 dùng mm²; σ dùng MPa. Kết quả chuẩn được đổi từ N sang kN.' },
+  { key:'B2', page:32, label:'(B.2)', title:'Sức chịu tải dài hạn PC', lhs:'RaL', rhs:'0.25*(sigmaCu-sigmaCe)*A0', variables:['sigmaCu','sigmaCe','A0'], variableUnits:{sigmaCu:'MPa',sigmaCe:'MPa',A0:'mm²'}, inputMinimums:{sigmaCu:60}, outputUnit:'kN', resultScale:0.001, conditions:'Cọc PC; cường độ nén bê tông không thấp hơn 60 MPa; α = 4.' },
+  { key:'B3', page:32, label:'(B.3)', title:'Sức chịu tải ngắn hạn PC', lhs:'RaShort', rhs:'0.5*(sigmaCu-sigmaCe)*A0', variables:['sigmaCu','sigmaCe','A0'], variableUnits:{sigmaCu:'MPa',sigmaCe:'MPa',A0:'mm²'}, inputMinimums:{sigmaCu:60}, outputUnit:'kN', resultScale:0.001, conditions:'Cọc PC; cường độ nén bê tông không thấp hơn 60 MPa; giá trị ngắn hạn bằng 2 lần sức chịu tải dài hạn theo vật liệu.' },
+  { key:'B4', page:33, label:'(B.4)', title:'Sức chịu tải dài hạn PHC/NPH', lhs:'RaL', rhs:'(sigmaCu/3.5-sigmaCe/4)*A0', variables:['sigmaCu','sigmaCe','A0'], variableUnits:{sigmaCu:'MPa',sigmaCe:'MPa',A0:'mm²'}, inputMinimums:{sigmaCu:80}, outputUnit:'kN', resultScale:0.001, conditions:'Cọc PHC/NPH; cường độ nén bê tông không thấp hơn 80 MPa; α = 3,5.' },
+  { key:'B5', page:33, label:'(B.5)', title:'Sức chịu tải ngắn hạn PHC/NPH', lhs:'RaShort', rhs:'2*(sigmaCu/3.5-sigmaCe/4)*A0', variables:['sigmaCu','sigmaCe','A0'], variableUnits:{sigmaCu:'MPa',sigmaCe:'MPa',A0:'mm²'}, inputMinimums:{sigmaCu:80}, outputUnit:'kN', resultScale:0.001, conditions:'Cọc PHC/NPH; cường độ nén bê tông không thấp hơn 80 MPa; giá trị ngắn hạn bằng 2 lần sức chịu tải dài hạn theo vật liệu.' },
+  { key:'B-Pmax', page:33, label:'Pmax', title:'Giới hạn tải làm việc thực tế tối đa', lhs:'Pmax', rhs:'0.8*RaShort', variables:['RaShort'], variableUnits:{RaShort:'kN'}, outputUnit:'kN', resultScale:1, conditions:'Pmax không vượt quá 80% sức chịu tải làm việc ngắn hạn theo vật liệu.' }
 ];
 
 export function verifiedFormulaLibrary(docs=[]) {
-  const doc = (docs || []).find(d => /TCVN\s*7888\s*:?\s*2014/i.test(`${d.standard || ''} ${d.name || ''}`) || /7888/.test(d.name || ''));
+  const doc = (docs || []).find(isTcvn7888_2014Document);
   if (!doc) return [];
   return VERIFIED_7888.map((f, i) => ({
     id:`verified7888:${f.key}`,
@@ -372,6 +377,13 @@ export function verifiedFormulaLibrary(docs=[]) {
     lhs:f.lhs,
     rhs:f.rhs,
     variables:f.variables,
+    variableUnits:f.variableUnits || {},
+    inputMinimums:f.inputMinimums || {},
+    units:f.outputUnit ? `Kết quả: ${f.outputUnit}` : '',
+    outputUnit:f.outputUnit || '',
+    resultScale:Number.isFinite(Number(f.resultScale)) ? Number(f.resultScale) : 1,
+    conditions:f.conditions || '',
+    status:'Verified',
     computable:true,
     verified:true
   }));

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 
 const source = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
 const pkgMeta = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
@@ -8,7 +9,7 @@ const CURRENT_VERSION = pkgMeta.version;
 
 const criticalControls = [
   ['sourceBadge', 'sourceBadge'],
-  ['openSettings', 'openSettings'],
+  ['assistantSettingsSummary', 'assistantSettingsSummary'],
   ['selectAll', 'selectAll'],
   ['clearSelection', 'clearSelection'],
   ['prevPage', 'prevPage'],
@@ -112,7 +113,7 @@ test('v1.9.4 reads version from package and runtime build metadata instead of ha
   assert.match(source, /build-info\.json/);
   assert.match(source, /formatBuildTime/);
   assert.match(source, /Build #/);
-  assert.match(source, /Phiên bản & bản build/);
+  assert.match(source, /Build & cập nhật/);
   assert.doesNotMatch(source, /23\/08\/2026 05:49 GMT\+7/);
 });
 
@@ -301,7 +302,7 @@ test('v1.9.4 medium desktop toolbar has anti-overlap responsive CSS', () => {
 test('v1.9.5 settings tab is always reachable and Windows EXE autobuilds on main', () => {
   const css = fs.readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
   const desktop = fs.readFileSync(new URL('../.github/workflows/desktop-win.yml', import.meta.url), 'utf8');
-  assert.match(source, /assistantSettingsQuick/);
+  assert.match(source, /assistantSettingsSummary/);
   assert.match(source, /data-tab=\"\$\{id\}\"/);
   assert.match(css, /grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
   assert.match(css, /panel-body.*overflow:auto/s);
@@ -568,7 +569,7 @@ test('v1.9.16 Bridge accepts the session API key for chat and model discovery', 
 test('v1.9.17 Desktop archive extraction follows external-first priority with built-in RAR fallback', () => {
   const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
   const bridge = fs.readFileSync(new URL('../bridge/server.mjs', import.meta.url), 'utf8');
-  assert.equal(pkg.dependencies['node-unrar-js'], '^2.0.2');
+  assert.equal(pkg.dependencies['node-unrar-js'], '2.0.2');
   assert.ok(pkg.build.files.includes('node_modules/node-unrar-js/**/*'));
   assert.match(bridge, /loadBuiltinUnrar/);
   assert.match(bridge, /createExtractorFromFile/);
@@ -926,7 +927,7 @@ test('v1.9.23 native PDF mode commits immediately and never silently resets to b
 test('v1.9.23 uses one AI control surface and compact native PDF details', () => {
   assert.doesNotMatch(source, /class="ai-quickbar"/);
   assert.match(source, /id="assistantSettingsSummary"/);
-  assert.match(source, /Model văn bản · nguồn điều khiển duy nhất/);
+  assert.match(source, /<span>Model<\/span>/);
   assert.match(source, /id="settingsNativePdfDetails" class="compact-disclosure" data-persist-detail/);
   assert.match(source, /Xem chi tiết PDF native/);
 });
@@ -948,4 +949,215 @@ test('v1.9.23 oversized image PDF can visually locate TOC before targeted page V
   assert.match(source, /!nativePdfAvailable/);
   assert.match(source, /visualTocLocatorUsed/);
   assert.match(source, /target\?\.visualDiscovered \? 6 : 4/);
+});
+
+
+test('v1.9.24 assistant UI has one provider/model summary and no duplicate quick AI badges', () => {
+  assert.doesNotMatch(source, /class="ai-badge/);
+  assert.doesNotMatch(source, /class="mode-chip/);
+  assert.doesNotMatch(source, /id="assistantSettingsQuick"/);
+  assert.match(source, /id="assistantSettingsSummary"/);
+  const providerSummaryCount = (source.match(/id="assistantSettingsSummary"/g) || []).length;
+  assert.equal(providerSummaryCount, 1);
+});
+
+test('v1.9.24 strict source control has a single visible switch', () => {
+  assert.match(source, /id="strictSide"/);
+  assert.doesNotMatch(source, /id="strictInput"/);
+});
+
+test('v1.9.24 native PDF card is compact and does not repeat provider badge', () => {
+  assert.match(source, /id="settingsNativePdfDetails"/);
+  assert.match(source, /Xem chi tiết PDF native/);
+  assert.match(source, /<span>Chế độ đọc PDF<\/span>/);
+  assert.doesNotMatch(source, /compact-status">\$\{state\.settings\.provider === 'gemini'/);
+  assert.doesNotMatch(source, /không tự quay về Cân bằng khi giao diện render lại/);
+});
+
+
+test('v1.9.26 keeps v1.9.25 lookup scope UI', () => {
+  assert.match(source, /lookupScope: 'hnl\.lookupScope\.v1925'/);
+  assert.match(source, /id="lookupScopeInput"/);
+  assert.match(source, /\['smart','Thông minh · bộ tìm kiếm ổn định v1\.9\.23'\]/);
+  assert.match(source, /\['region','Vùng chọn gần nhất'\]/);
+  assert.match(source, /\['pages','Nhiều trang…'\]/);
+  assert.match(source, /resolveOperationScope\(scope, state\.lookup\.pages, 'lookup'\)/);
+  assert.match(source, /không tự mở rộng ngoài lựa chọn/);
+});
+
+test('v1.9.26 keeps v1.9.25 formula scope UI', () => {
+  assert.match(source, /formulaScope: 'hnl\.formulaScope\.v1925'/);
+  assert.match(source, /formulaScanScope: localStorage\.getItem\(STORAGE\.formulaScope\) \|\| 'page'/);
+  assert.match(source, /id="formulaScopeInput"/);
+  assert.match(source, /Vùng chọn gần nhất · tiết kiệm nhất/);
+  assert.match(source, /Trang hiện tại · mặc định/);
+  assert.match(source, /AI\/Vision · chỉ phạm vi đã chọn/);
+  assert.match(source, /if \(scope === 'region'\) return scanFormulaFromRegion\(target\.region\)/);
+  assert.match(source, /HNL KHÔNG tự mở rộng ngoài phạm vi này/);
+});
+
+test('v1.9.26 page-range parser stays outside the v1.9.23 search brain', () => {
+  const searchSource = fs.readFileSync(new URL('../src/search.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(searchSource, /export function parsePageSpec/);
+  assert.match(source, /from '.\/scope\.js'/);
+  assert.match(source, /searchBrain:'v1\.9\.23'/);
+  assert.match(source, /function resolveOperationScope/);
+  assert.match(source, /Nguồn mặc định AI \/ RAG/);
+  assert.match(source, /lookupPagesInput/);
+  assert.match(source, /formulaPagesInput/);
+});
+
+
+test('v1.9.26 freezes the proven v1.9.23 search brain byte-for-byte', () => {
+  const searchSource = fs.readFileSync(new URL('../src/search.js', import.meta.url));
+  const hash = crypto.createHash('sha256').update(searchSource).digest('hex');
+  assert.equal(hash, 'f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2');
+  assert.match(source, /EXACT v1\.9\.23 lookup algorithm/);
+  assert.doesNotMatch(source, /Fresh PDF\.js rescue bypasses stale\/poor IndexedDB text[\s\S]*async function runLookup/);
+});
+
+test('v1.10.0 keeps the proven v1.9.23 search brain hash unchanged', () => {
+  const searchSource = fs.readFileSync(new URL('../src/search.js', import.meta.url));
+  const hash = crypto.createHash('sha256').update(searchSource).digest('hex');
+  assert.equal(hash, 'f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2');
+});
+
+test('v1.10.0 professional workspace has pin filter bookmark and region note controls', () => {
+  assert.match(source, /id="librarySearchInput"/);
+  assert.match(source, /id="libraryFilterInput"/);
+  assert.match(source, /data-pin-doc/);
+  assert.match(source, /id="bookmarkCurrentPage"/);
+  assert.match(source, /id="toggleBookmarks"/);
+  assert.match(source, /data-pdf-selection-action="note"/);
+  assert.match(source, /renderSavedAnnotations/);
+});
+
+test('v1.10.0 document health and reindex stay outside search brain', () => {
+  assert.match(source, /id="checkDocumentHealth"/);
+  assert.match(source, /id="reindexActiveDocument"/);
+  assert.match(source, /id="reindexAllDocuments"/);
+  assert.match(source, /reindexPdfText/);
+  const searchSource = fs.readFileSync(new URL('../src/search.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(searchSource, /documentHealth|reindexDocument|performanceMode/);
+});
+
+test('v1.10.0 answer evidence reports read method confidence and source verification', () => {
+  assert.match(source, /function answerEvidenceMeta/);
+  assert.match(source, /Native PDF \+ RAG/);
+  assert.match(source, /Page Batch \+ RAG/);
+  assert.match(source, /Vision \+ RAG/);
+  assert.match(source, /OCR \+ RAG/);
+  assert.match(source, /Độ tin cậy:/);
+  assert.match(source, /data-verify-message/);
+});
+
+test('v1.10.0 oversized PDF uses targeted Page Batch governed by performance mode', () => {
+  assert.match(source, /async function prepareOversizePdfPageBatchImages/);
+  assert.match(source, /visualPageLimit/);
+  assert.match(source, /PDF >50 MB · Page Batch/);
+  assert.match(source, /performanceMode/);
+  assert.match(source, /retrievalScale/);
+});
+
+test('v1.10.0 chat history can search pin rename and export', () => {
+  assert.match(source, /id="chatHistorySearch"/);
+  assert.match(source, /data-pin-chat-session/);
+  assert.match(source, /data-rename-chat-session/);
+  assert.match(source, /id="historyExportFormat"/);
+  assert.match(source, /id="exportHistoryBtn"/);
+  assert.match(source, /function exportHistory/);
+  assert.match(source, /PDF qua Print/);
+});
+
+test('v1.10.0 backup diagnostic ZIP and crash log never intentionally include API key', () => {
+  assert.match(source, /function makeStoredZip/);
+  assert.match(source, /async function exportBackupZip/);
+  assert.match(source, /async function exportDiagnosticZip/);
+  assert.match(source, /REDACTED_KEY/);
+  assert.match(source, /không chứa API key/i);
+});
+
+test('v1.10.0 workspace restore and field mode are wired', () => {
+  assert.match(source, /function saveWorkspace/);
+  assert.match(source, /function restoreWorkspace/);
+  assert.match(source, /restoreWorkspace\(\)/);
+  assert.match(source, /id="fieldModeInput"/);
+  assert.match(source, /field-mode/);
+  assert.match(source, /id="performanceModeInput"/);
+});
+
+test('v1.10.0 supports standards comparison and dossier contradiction audit', () => {
+  assert.match(source, /id="compareBtn"/);
+  assert.match(source, /id="compareAuditBtn"/);
+  assert.match(source, /Kiểm tra mâu thuẫn hồ sơ/);
+  assert.match(source, /state\.compareMode='audit'/);
+});
+
+test('v1.10.0 Windows desktop has packaged runtime smoke test', () => {
+  const electron = fs.readFileSync(new URL('../electron/main.cjs', import.meta.url), 'utf8');
+  const workflow = fs.readFileSync(new URL('../.github/workflows/desktop-win.yml', import.meta.url), 'utf8');
+  assert.match(electron, /--smoke-test/);
+  assert.match(electron, /HNL_SMOKE_TEST_OK/);
+  assert.match(electron, /dist\/build-info\.json/);
+  assert.match(workflow, /Smoke test Portable EXE/);
+  assert.match(workflow, /--smoke-test/);
+  assert.match(workflow, /WaitForExit\(60000\)/);
+});
+
+test('v1.10.0 PDF search explicitly guides clause table and appendix lookup', () => {
+  assert.match(source, /Tìm chữ \/ Điều \/ Bảng \/ Phụ lục…/);
+});
+
+test('v1.10.2 calculation UI uses real NPH Table 2 and preserves calculation draft/source links', () => {
+  assert.match(source, /<option value="PHC"[\s\S]*<option value="NPH"[\s\S]*<option value="PC"/);
+  assert.match(source, /NPH theo TCVN 7888:2014 chỉ có cấp A, B, C/);
+  assert.match(source, /Nạp Bảng 2 · NPH/);
+  assert.match(source, /lookupPileType7888/);
+  assert.match(source, /calcDraft/);
+  assert.match(source, /syncCalcDraftFromDom/);
+  assert.match(source, /data-hit-doc=.*source\.docId/);
+  assert.match(source, /table:draft\.tableSource \|\| 'Nhập tay'/);
+  assert.match(source, /resultScale/);
+  assert.match(source, /outputUnit/);
+  assert.match(source, /formula:type === 'PC' \? '\(B\.2\)\/\(B\.3\)' : '\(B\.4\)\/\(B\.5\)'/);
+});
+
+test('v1.10.2 verified 7888 UI no longer accepts a bare 7888 filename as edition proof', () => {
+  assert.match(source, /isTcvn7888_2014Document/);
+  assert.doesNotMatch(source, /function is7888\(doc\)[\s\S]{0,180}\/7888\/\.test\(doc\.name/);
+});
+
+test('v1.10.1 responsive desktop keeps three panels through the 881-980px bridge range', () => {
+  const css = fs.readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  assert.match(css, /@media \(max-width:980px\) and \(min-width:881px\)/);
+  assert.match(css, /--left-effective:\s*215px/);
+  assert.match(css, /--right-effective:\s*290px/);
+  assert.match(css, /minmax\(300px,1fr\)/);
+  assert.match(css, /@media \(max-width:880px\)/);
+});
+
+test('v1.10.2 calculator enforces Appendix B concrete strength applicability', () => {
+  const formulasSource = fs.readFileSync(new URL('../src/formulas.js', import.meta.url), 'utf8');
+  assert.match(source, /minSigmaCu = type === 'PC' \? 60 : 80/);
+  assert.match(source, /yêu cầu σcu không nhỏ hơn/);
+  assert.match(source, /item\.inputMinimums \|\| \{\}/);
+  assert.match(formulasSource, /inputMinimums:\{sigmaCu:60\}/);
+  assert.match(formulasSource, /inputMinimums:\{sigmaCu:80\}/);
+});
+
+test('v1.11.0 Code Pack UI exposes deep index and safe Excel exports', () => {
+  const codepacks = fs.readFileSync(new URL('../src/codepacks.js', import.meta.url), 'utf8');
+  const tables = fs.readFileSync(new URL('../src/codepack-tables.js', import.meta.url), 'utf8');
+  const excel = fs.readFileSync(new URL('../src/excel-export.js', import.meta.url), 'utf8');
+  assert.match(source, /id="codePackExcelBtn"/);
+  assert.match(source, /exportCurrentCodePackExcel/);
+  assert.match(source, /codePackSearch\(question, docs, 14\)/);
+  assert.match(codepacks, /CODEPACK_10304/);
+  assert.match(codepacks, /CODEPACK_5574/);
+  assert.match(codepacks, /CODEPACK_7888/);
+  assert.match(tables, /lookup5574Concrete/);
+  assert.match(tables, /lookup5574Steel/);
+  assert.match(excel, /exportCodePackWorkbook/);
+  assert.match(excel, /CHƯA VERIFIED/);
+  assert.match(excel, /BẢNG TRA 7888/);
 });

@@ -11,6 +11,7 @@ const healthUrl = () => `http://127.0.0.1:${bridgePort}/api/health`;
 let bridgeProcess = null;
 let mainWindow = null;
 let logStream = null;
+const SMOKE_TEST = process.argv.includes('--smoke-test');
 
 function ping(url, timeout = 1800) {
   return new Promise(resolve => {
@@ -174,19 +175,42 @@ async function boot() {
   });
 }
 
+async function runSmokeTest() {
+  const root = app.getAppPath();
+  const required = ['package.json', 'dist/index.html', 'bridge/server.mjs'];
+  const missing = required.filter(rel => !fs.existsSync(path.join(root, rel)));
+  if (missing.length) throw new Error(`Thiếu file runtime: ${missing.join(', ')}`);
+  const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+  const runtimeVersion = app.getVersion();
+  if (String(pkg.version) !== String(runtimeVersion)) throw new Error(`Version mismatch package=${pkg.version} runtime=${runtimeVersion}`);
+  const infoPath = path.join(root, 'dist', 'build-info.json');
+  if (!fs.existsSync(infoPath)) throw new Error('Thiếu dist/build-info.json');
+  const build = JSON.parse(fs.readFileSync(infoPath, 'utf8'));
+  if (String(build.version) !== String(runtimeVersion)) throw new Error(`Build info mismatch ${build.version} != ${runtimeVersion}`);
+  console.log(`HNL_SMOKE_TEST_OK v${runtimeVersion} · ${required.length + 1} runtime files`);
+  app.exit(0);
+}
+
 if (process.platform === 'win32') app.setAppUserModelId('com.hnl.pilestandardsai');
 
-const gotLock = app.requestSingleInstanceLock();
-if (!gotLock) {
-  app.quit();
-} else {
-  app.on('second-instance', () => {
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.focus();
-    }
+if (SMOKE_TEST) {
+  app.whenReady().then(runSmokeTest).catch(error => {
+    console.error(`HNL_SMOKE_TEST_FAIL ${error.stack || error.message}`);
+    app.exit(2);
   });
-  app.whenReady().then(boot);
+} else {
+  const gotLock = app.requestSingleInstanceLock();
+  if (!gotLock) {
+    app.quit();
+  } else {
+    app.on('second-instance', () => {
+      if (mainWindow) {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.focus();
+      }
+    });
+    app.whenReady().then(boot);
+  }
 }
 
 app.on('window-all-closed', () => {

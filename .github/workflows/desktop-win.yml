@@ -71,6 +71,20 @@ jobs:
           Write-Host "Portable EXE:"
           $portable | ForEach-Object { Write-Host " - $($_.Name) [$([math]::Round($_.Length/1MB,1)) MB]" }
 
+      - name: Smoke test Portable EXE
+        shell: pwsh
+        run: |
+          $portable = Get-ChildItem release -Filter "HNL-Pile-Standards-AI-Portable-*.exe" -File | Select-Object -First 1
+          if (-not $portable) { throw "Không tìm thấy Portable EXE để smoke test" }
+          Write-Host "Smoke test: $($portable.Name)"
+          $process = Start-Process -FilePath $portable.FullName -ArgumentList "--smoke-test" -PassThru -WindowStyle Hidden
+          if (-not $process.WaitForExit(60000)) {
+            try { Stop-Process -Id $process.Id -Force } catch {}
+            throw "Portable smoke test timeout sau 60 giây"
+          }
+          if ($process.ExitCode -ne 0) { throw "Portable smoke test FAIL, exit code $($process.ExitCode)" }
+          Write-Host "Portable smoke test PASS"
+
       - name: Show embedded build metadata
         shell: pwsh
         run: Get-Content dist/build-info.json

@@ -35,6 +35,19 @@ if (!/pkg\.version/.test(vite) || !/__HNL_APP_VERSION__/.test(vite)) fail('Vite 
 const gen = read('scripts/generate-build-info.mjs');
 if (!/pkg\.version/.test(gen)) fail('generate-build-info.mjs không lấy version từ package.json.');
 
+const main = read('src/main.js');
+const sw = read('public/sw.js');
+if (!/__HNL_APP_VERSION__/.test(main) || !/SOURCE_META\.version/.test(main)) fail('Runtime UI chưa lấy version từ Vite/package source.');
+if (!/serviceWorker\.register\(`\.\/sw\.js\?v=\$\{encodeURIComponent\(SOURCE_META\.version\)\}`/.test(main)) fail('Service Worker registration chưa dùng version runtime.');
+if (!/params\.get\('v'\)/.test(sw) || !/hnl-pile-ai-/.test(sw)) fail('Service Worker cache chưa khóa theo version query.');
+if (/release:\s*['"]v\d+\.\d+\.\d+/.test(main)) fail('SOURCE_META.release không nên hard-code version hiện hành; dùng SOURCE_META.version để tránh lệch.');
+
+for (const [group, deps] of Object.entries({ dependencies:pkg.dependencies || {}, devDependencies:pkg.devDependencies || {} })) {
+  for (const [name, spec] of Object.entries(deps)) {
+    if (/^[~^*]|latest/i.test(String(spec))) fail(`${group}.${name}=${spec} chưa pin exact version; build có thể trôi dependency.`);
+  }
+}
+
 const setupName = String(pkg.build?.nsis?.artifactName || '');
 const portableName = String(pkg.build?.portable?.artifactName || '');
 if (!setupName.includes('${version}') || !/Setup/.test(setupName)) fail('Tên NSIS Setup không dùng ${version} hoặc thiếu Setup.');
@@ -53,4 +66,4 @@ try {
   fail(`Không kiểm tra được build-info: ${error.message}`);
 }
 
-if (!process.exitCode) console.log(`VERSION GATE PASS: v${version} đồng bộ package → README → changelog → release → build metadata → Windows artifacts.`);
+if (!process.exitCode) console.log(`VERSION GATE PASS: v${version} đồng bộ package → README → changelog → release → build metadata → Service Worker → Windows artifacts.`);

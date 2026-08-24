@@ -1,6 +1,96 @@
 {
-  "current": "1.9.23",
+  "current": "1.11.0",
   "releases": [
+    {
+      "version": "1.11.0",
+      "date": "2026-08-24",
+      "title": "Deep 3-TCVN Code Packs · Verified Tables · Excel Calculation Trace",
+      "changes": [
+        "Nạp sẵn Code Pack sâu cho TCVN 7888:2014, TCVN 10304:2025 và TCVN 5574:2018; AI định vị Điều/Bảng/Công thức trước khi đọc trang PDF gốc.",
+        "Giữ nguyên search brain v1.9.23; Code Pack không thay tokenizer/ranking proven RAG.",
+        "TCVN 7888: 18 công thức index, B.1–B.5 Verified; Bảng 1/Bảng 2 cấu trúc.",
+        "TCVN 10304: 48 công thức + 18 bảng index; bảng tra đã đối chiếu mới cho automatic lookup.",
+        "TCVN 5574: >300 công thức index; bảng vật liệu Rb/Rbt/Eb và Rs/Rsc/Rsw có lookup Verified.",
+        "Xuất Excel từng công thức và toàn Code Pack; công thức chưa Verified chỉ xuất tham chiếu, không tự tính.",
+        "Thêm regression cho deep Code Pack, material lookup, Excel wiring và giữ Golden Test cọc chống."
+      ]
+    },
+    {
+      "version": "1.10.2",
+      "date": "2026-08-24",
+      "title": "Runtime Acceptance · NPH Table 2 · Verified Source Guard",
+      "changes": [
+        "Bổ sung Bảng 2 NPH từ TCVN 7888:2014 trang 12; calculator nạp đúng chiều dày, ứng suất hữu hiệu và ký hiệu Dk-D cho NPH, không dùng nhầm Bảng 1.",
+        "Công cụ Verified chỉ mở khi tài liệu xác nhận đúng TCVN 7888:2014 qua metadata/tên đầy đủ hoặc nội dung PDF; bare 7888 và TCVN 7888:2008 bị từ chối.",
+        "Thêm calcDraft giữ dữ liệu máy tính qua render; sửa source provenance để chỉnh tay không bị ghi nhầm là đã nạp Bảng 1/Bảng 2.",
+        "Lịch sử tính có liên kết mở trang công thức/nguồn và metadata riêng cho tablePage/designation.",
+        "Khóa điều kiện áp dụng Phụ lục B: PC yêu cầu σcu ≥ 60 MPa; PHC/NPH yêu cầu σcu ≥ 80 MPa trong calculator và công thức Verified.",
+        "Giữ nguyên search brain v1.9.23; Golden Test cọc chống/cọc ma sát/hash tiếp tục khóa regression.",
+        "Mở rộng Runtime Acceptance regression cho calculation/source/UI/version/offline/archive và responsive."
+      ]
+    },
+    {
+      "version": "1.10.1",
+      "date": "2026-08-24",
+      "title": "Calculation Integrity · Unit-safe Formula · NPH Logic Audit",
+      "changes": [
+        "Sửa lỗi hệ số 1000 trong calculator động của công thức Phụ lục B: MPa × mm² được đổi từ N sang kN trước khi hiển thị và lưu lịch sử.",
+        "Tách PC/PHC/NPH; NPH chỉ có cấp A/B/C và không tự nạp dữ liệu Bảng 1, tránh nhầm với Bảng 2.",
+        "Bổ sung metadata đơn vị biến/kết quả/điều kiện cho công thức xác minh và liên kết nguồn chi tiết cho lịch sử tính toán.",
+        "Khóa cứng AI/Vision formula gate: allowCompute cũ không còn đủ để bật calculator; chỉ công thức đã verified sau đối chiếu trang gốc mới tính tự động.",
+        "Giữ nguyên search brain v1.9.23; bổ sung regression test cho unit conversion, NPH class logic và responsive/version wiring.",
+        "Pin dependency trực tiếp và mở rộng Version Gate cho Service Worker/runtime version để giảm lệch build."
+      ]
+    },
+    {
+      "version": "1.10.0",
+      "date": "2026-08-23",
+      "title": "Professional Workspace · Evidence · Diagnostics · Stable RAG",
+      "changes": [
+        "Giữ nguyên byte-for-byte lõi src/search.js của v1.9.23; test hash tiếp tục khóa bộ tìm kiếm đã tra đúng “cọc chống”.",
+        "Thêm workspace tự lưu/khôi phục, bookmark/ghi chú vùng PDF, ghim/phân loại/lọc thư viện và cảnh báo tài liệu cùng họ/phiên bản.",
+        "Thêm Sức khỏe tài liệu, lập chỉ mục lại, gói chẩn đoán ZIP đã lọc key, Backup/Restore metadata + lịch sử + workspace.",
+        "Mỗi câu trả lời hiển thị phương thức RAG/OCR/Vision/Native/Page Batch, độ tin cậy và nút kiểm tra nguồn; PDF >50 MB dùng Page Batch trang mục tiêu.",
+        "Lịch sử chat có tìm/ghim/đổi tên/xuất; thêm So sánh và Kiểm tra mâu thuẫn hồ sơ, chế độ hiện trường, hiệu năng Nhẹ/Cân bằng/Mạnh, Undo/Redo.",
+        "Windows workflow chạy smoke test Portable sau Verify EXE để kiểm tra runtime files, build-info và version trước upload artifact."
+      ]
+    },
+    {
+      "version": "1.9.26",
+      "date": "2026-08-23",
+      "title": "v1.9.23 Search Brain · v1.9.25 Unified Scope/UI",
+      "changes": [
+        "Khóa lõi src/search.js byte-for-byte theo v1.9.23, bản đã tra được trường hợp thực tế “cọc chống”.",
+        "Giữ UI/phạm vi v1.9.25 cho Tra cứu và Công thức nhưng tách parser trang sang src/scope.js để không chạm search brain.",
+        "Tra cứu theo phạm vi tiếp tục dùng thuật toán searchEveryPage/TCVN 7888 của v1.9.23 trên đúng tập trang được chọn, không chồng ranking pipeline mới.",
+        "Giữ UI de-duplication, Native PDF compact, UI State Guard, Offline AI/Ollama, archive và lịch sử hỏi đáp/tính toán.",
+        "Thêm regression guard để phát hiện nếu search brain v1.9.23 bị thay đổi ngoài ý muốn."
+      ]
+    },
+    {
+      "version": "1.9.25",
+      "date": "2026-08-23",
+      "title": "Unified Smart Scope · Formula/Lookup Target Scan · Professional UI",
+      "changes": [
+        "Tra cứu có phạm vi riêng: Thông minh, Vùng chọn, Trang hiện tại, Nhiều trang, Tài liệu hiện tại, Tài liệu đã tick hoặc Toàn thư viện.",
+        "Công thức mặc định quét Trang hiện tại; có thể chọn vùng T▧, nhiều trang hoặc phạm vi rộng hơn. OCR/Vision không tự vượt ngoài phạm vi.",
+        "Tra cứu Thông minh ưu tiên exact/RAG/text, Fresh PDF.js và Local OCR đúng trang mục tiêu để giảm RAM/token; không tự Vision toàn tài liệu.",
+        "Đổi tên phạm vi sidebar thành Nguồn mặc định AI/RAG để tách rõ nguồn dữ liệu với phạm vi thao tác của từng tab.",
+        "Giữ UI de-duplication v1.9.24, Native PDF compact, UI State Guard, Offline AI và archive hardening."
+      ]
+    },
+    {
+      "version": "1.9.24",
+      "date": "2026-08-23",
+      "title": "Professional UI De-duplication · Single AI Status · Responsive Cleanup",
+      "changes": [
+        "Provider/model/trạng thái kết nối chỉ hiển thị một lần trong khối AI & kết nối; bỏ các badge Gemini/OpenAI trùng ở topbar và tiêu đề Trợ lý.",
+        "Bỏ nút mở Cài đặt trùng và công tắc Khóa nguồn thứ hai; mỗi state có một nguồn điều khiển rõ ràng.",
+        "PDF native tiếp tục thu gọn, bỏ badge provider lặp và thay câu chữ debug bằng mô tả người dùng.",
+        "Giảm lặp version ở card phụ và dọn CSS ai-quickbar/quick-model cũ không còn render.",
+        "Giữ responsive 3 panel trên >880px, toolbar PDF container-responsive và tab Trợ lý 4→3→2 cột."
+      ]
+    },
     {
       "version": "1.9.23",
       "date": "2026-08-23",

@@ -26,8 +26,17 @@ jobs:
         with:
           node-version: 22
 
+      - name: Bootstrap package-lock when missing
+        shell: bash
+        run: |
+          if [ ! -f package-lock.json ]; then
+            echo "package-lock.json chưa có trong repo; tạo lock tạm cho run này."
+            npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          fi
+          test -f package-lock.json
+
       - name: Install locked dependencies
-        run: npm ci
+        run: npm ci --no-audit --no-fund
 
       - name: Version Gate
         run: npm run check:version

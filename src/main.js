@@ -15,6 +15,7 @@ import { codePackSearch, codePackFormulaItems, codePackStats, codePackForDoc } f
 import { exportFormulaWorkbook, exportCodePackWorkbook, exportDrivenPileWorkflowWorkbook, export10304AdvancedWorkflowWorkbook, export5574WorkflowWorkbook, export7888WorkflowWorkbook, exportUnifiedEngineeringWorkbook } from './excel-export.js';
 import { buildImageEngineeringExtractionPrompt, parseImageEngineeringExtraction, normalizeImageEngineeringExtraction, imageEngineeringNeedsConfirmation, imageEngineeringFieldRows, updateImageEngineeringField, buildConfirmedEngineeringQuestion, imageEngineeringProvenance, isSupportedEngineeringImage, IMAGE_ENGINEERING_MAX_FILES, IMAGE_ENGINEERING_MAX_BYTES } from './image-engineering.js';
 import { normalizeEngineeringText, normalizeEngineeringPaste } from './engineering-text-normalizer.js';
+import { buildEngineeringInputInterpreterPrompt, parseEngineeringInputInterpreterResponse, shouldUseAiInputInterpreter } from './engineering-input-interpreter.js';
 import { createPass82DefaultDraft, runPass82UiCalculation, checkPass82Exporter, exportPass82Excel } from './pass82-ui-controller.js';
 import { parseStructuralJsonText } from './pass8-structural-file-parser.js';
 
@@ -705,6 +706,19 @@ async function callConfiguredAiOnce({ prompt, images = [], documents = [], pdfDe
     return callBridge({ bridgeUrl:state.settings.bridgeUrl, provider:state.settings.provider, model, prompt, images, documents, pdfDetail, apiKey:currentApiKey() });
   }
   return callDirect({ provider:state.settings.provider, model, apiKey:currentApiKey(), prompt, ollamaUrl:state.settings.ollamaUrl, images, documents, pdfDetail });
+}
+async function interpretEngineeringQuestionInputsV26(question='') {
+  if (!shouldUseAiInputInterpreter(question)) return null;
+  // `local` is the deterministic/local-search provider, not an LLM endpoint.
+  if (state.settings.provider === 'local') return null;
+  try {
+    const prompt=buildEngineeringInputInterpreterPrompt(question);
+    const raw=await callConfiguredAiOnce({ prompt, images:[], documents:[], pdfDetail:'auto' });
+    return parseEngineeringInputInterpreterResponse(raw);
+  } catch (error) {
+    console.warn('V26 AI Input Interpreter fallback to deterministic parser:', error);
+    return null;
+  }
 }
 async function chooseApprovedFallbackModel(error, currentModel) {
   // Fallback is allowed only from a model list VERIFIED against the current
@@ -1848,11 +1862,12 @@ async function exportPile10304Excel() {
 
 function engineeringResultFacts(result={}) {
   const labels={
-    longTermKn:'Ra dài hạn',shortTermKn:'Ra ngắn hạn',pmaxKn:'Pmax',RkKn:'Rk',RdKn:'Rd',
+    longTermKn:'Ra dài hạn',shortTermKn:'Ra ngắn hạn',pmaxKn:'Pmax',RkKn:'Rc,k / Rk',RdKn:'Rd',NdMaxKn:'Tải sau γn',
+    qbKpa:'qb',shaftUnitResistanceKpa:'fs',RubKn:'Sức kháng mũi',RufKn:'Sức kháng thân',
     tipResistanceKn:'R mũi',sideResistanceKn:'R ma sát',settlementM:'Độ lún',MuKnM:'Mu',
     utilization:'Hệ số sử dụng',crackWidthMm:'Bề rộng nứt',deflectionMm:'Độ võng'
   };
-  const unitFor=k=>/KnM$/i.test(k)?'kN.m':/Kn$/i.test(k)?'kN':/Mm$/i.test(k)?'mm':/settlementM$/i.test(k)?'m':'';
+  const unitFor=k=>/Kpa$/i.test(k)?'kPa':/KnM$/i.test(k)?'kN.m':/Kn$/i.test(k)?'kN':/Mm$/i.test(k)?'mm':/settlementM$/i.test(k)?'m':'';
   return Object.entries(result||{}).filter(([k,v])=>labels[k]&&Number.isFinite(Number(v))).slice(0,8).map(([k,v])=>({label:labels[k],value:Number(v),unit:unitFor(k)}));
 }
 
@@ -1891,7 +1906,7 @@ function openEngineeringInCalculator(index) {
   const message=state.chat[Number(index)];
   const meta=message?.engineering;
   if(!meta?.question) return showToast('Không tìm thấy đề bài kỹ thuật của câu trả lời này.', 'warning');
-  const payload=engineeringExcelPayload(meta.normalizedQuestion||meta.question);
+  const payload=engineeringExcelPayload(meta.normalizedQuestion||meta.question,{aiExtraction:meta.aiInputExtraction||null});
   if(!payload.recognized) return showToast('HNL chưa nhận diện được workflow kỹ thuật để chuyển sang Tính.', 'warning');
   state.chatCalcTransfer={payload,index:Number(index),imageProvenance:Array.isArray(meta.imageInput)?meta.imageInput:[]};
   syncChatTransferToDedicatedCalculator(payload);
@@ -1926,13 +1941,15 @@ function chatCalcTransferHtml() {
   </div>`;
 }
 
-function recalculateChatTransfer() {
+async function recalculateChatTransfer() {
   const transfer=state.chatCalcTransfer; if(!transfer) return;
   const question=String(document.querySelector('#chatCalcQuestionEdit')?.value||transfer.payload?.question||'').trim();
   if(!question) return showToast('Hãy nhập/bổ sung đề bài trước khi tính lại.', 'warning');
   const normalizedQuestion=normalizeEngineeringText(question);
+  const aiInputExtraction=await interpretEngineeringQuestionInputsV26(question);
   // v1.25.5 compatibility marker: engineeringExcelPayload(question)
-  const payload=engineeringExcelPayload(normalizedQuestion);
+  const payload=engineeringExcelPayload(normalizedQuestion,{aiExtraction:aiInputExtraction});
+  payload.aiInputExtraction=aiInputExtraction;
   payload.question=question;
   payload.normalizedQuestion=normalizedQuestion;
   if(!payload.recognized) return showToast('Đề bài sau chỉnh sửa chưa nhận diện được workflow kỹ thuật.', 'warning');
@@ -2337,7 +2354,7 @@ function bind() {
       if (el.matches('[data-engineering-excel]')) { await exportEngineeringMessageExcel(el.dataset.engineeringExcel); return; }
       if (el.matches('[data-engineering-open-calc]')) { openEngineeringInCalculator(el.dataset.engineeringOpenCalc); return; }
       if (el.matches('[data-engineering-source]')) { showEngineeringSources(el.dataset.engineeringSource); return; }
-      if (el.id === 'chatCalcRecalcBtn') { recalculateChatTransfer(); return; }
+      if (el.id === 'chatCalcRecalcBtn') { await recalculateChatTransfer(); return; }
       if (el.id === 'chatCalcExcelBtn') { await exportChatCalcTransferExcel(); return; }
       if (el.id === 'chatCalcBackBtn') { state.tab='chat'; render(); return; }
       if (el.id === 'newChatBtn') { await persistCurrentChat(); startNewChat(); return; }
@@ -4036,12 +4053,15 @@ async function askQuestion(questionOverride = '', options = {}) {
   // parsing always consumes the normalized engineering view. This makes copy/paste
   // from PDF/Word/LaTeX robust without silently changing what the user asked.
   const normalizedQuestion=normalizeEngineeringText(question);
-  const engineeringSolved = solveEngineeringQuestion(normalizedQuestion);
+  const aiInputExtraction=await interpretEngineeringQuestionInputsV26(question);
+  const engineeringSolved = solveEngineeringQuestion(normalizedQuestion,{aiExtraction:aiInputExtraction});
   const engineeringMeta = engineeringSolved.recognized ? {
     workflowId:engineeringSolved.workflow.id,title:engineeringSolved.workflow.title,standard:engineeringSolved.workflow.standard,
     status:engineeringSolved.workflow.status,question,normalizedQuestion,canExport:Boolean(engineeringSolved.canExport ?? canExportEngineeringResult(engineeringSolved)),
     resultOk:Boolean(engineeringSolved.result?.ok),methodOnly:Boolean(engineeringSolved.result?.methodOnly),
     missing:Array.isArray(engineeringSolved.result?.missing)?engineeringSolved.result.missing:[],
+    aiInputExtraction,
+    inputInterpreter:aiInputExtraction?'AI_ASSISTED_V26':'DETERMINISTIC_FALLBACK_V26',
     imageInput
   } : null;
   const displayQuestion=String(options.displayQuestion||question);
@@ -4071,7 +4091,7 @@ async function exportEngineeringMessageExcel(index) {
   const meta=message?.engineering;
   const imageProvenance=Array.isArray(meta?.imageInput)?meta.imageInput:[];
   if(!meta?.question) return showToast('Không tìm thấy đề bài kỹ thuật để xuất Excel.', 'warning');
-  const payload=engineeringExcelPayload(meta.normalizedQuestion||meta.question);
+  const payload=engineeringExcelPayload(meta.normalizedQuestion||meta.question,{aiExtraction:meta.aiInputExtraction||null});
   if(!payload.recognized || !/^(7888|10304|5574)-/.test(payload.workflow?.id||'')) return showToast('Workflow này chưa có Excel kỹ thuật chuyên dụng.', 'warning');
   if(!payload.canExport) return showToast('Đề bài chưa đủ input để tạo Excel tính toán. Hãy bổ sung dữ liệu còn thiếu rồi hỏi lại.', 'warning');
   if(!String(payload.workflow.status||'').startsWith('VERIFIED')) return showToast(`Workflow ${payload.workflow.title} chưa VERIFIED, không được xuất Excel số học.`, 'warning');

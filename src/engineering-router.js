@@ -3,13 +3,14 @@
 // run deterministic VERIFIED calculations when enough data exists, otherwise
 // return the exact workflow/source/status/missing inputs. AI never owns the math.
 
-import { calculateDrivenPile10304, calculateRockEndBearing10304, calculateBoredPile10304, calculateSptPile10304 } from './pile-workflows.js';
+import { calculateDrivenPile10304, calculateRockEndBearing10304, calculateBoredPile10304, calculateSptPile10304, calculateSptSummary10304 } from './pile-workflows.js';
 import { lookupPileType7888, classesForPileType7888 } from './tcvn7888.js';
 import { annulusAreaMm2, axialResistance } from './calculators.js';
 import { lookup5574Concrete, lookup5574Steel, lookup5574ConcreteSls, lookup5574SteelSls } from './codepack-tables.js';
 import { calcDynamic10304, calcSingleSettlement10304, calcGroupSettlement10304, calcEquivalentBlock10304, verifyPiledRaft10304, calcConstructionEffect10304 } from './tcvn10304-advanced.js';
 import { lookupTable7Alphas10304, lookupTable8Qb10304, lookupTable15Beta1, lookupTable15SideBeta } from './tcvn10304-table-engine.js';
 import { normalizeEngineeringText, extractEngineeringNumber, inferPileGeometry } from './engineering-text-normalizer.js';
+import { extractEngineeringScalarNumber, extractSptSummaryInputV26 } from './engineering-input-interpreter.js';
 import { productionStatusFor, isProductionNumericAllowed } from './production-status-registry.js';
 import { calculateNearCenteredRectPileCapacity5574, combineSoilAndMaterialResistance } from './pile-material-engine.js';
 import { combineLockedPileResistance } from './pile-capacity-engine.js';
@@ -283,17 +284,49 @@ function calcCpt10304(q='') {
   if(missing.length) return {ok:false,missing}; const Rs=b1*qs, f=b2*fs, Ru=Rs*A+f*h*u;
   return {ok:true,RkKn:Ru,inputs:{A,u,h,qs,fs,b1,b2,pile,load,soil,probe,b1Auto:!!b1Lookup,b2Auto:!!b2Lookup,saturatedSand:/bao hoa/.test(norm)},tableLookups:{b1:b1Lookup,b2:b2Lookup},steps:[`Bảng 15: β1=${b1}${b1Lookup?` (${b1Lookup.mode})`:''}; ${probe==='mechanical'?'β2':'βi'}=${b2}${b2Lookup?` (${b2Lookup.mode})`:''}.`,`CT (26): Rs=β1·qs=${Rs.toFixed(3)} kPa.`,`CT (27)/(28): f=β·fs=${f.toFixed(3)} kPa.`,`CT (25): Ru=Rs·A+f·h·u=${Ru.toFixed(3)} kN.`],provenance:['TCVN 10304:2025 · 7.3.4.2 · CT (25)-(28) · tr.55-56','Bảng 15 · tr.57 · không tự nội suy nếu không có chú thích cho phép']};
 }
-function calcSpt10304(q='') {
+function calcSpt10304(q='', options={}) {
   const geometry=inferPileGeometry(q),layers=parsePileLayers(q),points=parseSptPoints(q),norm=n(q); const L=explicit(q,['L','chiều dài','chieu dai'],'m?'),tipDepth=explicit(q,['z_tip','tipDepth','độ sâu mũi','do sau mui'],'m?')??L;
   const pileType=/coc vit/.test(norm)?'screw':(/rung.*moi dat|ống rung|ong rung/.test(norm)?'vibro-pipe':(/coc dong|coc ep|đóng|ép/.test(norm)?'driven':'bored'));
   if(layers.length&&tipDepth!=null&&(points.length||layers.some(x=>x.sptN!=null||x.cuKpa!=null))){
     const rawExcelInput={pileType,shape:geometry.shape,diameterM:geometry.diameterM,sideM:geometry.sideM,areaM2:geometry.areaM2,perimeterM:geometry.perimeterM,lengthM:L,tipDepthM:tipDepth,shaftStartDepthM:explicit(q,['shaftStart','z_head','độ sâu đầu cọc','do sau dau coc'],'m?')??0,layers,sptPoints:points,closedTip:!/hở mũi|ho mui|open tip/.test(norm),innerDiameterM:explicit(q,['d_in','dtrong','đường kính trong','duong kinh trong'],'m?'),gammaK:explicit(q,['gamma_k','γk']),gammaN:explicit(q,['gamma_n','γn'])};
     const result=calculateSptPile10304(rawExcelInput); if(result.ok) result.excelInputs=rawExcelInput; return result;
   }
-  // Legacy explicit-input compatibility: no hidden interpolation, values are MANUAL inputs.
-  const qb=explicit(q,['qb','q_b'],'(?:kPa|kN/m2|kN/m²)?'); const A=explicit(q,['Ap','A_p','A'],'(?:m2|mm2)?') ?? geometry.areaM2; const fs=explicit(q,['fs','f_s'],'(?:kPa|kN/m2|kN/m²)?') ?? 0; const fc=explicit(q,['fc','f_c'],'(?:kPa|kN/m2|kN/m²)?') ?? 0; const Ls=explicit(q,['Ls','L_s'],'m?') ?? 0; const Lc=explicit(q,['Lc','L_c'],'m?') ?? 0; const u=explicit(q,['u','chu vi'],'(?:m|mm)?') ?? geometry.perimeterM;
-  const missing=[]; if(qb==null) missing.push('N-SPT/c_u + địa tầng để tự tính Bảng D.1, hoặc qb nhập tay có provenance'); if(A==null) missing.push('A (m²)'); if(u==null) missing.push('u (m)'); if(!Ls&&!Lc) missing.push('Ls và/hoặc Lc'); if(missing.length) return {ok:false,missing}; const Rub=qb*A, Ruf=fs*Ls*u+fc*Lc*u, Ru=Rub+Ruf;
-  return {ok:true,status:'MIXED/MANUAL',RkKn:Ru,inputs:{qb,A,fs,fc,Ls,Lc,u},steps:[`D.3: Ru,b=qb·A=${Rub.toFixed(3)} kN.`,`D.5-D.6: Ru,f=${Ruf.toFixed(3)} kN.`,`D.1-D.2: Rk=Ru=${Ru.toFixed(3)} kN.`],provenance:['TCVN 10304:2025 · Phụ lục D · D.1-D.6 · tr.110','Bảng D.1 · tr.111','Giá trị qb/fs/fc nhập tay: không gắn là kết quả của XLL.']};
+
+  // V26: natural-language SPT summary route. The interpreter may use AI only to
+  // identify inputs/semantics; the deterministic engine below owns all formulas.
+  const interpreted=extractSptSummaryInputV26(q,options.aiExtraction||null);
+  const summaryReady=interpreted.soilGroup==='sand'&&interpreted.pileType!=='unknown'&&interpreted.fullShaft&&interpreted.lengthM>0&&interpreted.nBarTip!=null&&interpreted.nsShaft!=null&&geometry.areaM2>0&&geometry.perimeterM>0;
+  if(summaryReady){
+    const summaryInput={
+      inputMode:'EXPLICIT_SPT_SUMMARY',
+      pileType:interpreted.pileType,
+      shape:geometry.shape,
+      diameterM:geometry.diameterM,
+      sideM:geometry.sideM,
+      areaM2:geometry.areaM2,
+      perimeterM:geometry.perimeterM,
+      lengthM:interpreted.lengthM,
+      shaftStartDepthM:0,
+      shaftLengthM:interpreted.shaftLengthM,
+      soilGroup:'sand',
+      nBarTip:interpreted.nBarTip,
+      nsShaft:interpreted.nsShaft,
+      eta:interpreted.eta,
+      closedTip:interpreted.closedTip,
+      gammaK:interpreted.gammaK,
+      gammaN:interpreted.gammaN
+    };
+    const result=calculateSptSummary10304(summaryInput);
+    result.inputInterpretation=interpreted;
+    if(result.ok) result.excelInputs=summaryInput;
+    return result;
+  }
+
+  // Legacy explicit-input compatibility: scalar values only. V26 Formula Guard
+  // rejects coefficients embedded in formulas (qb=300ηNbar, fs=2Ns, ...).
+  const qb=extractEngineeringScalarNumber(q,['qb','q_b'],'(?:kPa|kN/m2|kN/m²)?'); const A=explicit(q,['Ap','A_p','A'],'(?:m2|mm2)?') ?? geometry.areaM2; const fs=extractEngineeringScalarNumber(q,['fs','f_s'],'(?:kPa|kN/m2|kN/m²)?') ?? 0; const fc=extractEngineeringScalarNumber(q,['fc','f_c'],'(?:kPa|kN/m2|kN/m²)?') ?? 0; const Ls=explicit(q,['Ls','L_s'],'m?') ?? 0; const Lc=explicit(q,['Lc','L_c'],'m?') ?? 0; const u=explicit(q,['u','chu vi'],'(?:m|mm)?') ?? geometry.perimeterM;
+  const missing=[]; if(qb==null) missing.push('N-SPT/c_u + địa tầng hoặc N̄/Ns tóm tắt có provenance để Calculation Engine tự tính Bảng D.1; qb chỉ được nhập tay khi là giá trị scalar'); if(A==null) missing.push('A (m²)'); if(u==null) missing.push('u (m)'); if(!Ls&&!Lc) missing.push('Ls và/hoặc Lc'); if(missing.length) return {ok:false,missing,inputInterpretation:interpreted}; const Rub=qb*A, Ruf=fs*Ls*u+fc*Lc*u, Ru=Rub+Ruf;
+  return {ok:true,status:'MIXED/MANUAL',RkKn:Ru,inputs:{qb,A,fs,fc,Ls,Lc,u},inputInterpretation:interpreted,steps:[`D.3: Ru,b=qb·A=${Rub.toFixed(3)} kN.`,`D.5-D.6: Ru,f=${Ruf.toFixed(3)} kN.`,`D.1-D.2: Rk=Ru=${Ru.toFixed(3)} kN.`],provenance:['TCVN 10304:2025 · Phụ lục D · D.1-D.6 · tr.110','Bảng D.1 · tr.111','V26 Formula Guard: qb/fs/fc nhập tay phải là scalar; hệ số trong công thức không được coi là giá trị đầu vào.']};
 }
 function calculate5574Material(question='') {
   const q=String(question).toUpperCase();
@@ -553,6 +586,7 @@ function productionRegistryIdForResult(workflow={},result={}) {
   if(workflow.id==='10304-driven') return '10304-driven';
   if(workflow.id==='10304-end-bearing' && result?.Ks!=null) return '10304-end-bearing-rock';
   if(workflow.id==='10304-bored' && Array.isArray(result?.segmentResults) && result?.tipLayer) return '10304-bored-raw';
+  if(workflow.id==='10304-spt' && result?.inputMode==='EXPLICIT_SPT_SUMMARY') return '10304-spt-summary-explicit';
   if(workflow.id==='10304-spt' && result?.noInterpolationPolicy===true) return '10304-spt-raw';
   if(workflow.id==='5574-pile-material' && result?.workflow==='pile-material-5574-near-centered-rect') return '5574-pile-material-near-centered-rect';
   return null;
@@ -575,7 +609,7 @@ export function canExportEngineeringResult(payload={}) {
   return true;
 }
 
-export function solveEngineeringQuestion(question='') {
+export function solveEngineeringQuestion(question='', options={}) {
   const workflow=selectEngineeringWorkflow(question);
   if(!workflow) return {recognized:false};
   let result=null;
@@ -589,7 +623,7 @@ export function solveEngineeringQuestion(question='') {
     else if(workflow.id==='10304-static') result=calcStatic10304(question);
     else if(workflow.id==='10304-dynamic') result=calcDynamic10304(question);
     else if(workflow.id==='10304-cpt') result=calcCpt10304(question);
-    else if(workflow.id==='10304-spt') result=calcSpt10304(question);
+    else if(workflow.id==='10304-spt') result=calcSpt10304(question,options);
     else if(workflow.id==='10304-settlement-single') result=calcSingleSettlement10304(question);
     else if(workflow.id==='10304-settlement-group') result=calcGroupSettlement10304(question);
     else if(workflow.id==='10304-equivalent-block') result=calcEquivalentBlock10304(question);
@@ -622,8 +656,8 @@ export function solveEngineeringQuestion(question='') {
   return {...solved,canExport:canExportEngineeringResult(solved)};
 }
 
-export function engineeringExcelPayload(question='') {
-  const solved=solveEngineeringQuestion(question);
+export function engineeringExcelPayload(question='', options={}) {
+  const solved=solveEngineeringQuestion(question,options);
   if(!solved.recognized) return {recognized:false};
   const id=solved.workflow.id;
   let input=solved.result?.excelInputs || solved.result?.inputs || {};

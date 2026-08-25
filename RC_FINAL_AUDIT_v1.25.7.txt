@@ -1,0 +1,64 @@
+HNL PILE STANDARDS AI - v1.25.7 RC FINAL AUDIT
+Date: 2026-08-24
+Scope: Chat -> Engineering Normalizer -> Router -> Deterministic Calculation Engine -> Excel/UI
+
+SOURCE POLICY
+- Baseline: user-uploaded v1.25.7 source ZIP.
+- No rollback.
+- Search Brain v1.9.23 was not modified.
+
+FIXES IN THIS RC PASS
+1. Natural-language driven-pile routing
+   - Recognizes wording such as: "Cọc vuông ... dài L = 12 m đóng bằng búa diesel".
+   - Preserves priority for more-specific CPT/end-bearing/bored workflows.
+2. Geological layer parsing
+   - Supports "Lớp N: Từ a m đến b m" and compact a-b / a–b forms.
+   - Keeps layer boundaries and IL values.
+3. Deterministic driven-pile gamma_n / Nd,max
+   - gamma_n is carried into the Calculation Engine.
+   - Nd,max = Rd/gamma_n only when gamma_n is a valid numeric input.
+4. Formula-only Excel path
+   - gamma_n is an input cell.
+   - Nd,max is an Excel formula, not a copied numeric result.
+5. Math renderer / paste recovery
+   - raw pasted LaTeX remains raw in the editor.
+   - standalone LaTeX formulas render even without $...$ or \(...\) delimiters.
+   - provider-damaged frac/sigma/gamma/left/right/times/approx/boxed forms are recovered for display.
+6. GitHub Actions RC metadata
+   - v1.25.7 naming/branch/artifact/golden paths synchronized.
+   - job name no longer hard-codes regression counts.
+
+TEST CASE 4 - DIRECT DETERMINISTIC CHECK
+- recognized=true
+- workflow=10304-driven
+- method=hammer
+- L=12 m; tipDepth=12 m; Ap=0.16 m2; u=1.6 m
+- Layers: 0-3 IL=.7; 3-8 IL=.5; 8-15 IL=.3
+- gamma_k=1.4; gamma_n=1.15
+- 7 side-friction segments; every segment <= 2 m; layer boundaries preserved
+- qb=3700 kPa
+- Rp=592.0 kN
+- Rf=510.8 kN
+- Rk=1102.8 kN
+- Rd=787.7142857143 kN
+- Nd,max=684.9689440994 kN
+- result.ok=true; canExport=true
+
+LOCAL GATES RUN ON FINAL WORKING TREE
+- npm test: PASS, 297/297
+- npm run golden:tables: PASS, 1130/1130
+- Search Brain SHA-256: f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2 (unchanged)
+- npm ci: BLOCKED locally because the uploaded ZIP did not contain package-lock.json
+- npm run excel:smoke: BLOCKED locally because exceljs is not installed (npm ci could not run)
+- npm run build:web: BLOCKED locally because vite is not installed (npm ci could not run)
+
+PACKAGE-LOCK / CI NOTE
+- The existing GitHub repository has package-lock.json v1.25.7.
+- When copying this ZIP over the existing GitHub checkout, keep that package-lock.json.
+- The RC workflow also has a bootstrap-lock job that generates/commits a synchronized package-lock if it is absent or version-mismatched; the next workflow run then executes the Linux and Windows gates.
+
+DO NOT MARK THE FOLLOWING AS LOCALLY VERIFIED UNTIL CI/DEPENDENCIES RUN
+- ExcelJS runtime smoke
+- Web production build
+- Windows Setup/Portable build
+- Microsoft Excel COM recalculation (runner-dependent)

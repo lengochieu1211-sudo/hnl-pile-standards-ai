@@ -13,6 +13,7 @@ export const PRODUCTION_STATUS_REGISTRY = Object.freeze({
   '10304-end-bearing-rock':{status:'LOCKED',productionNumeric:true,source:'7.2.1 · CT (5)–(8) · Bảng 1 · P0 Pass 3 E2E'},
   '10304-bored-raw':{status:'LOCKED',productionNumeric:true,source:'7.2.3 · CT (13)–(16) · Bảng 3,6,7,8 · P0 Pass 3 E2E'},
   '10304-spt-raw':{status:'LOCKED',productionNumeric:true,source:'Phụ lục D · D.1–D.6 · Bảng D.1 · SPT PDF Decision Pass · measured tip window + layer-representative shaft N; no continuous DCE interpolation'},
+  '10304-spt-summary-explicit':{status:'VERIFIED',productionNumeric:true,source:'V26 · Phụ lục D/Bảng D.1 · user-supplied N̄ tip + Ns for declared shaft interval · coefficients/caps delegated to LOCKED table engine · Formula Guard'},
   '5574-pile-material-near-centered-rect':{status:'LOCKED',productionNumeric:true,source:'TCVN 5574:2018 · 8.1.2.4.3 · CT (49)–(50) · Bảng 16 · P1 Pass 1'},
   'pile-capacity-integrated-square':{status:'LOCKED',productionNumeric:true,source:'P1 Material E2E · Rpile=min(Rd,10304, Nu,5574) · both child branches LOCKED + geometry/basis gates'},
   'pile-capacity-multiborehole-square':{status:'LOCKED',productionNumeric:true,source:'P1 Pass 2 · Multi-Borehole HK×{Mechanical,SPT} · batch min over independently LOCKED child workflows + common Rmaterial'},

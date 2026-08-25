@@ -482,8 +482,34 @@ export async function export10304AdvancedWorkflowWorkbook(workflowId, input={}, 
     const tb=wb.addWorksheet('04_BANG15_POLICY'); tb.columns=[{width:26},{width:20},{width:65}]; tb.addRows([['Nhóm','Chính sách','Ghi chú'],['β1 theo q_s','EXACT / EDGE-BAND','Không có chú thích cho phép nội suy giữa 1000–2500–...; mốc ≤1000 và ≥30000 dùng theo dấu của bảng.'],['β2/βi theo f_s','EXACT / EDGE-BAND','Mốc ≤20 và ≥120 dùng theo dấu của bảng; khoảng giữa chỉ dùng đúng mốc.'],['Cọc vít cát bão hòa','DISCRETE','βi giảm 2 lần theo chú thích Bảng 15.']]); styleHeader(tb.getRow(1),blue); styleSheet(tb);
     src.addRows([['CPT','7.3.4 · CT (25)-(29) · Bảng 15-16','55-58','VERIFIED','Bảng 15 không tự nội suy nếu nguồn không ghi; Bảng 16 có Chú thích 1 cho phép nội suy tuyến tính theo qc.']]);
   } else if(workflowId==='spt'){
-    const r={}; for(const [k,v,u,n] of [['qb',input.qb??1000,'kPa','q_b'],['A',input.A??0.16,'m²','A'],['fs',input.fs??20,'kPa','f_s'],['fc',input.fc??20,'kPa','f_c'],['Ls',input.Ls??6,'m','L_s'],['Lc',input.Lc??6,'m','L_c'],['u',input.u??1.6,'m','u']]) r[k]=addInput(n,v,u,'Phụ lục D');
-    const x=n=>`'01_INPUT'!B${r[n]}`; const rb=addCalc('R_u,b',`${x('qb')}*${x('A')}`,'kN','D.3'); const rf=addCalc('R_u,f',`(${x('fs')}*${x('Ls')}+${x('fc')}*${x('Lc')})*${x('u')}`,'kN','D.5-D.6'); addCalc('R_u',`B${rb}+B${rf}`,'kN','D.1-D.2'); src.addRows([['SPT','Phụ lục D · D.1-D.6 · Bảng D.1','110-111','VERIFIED','']]);
+    if(input.inputMode==='EXPLICIT_SPT_SUMMARY' || input.nBarTip!=null || input.nsShaft!=null){
+      const r={};
+      r.pileType=addInput('Loại cọc',input.pileType??'driven','-','driven / bored / vibro-pipe / screw');
+      r.eta=addInput('η',input.eta??1,'-','Bảng D.1; cọc đóng/ép mũi kín thường η=1');
+      r.Nbar=addInput('N̄ vùng mũi',input.nBarTip??'','-','Giá trị trung bình vùng mũi do người dùng cung cấp; không sinh điểm SPT');
+      r.Ns=addInput('Ns thân cọc',input.nsShaft??'','-','Giá trị đại diện cho khoảng thân được khai báo');
+      r.A=addInput('A',input.areaM2??input.A??0.16,'m²','Diện tích mũi');
+      r.u=addInput('u',input.perimeterM??input.u??1.6,'m','Chu vi thân');
+      r.Ls=addInput('Ls',input.shaftLengthM??input.Ls??input.lengthM??'','m','Chiều dài thân áp dụng Ns');
+      r.gk=addInput('γk',input.gammaK??1.5,'-','Hệ số độ tin cậy');
+      r.gn=addInput('γn',input.gammaN??1.15,'-','Hệ số tầm quan trọng/điều kiện thiết kế theo workflow HNL');
+      const d1=wb.addWorksheet('04_BANG_D1');
+      d1.columns=[{width:16},{width:28},{width:14},{width:14},{width:14},{width:14},{width:14},{width:14}];
+      d1.addRow(['pileType','label','tipSandN','tipCap','shaftSandN','shaftSandCap','tipSandEta','tipCapEta']); styleHeader(d1.getRow(1),'FF548235');
+      [['bored',T10304_SPT_D1.bored],['vibro-pipe',T10304_SPT_D1.vibroPipe],['screw',T10304_SPT_D1.screw],['driven',T10304_SPT_D1.driven]].forEach(([k,a])=>d1.addRow([k,a.label,a.tipSandN??'',a.tipCapKpa,a.shaftSandN??'',a.shaftSandCapKpa,a.tipSandUsesEta?1:0,a.tipCapUsesEta?1:0])); styleSheet(d1);
+      const x=n=>`'01_INPUT'!B${r[n]}`;
+      const qb=addCalc('q_b',`LET(pt,${x('pileType')},N,${x('Nbar')},eta,${x('eta')},coef,XLOOKUP(pt,'04_BANG_D1'!$A$2:$A$5,'04_BANG_D1'!$C$2:$C$5),cap,XLOOKUP(pt,'04_BANG_D1'!$A$2:$A$5,'04_BANG_D1'!$D$2:$D$5),useEta,XLOOKUP(pt,'04_BANG_D1'!$A$2:$A$5,'04_BANG_D1'!$G$2:$G$5),capEta,XLOOKUP(pt,'04_BANG_D1'!$A$2:$A$5,'04_BANG_D1'!$H$2:$H$5),IF(OR(NOT(ISNUMBER(N)),NOT(ISNUMBER(eta))),"BLOCK",MIN(coef*N*IF(useEta=1,eta,1),cap*IF(capEta=1,eta,1))))`,'kPa','Bảng D.1 · FORMULA+CAP; không lấy 300 trong công thức nguồn làm qb');
+      const fsr=addCalc('f_s',`LET(pt,${x('pileType')},N,${x('Ns')},coef,XLOOKUP(pt,'04_BANG_D1'!$A$2:$A$5,'04_BANG_D1'!$E$2:$E$5),cap,XLOOKUP(pt,'04_BANG_D1'!$A$2:$A$5,'04_BANG_D1'!$F$2:$F$5),IF(NOT(ISNUMBER(N)),"BLOCK",MIN(coef*N,cap)))`,'kPa','Bảng D.1 · FORMULA+CAP; không lấy 2 trong công thức nguồn làm fs');
+      const rb=addCalc('R_u,b',`IF(ISNUMBER(B${qb}),B${qb}*${x('A')},"")`,'kN','D.3');
+      const rf=addCalc('R_u,f',`IF(ISNUMBER(B${fsr}),B${fsr}*${x('Ls')}*${x('u')},"")`,'kN','D.5');
+      const rk=addCalc('R_c,k / R_k',`IF(AND(ISNUMBER(B${rb}),ISNUMBER(B${rf})),B${rb}+B${rf},"")`,'kN','D.1-D.2');
+      const rd=addCalc('R_d',`IF(AND(ISNUMBER(B${rk}),ISNUMBER(${x('gk')}),${x('gk')}>0),B${rk}/${x('gk')},"")`,'kN','Rk/γk');
+      addCalc('N_d,max',`IF(AND(ISNUMBER(B${rd}),ISNUMBER(${x('gn')}),${x('gn')}>0),B${rd}/${x('gn')},"")`,'kN','Rd/γn');
+      src.addRows([['SPT · V26 summary input','Phụ lục D · D.1-D.6 · Bảng D.1','110-111','VERIFIED','N̄/Ns là input có provenance; hệ số/cap lấy từ bảng tra trong workbook; Excel tự tính lại qb, fs, Rb, Rs, Rk, Rd, Nd,max.'],['Formula Guard','V26','','LOCKED POLICY','qb=300ηN̄ và fs=2Ns là công thức, không phải scalar qb=300 / fs=2.']]);
+    } else {
+      const r={}; for(const [k,v,u,n] of [['qb',input.qb??1000,'kPa','q_b'],['A',input.A??0.16,'m²','A'],['fs',input.fs??20,'kPa','f_s'],['fc',input.fc??20,'kPa','f_c'],['Ls',input.Ls??6,'m','L_s'],['Lc',input.Lc??6,'m','L_c'],['u',input.u??1.6,'m','u']]) r[k]=addInput(n,v,u,'Phụ lục D');
+      const x=n=>`'01_INPUT'!B${r[n]}`; const rb=addCalc('R_u,b',`${x('qb')}*${x('A')}`,'kN','D.3'); const rf=addCalc('R_u,f',`(${x('fs')}*${x('Ls')}+${x('fc')}*${x('Lc')})*${x('u')}`,'kN','D.5-D.6'); addCalc('R_u',`B${rb}+B${rf}`,'kN','D.1-D.2'); src.addRows([['SPT','Phụ lục D · D.1-D.6 · Bảng D.1','110-111','VERIFIED','Manual scalar compatibility; Formula Guard ở router chặn hệ số công thức bị hiểu nhầm.']]);
+    }
   } else if(workflowId==='construction-effect'){
     const r={}; r.alpha=addInput('alpha',input.alpha??0.05,'cm','Biên độ dao động đo khi hạ thử'); r.delta=addInput('delta',input.delta??10,'Hz','Tần số dao động đo khi hạ thử'); r.Va=addInput('V_a',input.VaCmS??3.0,'cm/s','Tự tra Bảng 18 theo kết cấu + trạng thái đất'); r.Rk=addInput('R_k',input.Rk??'','kN','Sức chịu tải tiêu chuẩn tại độ sâu đang xét'); r.rate=addInput('Tốc độ hạ',input.rate??'','m/min','≤3 m/min → gamma_c=1,2'); r.gc=addInput('gamma_c override',input.gammaC??'','-','Để trống nếu tốc độ ≤3 m/min');
     const x=n=>`'01_INPUT'!B${r[n]}`; const rv=addCalc('V',`2*PI()*${x('alpha')}*${x('delta')}`,'cm/s','CT (47)'); addCalc('Kiểm V <= V_a',`IF(B${rv}<=${x('Va')},1,0)`,'1=Đạt','Bảng 18'); addCalc('F_c,min',`IF(NOT(ISNUMBER(${x('Rk')})),"",IF(ISNUMBER(${x('gc')}),${x('gc')}*${x('Rk')},IF(AND(ISNUMBER(${x('rate')}),${x('rate')}<=3),1.2*${x('Rk')},NA())))`,'kN','CT (48)');

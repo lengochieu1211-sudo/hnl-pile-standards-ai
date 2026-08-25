@@ -1,10 +1,10 @@
-name: HNL v1.25.6 RC Final Gate
+name: HNL v1.25.7 RC Final Gate
 
 on:
   push:
     branches:
       - main
-      - release/v1.25.6-rc
+      - release/v1.25.7-rc
   workflow_dispatch:
 
 permissions:
@@ -51,11 +51,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add package-lock.json
-          git commit -m "build: sync package-lock for HNL v1.25.6 RC"
+          git commit -m "build: sync package-lock for HNL v1.25.7 RC"
           git push origin "HEAD:${GITHUB_REF_NAME}"
 
   linux-gate:
-    name: Clean checkout → npm ci → 286 tests → 1,130 Golden → ExcelJS → Web
+    name: Regression tests → P0/P1 Golden → ExcelJS → Web
     needs: bootstrap-lock
     if: needs.bootstrap-lock.outputs.lock_created == 'false'
     runs-on: ubuntu-latest
@@ -78,6 +78,24 @@ jobs:
       - name: Full Table Golden
         run: npm run golden:tables
 
+      - name: P0 Pass 3 Workflow Golden
+        run: npm run golden:workflows
+
+      - name: P1 Pass 1 Material Golden
+        run: npm run golden:material
+
+      - name: P1 Material Rsoil/Rmaterial E2E Golden
+        run: npm run golden:material-e2e
+
+      - name: DCE UDF Behavioral Golden
+        run: npm run golden:dce-udf
+
+      - name: SPT PDF Decision Golden
+        run: npm run golden:spt-decision
+
+      - name: P1 Multi-Borehole Golden
+        run: npm run golden:multiborehole
+
       - name: ExcelJS runtime smoke
         run: npm run excel:smoke
 
@@ -86,10 +104,17 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: hnl-v1.25.6-web-golden-excel
+          name: hnl-v1.25.7-web-golden-excel
           path: |
             dist/**
-            artifacts/full-table-golden-v1.25.6.json
+            artifacts/full-table-golden-v1.25.7.json
+            artifacts/p0-pass3/workflow-golden-v1.25.7.json
+            artifacts/p1-pass1/material-golden-v1.25.7.json
+            artifacts/p1-material-e2e/material-e2e-golden-v1.25.7.json
+            artifacts/dce-udf-behavioral/dce-udf-observed-v1.25.7.json
+            artifacts/dce-udf-behavioral/dce-udf-behavioral-golden-v1.25.7.json
+            artifacts/spt-pdf-decision/spt-pdf-decision-v1.25.7.json
+            artifacts/p1-multiborehole/multiborehole-golden-v1.25.7.json
             artifacts/excel-runtime-smoke/**
             package-lock.json
 
@@ -116,6 +141,24 @@ jobs:
       - name: Full Table Golden
         run: npm run golden:tables
 
+      - name: P0 Pass 3 Workflow Golden
+        run: npm run golden:workflows
+
+      - name: P1 Pass 1 Material Golden
+        run: npm run golden:material
+
+      - name: P1 Material Rsoil/Rmaterial E2E Golden
+        run: npm run golden:material-e2e
+
+      - name: DCE UDF Behavioral Golden
+        run: npm run golden:dce-udf
+
+      - name: SPT PDF Decision Golden
+        run: npm run golden:spt-decision
+
+      - name: P1 Multi-Borehole Golden
+        run: npm run golden:multiborehole
+
       - name: ExcelJS runtime smoke
         run: npm run excel:smoke
 
@@ -139,9 +182,16 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: hnl-v1.25.6-windows-setup-portable-excel
+          name: hnl-v1.25.7-windows-setup-portable-excel
           path: |
             release/*.exe
-            artifacts/full-table-golden-v1.25.6.json
+            artifacts/full-table-golden-v1.25.7.json
+            artifacts/p0-pass3/workflow-golden-v1.25.7.json
+            artifacts/p1-pass1/material-golden-v1.25.7.json
+            artifacts/p1-material-e2e/material-e2e-golden-v1.25.7.json
+            artifacts/dce-udf-behavioral/dce-udf-observed-v1.25.7.json
+            artifacts/dce-udf-behavioral/dce-udf-behavioral-golden-v1.25.7.json
+            artifacts/spt-pdf-decision/spt-pdf-decision-v1.25.7.json
+            artifacts/p1-multiborehole/multiborehole-golden-v1.25.7.json
             artifacts/excel-runtime-smoke/**
             scripts/verify-excel-com.ps1

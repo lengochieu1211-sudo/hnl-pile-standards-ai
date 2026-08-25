@@ -290,6 +290,44 @@ function representativeNForLayer(points,layer){
   if(!used.length)return {value:null,source:'MISSING-MEASURED-LAYER-N',used:[]};
   return {value:used.reduce((sum,p)=>sum+p.N,0)/used.length,source:'DERIVED-MEASURED-LAYER-MEAN',used};
 }
+/**
+ * V26 explicit-summary SPT calculator.
+ * This is deterministic and delegates all Appendix D coefficients/caps to the
+ * already-LOCKED table engine. It is used only when the user explicitly supplies
+ * Nbar at the pile tip and a representative Ns for a stated shaft interval.
+ * It never invents/interpolates SPT points and never treats formula coefficients
+ * copied from the standard as measured q_b/f_s values.
+ */
+export function calculateSptSummary10304(input={}){
+  const geometry=geometryFromInput(input),A=num(input.areaM2)??num(geometry.tipAreaM2)??num(geometry.areaM2),u=num(input.perimeterM)??num(geometry.perimeterM);
+  const L=num(input.lengthM),shaftStart=num(input.shaftStartDepthM)??0,shaftLength=num(input.shaftLengthM)??(L!=null?L-shaftStart:null),pileType=input.pileType||'driven';
+  const tipSoilGroup=input.tipSoilGroup||input.soilGroup||'sand',shaftSoilGroup=input.shaftSoilGroup||input.soilGroup||'sand';
+  const nBarTip=num(input.nBarTip),nsShaft=num(input.nsShaft),tipCuKpa=num(input.tipCuKpa),shaftCuKpa=num(input.shaftCuKpa),missing=[];
+  if(!(A>0))missing.push('A diện tích mũi');if(!(u>0))missing.push('u chu vi');if(!(L>0))missing.push('chiều dài cọc L');if(!(shaftLength>0))missing.push('chiều dài thân chịu ma sát');
+  if(tipSoilGroup==='sand'&&nBarTip==null)missing.push('N̄ vùng mũi do người dùng cung cấp');
+  if(tipSoilGroup!=='sand'&&tipCuKpa==null)missing.push('c_u tại mũi cho đất dính');
+  if(shaftSoilGroup==='sand'&&nsShaft==null)missing.push('N_s đại diện thân cọc do người dùng cung cấp');
+  if(shaftSoilGroup!=='sand'&&shaftCuKpa==null&&nsShaft==null)missing.push('c_u hoặc N_c đại diện thân cọc');
+  if(missing.length)return {ok:false,missing,geometry,inputMode:'EXPLICIT_SPT_SUMMARY',provenance:PROV_SPT};
+  let eta,qb,shaft;
+  try{
+    eta=sptEta10304({pileType,closedTip:input.closedTip!==false,lengthM:L,innerDiameterM:num(input.innerDiameterM),eta:input.eta});
+    qb=lookupSptTipResistance10304({pileType,soilGroup:tipSoilGroup,N:nBarTip,cuKpa:tipCuKpa,eta:eta.value});
+    shaft=lookupSptShaftResistance10304({pileType,soilGroup:shaftSoilGroup,N:nsShaft,cuKpa:shaftCuKpa});
+  }catch(e){return {ok:false,missing:[e.message],geometry,inputMode:'EXPLICIT_SPT_SUMMARY',provenance:PROV_SPT};}
+  const RubKn=qb.value*A,RufKn=shaft.value*shaftLength*u,RkKn=RubKn+RufKn,gammaK=num(input.gammaK),RdKn=gammaK&&gammaK>0?RkKn/gammaK:null,gammaN=num(input.gammaN),NdMaxKn=RdKn!=null&&gammaN&&gammaN>0?RdKn/gammaN:null;
+  const summaryInputPolicy={
+    decision:'V26-EXPLICIT-SUMMARY-INPUT',
+    normativeSource:'TCVN 10304:2025 · Phụ lục D · D.1–D.6 · Bảng D.1 · trang 110–111',
+    tipN:'USER-SUPPLIED-ALREADY-AVERAGED-NBAR; NO_SYNTHETIC_POINTS',
+    shaftN:'USER-SUPPLIED-REPRESENTATIVE-NS-FOR-DECLARED-SHAFT-INTERVAL',
+    continuousInterpolation:false,
+    formulaCoefficientsAreNotInputs:true,
+    note:'V26 chỉ nhận N̄/Ns mà người dùng nêu rõ; hệ số/cap qb,fs lấy từ table engine LOCKED, không parse 300 hoặc 2 từ công thức nguồn thành giá trị đo.'
+  };
+  return {ok:true,status:'VERIFIED_SUMMARY_INPUT',inputMode:'EXPLICIT_SPT_SUMMARY',summaryInputPolicy,inputs:{...input,areaM2:A,perimeterM:u,lengthM:L,shaftStartDepthM:shaftStart,shaftLengthM:shaftLength,pileType,eta:eta.value},geometry,pileType,eta:eta.value,nBarTip,nsShaft,qbKpa:qb.value,shaftUnitResistanceKpa:shaft.value,qbLookup:qb,shaftLookup:shaft,RubKn,RufKn,RkKn,gammaK,RdKn,gammaN,NdMaxKn,noInterpolationPolicy:true,steps:[`Bảng D.1: dùng N̄ mũi do người dùng cung cấp = ${nBarTip}; q_b=${qb.value.toFixed(3)} kPa (raw=${qb.raw.toFixed(3)}, cap=${qb.cap.toFixed(3)}).`,`D.3: Ru,b=q_b·A=${RubKn.toFixed(3)} kN.`,`Bảng D.1/D.5-D.6: dùng Ns thân cọc do người dùng cung cấp = ${nsShaft}; f_s=${shaft.value.toFixed(3)} kPa; Ru,f=${RufKn.toFixed(3)} kN.`,`D.1-D.2: Rk=Ru=${RkKn.toFixed(3)} kN.${RdKn!=null?` Rd=Rk/γk=${RdKn.toFixed(3)} kN.`:''}${NdMaxKn!=null?` Nd,max=Rd/γn=${NdMaxKn.toFixed(3)} kN/cọc.`:''}`],provenance:[PROV_SPT,'V26 · Input provenance: N̄/Ns được trích từ đề bài; hệ số/cap lấy từ Bảng D.1 trong table engine LOCKED.']};
+}
+
 /** Appendix D raw-profile SPT calculator. SPT PDF Decision Pass: no hidden continuous interpolation. */
 export function calculateSptPile10304(input={}){
   const geometry=geometryFromInput(input),A=num(input.areaM2)??num(geometry.tipAreaM2)??num(geometry.areaM2),u=num(input.perimeterM)??num(geometry.perimeterM),tipDepth=num(input.tipDepthM)??num(input.lengthM),shaftStart=num(input.shaftStartDepthM)??0,pileType=input.pileType||'bored',layers=normalizeGeoLayers10304(input.layers),points=input.sptPoints||[];

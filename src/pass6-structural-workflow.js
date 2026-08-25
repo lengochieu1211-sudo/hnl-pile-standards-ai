@@ -14,7 +14,7 @@
  */
 
 import { importDceStructuralTableBundle } from './etabs-sap-importer.js';
-import { importStructuralCsvBundle } from './csi-live-bridge.js';
+import { importStructuralCsvBundle } from './structural-csv-importer.js';
 import { checkImportedNodalPileReactionEnvelope } from './pile-reaction-engine.js';
 
 const EPS = 1e-10;

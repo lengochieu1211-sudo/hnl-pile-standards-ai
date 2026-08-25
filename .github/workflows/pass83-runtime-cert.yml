@@ -7,7 +7,8 @@ on:
       - main
       - 'p1/pass8.3-runtime-cert-v21'
       - 'p1/pass8.3-runtime-cert-v22'
-      - 'p1/pass8.3-repair-v23'
+      - 'p1/pass8.3-runtime-cert-v23'
+      - 'p1/pass8.3-runtime-cert-v24'
   pull_request:
     branches:
       - main
@@ -22,10 +23,10 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: npm
@@ -35,6 +36,9 @@ jobs:
 
       - name: Source sync gate
         run: npm run gate:pass83-source-sync
+
+      - name: Browser / Node runtime boundary gate
+        run: npm run gate:pass83-web-boundary
 
       - name: Locked regression suite · exact 574
         run: npm run gate:pass83-tests
@@ -84,10 +88,10 @@ jobs:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: npm
@@ -97,6 +101,9 @@ jobs:
 
       - name: Source sync gate on Windows
         run: npm run gate:pass83-source-sync
+
+      - name: Browser / Node runtime boundary gate on Windows
+        run: npm run gate:pass83-web-boundary
 
       - name: Locked regression suite on Windows · exact 574
         run: npm run gate:pass83-tests

@@ -1,0 +1,78 @@
+{
+  "schema": "HNL-P1-PASS8.3-VITE-REPAIR-V24",
+  "version": "1.25.7",
+  "status": "VITE_REPAIR_READY_FOR_GITHUB_CI",
+  "targetBranch": "p1/pass8.3-runtime-cert-v23",
+  "githubRun2": {
+    "runId": 32860381408,
+    "headSha": "8b6dfe9b0af65b6d1bb3d009db8fe442b691a0a1",
+    "passed": [
+      "npm ci",
+      "source sync gate",
+      "574/574 tests",
+      "Full Table 1242",
+      "Workflow 35",
+      "Material",
+      "DCE UDF 213",
+      "SPT 26",
+      "Material E2E",
+      "Multi-Borehole",
+      "Pass 8.2 E2E"
+    ],
+    "failed": "Vite web build",
+    "error": "src/csi-live-bridge.js: promisify is not exported by __vite-browser-external because Pass 6 statically imported Node-only CSi bridge for CSV fallback",
+    "windows": "SKIPPED_AFTER_LINUX_VITE_FAILURE"
+  },
+  "repair": {
+    "architecture": "Extract browser-safe CSV adapter; Pass 6 imports it directly; Node-only CSi bridge re-exports CSV API for backward compatibility.",
+    "newModule": "src/structural-csv-importer.js",
+    "browserImportGraph": {
+      "reachableModules": 38,
+      "csiLiveBridgeReachable": false,
+      "nodeBuiltinsReachable": 0,
+      "structuralCsvImporterReachable": true
+    },
+    "targetTests": {
+      "pass5Live": "19/19 PASS",
+      "pass6": "10/10 PASS",
+      "pass7Pass8Pass82": "34/34 PASS",
+      "sourceSync": "PASS"
+    },
+    "engineeringLogicChanged": false,
+    "searchPdfAiChanged": false,
+    "packageDependenciesChanged": false
+  },
+  "nextGate": "Push overlay to the existing v23 branch; Pass 8.3 workflow auto-runs; Vite must PASS before Windows starts.",
+  "files": [
+    {
+      "path": ".github/workflows/pass83-runtime-cert.yml",
+      "sha256": "cbd1848e778432a4dcb708c33c8ed4bd6156143c64d12622bb8318c7cf8ee223",
+      "bytes": 3445
+    },
+    {
+      "path": "package.json",
+      "sha256": "fabd8d7ab039bc429331a06c9627612c288301adb64a6a073f4733dd0197c12c",
+      "bytes": 4480
+    },
+    {
+      "path": "src/csi-live-bridge.js",
+      "sha256": "b3db4ffd8373d1ad8dbb8c1319ef8d18e860c971369793777c44c12f324c8762",
+      "bytes": 12214
+    },
+    {
+      "path": "src/pass6-structural-workflow.js",
+      "sha256": "53887c61190231080e073eff7b64b313553f851fb386c3e1ffdf2eea355e2e00",
+      "bytes": 8946
+    },
+    {
+      "path": "src/structural-csv-importer.js",
+      "sha256": "ca246aefd42de6b5f4cb1235281b213928b8d16daa9b4ae89e5fe950ecb988c5",
+      "bytes": 2683
+    },
+    {
+      "path": "tools/pass83-web-boundary-gate.mjs",
+      "sha256": "67a9dad946020eff7f6f3186cdbd22a4b5472a3d3557e9fc4f9e943b7b7af034",
+      "bytes": 1178
+    }
+  ]
+}

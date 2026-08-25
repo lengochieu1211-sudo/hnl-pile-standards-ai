@@ -33,7 +33,8 @@
     "golden:multiborehole": "node scripts/p1-multiborehole-golden.mjs artifacts/p1-multiborehole/multiborehole-golden-v1.25.7.json",
     "gate:pass82": "node tools/pass82-full-source-gate.mjs",
     "gate:pass83-source-sync": "node tools/pass83-source-sync-gate.mjs",
-    "gate:pass83-tests": "node tools/pass83-test-count-gate.mjs"
+    "gate:pass83-tests": "node tools/pass83-test-count-gate.mjs",
+    "gate:pass83-web-boundary": "node tools/pass83-web-boundary-gate.mjs"
   },
   "dependencies": {
     "cors": "2.8.5",

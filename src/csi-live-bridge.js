@@ -16,6 +16,13 @@ import {
   importDceStructuralTableBundle,
   assertImporterContainsNoNumericEngineeringResults
 } from "./etabs-sap-importer.js";
+import {
+  parseCsvText,
+  importStructuralCsvBundle,
+  requiredCompressionSign
+} from './structural-csv-importer.js';
+
+export { parseCsvText, importStructuralCsvBundle } from './structural-csv-importer.js';
 
 const execFileAsync = promisify(nodeExecFile);
 
@@ -57,13 +64,6 @@ export const CSI_TABLE_ROLE_ALIASES = Object.freeze({
 
 function normName(x) {
   return String(x ?? "").toUpperCase().replace(/[^A-Z0-9]+/g, "");
-}
-
-function requiredSign(v, label) {
-  if (!['compression-positive','compression-negative'].includes(v)) {
-    throw new Error(`${label} must explicitly be compression-positive or compression-negative`);
-  }
-  return v;
 }
 
 export function resolveCsiTableRole(table, aliases = CSI_TABLE_ROLE_ALIASES) {
@@ -183,8 +183,8 @@ export function importCsiBridgePayload(payload, {
   if (payload.units?.normalizedTo !== 'kN_m_C' || payload.units?.verified !== true) {
     throw new Error('CSI bridge units are not verified as kN_m_C');
   }
-  const nodalSign=requiredSign(nodalReactionCompressionSign ?? payload.signConventions?.nodalReactions,'nodalReactionCompressionSign');
-  const pierSign=requiredSign(pierForceCompressionSign ?? payload.signConventions?.pierForces,'pierForceCompressionSign');
+  const nodalSign=requiredCompressionSign(nodalReactionCompressionSign ?? payload.signConventions?.nodalReactions,'nodalReactionCompressionSign');
+  const pierSign=requiredCompressionSign(pierForceCompressionSign ?? payload.signConventions?.pierForces,'pierForceCompressionSign');
   const tables=indexBridgeTables(payload);
   const tablePointRows=csiBridgeTableToRows(tables.pointCoordinates);
   const tableReactionRows=csiBridgeTableToRows(tables.nodalReactions);
@@ -252,58 +252,6 @@ export function importExcelFallbackPayload(payload, {
     pierForceCompressionSign,
     preferDirectCoordinates:false,
     preferDirectJointReactions:false
-  });
-}
-
-export function parseCsvText(csvText, { delimiter=',' } = {}) {
-  const text=String(csvText ?? '').replace(/^\uFEFF/,'');
-  const rows=[]; let row=[]; let field=''; let quoted=false;
-  for (let i=0;i<text.length;i++) {
-    const c=text[i];
-    if (quoted) {
-      if (c==='"' && text[i+1]==='"') { field+='"'; i++; }
-      else if (c==='"') quoted=false;
-      else field+=c;
-    } else {
-      if (c==='"') quoted=true;
-      else if (c===delimiter) { row.push(field); field=''; }
-      else if (c==='\n') { row.push(field.replace(/\r$/,'')); rows.push(row); row=[]; field=''; }
-      else field+=c;
-    }
-  }
-  if (quoted) throw new Error('CSV has unterminated quoted field');
-  if (field.length || row.length) { row.push(field.replace(/\r$/,'')); rows.push(row); }
-  const nonempty=rows.filter(r=>r.some(x=>String(x).trim()!==''));
-  if (!nonempty.length) return [];
-  const headers=nonempty[0].map((h,i)=>String(h).trim() || `Column${i+1}`);
-  return nonempty.slice(1).map((r,i)=>{
-    const o={_sourceRow:i+2};
-    headers.forEach((h,j)=>o[h]=r[j] ?? '');
-    return o;
-  });
-}
-
-export function importStructuralCsvBundle({
-  pointCoordinatesCsv,
-  nodalReactionsCsv,
-  pointSpringAssignmentsCsv,
-  pierForcesCsv = '',
-  pierSectionCsv = '',
-  sourceId='CSV_FALLBACK',
-  nodalReactionCompressionSign,
-  pierForceCompressionSign,
-  unitsProfile
-}) {
-  if (unitsProfile !== 'kN_m_C') throw new Error('CSV fallback unitsProfile must explicitly be kN_m_C');
-  return importDceStructuralTableBundle({
-    pointCoordinates: parseCsvText(pointCoordinatesCsv),
-    nodalReactions: parseCsvText(nodalReactionsCsv),
-    pointSpringAssignments: parseCsvText(pointSpringAssignmentsCsv),
-    pierForces: parseCsvText(pierForcesCsv),
-    pierSection: parseCsvText(pierSectionCsv),
-    sourceId,
-    nodalReactionCompressionSign: requiredSign(nodalReactionCompressionSign,'nodalReactionCompressionSign'),
-    pierForceCompressionSign: requiredSign(pierForceCompressionSign,'pierForceCompressionSign')
   });
 }
 

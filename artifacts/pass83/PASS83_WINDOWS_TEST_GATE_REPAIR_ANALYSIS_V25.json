@@ -1,0 +1,29 @@
+{
+  "schema": "HNL-P1-PASS8.3-WINDOWS-TEST-GATE-REPAIR-V25",
+  "status": "PATCH_READY_LOCAL_VALIDATED",
+  "rootCause": "Windows GitHub Actions failed before tests because spawnSync npm.cmd returned EINVAL",
+  "changedFiles": [
+    "tools/pass83-test-count-gate.mjs"
+  ],
+  "strategy": "Use process.execPath for fixtures/version/search and explicit tests/*.test.mjs files; never spawn npm.cmd",
+  "lockedExpectations": {
+    "tests": 574,
+    "pass": 574,
+    "fail": 0
+  },
+  "localValidation": {
+    "fixtures": "PASS",
+    "versionGate": "PASS",
+    "searchBrain": "PASS",
+    "tests": 574,
+    "pass": 574,
+    "fail": 0,
+    "status": "PASS"
+  },
+  "windowsLiveCertification": "PENDING_GITHUB_ACTIONS",
+  "gateSha256": "a2e7d0604e5050328054582b2f246936c48ba54cda5c71f08e9cd37363f8773f",
+  "searchBrainTouched": false,
+  "pdfTouched": false,
+  "aiTouched": false,
+  "engineeringEngineTouched": false
+}

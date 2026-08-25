@@ -1,0 +1,119 @@
+{
+  "schema": "HNL-V26-AI-INPUT-INTERPRETER-AUDIT",
+  "status": "READY_FOR_GITHUB_CI_NOT_YET_PRODUCTION_LOCKED",
+  "rootCause": [
+    "qb=300ηNbar parsed as scalar qb=300",
+    "fs=2Ns parsed as scalar fs=2",
+    "L=10m not semantically mapped to full-sand-shaft Ls=10m"
+  ],
+  "architecture": "AI extracts inputs/semantics only; deterministic table/workflow engine calculates; Excel recalculates with real formulas",
+  "expectedBaseGitBlobSha1": {
+    "src/engineering-router.js": "de49be58158fa8cbfd536b8456c69e68932df481",
+    "src/pile-workflows.js": "1f7b54291ef9487cdab514f657bd39a04e8d4eef",
+    "src/production-status-registry.js": "faa3817f5da7ab70d8631238fc8a560c3db65ec4",
+    "src/main.js": "55d608fe5758c3438db9b4fcb104208411a4727a",
+    "src/excel-export.js": "cd3bcdd0167d8db1954a3e6594e0b92b05f97374",
+    "src/search.js": "fd2cbfbc4235e5f1bf05cbc52e3ed7df1c759de3"
+  },
+  "localGates": {
+    "v26SptGolden": {
+      "pass": 13,
+      "fail": 0
+    },
+    "existingRegression": {
+      "tests": 574,
+      "pass": 574,
+      "fail": 0
+    },
+    "fullTableGolden": {
+      "tests": 1242,
+      "pass": 1242,
+      "fail": 0
+    },
+    "sptPdfDecision": {
+      "tests": 26,
+      "pass": 26,
+      "fail": 0
+    },
+    "searchBrain": {
+      "status": "PASS",
+      "normalizedSha256": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2"
+    },
+    "excelJsRuntime": "PENDING_GITHUB_ACTIONS",
+    "viteBuild": "PENDING_GITHUB_ACTIONS",
+    "windowsRuntime": "PENDING_GITHUB_ACTIONS"
+  },
+  "goldenExpected": {
+    "qbKpa": 6000,
+    "fsKpa": 40,
+    "RbKn": 960,
+    "RsKn": 640,
+    "RkKn": 1600,
+    "RdKn": 1066.6666666666667,
+    "NdMaxKn": 927.5362318840581
+  },
+  "searchJsTouched": false,
+  "engineeringFormulaOwnership": "DETERMINISTIC_ENGINE_ONLY",
+  "files": [
+    {
+      "path": ".github/workflows/v26-spt-input-cert.yml",
+      "bytes": 2256,
+      "sha256": "e8c7e73dae3fb91093c4458aa510b37127aef02741c3c0fc5c83658ae9018942"
+    },
+    {
+      "path": "RUN_V26_LOCAL_GOLDEN.cmd",
+      "bytes": 694,
+      "sha256": "79a7c2b9a69353482bf3cab439924ba8048c733faac9110e87f0409006711569"
+    },
+    {
+      "path": "V26_AI_INPUT_INTERPRETER_README.md",
+      "bytes": 4036,
+      "sha256": "2232837d573c445e9d6c65f0367b2e744441d52b096b87c5865e17f9878469aa"
+    },
+    {
+      "path": "artifacts/v26/V26_SPT_GOLDEN_RESULT.json",
+      "bytes": 2696,
+      "sha256": "2a9089f119bb771a3bd99e918f09973d9bb981d4d7c6cf7590a786f99fbe1fec"
+    },
+    {
+      "path": "src/engineering-input-interpreter.js",
+      "bytes": 11034,
+      "sha256": "2d37b9deb615fc0d0360619d2c34281c44b8ccea6504aa54aa3fe37edc0d3546"
+    },
+    {
+      "path": "src/engineering-router.js",
+      "bytes": 69837,
+      "sha256": "52378e08598c1f9910ddf9ce4d557832775fdcf804543a0018b709af1c1b70ba"
+    },
+    {
+      "path": "src/excel-export.js",
+      "bytes": 210410,
+      "sha256": "32048bc31f5c32bfad553479a651998bc32fa7b419e2a9fe7858ffcb533530ea"
+    },
+    {
+      "path": "src/main.js",
+      "bytes": 360730,
+      "sha256": "b70689d4688480955f90458e70110a4be4bb5c0aeb3f224e454cb46c2b5a34fd"
+    },
+    {
+      "path": "src/pile-workflows.js",
+      "bytes": 36616,
+      "sha256": "e47f37b940857e079bb8031d574cc5ea79f84379a0553ecd69f860cd1cf39805"
+    },
+    {
+      "path": "src/production-status-registry.js",
+      "bytes": 4353,
+      "sha256": "b8c7941312c7f82b4e54d8c6b2b7efab2e60af983378a9f20761998c34e9e2df"
+    },
+    {
+      "path": "tools/v26-spt-excel-golden.mjs",
+      "bytes": 4223,
+      "sha256": "6ec2ce48a8e36252a50c98becabd9b9f86ebff8df1efa6558e6fd29d0fb60220"
+    },
+    {
+      "path": "tools/v26-spt-golden.mjs",
+      "bytes": 7280,
+      "sha256": "274103505ff92b07fbbcbf8dad05d3c2fddcb6d7da4077571dc89a4409cda8f4"
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "schema": "HNL-V26-SPT-GOLDEN-RESULT",
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "Formula Guard rejects qb coefficient from qb=300ηNbar",
+      "status": "PASS"
+    },
+    {
+      "name": "Formula Guard rejects fs coefficient from fs=2Ns",
+      "status": "PASS"
+    },
+    {
+      "name": "Formula Guard accepts true scalar qb",
+      "status": "PASS"
+    },
+    {
+      "name": "Natural-language extraction recognizes explicit SPT summary",
+      "status": "PASS"
+    },
+    {
+      "name": "Exact production regression question routes to SPT deterministic summary engine",
+      "status": "PASS"
+    },
+    {
+      "name": "Exact Golden numeric result",
+      "status": "PASS"
+    },
+    {
+      "name": "Excel is unlocked only from deterministic result",
+      "status": "PASS"
+    },
+    {
+      "name": "AI interpreter prompt forbids AI-owned calculations",
+      "status": "PASS"
+    },
+    {
+      "name": "AI interpreter accepts input-only JSON",
+      "status": "PASS"
+    },
+    {
+      "name": "AI interpreter rejects computed engineering results",
+      "status": "PASS"
+    },
+    {
+      "name": "AI-assisted extraction can fill unfamiliar wording without owning math",
+      "status": "PASS"
+    },
+    {
+      "name": "Vietnamese Formula-Only Excel source is wired for V26 summary input",
+      "status": "PASS"
+    },
+    {
+      "name": "Raw text overrides conflicting AI scalar",
+      "status": "PASS"
+    }
+  ],
+  "exactQuestion": "Tính sức chịu tải cọc đóng/ép vuông 400×400 mm, L=10 m theo SPT, Phụ lục D TCVN 10304:2025.\nCọc mũi kín, η=1,0.\nĐất cát.\nGiá trị SPT trung bình vùng mũi N̄=20.\nGiá trị Ns trên toàn thân cọc =20.\nγn=1,15 và γk=1,50.\nTính qb, fs, sức kháng mũi, sức kháng thân, Rc,k và tải cho phép.\nNguồn số hóa thể hiện phương pháp SPT với qb = 300ηN̄, giới hạn qb ≤ 18000 kPa, và với cát fs = 2Ns ≤100 kPa.",
+  "expected": {
+    "qbKpa": 6000,
+    "fsKpa": 40,
+    "RbKn": 960,
+    "RsKn": 640,
+    "RkKn": 1600,
+    "RdKn": 1066.6666666666667,
+    "NdMaxKn": 927.5362318840581
+  },
+  "actual": {
+    "qbKpa": 6000,
+    "fsKpa": 40,
+    "RbKn": 960.0000000000002,
+    "RsKn": 640,
+    "RkKn": 1600.0000000000002,
+    "RdKn": 1066.6666666666667,
+    "NdMaxKn": 927.5362318840581
+  },
+  "formulaGuard": {
+    "qb": {
+      "legacyCandidate": 300,
+      "scalarCandidate": null,
+      "rejectedCoefficient": true
+    },
+    "fs": {
+      "legacyCandidate": 2,
+      "scalarCandidate": null,
+      "rejectedCoefficient": true
+    }
+  },
+  "calculationOwner": "DETERMINISTIC_ENGINE",
+  "aiRole": "INPUT_EXTRACTION_ONLY",
+  "searchBrainTouched": false
+}

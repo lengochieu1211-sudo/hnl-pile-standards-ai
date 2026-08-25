@@ -1,0 +1,76 @@
+name: V26 SPT AI Input Certification
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'p1/v26-ai-input-interpreter'
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  linux-v26:
+    name: Linux · V26 Golden + 574 regression + Vite
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install exact dependencies
+        run: npm ci
+      - name: V26 SPT Formula Guard + AI Input Golden
+        run: node tools/v26-spt-golden.mjs
+      - name: V26 Vietnamese Formula-Only Excel Golden
+        run: node tools/v26-spt-excel-golden.mjs
+      - name: Locked regression suite · exact 574
+        run: npm run gate:pass83-tests
+      - name: Full Table Golden 1242
+        run: npm run golden:tables
+      - name: SPT PDF decision Golden
+        run: npm run golden:spt-decision
+      - name: Build production web with Vite
+        run: npm run build:web
+      - name: Upload V26 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: hnl-v26-spt-golden-linux
+          path: |
+            artifacts/v26/V26_SPT_GOLDEN_RESULT.json
+            artifacts/v26/V26_SPT_EXCEL_GOLDEN_RESULT.json
+            artifacts/v26/HNL_V26_SPT_FORMULA_GOLDEN.xlsx
+          if-no-files-found: error
+
+  windows-v26:
+    name: Windows · V26 Golden + 574 regression
+    needs: linux-v26
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install exact dependencies
+        run: npm ci
+      - name: V26 SPT Formula Guard + AI Input Golden
+        run: node tools/v26-spt-golden.mjs
+      - name: Locked regression suite · exact 574
+        run: npm run gate:pass83-tests
+      - name: Upload V26 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: hnl-v26-spt-golden-windows
+          path: artifacts/v26/V26_SPT_GOLDEN_RESULT.json
+          if-no-files-found: error

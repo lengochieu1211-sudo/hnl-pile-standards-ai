@@ -1,0 +1,81 @@
+{
+  "version": "1.25.7",
+  "generatedAt": "2026-08-25T03:34:04.599892+00:00",
+  "scope": "DCE UDF Behavioral Golden",
+  "normativeAuthority": "TCVN 10304:2025 PDF",
+  "referenceOnly": [
+    "10.1 DCE_SctCoc_10304 2025.xlsm",
+    "V.2020/DCE Excel.dll",
+    "DCE Excel Add-In"
+  ],
+  "behavioralGolden": {
+    "status": "PASS_WITH_NORMATIVE_POLICY_DIFFERENCE_RECORDED",
+    "checks": 213,
+    "passOrAccepted": 213,
+    "fail": 0,
+    "NoiSuySPT": "51/51 characterized",
+    "qb_SPT2025": "51/51 matches HNL Appendix D primitive",
+    "flu_SPT2025_unit_f": "51/51 matches HNL Appendix D primitive",
+    "flu_SPT2025_cumulative": "51/51 DCE right-end integration characterized",
+    "GetKsFromRQD": "1/1 direct cached point RQD=30 -> 0.24",
+    "GetQbBang8": "5/5 indirect runtime observations",
+    "EQgamma": "5 unique tuples characterized; Production remains REVIEW"
+  },
+  "sptFullWorkflow": {
+    "dceRkKn": 11687.68599870603,
+    "hnlRkKn": 11286.611430992834,
+    "differenceHnlMinusDceKn": -401.0745677131963,
+    "dceShaftKn": 6975.297018321339,
+    "hnlShaftKn": 6574.222450608145,
+    "differenceShaftHnlMinusDceKn": -401.0745677131945,
+    "classification": "DIFFERENT_BY_NORMATIVE_POLICY_DECISION",
+    "productionDecision": "SPT_PDF_DECISION_LOCKED__NO_CONTINUOUS_N_INTERPOLATION__NO_DCE_RIGHT_END_INTEGRATION",
+    "pdfDecision": {
+      "tipN": "MEASURED-WINDOW-ARITHMETIC-MEAN",
+      "shaftN": "LAYER-REPRESENTATIVE_OR_MEASURED-LAYER-MEAN",
+      "boundary": "[top,bottom)",
+      "partition": "D.5/D.6 by geological layer"
+    }
+  },
+  "regression": {
+    "npmTest": "361/361 PASS",
+    "fullTableGolden": "1242/1242 PASS",
+    "p0WorkflowGolden": "35/35 metrics PASS",
+    "p1MaterialGolden": "42/42 metrics PASS",
+    "versionGate": "PASS v1.25.7",
+    "searchBrain": "PASS f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2",
+    "sptPdfDecisionGolden": "26/26 PASS"
+  },
+  "localRuntimeGates": {
+    "npmCi": {
+      "status": "BLOCKED",
+      "exitCode": 1,
+      "reason": "source package has no package-lock.json"
+    },
+    "excelSmoke": {
+      "status": "BLOCKED",
+      "exitCode": 1,
+      "reason": "exceljs not installed in local sandbox"
+    },
+    "webBuild": {
+      "status": "BLOCKED",
+      "exitCode": 127,
+      "reason": "vite not installed in local sandbox"
+    },
+    "windowsBuild": {
+      "status": "NOT_RUN_LOCAL",
+      "reason": "Linux sandbox"
+    },
+    "excelComRecalc": {
+      "status": "NOT_RUN_LOCAL",
+      "reason": "Requires Windows + Microsoft Excel"
+    }
+  },
+  "ciWiring": "DCE Behavioral Golden + SPT PDF Decision Golden added to Linux and Windows rc-final gates",
+  "productionChanges": {
+    "SPTPolicyChanged": true,
+    "EQUnlocked": false,
+    "XllProductionDependency": false,
+    "SPTPolicyChange": "Boundary fixed to [top,bottom); shaft N layer representative/measured-layer mean; no continuous interpolation; shaft N cap100 removed."
+  }
+}

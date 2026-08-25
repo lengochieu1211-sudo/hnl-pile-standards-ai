@@ -1,0 +1,327 @@
+{
+  "schema": "HNL-P1-MATERIAL-RSOIL-RMATERIAL-E2E-GOLDEN",
+  "version": "1.25.7",
+  "generatedAt": "2026-08-25T13:41:36.022Z",
+  "sourceHierarchy": [
+    "TCVN PDF is normative",
+    "Each soil child Calculation Engine is independently LOCKED",
+    "PileMaterialEngine CT49–50 is independently LOCKED",
+    "Integrated composition only performs Rpile=min(Rsoil,Rmaterial)",
+    "γn is applied after min; it never changes Rsoil/Rmaterial"
+  ],
+  "scope": "Square piles only for scalar integrated capacity; circular/annular material is N–M demand-check and is intentionally blocked from scalar min.",
+  "tolerance": {
+    "relative": 1e-10,
+    "absolute": 1e-9
+  },
+  "workflowCases": [
+    {
+      "id": "DRIVEN-SOIL-GOVERNS",
+      "soilWorkflowId": "10304-driven",
+      "soilStatus": "VERIFIED",
+      "materialStatus": "VERIFIED",
+      "engineOk": true,
+      "excelOk": true,
+      "governingEngine": "SOIL",
+      "governingExcel": "SOIL",
+      "expectedGoverning": "SOIL",
+      "metrics": [
+        {
+          "name": "Rsoil",
+          "engine": 787.7142857142859,
+          "excelFormulaModel": 787.7142857142859,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true
+        },
+        {
+          "name": "Rmaterial",
+          "engine": 2952,
+          "excelFormulaModel": 2952,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true
+        },
+        {
+          "name": "Rpile",
+          "engine": 787.7142857142859,
+          "excelFormulaModel": 787.7142857142859,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true
+        },
+        {
+          "name": "gammaN",
+          "engine": 1.15,
+          "excelFormulaModel": 1.15,
+          "diff": 0,
+          "unit": "-",
+          "pass": true
+        },
+        {
+          "name": "NdMaxFinal",
+          "engine": 684.9689440993791,
+          "excelFormulaModel": 684.9689440993791,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "id": "ROCK-MATERIAL-GOVERNS",
+      "soilWorkflowId": "10304-end-bearing",
+      "soilStatus": "VERIFIED",
+      "materialStatus": "VERIFIED",
+      "engineOk": true,
+      "excelOk": true,
+      "governingEngine": "MATERIAL",
+      "governingExcel": "MATERIAL",
+      "expectedGoverning": "MATERIAL",
+      "metrics": [
+        {
+          "name": "Rsoil",
+          "engine": 2666.666666666667,
+          "excelFormulaModel": 2666.666666666667,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true
+        },
+        {
+          "name": "Rmaterial",
+          "engine": 1908,
+          "excelFormulaModel": 1908,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true
+        },
+        {
+          "name": "Rpile",
+          "engine": 1908,
+          "excelFormulaModel": 1908,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true
+        },
+        {
+          "name": "gammaN",
+          "engine": 1.15,
+          "excelFormulaModel": 1.15,
+          "diff": 0,
+          "unit": "-",
+          "pass": true
+        },
+        {
+          "name": "NdMaxFinal",
+          "engine": 1659.1304347826087,
+          "excelFormulaModel": 1659.1304347826087,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "id": "BORED-SOIL-GOVERNS",
+      "soilWorkflowId": "10304-bored",
+      "soilStatus": "VERIFIED",
+      "materialStatus": "VERIFIED",
+      "engineOk": true,
+      "excelOk": true,
+      "governingEngine": "SOIL",
+      "governingExcel": "SOIL",
+      "expectedGoverning": "SOIL",
+      "metrics": [
+        {
+          "name": "Rsoil",
+          "engine": 125.71428571428574,
+          "excelFormulaModel": 125.71428571428574,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true
+        },
+        {
+          "name": "Rmaterial",
+          "engine": 2952,
+          "excelFormulaModel": 2952,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true
+        },
+        {
+          "name": "Rpile",
+          "engine": 125.71428571428574,
+          "excelFormulaModel": 125.71428571428574,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true
+        },
+        {
+          "name": "gammaN",
+          "engine": 1.15,
+          "excelFormulaModel": 1.15,
+          "diff": 0,
+          "unit": "-",
+          "pass": true
+        },
+        {
+          "name": "NdMaxFinal",
+          "engine": 109.31677018633543,
+          "excelFormulaModel": 109.31677018633543,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "id": "SPT-SOIL-GOVERNS",
+      "soilWorkflowId": "10304-spt",
+      "soilStatus": "VERIFIED",
+      "materialStatus": "VERIFIED",
+      "engineOk": true,
+      "excelOk": true,
+      "governingEngine": "SOIL",
+      "governingExcel": "SOIL",
+      "expectedGoverning": "SOIL",
+      "metrics": [
+        {
+          "name": "Rsoil",
+          "engine": 1017.6,
+          "excelFormulaModel": 1017.6,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true
+        },
+        {
+          "name": "Rmaterial",
+          "engine": 2952,
+          "excelFormulaModel": 2952,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true
+        },
+        {
+          "name": "Rpile",
+          "engine": 1017.6,
+          "excelFormulaModel": 1017.6,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true
+        },
+        {
+          "name": "gammaN",
+          "engine": 1.15,
+          "excelFormulaModel": 1.15,
+          "diff": 0,
+          "unit": "-",
+          "pass": true
+        },
+        {
+          "name": "NdMaxFinal",
+          "engine": 884.8695652173914,
+          "excelFormulaModel": 884.8695652173914,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true
+        }
+      ],
+      "pass": true
+    }
+  ],
+  "boundaryCases": [
+    {
+      "id": "MISSING-GAMMAK",
+      "ok": false,
+      "issues": [
+        "Thiếu γk/Rd đất nền đã VERIFIED; không được dùng Rk hoặc số nhập tay để so min."
+      ],
+      "pass": true
+    },
+    {
+      "id": "MIXED-MANUAL-SOIL",
+      "ok": false,
+      "issues": [
+        "Trạng thái đất nền phải VERIFIED; hiện MIXED/MANUAL."
+      ],
+      "pass": true
+    },
+    {
+      "id": "ROCK-PRELIMINARY",
+      "ok": false,
+      "issues": [
+        "Trạng thái đất nền phải VERIFIED; hiện VERIFIED_PRELIMINARY.",
+        "Nhánh đất nền mới sơ bộ, chưa phải sức kháng thiết kế cuối."
+      ],
+      "pass": true
+    },
+    {
+      "id": "GEOMETRY-MISMATCH",
+      "ok": false,
+      "issues": [
+        "Hình học không đồng nhất: đất dùng a=400 mm, vật liệu dùng a=450 mm."
+      ],
+      "pass": true
+    },
+    {
+      "id": "CIRCULAR-NM-NOT-SCALAR",
+      "ok": false,
+      "issues": [
+        "Rmaterial phải ở basis DESIGN_RESISTANCE_TTGH1.",
+        "P1 integrated Rsoil↔Rmaterial hiện LOCKED cho cọc vuông; cọc tròn phải kiểm vật liệu N–M theo Phụ lục F, không tạo Nu giả.",
+        "Thiếu cạnh cọc đồng nhất giữa nhánh đất và vật liệu."
+      ],
+      "pass": true
+    },
+    {
+      "id": "GAMMAN-AFTER-MIN",
+      "ok": true,
+      "Rpile": 787.7142857142859,
+      "Rsoil": 787.7142857142859,
+      "Rmaterial": 2952,
+      "gammaN": 2,
+      "NdMax": 393.85714285714295,
+      "pass": true
+    }
+  ],
+  "normativeBenchmarks": [
+    {
+      "id": "B30-CB400-CT50",
+      "actual": 2952,
+      "expected": 2952,
+      "unit": "kN",
+      "source": "TCVN 5574:2018 · Bảng 7/13/16 · CT (50)",
+      "pass": true
+    },
+    {
+      "id": "ROCK-RD",
+      "actual": 2666.666666666667,
+      "expected": 2666.666666666667,
+      "unit": "kN",
+      "source": "Locked TCVN 10304 rock child workflow",
+      "pass": true
+    },
+    {
+      "id": "ROCK-MIN",
+      "actual": 1908,
+      "expected": 1908,
+      "unit": "kN",
+      "source": "Rpile=min(Rd,10304, Nu,5574)",
+      "pass": true
+    }
+  ],
+  "summary": {
+    "workflowCases": 4,
+    "workflowPass": 4,
+    "intermediateMetrics": 20,
+    "intermediatePass": 20,
+    "boundaryCases": 6,
+    "boundaryPass": 6,
+    "normativeBenchmarks": 3,
+    "normativeBenchmarkPass": 3,
+    "pass": true
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "HNL-P1-PASS8.1-DYNAMIC-EXCEL-GOLDEN",
+  "version": "1.25.7",
+  "status": "PASS",
+  "fileName": "HNL_Tinh_Toan_Coc_168_v1.25.7.xlsx",
+  "exportId": "8d495a1e-39db-45b3-a859-425a94c7666d",
+  "templateSha256": "582e897788d3aa96895f7ff63e604899ad489cbe2d5fb59238bb186a4b62b9d1",
+  "outputSha256": "51b88221deb8dae82e4c31ee1067acaf7b842bb5fed2cc121c578e5b2c8d8c88",
+  "summary": {
+    "RsoilKn": 843.4285714285716,
+    "RmaterialKn": 2952,
+    "RpileKn": 843.4285714285716,
+    "gammaN": 1.15,
+    "NdMaxPerPileKn": 733.4161490683232,
+    "boreholeBranches": 6,
+    "pileChecks": 19,
+    "governingPileId": "168",
+    "governingCombinationId": "EULS",
+    "governingUtilization": 0.4980692764464232,
+    "overallPass": true
+  },
+  "conclusion": {
+    "code": "DAT",
+    "statusVi": "ĐẠT",
+    "text": "ĐẠT: cọc bất lợi 168 · tổ hợp EULS · hệ số sử dụng 0.4981 ≤ 1,0000. Sức chịu tải cọc Rpile=843.429 kN; giới hạn tác động Nd,max=733.416 kN/cọc. Địa chất bất lợi: HK2 · CƠ LÝ · 7.2.2 CỌC ĐÓNG/ÉP; đất nền khống chế."
+  },
+  "compare": {
+    "pass": true,
+    "issues": []
+  }
+}

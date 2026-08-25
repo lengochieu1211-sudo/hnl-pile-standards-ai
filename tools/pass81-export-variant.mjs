@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { runPass8OneClickCalculation } from '../src/pass8-workflow-router.js';
+import { executePass81Export } from '../server/pass81-excel-route.mjs';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const base=JSON.parse(fs.readFileSync(path.join(root,'artifacts/p1-pass81-export-request-golden-v20.json'),'utf8'));
+const request=structuredClone(base.request); request.design.gammaN=1.20;
+const out=runPass8OneClickCalculation(request); const s=out.result.summary;
+const body={...base,request,clientSummary:{RsoilKn:s.RsoilKn,RmaterialKn:s.RmaterialKn,RpileKn:s.RpileKn,gammaN:s.gammaN,NdMaxPerPileKn:s.NdMaxPerPileKn,boreholeBranches:s.boreholeBranches,pileChecks:s.pileChecks,governingPileId:s.governingPileId,governingCombinationId:s.governingCombinationId,governingUtilization:s.governingUtilization,conclusion:out.result.conclusion.statusVi}};
+const x=executePass81Export(body); const p=path.join(root,'artifacts/pass81-runtime/HNL_Dynamic_Variant_GammaN_1_20_v20.xlsx'); fs.writeFileSync(p,x.buffer);
+console.log(JSON.stringify({file:p,summary:s,conclusion:out.result.conclusion.statusVi,bytes:x.buffer.length},null,2));

@@ -1,0 +1,638 @@
+{
+  "schema": "HNL-P1-MULTI-BOREHOLE-GOLDEN",
+  "version": "1.25.7",
+  "generatedAt": "2026-08-25T13:41:36.162Z",
+  "scope": "Same square pile; many boreholes; Mechanical 7.2.2/7.2.3 + SPT Appendix D; shared LOCKED Rmaterial; batch governing by Rpile.",
+  "sourceHierarchy": [
+    "TCVN PDF is normative",
+    "Mechanical/SPT child engines remain independently LOCKED",
+    "Rmaterial remains independently LOCKED",
+    "Batch engine only orchestrates and selects minima",
+    "XLSM HK workflow is reference, not legal authority"
+  ],
+  "tolerance": {
+    "relative": 1e-10,
+    "absolute": 1e-9
+  },
+  "baseCase": {
+    "engine": {
+      "criticalBoreholeId": "HK2",
+      "criticalMethodId": "10304-driven",
+      "pileResistanceMinKn": 843.4285714285716,
+      "soilMinimum": {
+        "valueKn": 843.4285714285716,
+        "rows": [
+          "HK2:10304-driven"
+        ],
+        "boreholeId": "HK2",
+        "methodId": "10304-driven"
+      },
+      "tipMinimum": {
+        "valueKn": 435.2000000000001,
+        "rows": [
+          "HK2:10304-driven"
+        ]
+      },
+      "shaftMinimum": {
+        "valueKn": 560,
+        "rows": [
+          "HK2:10304-spt"
+        ]
+      }
+    },
+    "rows": [
+      {
+        "boreholeId": "HK1",
+        "methodId": "10304-driven",
+        "QbKn": 665.6000000000001,
+        "QsKn": 1052.56,
+        "RkKn": 1718.16,
+        "RdKn": 1227.257142857143,
+        "RmaterialKn": 2952,
+        "RpileKn": 1227.257142857143,
+        "NdMaxFinalKn": 1067.1801242236027,
+        "governing": "SOIL",
+        "soilAtTip": {
+          "index": 3,
+          "top": 9,
+          "bottom": 15,
+          "soilGroup": "sand",
+          "soilClass": null,
+          "sandType": "medium",
+          "IL": null,
+          "sptN": null,
+          "cuKpa": null
+        }
+      },
+      {
+        "boreholeId": "HK1",
+        "methodId": "10304-spt",
+        "QbKn": 1560.0000000000002,
+        "QsKn": 902.4,
+        "RkKn": 2462.4,
+        "RdKn": 1641.6000000000001,
+        "RmaterialKn": 2952,
+        "RpileKn": 1641.6000000000001,
+        "NdMaxFinalKn": 1427.4782608695655,
+        "governing": "SOIL",
+        "soilAtTip": {
+          "index": 3,
+          "top": 9,
+          "bottom": 15,
+          "soilGroup": "sand",
+          "soilClass": "sand",
+          "sandType": "medium",
+          "IL": null,
+          "sptN": 30,
+          "cuKpa": null
+        }
+      },
+      {
+        "boreholeId": "HK2",
+        "methodId": "10304-driven",
+        "QbKn": 435.2000000000001,
+        "QsKn": 745.6000000000001,
+        "RkKn": 1180.8000000000002,
+        "RdKn": 843.4285714285716,
+        "RmaterialKn": 2952,
+        "RpileKn": 843.4285714285716,
+        "NdMaxFinalKn": 733.4161490683232,
+        "governing": "SOIL",
+        "soilAtTip": {
+          "index": 3,
+          "top": 9,
+          "bottom": 15,
+          "soilGroup": "sand",
+          "soilClass": null,
+          "sandType": "fine",
+          "IL": null,
+          "sptN": null,
+          "cuKpa": null
+        }
+      },
+      {
+        "boreholeId": "HK2",
+        "methodId": "10304-spt",
+        "QbKn": 1080.0000000000002,
+        "QsKn": 560,
+        "RkKn": 1640.0000000000002,
+        "RdKn": 1093.3333333333335,
+        "RmaterialKn": 2952,
+        "RpileKn": 1093.3333333333335,
+        "NdMaxFinalKn": 950.7246376811596,
+        "governing": "SOIL",
+        "soilAtTip": {
+          "index": 3,
+          "top": 9,
+          "bottom": 15,
+          "soilGroup": "sand",
+          "soilClass": "sand",
+          "sandType": "fine",
+          "IL": null,
+          "sptN": 20,
+          "cuKpa": null
+        }
+      },
+      {
+        "boreholeId": "HK3",
+        "methodId": "10304-driven",
+        "QbKn": 1264.0000000000002,
+        "QsKn": 1052.56,
+        "RkKn": 2316.5600000000004,
+        "RdKn": 1654.6857142857148,
+        "RmaterialKn": 2952,
+        "RpileKn": 1654.6857142857148,
+        "NdMaxFinalKn": 1438.8571428571433,
+        "governing": "SOIL",
+        "soilAtTip": {
+          "index": 3,
+          "top": 9,
+          "bottom": 15,
+          "soilGroup": "sand",
+          "soilClass": null,
+          "sandType": "coarse",
+          "IL": null,
+          "sptN": null,
+          "cuKpa": null
+        }
+      },
+      {
+        "boreholeId": "HK3",
+        "methodId": "10304-spt",
+        "QbKn": 2280.0000000000005,
+        "QsKn": 1312,
+        "RkKn": 3592.0000000000005,
+        "RdKn": 2394.666666666667,
+        "RmaterialKn": 2952,
+        "RpileKn": 2394.666666666667,
+        "NdMaxFinalKn": 2082.3188405797105,
+        "governing": "SOIL",
+        "soilAtTip": {
+          "index": 3,
+          "top": 9,
+          "bottom": 15,
+          "soilGroup": "sand",
+          "soilClass": "sand",
+          "sandType": "coarse",
+          "IL": null,
+          "sptN": 45,
+          "cuKpa": null
+        }
+      }
+    ]
+  },
+  "rowMetrics": [
+    {
+      "row": "HK1:10304-driven",
+      "metric": "QbKn",
+      "engine": 665.6000000000001,
+      "excelFormulaModel": 665.6000000000001,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK1:10304-driven",
+      "metric": "QsKn",
+      "engine": 1052.56,
+      "excelFormulaModel": 1052.56,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK1:10304-driven",
+      "metric": "RkKn",
+      "engine": 1718.16,
+      "excelFormulaModel": 1718.16,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK1:10304-driven",
+      "metric": "RdKn",
+      "engine": 1227.257142857143,
+      "excelFormulaModel": 1227.257142857143,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK1:10304-driven",
+      "metric": "RmaterialKn",
+      "engine": 2952,
+      "excelFormulaModel": 2952,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK1:10304-driven",
+      "metric": "RpileKn",
+      "engine": 1227.257142857143,
+      "excelFormulaModel": 1227.257142857143,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK1:10304-driven",
+      "metric": "NdMaxFinalKn",
+      "engine": 1067.1801242236027,
+      "excelFormulaModel": 1067.1801242236027,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK1:10304-spt",
+      "metric": "QbKn",
+      "engine": 1560.0000000000002,
+      "excelFormulaModel": 1560.0000000000002,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK1:10304-spt",
+      "metric": "QsKn",
+      "engine": 902.4,
+      "excelFormulaModel": 902.4,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK1:10304-spt",
+      "metric": "RkKn",
+      "engine": 2462.4,
+      "excelFormulaModel": 2462.4,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK1:10304-spt",
+      "metric": "RdKn",
+      "engine": 1641.6000000000001,
+      "excelFormulaModel": 1641.6000000000001,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK1:10304-spt",
+      "metric": "RmaterialKn",
+      "engine": 2952,
+      "excelFormulaModel": 2952,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK1:10304-spt",
+      "metric": "RpileKn",
+      "engine": 1641.6000000000001,
+      "excelFormulaModel": 1641.6000000000001,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK1:10304-spt",
+      "metric": "NdMaxFinalKn",
+      "engine": 1427.4782608695655,
+      "excelFormulaModel": 1427.4782608695655,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK2:10304-driven",
+      "metric": "QbKn",
+      "engine": 435.2000000000001,
+      "excelFormulaModel": 435.2000000000001,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK2:10304-driven",
+      "metric": "QsKn",
+      "engine": 745.6000000000001,
+      "excelFormulaModel": 745.6000000000001,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK2:10304-driven",
+      "metric": "RkKn",
+      "engine": 1180.8000000000002,
+      "excelFormulaModel": 1180.8000000000002,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK2:10304-driven",
+      "metric": "RdKn",
+      "engine": 843.4285714285716,
+      "excelFormulaModel": 843.4285714285716,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK2:10304-driven",
+      "metric": "RmaterialKn",
+      "engine": 2952,
+      "excelFormulaModel": 2952,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK2:10304-driven",
+      "metric": "RpileKn",
+      "engine": 843.4285714285716,
+      "excelFormulaModel": 843.4285714285716,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK2:10304-driven",
+      "metric": "NdMaxFinalKn",
+      "engine": 733.4161490683232,
+      "excelFormulaModel": 733.4161490683232,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK2:10304-spt",
+      "metric": "QbKn",
+      "engine": 1080.0000000000002,
+      "excelFormulaModel": 1080.0000000000002,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK2:10304-spt",
+      "metric": "QsKn",
+      "engine": 560,
+      "excelFormulaModel": 560,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK2:10304-spt",
+      "metric": "RkKn",
+      "engine": 1640.0000000000002,
+      "excelFormulaModel": 1640.0000000000002,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK2:10304-spt",
+      "metric": "RdKn",
+      "engine": 1093.3333333333335,
+      "excelFormulaModel": 1093.3333333333335,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK2:10304-spt",
+      "metric": "RmaterialKn",
+      "engine": 2952,
+      "excelFormulaModel": 2952,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK2:10304-spt",
+      "metric": "RpileKn",
+      "engine": 1093.3333333333335,
+      "excelFormulaModel": 1093.3333333333335,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK2:10304-spt",
+      "metric": "NdMaxFinalKn",
+      "engine": 950.7246376811596,
+      "excelFormulaModel": 950.7246376811596,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK3:10304-driven",
+      "metric": "QbKn",
+      "engine": 1264.0000000000002,
+      "excelFormulaModel": 1264.0000000000002,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK3:10304-driven",
+      "metric": "QsKn",
+      "engine": 1052.56,
+      "excelFormulaModel": 1052.56,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK3:10304-driven",
+      "metric": "RkKn",
+      "engine": 2316.5600000000004,
+      "excelFormulaModel": 2316.5600000000004,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK3:10304-driven",
+      "metric": "RdKn",
+      "engine": 1654.6857142857148,
+      "excelFormulaModel": 1654.6857142857148,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK3:10304-driven",
+      "metric": "RmaterialKn",
+      "engine": 2952,
+      "excelFormulaModel": 2952,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK3:10304-driven",
+      "metric": "RpileKn",
+      "engine": 1654.6857142857148,
+      "excelFormulaModel": 1654.6857142857148,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK3:10304-driven",
+      "metric": "NdMaxFinalKn",
+      "engine": 1438.8571428571433,
+      "excelFormulaModel": 1438.8571428571433,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK3:10304-spt",
+      "metric": "QbKn",
+      "engine": 2280.0000000000005,
+      "excelFormulaModel": 2280.0000000000005,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK3:10304-spt",
+      "metric": "QsKn",
+      "engine": 1312,
+      "excelFormulaModel": 1312,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK3:10304-spt",
+      "metric": "RkKn",
+      "engine": 3592.0000000000005,
+      "excelFormulaModel": 3592.0000000000005,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK3:10304-spt",
+      "metric": "RdKn",
+      "engine": 2394.666666666667,
+      "excelFormulaModel": 2394.666666666667,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK3:10304-spt",
+      "metric": "RmaterialKn",
+      "engine": 2952,
+      "excelFormulaModel": 2952,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK3:10304-spt",
+      "metric": "RpileKn",
+      "engine": 2394.666666666667,
+      "excelFormulaModel": 2394.666666666667,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "row": "HK3:10304-spt",
+      "metric": "NdMaxFinalKn",
+      "engine": 2082.3188405797105,
+      "excelFormulaModel": 2082.3188405797105,
+      "diff": 0,
+      "pass": true
+    }
+  ],
+  "summaryMetrics": [
+    {
+      "metric": "Rpile,min",
+      "engine": 843.4285714285716,
+      "excelFormulaModel": 843.4285714285716,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "metric": "Rd,min",
+      "engine": 843.4285714285716,
+      "excelFormulaModel": 843.4285714285716,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "metric": "Qb,min",
+      "engine": 435.2000000000001,
+      "excelFormulaModel": 435.2000000000001,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "metric": "Qs,min",
+      "engine": 560,
+      "excelFormulaModel": 560,
+      "diff": 0,
+      "pass": true
+    },
+    {
+      "metric": "Nd,max,batch",
+      "engine": 733.4161490683232,
+      "excelFormulaModel": 733.4161490683232,
+      "diff": 0,
+      "pass": true
+    }
+  ],
+  "boundaryCases": [
+    {
+      "id": "SINGLE-BOREHOLE",
+      "ok": false,
+      "issues": [
+        "Multi-Borehole cần ít nhất 2 lỗ khoan hợp lệ."
+      ],
+      "pass": true
+    },
+    {
+      "id": "DUPLICATE-ID",
+      "ok": false,
+      "issues": [
+        "Trùng mã lỗ khoan: HK1."
+      ],
+      "pass": true
+    },
+    {
+      "id": "UNSUPPORTED-MECHANICAL",
+      "ok": false,
+      "issues": [
+        "Cơ lý Multi-Borehole hiện LOCKED cho 7.2.2 cọc đóng/ép hoặc 7.2.3 cọc khoan/nhồi."
+      ],
+      "pass": true
+    },
+    {
+      "id": "PROFILE-GAP",
+      "ok": false,
+      "invalidRows": 2,
+      "pass": true
+    },
+    {
+      "id": "MATERIAL-COMMON-TIE",
+      "ok": true,
+      "materialTie": true,
+      "criticalBoreholeId": null,
+      "soilCritical": "HK1",
+      "pass": true
+    }
+  ],
+  "benchmarks": [
+    {
+      "id": "HK2-MECH-RD",
+      "actual": 843.4285714285716,
+      "expected": 843.4285714285716,
+      "unit": "kN",
+      "pass": true
+    },
+    {
+      "id": "HK2-SPT-RD",
+      "actual": 1093.3333333333335,
+      "expected": 1093.3333333333335,
+      "unit": "kN",
+      "pass": true
+    },
+    {
+      "id": "BATCH-RPILE-MIN",
+      "actual": 843.4285714285716,
+      "expected": 843.4285714285716,
+      "unit": "kN",
+      "pass": true
+    }
+  ],
+  "summary": {
+    "rows": 6,
+    "rowMetrics": 42,
+    "rowMetricPass": 42,
+    "summaryMetrics": 5,
+    "summaryMetricPass": 5,
+    "boundaryCases": 5,
+    "boundaryPass": 5,
+    "benchmarks": 3,
+    "benchmarkPass": 3,
+    "engineOk": true,
+    "excelOk": true,
+    "criticalBoreholeId": "HK2",
+    "criticalMethodId": "10304-driven",
+    "pass": true
+  }
+}

@@ -1,0 +1,187 @@
+{
+  "base": "HNL-Pile-Standards-AI-v1.25.7-P0-XLSM-Reverse-Engineering",
+  "target": "HNL-Pile-Standards-AI-v1.25.7-P0-Pass3-End-to-End-Lock",
+  "changedFileCount": 30,
+  "files": [
+    {
+      "path": ".github/workflows/rc-final.yml",
+      "status": "MODIFIED",
+      "sha256": "b2e2ec1ef5b9d6c95897ae3eca8e5c5a8072d33cbd924c40577c885a9a6914d3",
+      "bytes": 4749
+    },
+    {
+      "path": "P0_PASS3_END_TO_END_LOCK_SUMMARY_v1.25.7.md",
+      "status": "ADDED",
+      "sha256": "796e58c40f40b9b8e00ab30f40a9aefd8d45ec3242486205096601af5df0841d",
+      "bytes": 750
+    },
+    {
+      "path": "artifacts/full-table-golden-v1.25.7.json",
+      "status": "MODIFIED",
+      "sha256": "65fd8a96f10014777fa1c40c6b9a4ad1392ad221a4a5302173d3bea3ff34e29e",
+      "bytes": 474022
+    },
+    {
+      "path": "artifacts/p0-pass3/build-web.exit",
+      "status": "ADDED",
+      "sha256": "743c7850cccfba5e53a9002663ec1ddd1079315a98bdbfdde10e6044f56abefe",
+      "bytes": 4
+    },
+    {
+      "path": "artifacts/p0-pass3/build-web.log",
+      "status": "ADDED",
+      "sha256": "13c39c705e1d078a305930e2a4cf44e62db5f36f768bf8542f04527bd21e9956",
+      "bytes": 173
+    },
+    {
+      "path": "artifacts/p0-pass3/changed-files-v1.25.7.json",
+      "status": "ADDED",
+      "sha256": "8c74bbe6da11c0bc63a9c4d05eb39b64410d9460c65d7c7a995cb3dec8da793e",
+      "bytes": 7004
+    },
+    {
+      "path": "artifacts/p0-pass3/excel-smoke.exit",
+      "status": "ADDED",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "artifacts/p0-pass3/excel-smoke.log",
+      "status": "ADDED",
+      "sha256": "b1f01eb9bf443eeb0a6a61a1bf782de3c443c900ff9f81ca929ca196bd9ffba2",
+      "bytes": 1105
+    },
+    {
+      "path": "artifacts/p0-pass3/full-table-golden-final.log",
+      "status": "ADDED",
+      "sha256": "2210c7c91b3aab48dcc8720f1cd6005170daa2b98bc33175c563fbbd30ae64b9",
+      "bytes": 1018
+    },
+    {
+      "path": "artifacts/p0-pass3/gate-status-v1.25.7.json",
+      "status": "ADDED",
+      "sha256": "287d7bfe34420241afc8a0c6ce59482b7f262a516ce8f4849f0fd589848b8ef7",
+      "bytes": 818
+    },
+    {
+      "path": "artifacts/p0-pass3/npm-ci.exit",
+      "status": "ADDED",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "artifacts/p0-pass3/npm-ci.log",
+      "status": "ADDED",
+      "sha256": "a34c870e9887d5a4f0b445e8d0072de8e313fe669592c2524f8e053d73c31d22",
+      "bytes": 1185
+    },
+    {
+      "path": "artifacts/p0-pass3/production-status-v1.25.7.json",
+      "status": "ADDED",
+      "sha256": "279d617237d94b0b061f7274ea56b84245f268d11edf968918d3d1d46d73f03f",
+      "bytes": 2336
+    },
+    {
+      "path": "artifacts/p0-pass3/search-brain-final.log",
+      "status": "ADDED",
+      "sha256": "a280790099caaa3221c2fbda93fbf1c2b956cea7dae4b321d8557d0ae0084777",
+      "bytes": 138
+    },
+    {
+      "path": "artifacts/p0-pass3/test-full-final.log",
+      "status": "ADDED",
+      "sha256": "2efbcf7eb90e967733d5ed540bc246019e3ea9f461cdc0dd0c7becc1d4c3f7e7",
+      "bytes": 66510
+    },
+    {
+      "path": "artifacts/p0-pass3/version-gate-final.log",
+      "status": "ADDED",
+      "sha256": "7274fb748a21dd2af9d72cad56e2989b6cecc01894a90589fa1abab40bffa986",
+      "bytes": 146
+    },
+    {
+      "path": "artifacts/p0-pass3/workflow-golden-final.log",
+      "status": "ADDED",
+      "sha256": "a9d7dd28319725fdb69179684930ea652f8a0702acc2e25e1c406390e3bb4e9e",
+      "bytes": 195
+    },
+    {
+      "path": "artifacts/p0-pass3/workflow-golden-v1.25.7.json",
+      "status": "ADDED",
+      "sha256": "2c1136d3b43518f812021800b89d6f1988cfba5a0ca6544a0dc68d7713217d85",
+      "bytes": 19678
+    },
+    {
+      "path": "docs/P0_PASS3_END_TO_END_LOCK_V1.25.7.md",
+      "status": "ADDED",
+      "sha256": "ad1ea49dc87343e45806016442e72708248199b72b24a6b81e708965cf91d244",
+      "bytes": 7738
+    },
+    {
+      "path": "package.json",
+      "status": "MODIFIED",
+      "sha256": "4cdbc8a9fe367f1ad2a5f3406c3860062bc0d3a8ac28df39f8de8eee4ad8f284",
+      "bytes": 3542
+    },
+    {
+      "path": "scripts/excel-runtime-smoke.mjs",
+      "status": "MODIFIED",
+      "sha256": "7fc6b9af3ab4a231e594ebba3a4c8ea4cca944edfadac0ed5f127ebd6c258bff",
+      "bytes": 4760
+    },
+    {
+      "path": "scripts/p0-pass3-workflow-golden.mjs",
+      "status": "ADDED",
+      "sha256": "b40001c0ad82ec38b8f6f0989c4f0fbf24d2e57e34a8f31968aa69e46cdcb6d0",
+      "bytes": 10261
+    },
+    {
+      "path": "scripts/verify-excel-com.ps1",
+      "status": "MODIFIED",
+      "sha256": "f406bd004d5f541ec92f7633246d5f839c2e45492abed6ef39a690c20019af95",
+      "bytes": 6620
+    },
+    {
+      "path": "src/engineering-router.js",
+      "status": "MODIFIED",
+      "sha256": "dbd28e007e935507a8a77c52eed73da9ce09ed8f0316a8ce038e4aaceb7ff27a",
+      "bytes": 54020
+    },
+    {
+      "path": "src/excel-export.js",
+      "status": "MODIFIED",
+      "sha256": "86ee93a31dc5acfb792abc50040c2b65079da3d0c934c86883101aad1e0d7b72",
+      "bytes": 167357
+    },
+    {
+      "path": "src/p0-pass3-excel-model.js",
+      "status": "ADDED",
+      "sha256": "ec76d62505ce8f736bd993ecaea778623e6427b61a42ace0aee696f68bc67b3b",
+      "bytes": 9526
+    },
+    {
+      "path": "src/pile-workflows.js",
+      "status": "MODIFIED",
+      "sha256": "febf280febb66a35f082bac936c9ea9db4dd19081417d448ceea69249a5da8ce",
+      "bytes": 30617
+    },
+    {
+      "path": "src/production-status-registry.js",
+      "status": "ADDED",
+      "sha256": "f5886d9345790e07f2018cd203c719063a61bb2823bb5b723f9b07dda4412c23",
+      "bytes": 2382
+    },
+    {
+      "path": "tests/v1.25.7-p0-pass3.test.mjs",
+      "status": "ADDED",
+      "sha256": "17e2e7469f91e51a3d924c3c7c52e7a564270a97c420628569d8d6313cefed53",
+      "bytes": 8259
+    },
+    {
+      "path": "tests/v1.25.7.test.mjs",
+      "status": "MODIFIED",
+      "sha256": "c7fee6ad7924452a812ad6a499787aa6d555183db257a6a2dd6fa4b820b602d3",
+      "bytes": 8235
+    }
+  ]
+}

@@ -1,0 +1,177 @@
+{
+  "schema": "HNL-P1-PASS8.2-FULL-SOURCE-PRODUCTION-UI-E2E-GATE",
+  "version": "1.25.7",
+  "release": "v21",
+  "generatedAt": "2026-08-25T13:19:15.012Z",
+  "base": {
+    "repository": "lengochieu1211-sudo/hnl-pile-standards-ai",
+    "githubMainObservedCommit": "0e956d36cbb63c45c24978993bf50da68d43d883",
+    "fullSourceBase": "P1 Pass2 full app + Pass3–8.1 locked overlays"
+  },
+  "checks": [
+    {
+      "name": "IMMUTABLE_src/search.js",
+      "status": "PASS",
+      "detail": {
+        "actual": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2",
+        "expected": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2"
+      }
+    },
+    {
+      "name": "IMMUTABLE_src/pdf.js",
+      "status": "PASS",
+      "detail": {
+        "actual": "5f9dd85f1c932b49f82def27d0c8c4002825a917c490ff11b3922ff5555b11a3",
+        "expected": "5f9dd85f1c932b49f82def27d0c8c4002825a917c490ff11b3922ff5555b11a3"
+      }
+    },
+    {
+      "name": "IMMUTABLE_src/ai.js",
+      "status": "PASS",
+      "detail": {
+        "actual": "711f9dbe5e2c2e4255a980b8b59fa3fc4b801fad78e5e5dd1b7cd223538a7f11",
+        "expected": "711f9dbe5e2c2e4255a980b8b59fa3fc4b801fad78e5e5dd1b7cd223538a7f11"
+      }
+    },
+    {
+      "name": "DESKTOP_PACKAGES_SERVER_ROUTE",
+      "status": "PASS",
+      "detail": {
+        "files": [
+          "dist/**/*",
+          "bridge/**/*",
+          "server/**/*",
+          "electron/**/*",
+          "offline/**/*",
+          "public/**/*",
+          "package.json",
+          "node_modules/node-unrar-js/**/*"
+        ]
+      }
+    },
+    {
+      "name": "VIETNAMESE_TEMPLATE_PACKAGED",
+      "status": "PASS",
+      "detail": {}
+    },
+    {
+      "name": "PRODUCTION_UI_WIRING",
+      "status": "PASS",
+      "detail": {}
+    },
+    {
+      "name": "PRODUCTION_BRIDGE_WIRING",
+      "status": "PASS",
+      "detail": {}
+    },
+    {
+      "name": "TEMPLATE_V18_SHA",
+      "status": "PASS",
+      "detail": {
+        "actual": "582e897788d3aa96895f7ff63e604899ad489cbe2d5fb59238bb186a4b62b9d1"
+      }
+    },
+    {
+      "name": "node-full-suite",
+      "status": "PASS",
+      "detail": {
+        "exitCode": 0,
+        "log": "artifacts/pass82-node-full-suite.log",
+        "summary": {
+          "tests": 574,
+          "pass": 574,
+          "fail": 0
+        }
+      }
+    },
+    {
+      "name": "search-gate",
+      "status": "PASS",
+      "detail": {
+        "exitCode": 0,
+        "log": "artifacts/pass82-search-gate.log"
+      }
+    },
+    {
+      "name": "version-gate",
+      "status": "PASS",
+      "detail": {
+        "exitCode": 0,
+        "log": "artifacts/pass82-version-gate.log"
+      }
+    },
+    {
+      "name": "golden-tables",
+      "status": "PASS",
+      "detail": {
+        "exitCode": 0,
+        "log": "artifacts/pass82-golden-tables.log"
+      }
+    },
+    {
+      "name": "golden-workflows",
+      "status": "PASS",
+      "detail": {
+        "exitCode": 0,
+        "log": "artifacts/pass82-golden-workflows.log"
+      }
+    },
+    {
+      "name": "golden-material",
+      "status": "PASS",
+      "detail": {
+        "exitCode": 0,
+        "log": "artifacts/pass82-golden-material.log"
+      }
+    },
+    {
+      "name": "golden-dce-udf",
+      "status": "PASS",
+      "detail": {
+        "exitCode": 0,
+        "log": "artifacts/pass82-golden-dce-udf.log"
+      }
+    },
+    {
+      "name": "golden-spt",
+      "status": "PASS",
+      "detail": {
+        "exitCode": 0,
+        "log": "artifacts/pass82-golden-spt.log"
+      }
+    },
+    {
+      "name": "golden-material-e2e",
+      "status": "PASS",
+      "detail": {
+        "exitCode": 0,
+        "log": "artifacts/pass82-golden-material-e2e.log"
+      }
+    },
+    {
+      "name": "golden-multiborehole",
+      "status": "PASS",
+      "detail": {
+        "exitCode": 0,
+        "log": "artifacts/pass82-golden-multiborehole.log"
+      }
+    },
+    {
+      "name": "pass4-fingerprint-python",
+      "status": "PASS",
+      "detail": {
+        "exitCode": 0,
+        "log": "artifacts/pass82-pass4-fingerprint-python.log"
+      }
+    }
+  ],
+  "pass": true,
+  "failed": [],
+  "sourceMergeStatus": "FULL_SOURCE_MERGED_SOURCE_LOCKED",
+  "runtimeCertification": {
+    "webBuild": "ENVIRONMENT_BLOCKED_NO_NODE_MODULES_VITE",
+    "electronRuntime": "NOT_RUN_LINUX_SANDBOX",
+    "windowsRuntime": "NOT_RUN_LINUX_SANDBOX"
+  },
+  "invariant": "Pass 8.2 adds UI/route orchestration only; engineering values remain in locked Pass 7 and child engines. Search Brain/PDF/AI are byte-identical to pre-merge baseline."
+}

@@ -1,0 +1,138 @@
+{
+  "schema": "HNL-PASS5-HANDOFF-TM-SCT-COC-FG-REFERENCE-V13",
+  "rows": [
+    {
+      "xlsmRow": 20,
+      "pointId": "136",
+      "combinationId": "EULS",
+      "FzMax": 286.919917748628,
+      "FzMin": 190.236091395564
+    },
+    {
+      "xlsmRow": 21,
+      "pointId": "137",
+      "combinationId": "EULS",
+      "FzMax": 260.927826806112,
+      "FzMin": 198.905718685713
+    },
+    {
+      "xlsmRow": 22,
+      "pointId": "144",
+      "combinationId": "EULS",
+      "FzMax": 270.89349858249,
+      "FzMin": 176.197138986421
+    },
+    {
+      "xlsmRow": 23,
+      "pointId": "145",
+      "combinationId": "EULS",
+      "FzMax": 285.1184277096,
+      "FzMin": 176.987686228341
+    },
+    {
+      "xlsmRow": 24,
+      "pointId": "146",
+      "combinationId": "EULS",
+      "FzMax": 297.485906351698,
+      "FzMin": 194.719426742177
+    },
+    {
+      "xlsmRow": 25,
+      "pointId": "147",
+      "combinationId": "EULS",
+      "FzMax": 300.337650867034,
+      "FzMin": 198.291261758577
+    },
+    {
+      "xlsmRow": 26,
+      "pointId": "148",
+      "combinationId": "EULS",
+      "FzMax": 300.045558219307,
+      "FzMin": 199.222950048983
+    },
+    {
+      "xlsmRow": 27,
+      "pointId": "159",
+      "combinationId": "EULS",
+      "FzMax": 303.413682144375,
+      "FzMin": 201.423281559424
+    },
+    {
+      "xlsmRow": 28,
+      "pointId": "160",
+      "combinationId": "EULS",
+      "FzMax": 343.639189746848,
+      "FzMin": 229.640955300277
+    },
+    {
+      "xlsmRow": 29,
+      "pointId": "161",
+      "combinationId": "EULS",
+      "FzMax": 280.227715742439,
+      "FzMin": 205.766759629683
+    },
+    {
+      "xlsmRow": 30,
+      "pointId": "167",
+      "combinationId": "EULS",
+      "FzMax": 310.901779033709,
+      "FzMin": 203.477718816149
+    },
+    {
+      "xlsmRow": 31,
+      "pointId": "168",
+      "combinationId": "EULS",
+      "FzMax": 365.292050700582,
+      "FzMin": 240.96986191633
+    },
+    {
+      "xlsmRow": 32,
+      "pointId": "169",
+      "combinationId": "EULS",
+      "FzMax": 290.521381936257,
+      "FzMin": 196.598767678849
+    },
+    {
+      "xlsmRow": 33,
+      "pointId": "170",
+      "combinationId": "EULS",
+      "FzMax": 285.949573636969,
+      "FzMin": 187.777108890851
+    },
+    {
+      "xlsmRow": 34,
+      "pointId": "171",
+      "combinationId": "EULS",
+      "FzMax": 285.780825879486,
+      "FzMin": 184.568224285437
+    },
+    {
+      "xlsmRow": 35,
+      "pointId": "172",
+      "combinationId": "EULS",
+      "FzMax": 282.454353023628,
+      "FzMin": 178.932417521651
+    },
+    {
+      "xlsmRow": 36,
+      "pointId": "177",
+      "combinationId": "EULS",
+      "FzMax": 284.158695264875,
+      "FzMin": 175.291365153619
+    },
+    {
+      "xlsmRow": 37,
+      "pointId": "178",
+      "combinationId": "EULS",
+      "FzMax": 275.855954258927,
+      "FzMin": 165.104588311253
+    },
+    {
+      "xlsmRow": 38,
+      "pointId": "179",
+      "combinationId": "EULS",
+      "FzMax": 273.635492783287,
+      "FzMin": 151.832163479382
+    }
+  ]
+}

@@ -1,0 +1,325 @@
+{
+  "schema": "HNL-P1-PASS6-E2E-LOCK-GATE",
+  "version": "1.25.7",
+  "generatedAt": "2026-08-25T11:06:14.830Z",
+  "checks": [
+    {
+      "name": "UPSTREAM_HASH_src/etabs-sap-importer.js",
+      "status": "PASS",
+      "detail": {
+        "actual": "ce5ad7c1d2e14721f14467bfe19e7e29531629fc4f5a3682ed38dc01dff1bd3d",
+        "expected": "ce5ad7c1d2e14721f14467bfe19e7e29531629fc4f5a3682ed38dc01dff1bd3d"
+      }
+    },
+    {
+      "name": "UPSTREAM_HASH_src/csi-live-bridge.js",
+      "status": "PASS",
+      "detail": {
+        "actual": "c9bf005b3ef9d0035256d98caeefa2d4a0469477ec11fb83838843f3661d8095",
+        "expected": "c9bf005b3ef9d0035256d98caeefa2d4a0469477ec11fb83838843f3661d8095"
+      }
+    },
+    {
+      "name": "UPSTREAM_HASH_src/pass5-core-status.js",
+      "status": "PASS",
+      "detail": {
+        "actual": "4d7a5f59c1879c0868f74b41b2c52ff8caa7404ccc1935299a4d2ec28feeb55c",
+        "expected": "4d7a5f59c1879c0868f74b41b2c52ff8caa7404ccc1935299a4d2ec28feeb55c"
+      }
+    },
+    {
+      "name": "UPSTREAM_HASH_src/pile-reaction-engine.js",
+      "status": "PASS",
+      "detail": {
+        "actual": "69a5efe4b5e25d6a88b34817dc9e6ea77ad03932996eed05d2b006e75fec5ce8",
+        "expected": "69a5efe4b5e25d6a88b34817dc9e6ea77ad03932996eed05d2b006e75fec5ce8"
+      }
+    },
+    {
+      "name": "CURRENT_TESTS",
+      "status": "PASS",
+      "detail": {
+        "tests": 148,
+        "pass": 148,
+        "fail": 0,
+        "exitCode": 0
+      }
+    },
+    {
+      "name": "GOLDEN_OVERALL",
+      "status": "PASS",
+      "detail": {
+        "pileCount": 19,
+        "combinationIds": [
+          "EULS"
+        ],
+        "checkRows": 19,
+        "passRows": 19,
+        "failRows": 0,
+        "blockedRows": 0,
+        "governingPileId": "168",
+        "governingPointId": "168",
+        "governingCombinationId": "EULS",
+        "governingDemandKn": 365.2920507005818,
+        "governingCapacityKn": 733.4161490683232,
+        "governingUtilization": 0.4980692764464232,
+        "overallPass": true
+      }
+    },
+    {
+      "name": "DCE_CSV_PARITY_19",
+      "status": "PASS",
+      "detail": {
+        "rows": 19,
+        "pass": 19,
+        "fail": 0,
+        "allPass": true,
+        "rowsDetail": [
+          {
+            "pointId": "136",
+            "combinationId": "EULS",
+            "demandDiffKn": 0,
+            "capacityDiffKn": 0,
+            "utilizationDiff": 0,
+            "statusMatch": true,
+            "pass": true
+          },
+          {
+            "pointId": "137",
+            "combinationId": "EULS",
+            "demandDiffKn": 0,
+            "capacityDiffKn": 0,
+            "utilizationDiff": 0,
+            "statusMatch": true,
+            "pass": true
+          },
+          {
+            "pointId": "144",
+            "combinationId": "EULS",
+            "demandDiffKn": 0,
+            "capacityDiffKn": 0,
+            "utilizationDiff": 0,
+            "statusMatch": true,
+            "pass": true
+          },
+          {
+            "pointId": "145",
+            "combinationId": "EULS",
+            "demandDiffKn": 0,
+            "capacityDiffKn": 0,
+            "utilizationDiff": 0,
+            "statusMatch": true,
+            "pass": true
+          },
+          {
+            "pointId": "146",
+            "combinationId": "EULS",
+            "demandDiffKn": 0,
+            "capacityDiffKn": 0,
+            "utilizationDiff": 0,
+            "statusMatch": true,
+            "pass": true
+          },
+          {
+            "pointId": "147",
+            "combinationId": "EULS",
+            "demandDiffKn": 0,
+            "capacityDiffKn": 0,
+            "utilizationDiff": 0,
+            "statusMatch": true,
+            "pass": true
+          },
+          {
+            "pointId": "148",
+            "combinationId": "EULS",
+            "demandDiffKn": 0,
+            "capacityDiffKn": 0,
+            "utilizationDiff": 0,
+            "statusMatch": true,
+            "pass": true
+          },
+          {
+            "pointId": "159",
+            "combinationId": "EULS",
+            "demandDiffKn": 0,
+            "capacityDiffKn": 0,
+            "utilizationDiff": 0,
+            "statusMatch": true,
+            "pass": true
+          },
+          {
+            "pointId": "160",
+            "combinationId": "EULS",
+            "demandDiffKn": 0,
+            "capacityDiffKn": 0,
+            "utilizationDiff": 0,
+            "statusMatch": true,
+            "pass": true
+          },
+          {
+            "pointId": "161",
+            "combinationId": "EULS",
+            "demandDiffKn": 0,
+            "capacityDiffKn": 0,
+            "utilizationDiff": 0,
+            "statusMatch": true,
+            "pass": true
+          },
+          {
+            "pointId": "167",
+            "combinationId": "EULS",
+            "demandDiffKn": 0,
+            "capacityDiffKn": 0,
+            "utilizationDiff": 0,
+            "statusMatch": true,
+            "pass": true
+          },
+          {
+            "pointId": "168",
+            "combinationId": "EULS",
+            "demandDiffKn": 0,
+            "capacityDiffKn": 0,
+            "utilizationDiff": 0,
+            "statusMatch": true,
+            "pass": true
+          },
+          {
+            "pointId": "169",
+            "combinationId": "EULS",
+            "demandDiffKn": 0,
+            "capacityDiffKn": 0,
+            "utilizationDiff": 0,
+            "statusMatch": true,
+            "pass": true
+          },
+          {
+            "pointId": "170",
+            "combinationId": "EULS",
+            "demandDiffKn": 0,
+            "capacityDiffKn": 0,
+            "utilizationDiff": 0,
+            "statusMatch": true,
+            "pass": true
+          },
+          {
+            "pointId": "171",
+            "combinationId": "EULS",
+            "demandDiffKn": 0,
+            "capacityDiffKn": 0,
+            "utilizationDiff": 0,
+            "statusMatch": true,
+            "pass": true
+          },
+          {
+            "pointId": "172",
+            "combinationId": "EULS",
+            "demandDiffKn": 0,
+            "capacityDiffKn": 0,
+            "utilizationDiff": 0,
+            "statusMatch": true,
+            "pass": true
+          },
+          {
+            "pointId": "177",
+            "combinationId": "EULS",
+            "demandDiffKn": 0,
+            "capacityDiffKn": 0,
+            "utilizationDiff": 0,
+            "statusMatch": true,
+            "pass": true
+          },
+          {
+            "pointId": "178",
+            "combinationId": "EULS",
+            "demandDiffKn": 0,
+            "capacityDiffKn": 0,
+            "utilizationDiff": 0,
+            "statusMatch": true,
+            "pass": true
+          },
+          {
+            "pointId": "179",
+            "combinationId": "EULS",
+            "demandDiffKn": 0,
+            "capacityDiffKn": 0,
+            "utilizationDiff": 0,
+            "statusMatch": true,
+            "pass": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "GOVERNING_168",
+      "status": "PASS",
+      "detail": {
+        "pileId": "168",
+        "pointId": "168",
+        "combinationId": "EULS",
+        "demandKn": 365.2920507005818,
+        "capacityKn": 733.4161490683232,
+        "utilization": 0.4980692764464232,
+        "checkType": "COMPRESSION",
+        "pass": true
+      }
+    },
+    {
+      "name": "CAPACITY_LOCKED",
+      "status": "PASS",
+      "detail": {
+        "status": "LOCKED_MULTI_BOREHOLE_INTEGRATED",
+        "RpileKn": 843.4285714285716,
+        "gammaN": 1.15,
+        "NdMaxPerPileKn": 733.4161490683232,
+        "sourceModule": "PileCapacityEngine / MultiBoreholePileEngine",
+        "sourceArtifact": "pile-quantity-golden-v1.25.7.json / LOCKED-RPILE-MIN",
+        "governingBasis": "Rpile=min(Rsoil,Rmaterial), then Nd,max=Rpile/gammaN"
+      }
+    },
+    {
+      "name": "SAFETY_BLOCKS",
+      "status": "PASS",
+      "detail": {
+        "manualCapacityBlocked": true,
+        "inconsistentCapacityBlocked": true,
+        "unknownCombinationBlocked": true,
+        "dceRd350NotProductionCapacity": true,
+        "analyticalRigidCapNotInvoked": true
+      }
+    },
+    {
+      "name": "PRIOR_REGRESSION",
+      "status": "PASS",
+      "detail": {
+        "tmSctCocEnvelope": "19/19 PASS",
+        "pass3Pierforces": "39/39 PASS",
+        "pass3XlsmBehavior": "273/273 PASS",
+        "priorRegression": "388/388 PASS",
+        "priorFullTable": "1242/1242 PASS",
+        "searchBrainSha256": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2"
+      }
+    },
+    {
+      "name": "PRIOR_FULL_TABLE",
+      "status": "PASS",
+      "detail": {
+        "tmSctCocEnvelope": "19/19 PASS",
+        "pass3Pierforces": "39/39 PASS",
+        "pass3XlsmBehavior": "273/273 PASS",
+        "priorRegression": "388/388 PASS",
+        "priorFullTable": "1242/1242 PASS",
+        "searchBrainSha256": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2"
+      }
+    },
+    {
+      "name": "SEARCH_BRAIN_PRIOR_LOCK",
+      "status": "PASS",
+      "detail": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2"
+    }
+  ],
+  "pass": true,
+  "failed": [],
+  "status": "CORE_LOCKED_PATCH",
+  "fullSourceIntegration": "DEFERRED_SEPARATE_GATE",
+  "liveCsiCertification": "DEFERRED"
+}

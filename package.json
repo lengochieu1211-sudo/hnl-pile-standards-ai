@@ -24,7 +24,14 @@
     "check:search": "node scripts/check-search-brain.mjs",
     "fixtures:images": "node scripts/generate-image-fixtures.mjs",
     "golden:tables": "node scripts/full-table-golden.mjs artifacts/full-table-golden-v1.25.7.json",
-    "excel:smoke": "node scripts/excel-runtime-smoke.mjs artifacts/excel-runtime-smoke"
+    "excel:smoke": "node scripts/excel-runtime-smoke.mjs artifacts/excel-runtime-smoke",
+    "golden:workflows": "node scripts/p0-pass3-workflow-golden.mjs artifacts/p0-pass3/workflow-golden-v1.25.7.json",
+    "golden:material": "node scripts/p1-pass1-material-golden.mjs artifacts/p1-pass1/material-golden-v1.25.7.json",
+    "golden:dce-udf": "node scripts/dce-udf-behavioral-golden.mjs artifacts/dce-udf-behavioral/dce-udf-behavioral-golden-v1.25.7.json",
+    "golden:spt-decision": "node scripts/spt-pdf-decision-golden.mjs artifacts/spt-pdf-decision/spt-pdf-decision-v1.25.7.json",
+    "golden:material-e2e": "node scripts/p1-material-e2e-golden.mjs artifacts/p1-material-e2e/material-e2e-golden-v1.25.7.json",
+    "golden:multiborehole": "node scripts/p1-multiborehole-golden.mjs artifacts/p1-multiborehole/multiborehole-golden-v1.25.7.json",
+    "gate:pass82": "node tools/pass82-full-source-gate.mjs"
   },
   "dependencies": {
     "cors": "2.8.5",
@@ -50,6 +57,7 @@
     "files": [
       "dist/**/*",
       "bridge/**/*",
+      "server/**/*",
       "electron/**/*",
       "offline/**/*",
       "public/**/*",

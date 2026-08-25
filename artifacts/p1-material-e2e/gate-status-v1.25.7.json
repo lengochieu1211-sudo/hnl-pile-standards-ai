@@ -1,0 +1,82 @@
+{
+  "schema": "HNL-P1-MATERIAL-RSOIL-RMATERIAL-E2E-GATE-STATUS",
+  "version": "1.25.7",
+  "generatedAt": "2026-08-25T03:55:46.757447+00:00",
+  "passes": {
+    "focused": {
+      "pass": 9,
+      "total": 9
+    },
+    "regression": {
+      "pass": 370,
+      "total": 370
+    },
+    "fullTableGolden": {
+      "pass": 1242,
+      "total": 1242
+    },
+    "p0WorkflowGolden": {
+      "workflowPass": 3,
+      "workflowTotal": 3,
+      "intermediatePass": 35,
+      "intermediateTotal": 35
+    },
+    "p1MaterialGolden": {
+      "capacityPass": 7,
+      "capacityTotal": 7,
+      "intermediatePass": 42,
+      "intermediateTotal": 42
+    },
+    "p1MaterialE2E": {
+      "workflowPass": 4,
+      "workflowTotal": 4,
+      "intermediatePass": 20,
+      "intermediateTotal": 20,
+      "boundaryPass": 6,
+      "boundaryTotal": 6,
+      "benchmarkPass": 3,
+      "benchmarkTotal": 3
+    },
+    "dceBehavioral": {
+      "acceptable": 213,
+      "total": 213,
+      "fail": 0
+    },
+    "sptPdfDecision": {
+      "pass": 26,
+      "total": 26
+    },
+    "versionGate": "PASS",
+    "searchBrain": {
+      "status": "PASS",
+      "normalizedSha256": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2"
+    }
+  },
+  "blocked": {
+    "npmCi": {
+      "status": "BLOCKED",
+      "reason": "package-lock.json absent in authoritative source ZIP"
+    },
+    "excelSmoke": {
+      "status": "BLOCKED",
+      "reason": "exceljs package not installed in sandbox"
+    },
+    "webBuild": {
+      "status": "BLOCKED",
+      "reason": "vite not installed in sandbox"
+    },
+    "windowsBuild": {
+      "status": "NOT_RUN",
+      "reason": "Linux sandbox"
+    },
+    "excelCom": {
+      "status": "NOT_RUN",
+      "reason": "Microsoft Excel COM unavailable in Linux sandbox"
+    }
+  },
+  "production": {
+    "integratedSquare": "LOCKED",
+    "eq": "REVIEW",
+    "xlsmSctVatLieu": "REFERENCE/BUGGED"
+  }
+}

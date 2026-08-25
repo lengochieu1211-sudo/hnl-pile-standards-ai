@@ -1,0 +1,1815 @@
+{
+  "schema": "HNL_DCE_UDF_BEHAVIORAL_EVIDENCE_V1",
+  "hnlVersion": "1.25.7",
+  "principle": "XLSM/XLL evidence is reference only; TCVN PDF remains normative authority.",
+  "source": {
+    "xlsm": "/mnt/data/10.1 DCE_SctCoc_10304 2025.xlsm",
+    "xlsmSha256": "ec38b68f753b08e50d9d1f9df988be5084cab1aedf391ba1aaecf112e9d88bd1"
+  },
+  "udfSignatures": {
+    "NoiSuySPT": "NoiSuySPT(CaoDo, Range, MuiCoc, DKCoc, dDuoi, dTren)",
+    "qb_SPT2025": "qb_SPT2025(LoaiCoc, DKNgoaiCoc, DKTrongCoc, CaoDo, MuiCoc, RangeDat, RangeSPT)",
+    "flu_SPT2025": "flu_SPT2025(LoaiCoc, DKNgoaiCoc, DKTrongCoc, ChuViCoc, DauCoc, MuiCoc, RangeDat, RangeSPT, LayDauCoc, LayMuiCoc, OptionLay, sstlay, PhanTo)",
+    "GetKsFromRQD": "GetKsFromRQD(RQD)",
+    "GetQbBang8": "GetQbBang8(IL11, h22)",
+    "TinhGammaqbCMS": "TinhGammaqbCMS(agR_G, loaiCat, tinhChat, Il, loaicoc, LoaiDatNen, LoaiPho)",
+    "TinhGammafiCMS": "TinhGammafiCMS(agR_G, loaiCat, tinhChat, Il, loaicoc, LoaiDatNen, LoaiPho)"
+  },
+  "udfCallCounts": {
+    "NoiSuySPT": 140,
+    "GetKsFromRQD": 1,
+    "qb_SPT2025": 169,
+    "flu_SPT2025": 548,
+    "GetQbBang8": 0,
+    "TinhGammaqbCMS": 218,
+    "TinhGammafiCMS": 218,
+    "qbEQ_SPT2025": 239,
+    "fluEQ_SPT2025": 338
+  },
+  "udfCallCountsBySheet": {
+    "SPT 10304-2025": {
+      "NoiSuySPT": 70,
+      "qb_SPT2025": 169,
+      "flu_SPT2025": 408
+    },
+    "SPT 10304-2025 EQ": {
+      "NoiSuySPT": 70,
+      "flu_SPT2025": 140,
+      "qbEQ_SPT2025": 239,
+      "fluEQ_SPT2025": 338
+    },
+    "7.2.1-10304-Cọc Chống": {
+      "GetKsFromRQD": 1
+    },
+    "7.2.2-10304-Không moi đất": {},
+    "7.2.2-10304-Không moi đất EQ": {
+      "TinhGammaqbCMS": 110,
+      "TinhGammafiCMS": 110
+    },
+    "7.2.3-10304-Có moi đất": {},
+    "7.2.3-10304-Có moi đất EQ": {
+      "TinhGammaqbCMS": 108,
+      "TinhGammafiCMS": 108
+    }
+  },
+  "sptScenario": {
+    "sheet": "SPT 10304-2025",
+    "pileTypeDce": "Cọc khoan nhồi",
+    "shape": "Cọc Tròn",
+    "diameterM": 1,
+    "innerTipDiameterM": 0,
+    "shaftStartDepthM": 15,
+    "tipDepthM": 43.2,
+    "segmentSizeM": 1,
+    "lengthM": 28.200000000000003,
+    "areaM2": 0.7853981633974483,
+    "perimeterM": 3.141592653589793,
+    "QbKn": 4712.38898038469,
+    "fluAtHeadKn": 1533.2832311168322,
+    "fluAtTipKn": 8508.580249438171,
+    "RkKn": 11687.68599870603,
+    "gammaN": 1.15,
+    "gammaK": 1.5,
+    "selfWeightKn": 609.0762757147212,
+    "finalWorkbookKn": 6160,
+    "formulas": {
+      "Qb": "_xll.qb_SPT2025($D$10,$D$12,$D$13,$D$16,$D$16,$H$11:$I$27,$O$19:$P$108)*D19",
+      "fluAtHead": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,TRUE,FALSE,\"\",0,$D$17)",
+      "fluAtTip": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,TRUE,\"\",0,$D$17)",
+      "Rk": "$D$21+$D$23-D22"
+    },
+    "soilLayers": [
+      {
+        "sourceRow": 11,
+        "topDepthM": 0.0,
+        "bottomDepthM": 1.5,
+        "dceSoilGroup": "Đất dính",
+        "soilGroup": "clay"
+      },
+      {
+        "sourceRow": 12,
+        "topDepthM": 1.5,
+        "bottomDepthM": 7.0,
+        "dceSoilGroup": "Đất dính",
+        "soilGroup": "clay"
+      },
+      {
+        "sourceRow": 13,
+        "topDepthM": 7.0,
+        "bottomDepthM": 10.5,
+        "dceSoilGroup": "Đất dính",
+        "soilGroup": "clay"
+      },
+      {
+        "sourceRow": 14,
+        "topDepthM": 10.5,
+        "bottomDepthM": 12.2,
+        "dceSoilGroup": "Đất dính",
+        "soilGroup": "clay"
+      },
+      {
+        "sourceRow": 15,
+        "topDepthM": 12.2,
+        "bottomDepthM": 27.0,
+        "dceSoilGroup": "Đất rời",
+        "soilGroup": "sand"
+      },
+      {
+        "sourceRow": 16,
+        "topDepthM": 27.0,
+        "bottomDepthM": 38.2,
+        "dceSoilGroup": "Đất rời",
+        "soilGroup": "sand"
+      },
+      {
+        "sourceRow": 17,
+        "topDepthM": 38.2,
+        "bottomDepthM": 100.0,
+        "dceSoilGroup": "Đất rời",
+        "soilGroup": "sand"
+      }
+    ],
+    "sptPoints": [
+      {
+        "cellDepth": "O19",
+        "cellN": "P19",
+        "depthM": 0.0,
+        "N": 0.0
+      },
+      {
+        "cellDepth": "O20",
+        "cellN": "P20",
+        "depthM": 1.5,
+        "N": 4.0
+      },
+      {
+        "cellDepth": "O21",
+        "cellN": "P21",
+        "depthM": 3.5,
+        "N": 3.0
+      },
+      {
+        "cellDepth": "O22",
+        "cellN": "P22",
+        "depthM": 5.5,
+        "N": 3.0
+      },
+      {
+        "cellDepth": "O23",
+        "cellN": "P23",
+        "depthM": 7.0,
+        "N": 2.0
+      },
+      {
+        "cellDepth": "O24",
+        "cellN": "P24",
+        "depthM": 9.0,
+        "N": 6.0
+      },
+      {
+        "cellDepth": "O25",
+        "cellN": "P25",
+        "depthM": 10.5,
+        "N": 8.0
+      },
+      {
+        "cellDepth": "O26",
+        "cellN": "P26",
+        "depthM": 12.2,
+        "N": 12.0
+      },
+      {
+        "cellDepth": "O27",
+        "cellN": "P27",
+        "depthM": 14.2,
+        "N": 13.0
+      },
+      {
+        "cellDepth": "O28",
+        "cellN": "P28",
+        "depthM": 16.2,
+        "N": 13.0
+      },
+      {
+        "cellDepth": "O29",
+        "cellN": "P29",
+        "depthM": 18.2,
+        "N": 13.0
+      },
+      {
+        "cellDepth": "O30",
+        "cellN": "P30",
+        "depthM": 20.2,
+        "N": 14.0
+      },
+      {
+        "cellDepth": "O31",
+        "cellN": "P31",
+        "depthM": 22.2,
+        "N": 14.0
+      },
+      {
+        "cellDepth": "O32",
+        "cellN": "P32",
+        "depthM": 24.2,
+        "N": 15.0
+      },
+      {
+        "cellDepth": "O33",
+        "cellN": "P33",
+        "depthM": 26.2,
+        "N": 15.0
+      },
+      {
+        "cellDepth": "O34",
+        "cellN": "P34",
+        "depthM": 27.0,
+        "N": 17.0
+      },
+      {
+        "cellDepth": "O35",
+        "cellN": "P35",
+        "depthM": 29.0,
+        "N": 20.0
+      },
+      {
+        "cellDepth": "O36",
+        "cellN": "P36",
+        "depthM": 31.0,
+        "N": 25.0
+      },
+      {
+        "cellDepth": "O37",
+        "cellN": "P37",
+        "depthM": 33.0,
+        "N": 20.0
+      },
+      {
+        "cellDepth": "O38",
+        "cellN": "P38",
+        "depthM": 35.0,
+        "N": 27.0
+      },
+      {
+        "cellDepth": "O39",
+        "cellN": "P39",
+        "depthM": 37.0,
+        "N": 30.0
+      },
+      {
+        "cellDepth": "O40",
+        "cellN": "P40",
+        "depthM": 38.2,
+        "N": 24.0
+      },
+      {
+        "cellDepth": "O41",
+        "cellN": "P41",
+        "depthM": 40.2,
+        "N": 50.0
+      },
+      {
+        "cellDepth": "O42",
+        "cellN": "P42",
+        "depthM": 42.2,
+        "N": 50.0
+      },
+      {
+        "cellDepth": "O43",
+        "cellN": "P43",
+        "depthM": 43.2,
+        "N": 50.0
+      },
+      {
+        "cellDepth": "O44",
+        "cellN": "P44",
+        "depthM": 45.2,
+        "N": 50.0
+      },
+      {
+        "cellDepth": "O45",
+        "cellN": "P45",
+        "depthM": 45.2,
+        "N": 50.0
+      },
+      {
+        "cellDepth": "O46",
+        "cellN": "P46",
+        "depthM": 45.2,
+        "N": 50.0
+      },
+      {
+        "cellDepth": "O47",
+        "cellN": "P47",
+        "depthM": 100.0,
+        "N": 50.0
+      }
+    ],
+    "diagnostics": [
+      {
+        "row": 35,
+        "depthM": 0.0,
+        "layerName": "Lớp 1",
+        "dceSoilGroup": "Đất dính",
+        "NInterpolated": 0,
+        "qbSandKpa": "-",
+        "qbClayKpa": 0,
+        "segmentLengthM": 0,
+        "fSandKpa": "-",
+        "fClayKpa": 0,
+        "fluCumulativeKn": 0,
+        "formulaN": "IF(B35=\"\",\"\",_xll.NoiSuySPT(B35,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A35,$D$17)"
+      },
+      {
+        "row": 36,
+        "depthM": 1.0,
+        "layerName": "Lớp 1",
+        "dceSoilGroup": "Đất dính",
+        "NInterpolated": 2.6666666666666665,
+        "qbSandKpa": "-",
+        "qbClayKpa": 99.99999999999999,
+        "segmentLengthM": 1,
+        "fSandKpa": "-",
+        "fClayKpa": 16.666666666666664,
+        "fluCumulativeKn": 52.359877559829876,
+        "formulaN": "IF(B36=\"\",\"\",_xll.NoiSuySPT(B36,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A36,$D$17)"
+      },
+      {
+        "row": 37,
+        "depthM": 1.5,
+        "layerName": "Lớp 2",
+        "dceSoilGroup": "Đất dính",
+        "NInterpolated": 4,
+        "qbSandKpa": "-",
+        "qbClayKpa": 150,
+        "segmentLengthM": 0.5,
+        "fSandKpa": "-",
+        "fClayKpa": 25,
+        "fluCumulativeKn": 91.62978572970229,
+        "formulaN": "IF(B37=\"\",\"\",_xll.NoiSuySPT(B37,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A37,$D$17)"
+      },
+      {
+        "row": 38,
+        "depthM": 2.0,
+        "layerName": "Lớp 2",
+        "dceSoilGroup": "Đất dính",
+        "NInterpolated": 3.75,
+        "qbSandKpa": "-",
+        "qbClayKpa": 140.625,
+        "segmentLengthM": 0.5,
+        "fSandKpa": "-",
+        "fClayKpa": 23.4375,
+        "fluCumulativeKn": 128.4453246389577,
+        "formulaN": "IF(B38=\"\",\"\",_xll.NoiSuySPT(B38,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A38,$D$17)"
+      },
+      {
+        "row": 39,
+        "depthM": 3.0,
+        "layerName": "Lớp 2",
+        "dceSoilGroup": "Đất dính",
+        "NInterpolated": 3.25,
+        "qbSandKpa": "-",
+        "qbClayKpa": 121.875,
+        "segmentLengthM": 1,
+        "fSandKpa": "-",
+        "fClayKpa": 20.3125,
+        "fluCumulativeKn": 192.25892541500036,
+        "formulaN": "IF(B39=\"\",\"\",_xll.NoiSuySPT(B39,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A39,$D$17)"
+      },
+      {
+        "row": 40,
+        "depthM": 4.0,
+        "layerName": "Lớp 2",
+        "dceSoilGroup": "Đất dính",
+        "NInterpolated": 3,
+        "qbSandKpa": "-",
+        "qbClayKpa": 112.5,
+        "segmentLengthM": 1,
+        "fSandKpa": "-",
+        "fClayKpa": 18.75,
+        "fluCumulativeKn": 251.16378766980898,
+        "formulaN": "IF(B40=\"\",\"\",_xll.NoiSuySPT(B40,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A40,$D$17)"
+      },
+      {
+        "row": 41,
+        "depthM": 5.0,
+        "layerName": "Lớp 2",
+        "dceSoilGroup": "Đất dính",
+        "NInterpolated": 3,
+        "qbSandKpa": "-",
+        "qbClayKpa": 112.5,
+        "segmentLengthM": 1,
+        "fSandKpa": "-",
+        "fClayKpa": 18.75,
+        "fluCumulativeKn": 310.0686499246176,
+        "formulaN": "IF(B41=\"\",\"\",_xll.NoiSuySPT(B41,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A41,$D$17)"
+      },
+      {
+        "row": 42,
+        "depthM": 6.0,
+        "layerName": "Lớp 2",
+        "dceSoilGroup": "Đất dính",
+        "NInterpolated": 2.6666666666666665,
+        "qbSandKpa": "-",
+        "qbClayKpa": 99.99999999999999,
+        "segmentLengthM": 1,
+        "fSandKpa": "-",
+        "fClayKpa": 16.666666666666664,
+        "fluCumulativeKn": 362.4285274844475,
+        "formulaN": "IF(B42=\"\",\"\",_xll.NoiSuySPT(B42,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A42,$D$17)"
+      },
+      {
+        "row": 43,
+        "depthM": 7.0,
+        "layerName": "Lớp 3",
+        "dceSoilGroup": "Đất dính",
+        "NInterpolated": 2,
+        "qbSandKpa": "-",
+        "qbClayKpa": 75,
+        "segmentLengthM": 1,
+        "fSandKpa": "-",
+        "fClayKpa": 12.5,
+        "fluCumulativeKn": 401.6984356543199,
+        "formulaN": "IF(B43=\"\",\"\",_xll.NoiSuySPT(B43,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A43,$D$17)"
+      },
+      {
+        "row": 44,
+        "depthM": 8.0,
+        "layerName": "Lớp 3",
+        "dceSoilGroup": "Đất dính",
+        "NInterpolated": 4,
+        "qbSandKpa": "-",
+        "qbClayKpa": 150,
+        "segmentLengthM": 1,
+        "fSandKpa": "-",
+        "fClayKpa": 25,
+        "fluCumulativeKn": 480.23825199406474,
+        "formulaN": "IF(B44=\"\",\"\",_xll.NoiSuySPT(B44,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A44,$D$17)"
+      },
+      {
+        "row": 45,
+        "depthM": 9.0,
+        "layerName": "Lớp 3",
+        "dceSoilGroup": "Đất dính",
+        "NInterpolated": 6,
+        "qbSandKpa": "-",
+        "qbClayKpa": 225,
+        "segmentLengthM": 1,
+        "fSandKpa": "-",
+        "fClayKpa": 37.5,
+        "fluCumulativeKn": 598.047976503682,
+        "formulaN": "IF(B45=\"\",\"\",_xll.NoiSuySPT(B45,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A45,$D$17)"
+      },
+      {
+        "row": 46,
+        "depthM": 10.0,
+        "layerName": "Lớp 3",
+        "dceSoilGroup": "Đất dính",
+        "NInterpolated": 7.333333333333333,
+        "qbSandKpa": "-",
+        "qbClayKpa": 275,
+        "segmentLengthM": 1,
+        "fSandKpa": "-",
+        "fClayKpa": 45.83333333333333,
+        "fluCumulativeKn": 742.0376397932141,
+        "formulaN": "IF(B46=\"\",\"\",_xll.NoiSuySPT(B46,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A46,$D$17)"
+      },
+      {
+        "row": 47,
+        "depthM": 10.5,
+        "layerName": "Lớp 4",
+        "dceSoilGroup": "Đất dính",
+        "NInterpolated": 8,
+        "qbSandKpa": "-",
+        "qbClayKpa": 300,
+        "segmentLengthM": 0.5,
+        "fSandKpa": "-",
+        "fClayKpa": 50,
+        "fluCumulativeKn": 820.5774561329589,
+        "formulaN": "IF(B47=\"\",\"\",_xll.NoiSuySPT(B47,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A47,$D$17)"
+      },
+      {
+        "row": 48,
+        "depthM": 11.0,
+        "layerName": "Lớp 4",
+        "dceSoilGroup": "Đất dính",
+        "NInterpolated": 9.176470588235295,
+        "qbSandKpa": "-",
+        "qbClayKpa": 344.11764705882354,
+        "segmentLengthM": 0.5,
+        "fSandKpa": "-",
+        "fClayKpa": 57.352941176470594,
+        "fluCumulativeKn": 910.6672454638427,
+        "formulaN": "IF(B48=\"\",\"\",_xll.NoiSuySPT(B48,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A48,$D$17)"
+      },
+      {
+        "row": 49,
+        "depthM": 12.0,
+        "layerName": "Lớp 4",
+        "dceSoilGroup": "Đất dính",
+        "NInterpolated": 11.529411764705884,
+        "qbSandKpa": "-",
+        "qbClayKpa": 432.3529411764706,
+        "segmentLengthM": 1,
+        "fSandKpa": "-",
+        "fClayKpa": 72.05882352941177,
+        "fluCumulativeKn": 1137.046716090166,
+        "formulaN": "IF(B49=\"\",\"\",_xll.NoiSuySPT(B49,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A49,$D$17)"
+      },
+      {
+        "row": 50,
+        "depthM": 12.2,
+        "layerName": "Lớp 5",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 12,
+        "qbSandKpa": 1440,
+        "qbClayKpa": "-",
+        "segmentLengthM": 0.1999999999999993,
+        "fSandKpa": 39.599999999999994,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 1161.9281299065972,
+        "formulaN": "IF(B50=\"\",\"\",_xll.NoiSuySPT(B50,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A50,$D$17)"
+      },
+      {
+        "row": 51,
+        "depthM": 13.0,
+        "layerName": "Lớp 5",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 12.4,
+        "qbSandKpa": 1488,
+        "qbClayKpa": "-",
+        "segmentLengthM": 0.8000000000000007,
+        "fSandKpa": 40.92,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 1264.7713070145128,
+        "formulaN": "IF(B51=\"\",\"\",_xll.NoiSuySPT(B51,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A51,$D$17)"
+      },
+      {
+        "row": 52,
+        "depthM": 14.0,
+        "layerName": "Lớp 5",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 12.9,
+        "qbSandKpa": 1548,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 42.57,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 1398.5089062778302,
+        "formulaN": "IF(B52=\"\",\"\",_xll.NoiSuySPT(B52,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A52,$D$17)"
+      },
+      {
+        "row": 53,
+        "depthM": 15.0,
+        "layerName": "Lớp 5",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 13,
+        "qbSandKpa": 1560,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 42.9,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 1533.2832311168322,
+        "formulaN": "IF(B53=\"\",\"\",_xll.NoiSuySPT(B53,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A53,$D$17)"
+      },
+      {
+        "row": 54,
+        "depthM": 16.0,
+        "layerName": "Lớp 5",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 13,
+        "qbSandKpa": 1560,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 42.9,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 1668.0575559558342,
+        "formulaN": "IF(B54=\"\",\"\",_xll.NoiSuySPT(B54,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A54,$D$17)"
+      },
+      {
+        "row": 55,
+        "depthM": 17.0,
+        "layerName": "Lớp 5",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 13,
+        "qbSandKpa": 1560,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 42.9,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 1802.8318807948363,
+        "formulaN": "IF(B55=\"\",\"\",_xll.NoiSuySPT(B55,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A55,$D$17)"
+      },
+      {
+        "row": 56,
+        "depthM": 18.0,
+        "layerName": "Lớp 5",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 13,
+        "qbSandKpa": 1560,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 42.9,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 1937.6062056338383,
+        "formulaN": "IF(B56=\"\",\"\",_xll.NoiSuySPT(B56,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A56,$D$17)"
+      },
+      {
+        "row": 57,
+        "depthM": 19.0,
+        "layerName": "Lớp 5",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 13.4,
+        "qbSandKpa": 1608,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 44.22,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 2076.5274327755787,
+        "formulaN": "IF(B57=\"\",\"\",_xll.NoiSuySPT(B57,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A57,$D$17)"
+      },
+      {
+        "row": 58,
+        "depthM": 20.0,
+        "layerName": "Lớp 5",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 13.9,
+        "qbSandKpa": 1668,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 45.87,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 2220.6322877957427,
+        "formulaN": "IF(B58=\"\",\"\",_xll.NoiSuySPT(B58,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A58,$D$17)"
+      },
+      {
+        "row": 59,
+        "depthM": 21.0,
+        "layerName": "Lớp 5",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 14,
+        "qbSandKpa": 1680,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 46.199999999999996,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 2365.7738683915913,
+        "formulaN": "IF(B59=\"\",\"\",_xll.NoiSuySPT(B59,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A59,$D$17)"
+      },
+      {
+        "row": 60,
+        "depthM": 22.0,
+        "layerName": "Lớp 5",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 14,
+        "qbSandKpa": 1680,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 46.199999999999996,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 2510.91544898744,
+        "formulaN": "IF(B60=\"\",\"\",_xll.NoiSuySPT(B60,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A60,$D$17)"
+      },
+      {
+        "row": 61,
+        "depthM": 23.0,
+        "layerName": "Lớp 5",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 14.4,
+        "qbSandKpa": 1728,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 47.519999999999996,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 2660.203931886027,
+        "formulaN": "IF(B61=\"\",\"\",_xll.NoiSuySPT(B61,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A61,$D$17)"
+      },
+      {
+        "row": 62,
+        "depthM": 24.0,
+        "layerName": "Lớp 5",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 14.9,
+        "qbSandKpa": 1788,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 49.17,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 2814.676042663037,
+        "formulaN": "IF(B62=\"\",\"\",_xll.NoiSuySPT(B62,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A62,$D$17)"
+      },
+      {
+        "row": 63,
+        "depthM": 25.0,
+        "layerName": "Lớp 5",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 15,
+        "qbSandKpa": 1800,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 49.5,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 2970.184879015732,
+        "formulaN": "IF(B63=\"\",\"\",_xll.NoiSuySPT(B63,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A63,$D$17)"
+      },
+      {
+        "row": 64,
+        "depthM": 26.0,
+        "layerName": "Lớp 5",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 15,
+        "qbSandKpa": 1800,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 49.5,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 3125.6937153684266,
+        "formulaN": "IF(B64=\"\",\"\",_xll.NoiSuySPT(B64,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A64,$D$17)"
+      },
+      {
+        "row": 65,
+        "depthM": 27.0,
+        "layerName": "Lớp 6",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 17,
+        "qbSandKpa": 2040,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 56.099999999999994,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 3301.937063234814,
+        "formulaN": "IF(B65=\"\",\"\",_xll.NoiSuySPT(B65,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A65,$D$17)"
+      },
+      {
+        "row": 66,
+        "depthM": 28.0,
+        "layerName": "Lớp 6",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 18.5,
+        "qbSandKpa": 2220,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 61.05,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 3493.7312947364708,
+        "formulaN": "IF(B66=\"\",\"\",_xll.NoiSuySPT(B66,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A66,$D$17)"
+      },
+      {
+        "row": 67,
+        "depthM": 29.0,
+        "layerName": "Lớp 6",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 20,
+        "qbSandKpa": 2400,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 66,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 3701.076409873397,
+        "formulaN": "IF(B67=\"\",\"\",_xll.NoiSuySPT(B67,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A67,$D$17)"
+      },
+      {
+        "row": 68,
+        "depthM": 30.0,
+        "layerName": "Lớp 6",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 22.5,
+        "qbSandKpa": 2700,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 74.25,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 3934.339664402439,
+        "formulaN": "IF(B68=\"\",\"\",_xll.NoiSuySPT(B68,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A68,$D$17)"
+      },
+      {
+        "row": 69,
+        "depthM": 31.0,
+        "layerName": "Lớp 6",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 25,
+        "qbSandKpa": 3000,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 82.5,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 4193.521058323597,
+        "formulaN": "IF(B69=\"\",\"\",_xll.NoiSuySPT(B69,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A69,$D$17)"
+      },
+      {
+        "row": 70,
+        "depthM": 32.0,
+        "layerName": "Lớp 6",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 22.5,
+        "qbSandKpa": 2700,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 74.25,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 4426.784312852639,
+        "formulaN": "IF(B70=\"\",\"\",_xll.NoiSuySPT(B70,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A70,$D$17)"
+      },
+      {
+        "row": 71,
+        "depthM": 33.0,
+        "layerName": "Lớp 6",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 20,
+        "qbSandKpa": 2400,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 66,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 4634.129427989566,
+        "formulaN": "IF(B71=\"\",\"\",_xll.NoiSuySPT(B71,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A71,$D$17)"
+      },
+      {
+        "row": 72,
+        "depthM": 34.0,
+        "layerName": "Lớp 6",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 23.5,
+        "qbSandKpa": 2820,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 77.55,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 4877.759938275454,
+        "formulaN": "IF(B72=\"\",\"\",_xll.NoiSuySPT(B72,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A72,$D$17)"
+      },
+      {
+        "row": 73,
+        "depthM": 35.0,
+        "layerName": "Lớp 6",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 27,
+        "qbSandKpa": 3240,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 89.1,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 5157.675843710304,
+        "formulaN": "IF(B73=\"\",\"\",_xll.NoiSuySPT(B73,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A73,$D$17)"
+      },
+      {
+        "row": 74,
+        "depthM": 36.0,
+        "layerName": "Lớp 6",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 28.5,
+        "qbSandKpa": 3420,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 94.05,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 5453.142632780425,
+        "formulaN": "IF(B74=\"\",\"\",_xll.NoiSuySPT(B74,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A74,$D$17)"
+      },
+      {
+        "row": 75,
+        "depthM": 37.0,
+        "layerName": "Lớp 6",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 30,
+        "qbSandKpa": 3600,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 99,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 5764.160305485814,
+        "formulaN": "IF(B75=\"\",\"\",_xll.NoiSuySPT(B75,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A75,$D$17)"
+      },
+      {
+        "row": 76,
+        "depthM": 38.0,
+        "layerName": "Lớp 6",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 25.00000000000001,
+        "qbSandKpa": 3000.0000000000014,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 82.50000000000003,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 6023.341699406972,
+        "formulaN": "IF(B76=\"\",\"\",_xll.NoiSuySPT(B76,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A76,$D$17)"
+      },
+      {
+        "row": 77,
+        "depthM": 38.2,
+        "layerName": "Lớp 7",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 24,
+        "qbSandKpa": 2880,
+        "qbClayKpa": "-",
+        "segmentLengthM": 0.20000000000000284,
+        "fSandKpa": 79.19999999999999,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 6073.104527039835,
+        "formulaN": "IF(B77=\"\",\"\",_xll.NoiSuySPT(B77,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A77,$D$17)"
+      },
+      {
+        "row": 78,
+        "depthM": 39.0,
+        "layerName": "Lớp 7",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 34.39999999999996,
+        "qbSandKpa": 4127.999999999995,
+        "qbClayKpa": "-",
+        "segmentLengthM": 0.7999999999999972,
+        "fSandKpa": 113.51999999999987,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 6358.411405468245,
+        "formulaN": "IF(B78=\"\",\"\",_xll.NoiSuySPT(B78,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A78,$D$17)"
+      },
+      {
+        "row": 79,
+        "depthM": 40.0,
+        "layerName": "Lớp 7",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 47.39999999999996,
+        "qbSandKpa": 5687.999999999995,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 156.41999999999987,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 6849.81932834276,
+        "formulaN": "IF(B79=\"\",\"\",_xll.NoiSuySPT(B79,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A79,$D$17)"
+      },
+      {
+        "row": 80,
+        "depthM": 41.0,
+        "layerName": "Lớp 7",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 50,
+        "qbSandKpa": 6000,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 165,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 7368.182116185076,
+        "formulaN": "IF(B80=\"\",\"\",_xll.NoiSuySPT(B80,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A80,$D$17)"
+      },
+      {
+        "row": 81,
+        "depthM": 42.0,
+        "layerName": "Lớp 7",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 50,
+        "qbSandKpa": 6000,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 165,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 7886.544904027392,
+        "formulaN": "IF(B81=\"\",\"\",_xll.NoiSuySPT(B81,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A81,$D$17)"
+      },
+      {
+        "row": 82,
+        "depthM": 43.0,
+        "layerName": "Lớp 7",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 50,
+        "qbSandKpa": 6000,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 165,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 8404.907691869706,
+        "formulaN": "IF(B82=\"\",\"\",_xll.NoiSuySPT(B82,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A82,$D$17)"
+      },
+      {
+        "row": 83,
+        "depthM": 43.2,
+        "layerName": "Lớp 7",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 50,
+        "qbSandKpa": 6000,
+        "qbClayKpa": "-",
+        "segmentLengthM": 0.20000000000000284,
+        "fSandKpa": 165,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 8508.580249438171,
+        "formulaN": "IF(B83=\"\",\"\",_xll.NoiSuySPT(B83,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A83,$D$17)"
+      },
+      {
+        "row": 84,
+        "depthM": 44.0,
+        "layerName": "Lớp 7",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 50,
+        "qbSandKpa": 6000,
+        "qbClayKpa": "-",
+        "segmentLengthM": 0.7999999999999972,
+        "fSandKpa": 165,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 8923.270479712022,
+        "formulaN": "IF(B84=\"\",\"\",_xll.NoiSuySPT(B84,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A84,$D$17)"
+      },
+      {
+        "row": 85,
+        "depthM": 45.0,
+        "layerName": "Lớp 7",
+        "dceSoilGroup": "Đất rời",
+        "NInterpolated": 50,
+        "qbSandKpa": 6000,
+        "qbClayKpa": "-",
+        "segmentLengthM": 1,
+        "fSandKpa": 165,
+        "fClayKpa": "-",
+        "fluCumulativeKn": 9441.633267554338,
+        "formulaN": "IF(B85=\"\",\"\",_xll.NoiSuySPT(B85,$O$19:$P$108,$D$16,$D$12,0,0))",
+        "formulaFlu": "_xll.flu_SPT2025($D$10,$D$12,$D$13,$D$20,$D$15,$D$16,$H$11:$I$27,$O$19:$P$108,FALSE,FALSE,\"flu\",A85,$D$17)"
+      }
+    ]
+  },
+  "rockKsDirectObservation": {
+    "inputCell": "F37",
+    "outputCell": "F38",
+    "RQD": 30,
+    "Ks": 0.24,
+    "formula": "_xll.GetKsFromRQD(F37)"
+  },
+  "table8IndirectObservations": [
+    {
+      "row": 48,
+      "depthM": 4.0,
+      "IL": 0.3,
+      "qbKpa": 575.0,
+      "cell": "F48",
+      "formula": "IF(B48=\"\",\"\",_xll.Qb_CocMaSatCMD(B48,$H$12:$O$25,$D$23,$D$25,$H$32,$D$13,$D$27,$D$26,\"qb\"))"
+    },
+    {
+      "row": 49,
+      "depthM": 5.0,
+      "IL": 0.3,
+      "qbKpa": 650.0,
+      "cell": "F49",
+      "formula": "IF(B49=\"\",\"\",_xll.Qb_CocMaSatCMD(B49,$H$12:$O$25,$D$23,$D$25,$H$32,$D$13,$D$27,$D$26,\"qb\"))"
+    },
+    {
+      "row": 50,
+      "depthM": 6.0,
+      "IL": 0.3,
+      "qbKpa": 700.0,
+      "cell": "F50",
+      "formula": "IF(B50=\"\",\"\",_xll.Qb_CocMaSatCMD(B50,$H$12:$O$25,$D$23,$D$25,$H$32,$D$13,$D$27,$D$26,\"qb\"))"
+    },
+    {
+      "row": 53,
+      "depthM": 9.0,
+      "IL": 0.2,
+      "qbKpa": 983.3333333333334,
+      "cell": "F53",
+      "formula": "IF(B53=\"\",\"\",_xll.Qb_CocMaSatCMD(B53,$H$12:$O$25,$D$23,$D$25,$H$32,$D$13,$D$27,$D$26,\"qb\"))"
+    },
+    {
+      "row": 54,
+      "depthM": 10.0,
+      "IL": 0.2,
+      "qbKpa": 1050.0,
+      "cell": "F54",
+      "formula": "IF(B54=\"\",\"\",_xll.Qb_CocMaSatCMD(B54,$H$12:$O$25,$D$23,$D$25,$H$32,$D$13,$D$27,$D$26,\"qb\"))"
+    }
+  ],
+  "eqGammaUniqueObservations": [
+    {
+      "depthM": 0.0,
+      "agR_G": 0.0848,
+      "loaiCat": "Cát Chặt ít ẩm và ẩm",
+      "tinhChat": "Cát Chặt ít ẩm và ẩm",
+      "IL": null,
+      "pileType": "Cọc nhồi chiếm chỗ",
+      "groundType": "D",
+      "spectrumType": "Loại 1",
+      "gammaQb": 0.98552,
+      "gammaFi": 0.9355199999999999,
+      "sources": [
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 41,
+          "gammaQbCell": "F41",
+          "gammaFiCell": "K41"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 42,
+          "gammaQbCell": "F42",
+          "gammaFiCell": "K42"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 83,
+          "gammaQbCell": "F83",
+          "gammaFiCell": "K83"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 84,
+          "gammaQbCell": "F84",
+          "gammaFiCell": "K84"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 85,
+          "gammaQbCell": "F85",
+          "gammaFiCell": "K85"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 86,
+          "gammaQbCell": "F86",
+          "gammaFiCell": "K86"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 87,
+          "gammaQbCell": "F87",
+          "gammaFiCell": "K87"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 88,
+          "gammaQbCell": "F88",
+          "gammaFiCell": "K88"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 89,
+          "gammaQbCell": "F89",
+          "gammaFiCell": "K89"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 90,
+          "gammaQbCell": "F90",
+          "gammaFiCell": "K90"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 91,
+          "gammaQbCell": "F91",
+          "gammaFiCell": "K91"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 43,
+          "gammaQbCell": "E43",
+          "gammaFiCell": "J43"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 44,
+          "gammaQbCell": "E44",
+          "gammaFiCell": "J44"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 85,
+          "gammaQbCell": "E85",
+          "gammaFiCell": "J85"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 86,
+          "gammaQbCell": "E86",
+          "gammaFiCell": "J86"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 87,
+          "gammaQbCell": "E87",
+          "gammaFiCell": "J87"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 88,
+          "gammaQbCell": "E88",
+          "gammaFiCell": "J88"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 89,
+          "gammaQbCell": "E89",
+          "gammaFiCell": "J89"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 90,
+          "gammaQbCell": "E90",
+          "gammaFiCell": "J90"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 91,
+          "gammaQbCell": "E91",
+          "gammaFiCell": "J91"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 92,
+          "gammaQbCell": "E92",
+          "gammaFiCell": "J92"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 93,
+          "gammaQbCell": "E93",
+          "gammaFiCell": "J93"
+        }
+      ]
+    },
+    {
+      "depthM": 1.5,
+      "agR_G": 0.0848,
+      "loaiCat": "Đất sét",
+      "tinhChat": "Đất sét",
+      "IL": 0.3,
+      "pileType": "Cọc nhồi chiếm chỗ",
+      "groundType": "D",
+      "spectrumType": "Loại 1",
+      "gammaQb": 0.9427599999999999,
+      "gammaFi": 0.84276,
+      "sources": [
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 43,
+          "gammaQbCell": "F43",
+          "gammaFiCell": "K43"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 44,
+          "gammaQbCell": "F44",
+          "gammaFiCell": "K44"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 45,
+          "gammaQbCell": "F45",
+          "gammaFiCell": "K45"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 46,
+          "gammaQbCell": "F46",
+          "gammaFiCell": "K46"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 47,
+          "gammaQbCell": "F47",
+          "gammaFiCell": "K47"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 48,
+          "gammaQbCell": "F48",
+          "gammaFiCell": "K48"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 45,
+          "gammaQbCell": "E45",
+          "gammaFiCell": "J45"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 46,
+          "gammaQbCell": "E46",
+          "gammaFiCell": "J46"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 47,
+          "gammaQbCell": "E47",
+          "gammaFiCell": "J47"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 48,
+          "gammaQbCell": "E48",
+          "gammaFiCell": "J48"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 49,
+          "gammaQbCell": "E49",
+          "gammaFiCell": "J49"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 50,
+          "gammaQbCell": "E50",
+          "gammaFiCell": "J50"
+        }
+      ]
+    },
+    {
+      "depthM": 7.0,
+      "agR_G": 0.0848,
+      "loaiCat": "Đất sét",
+      "tinhChat": "Đất sét",
+      "IL": 0.2,
+      "pileType": "Cọc nhồi chiếm chỗ",
+      "groundType": "D",
+      "spectrumType": "Loại 1",
+      "gammaQb": 0.9427599999999999,
+      "gammaFi": 0.84276,
+      "sources": [
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 49,
+          "gammaQbCell": "F49",
+          "gammaFiCell": "K49"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 50,
+          "gammaQbCell": "F50",
+          "gammaFiCell": "K50"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 51,
+          "gammaQbCell": "F51",
+          "gammaFiCell": "K51"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 52,
+          "gammaQbCell": "F52",
+          "gammaFiCell": "K52"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 51,
+          "gammaQbCell": "E51",
+          "gammaFiCell": "J51"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 52,
+          "gammaQbCell": "E52",
+          "gammaFiCell": "J52"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 53,
+          "gammaQbCell": "E53",
+          "gammaFiCell": "J53"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 54,
+          "gammaQbCell": "E54",
+          "gammaFiCell": "J54"
+        }
+      ]
+    },
+    {
+      "depthM": 10.5,
+      "agR_G": 0.0848,
+      "loaiCat": "Đất sét",
+      "tinhChat": "Đất sét",
+      "IL": 0.1,
+      "pileType": "Cọc nhồi chiếm chỗ",
+      "groundType": "D",
+      "spectrumType": "Loại 1",
+      "gammaQb": 0.9427599999999999,
+      "gammaFi": 0.84276,
+      "sources": [
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 53,
+          "gammaQbCell": "F53",
+          "gammaFiCell": "K53"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 54,
+          "gammaQbCell": "F54",
+          "gammaFiCell": "K54"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 55,
+          "gammaQbCell": "F55",
+          "gammaFiCell": "K55"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 55,
+          "gammaQbCell": "E55",
+          "gammaFiCell": "J55"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 56,
+          "gammaQbCell": "E56",
+          "gammaFiCell": "J56"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 57,
+          "gammaQbCell": "E57",
+          "gammaFiCell": "J57"
+        }
+      ]
+    },
+    {
+      "depthM": 12.2,
+      "agR_G": 0.0848,
+      "loaiCat": "Cát Chặt vừa ít ẩm và ẩm",
+      "tinhChat": "Cát Chặt vừa ít ẩm và ẩm",
+      "IL": null,
+      "pileType": "Cọc nhồi chiếm chỗ",
+      "groundType": "D",
+      "spectrumType": "Loại 1",
+      "gammaQb": 0.9355199999999999,
+      "gammaFi": 0.9355199999999999,
+      "sources": [
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 56,
+          "gammaQbCell": "F56",
+          "gammaFiCell": "K56"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 57,
+          "gammaQbCell": "F57",
+          "gammaFiCell": "K57"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 58,
+          "gammaQbCell": "F58",
+          "gammaFiCell": "K58"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 59,
+          "gammaQbCell": "F59",
+          "gammaFiCell": "K59"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 60,
+          "gammaQbCell": "F60",
+          "gammaFiCell": "K60"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 61,
+          "gammaQbCell": "F61",
+          "gammaFiCell": "K61"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 62,
+          "gammaQbCell": "F62",
+          "gammaFiCell": "K62"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 63,
+          "gammaQbCell": "F63",
+          "gammaFiCell": "K63"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 64,
+          "gammaQbCell": "F64",
+          "gammaFiCell": "K64"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 65,
+          "gammaQbCell": "F65",
+          "gammaFiCell": "K65"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 66,
+          "gammaQbCell": "F66",
+          "gammaFiCell": "K66"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 67,
+          "gammaQbCell": "F67",
+          "gammaFiCell": "K67"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 68,
+          "gammaQbCell": "F68",
+          "gammaFiCell": "K68"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 69,
+          "gammaQbCell": "F69",
+          "gammaFiCell": "K69"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 70,
+          "gammaQbCell": "F70",
+          "gammaFiCell": "K70"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 71,
+          "gammaQbCell": "F71",
+          "gammaFiCell": "K71"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 72,
+          "gammaQbCell": "F72",
+          "gammaFiCell": "K72"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 73,
+          "gammaQbCell": "F73",
+          "gammaFiCell": "K73"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 74,
+          "gammaQbCell": "F74",
+          "gammaFiCell": "K74"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 75,
+          "gammaQbCell": "F75",
+          "gammaFiCell": "K75"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 76,
+          "gammaQbCell": "F76",
+          "gammaFiCell": "K76"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 77,
+          "gammaQbCell": "F77",
+          "gammaFiCell": "K77"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 78,
+          "gammaQbCell": "F78",
+          "gammaFiCell": "K78"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 79,
+          "gammaQbCell": "F79",
+          "gammaFiCell": "K79"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 80,
+          "gammaQbCell": "F80",
+          "gammaFiCell": "K80"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 81,
+          "gammaQbCell": "F81",
+          "gammaFiCell": "K81"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 82,
+          "gammaQbCell": "F82",
+          "gammaFiCell": "K82"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 58,
+          "gammaQbCell": "E58",
+          "gammaFiCell": "J58"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 59,
+          "gammaQbCell": "E59",
+          "gammaFiCell": "J59"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 60,
+          "gammaQbCell": "E60",
+          "gammaFiCell": "J60"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 61,
+          "gammaQbCell": "E61",
+          "gammaFiCell": "J61"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 62,
+          "gammaQbCell": "E62",
+          "gammaFiCell": "J62"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 63,
+          "gammaQbCell": "E63",
+          "gammaFiCell": "J63"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 64,
+          "gammaQbCell": "E64",
+          "gammaFiCell": "J64"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 65,
+          "gammaQbCell": "E65",
+          "gammaFiCell": "J65"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 66,
+          "gammaQbCell": "E66",
+          "gammaFiCell": "J66"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 67,
+          "gammaQbCell": "E67",
+          "gammaFiCell": "J67"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 68,
+          "gammaQbCell": "E68",
+          "gammaFiCell": "J68"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 69,
+          "gammaQbCell": "E69",
+          "gammaFiCell": "J69"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 70,
+          "gammaQbCell": "E70",
+          "gammaFiCell": "J70"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 71,
+          "gammaQbCell": "E71",
+          "gammaFiCell": "J71"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 72,
+          "gammaQbCell": "E72",
+          "gammaFiCell": "J72"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 73,
+          "gammaQbCell": "E73",
+          "gammaFiCell": "J73"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 74,
+          "gammaQbCell": "E74",
+          "gammaFiCell": "J74"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 75,
+          "gammaQbCell": "E75",
+          "gammaFiCell": "J75"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 76,
+          "gammaQbCell": "E76",
+          "gammaFiCell": "J76"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 77,
+          "gammaQbCell": "E77",
+          "gammaFiCell": "J77"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 78,
+          "gammaQbCell": "E78",
+          "gammaFiCell": "J78"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 79,
+          "gammaQbCell": "E79",
+          "gammaFiCell": "J79"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 80,
+          "gammaQbCell": "E80",
+          "gammaFiCell": "J80"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 81,
+          "gammaQbCell": "E81",
+          "gammaFiCell": "J81"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 82,
+          "gammaQbCell": "E82",
+          "gammaFiCell": "J82"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 83,
+          "gammaQbCell": "E83",
+          "gammaFiCell": "J83"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 84,
+          "gammaQbCell": "E84",
+          "gammaFiCell": "J84"
+        }
+      ]
+    }
+  ],
+  "evidenceStatus": {
+    "signatures": "WHITE_BOX_CONTRACT_FROM_DCE_EXCEL_DLL",
+    "cachedWorkbookBehavior": "RUNTIME_CACHED_REFERENCE",
+    "exactProtectedMethodBody": "PARTIAL_WHITE_BOX_PROTECTED",
+    "productionAuthority": "TCVN_PDF_AND_HNL_GOLDEN_ONLY"
+  }
+}

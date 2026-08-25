@@ -1,0 +1,77 @@
+{
+  "version": "1.25.7",
+  "generatedAt": "2026-08-25T00:31:07.910Z",
+  "registry": {
+    "pile-geometry": {
+      "status": "LOCKED",
+      "productionNumeric": true,
+      "source": "Deterministic geometry · P0 Pass 1"
+    },
+    "borehole": {
+      "status": "LOCKED",
+      "productionNumeric": true,
+      "source": "Deterministic layer geometry · P0 Pass 1"
+    },
+    "interpolation-10304": {
+      "status": "LOCKED",
+      "productionNumeric": true,
+      "source": "TCVN 10304:2025 table policies + boundary Golden"
+    },
+    "10304-driven": {
+      "status": "LOCKED",
+      "productionNumeric": true,
+      "source": "7.2.2.1 · CT (9) · Bảng 2–4"
+    },
+    "10304-end-bearing-rock": {
+      "status": "LOCKED",
+      "productionNumeric": true,
+      "source": "7.2.1 · CT (5)–(8) · Bảng 1 · P0 Pass 3 E2E"
+    },
+    "10304-bored-raw": {
+      "status": "LOCKED",
+      "productionNumeric": true,
+      "source": "7.2.3 · CT (13)–(16) · Bảng 3,6,7,8 · P0 Pass 3 E2E"
+    },
+    "10304-spt-raw": {
+      "status": "LOCKED",
+      "productionNumeric": true,
+      "source": "Phụ lục D · D.1–D.6 · Bảng D.1 · P0 Pass 3 E2E"
+    },
+    "xll-GetKsFromRQD": {
+      "status": "REFERENCE",
+      "productionNumeric": false,
+      "source": "DCE XLL black box; replaced by direct Bảng 1 implementation"
+    },
+    "xll-NoiSuySPT": {
+      "status": "REFERENCE",
+      "productionNumeric": false,
+      "source": "DCE XLL black box; intentionally not cloned"
+    },
+    "xll-qb_SPT2025": {
+      "status": "REFERENCE",
+      "productionNumeric": false,
+      "source": "DCE XLL black box; replaced by Appendix D implementation"
+    },
+    "xll-flu_SPT2025": {
+      "status": "REFERENCE",
+      "productionNumeric": false,
+      "source": "DCE XLL black box; replaced by Appendix D implementation"
+    },
+    "10304-seismic-eq": {
+      "status": "REVIEW",
+      "productionNumeric": false,
+      "source": "XLSM/XLL EQ logic not yet independently verified"
+    },
+    "10304-2014": {
+      "status": "LEGACY",
+      "productionNumeric": false,
+      "source": "TCVN 10304:2014 legacy data"
+    }
+  },
+  "releaseRuntimeGate": {
+    "excelJs": "BLOCKED_LOCAL_MISSING_DEPENDENCIES",
+    "webBuild": "BLOCKED_LOCAL_MISSING_VITE",
+    "windowsBuild": "NOT_RUN_LOCAL",
+    "ciWiring": "ENABLED"
+  }
+}

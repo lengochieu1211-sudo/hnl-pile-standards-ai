@@ -1,0 +1,26 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { buildPass8CapacityInput, normalizePass8StructuralSource, runPass8OneClickCalculation, buildPass8ExcelExportContract } from '../src/pass8-workflow-router.js';
+import { parseStructuralJsonText, buildCsvStructuralBundle } from '../src/pass8-structural-file-parser.js';
+import { requestPass8VietnameseExcel } from '../src/pass8-excel-export-client.js';
+const fixture=JSON.parse(fs.readFileSync('artifacts/p1-pass5-dce-table-bundle-fixture-v13.json','utf8'));
+const p7=JSON.parse(fs.readFileSync('artifacts/p1-pass7-full-calculation-golden-v18.json','utf8'));
+const req=()=>({pile:{constructionMethod:'driven',shape:'square',sideMm:400,lengthM:12,tipDepthM:12},soil:{mechanicalGammaK:1.4,sptGammaK:1.5,boreholes:p7.capacityInput.boreholes},material:{grade:'B30',steel:'CB400-V',AsTotMm2:1600,L0Mm:4000,e0Mm:400/30},design:{gammaN:1.15},structural:{kind:'DCE_TABLES',tables:fixture.tables,sourceId:'PASS8_TEST'},combinationIds:['EULS']});
+const close=(a,b,t=1e-10)=>Math.abs(Number(a)-Number(b))<=Math.max(t,t*Math.max(1,Math.abs(Number(a)),Math.abs(Number(b))));
+
+test('Pass8 routes driven pile to locked 7.2.2 workflow',()=>{const x=buildPass8CapacityInput(req());assert.equal(x.mechanicalWorkflowId,'10304-driven');assert.equal(x.sptInput.pileType,'driven');});
+test('Pass8 routes bored pile to locked 7.2.3 workflow without calculating in router',()=>{const r=req();r.pile.constructionMethod='bored';const x=buildPass8CapacityInput(r);assert.equal(x.mechanicalWorkflowId,'10304-bored');assert.equal(x.sptInput.pileType,'bored');});
+test('Pass8 blocks non-square production pile',()=>{const r=req();r.pile.shape='circle';assert.throws(()=>buildPass8CapacityInput(r),/chỉ mở cho cọc vuông/);});
+test('Pass8 blocks fewer than two boreholes',()=>{const r=req();r.soil.boreholes=[r.soil.boreholes[0]];assert.throws(()=>buildPass8CapacityInput(r),/tối thiểu 2 lỗ khoan/);});
+test('Pass8 preserves explicit DCE sign conventions',()=>{const x=normalizePass8StructuralSource(req().structural);assert.equal(x.nodalReactionCompressionSign,'compression-positive');assert.equal(x.pierForceCompressionSign,'compression-negative');});
+test('Pass8 CSV blocks silent unit guess',()=>assert.throws(()=>normalizePass8StructuralSource({kind:'CSV',unitsProfile:'unknown'}),/kN_m_C/));
+test('Pass8 one-click Golden equals Pass7 locked result',()=>{const x=runPass8OneClickCalculation(req());assert.ok(close(x.result.summary.RsoilKn,843.4285714285716));assert.ok(close(x.result.summary.RmaterialKn,2952));assert.ok(close(x.result.summary.RpileKn,843.4285714285716));assert.ok(close(x.result.summary.NdMaxPerPileKn,733.4161490683232));assert.equal(x.result.summary.governingPileId,'168');assert.equal(x.result.conclusion.statusVi,'ĐẠT');});
+test('Pass8 explanation has 8 Vietnamese workflow steps',()=>{const x=runPass8OneClickCalculation(req());assert.equal(x.steps.length,8);assert.match(x.steps[0].title,/Chọn workflow/);assert.match(x.steps[7].title,/Kết luận/);});
+test('Pass8 Excel contract uses Vietnamese v18 template and is enabled for verified Golden',()=>{const x=runPass8OneClickCalculation(req());assert.equal(x.excelExport.enabled,true);assert.equal(x.excelExport.template,'HNL_P1_Pass7_Bao_Cao_Tinh_Toan_Coc_San_Xuat_v18.xlsx');assert.equal(x.excelExport.language,'vi-VN');});
+test('Pass8 Excel contract blocks export when result is locked',()=>{const r={conclusion:{statusVi:'KHÓA TÍNH'},structural:{summary:{blockedRows:1}},summary:{}};const x=buildPass8ExcelExportContract(r,{});assert.equal(x.enabled,false);assert.match(x.blockedReason,/KHÓA TÍNH/);});
+test('Pass8 JSON file parser accepts raw Pass5 fixture with tables',()=>{const x=parseStructuralJsonText(JSON.stringify(fixture));assert.equal(x.kind,'DCE_TABLES');assert.equal(x.tables.nodalReactions.length,38);});
+test('Pass8 JSON file parser rejects arbitrary JSON',()=>assert.throws(()=>parseStructuralJsonText('{"x":1}'),/schema Pass 5/));
+test('Pass8 CSV bundle requires three core files',()=>assert.throws(()=>buildCsvStructuralBundle({pointCoordinatesCsv:'x'}),/Thiếu nodalReactionsCsv/));
+test('Pass8 Excel client posts result only to exporter endpoint',async()=>{let call=null;const fake=async(url,opt)=>{call={url,opt};return {ok:true,blob:async()=>new Blob(['x'])};};const x=runPass8OneClickCalculation(req());const out=await requestPass8VietnameseExcel(x.excelExport,{fetchImpl:fake});assert.equal(call.url,'/api/hnl/pile/export-excel');assert.equal(call.opt.method,'POST');assert.match(out.fileName,/\.xlsx$/);});
+test('Pass8 Excel client refuses blocked contract without network call',async()=>{let called=false;await assert.rejects(()=>requestPass8VietnameseExcel({enabled:false,blockedReason:'KHÓA'},{fetchImpl:async()=>{called=true;}}),/KHÓA/);assert.equal(called,false);});

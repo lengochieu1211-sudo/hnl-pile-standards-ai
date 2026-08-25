@@ -1,0 +1,3038 @@
+{
+  "schema": "HNL_DCE_UDF_BEHAVIORAL_GOLDEN_V1",
+  "hnlVersion": "1.25.7",
+  "generatedAt": "2026-08-25T13:41:35.735Z",
+  "authority": {
+    "normative": "TCVN 10304:2025 PDF",
+    "reference": "DCE XLSM cached runtime behavior + DCE Excel.dll signatures",
+    "productionRule": "DCE difference alone never modifies HNL Production."
+  },
+  "sourceEvidence": {
+    "xlsmSha256": "ec38b68f753b08e50d9d1f9df988be5084cab1aedf391ba1aaecf112e9d88bd1",
+    "udfCallCounts": {
+      "NoiSuySPT": 140,
+      "GetKsFromRQD": 1,
+      "qb_SPT2025": 169,
+      "flu_SPT2025": 548,
+      "GetQbBang8": 0,
+      "TinhGammaqbCMS": 218,
+      "TinhGammafiCMS": 218,
+      "qbEQ_SPT2025": 239,
+      "fluEQ_SPT2025": 338
+    },
+    "evidenceStatus": {
+      "signatures": "WHITE_BOX_CONTRACT_FROM_DCE_EXCEL_DLL",
+      "cachedWorkbookBehavior": "RUNTIME_CACHED_REFERENCE",
+      "exactProtectedMethodBody": "PARTIAL_WHITE_BOX_PROTECTED",
+      "productionAuthority": "TCVN_PDF_AND_HNL_GOLDEN_ONLY"
+    }
+  },
+  "summary": {
+    "totalChecks": 213,
+    "failed": 0,
+    "NoiSuySPT": "51/51",
+    "qbSPT": "51/51",
+    "fluUnit": "51/51",
+    "fluCumulative": "51/51",
+    "GetKsFromRQD": "1/1",
+    "GetQbBang8Indirect": "5/5",
+    "eqGammaUniqueTuples": 5,
+    "eqProductionBlocked": true
+  },
+  "sptPolicyDifference": {
+    "dce": {
+      "QbKn": 4712.38898038469,
+      "RufKn": 6975.297018321339,
+      "RkKn": 11687.68599870603
+    },
+    "hnl": {
+      "QbKn": 4712.38898038469,
+      "RufKn": 6574.222450608145,
+      "RkKn": 11286.611430992834,
+      "tipN": 50,
+      "noInterpolationPolicy": true
+    },
+    "delta": {
+      "QbKn": 0,
+      "RufKn": -401.0745677131945,
+      "RkKn": -401.0745677131963
+    },
+    "classification": "DIFFERENT_BY_NORMATIVE_POLICY_DECISION",
+    "decision": "SPT_PDF_DECISION_LOCKED__NO_CONTINUOUS_N_INTERPOLATION__NO_DCE_RIGHT_END_INTEGRATION",
+    "pdfDecision": {
+      "tipN": "MEASURED-WINDOW-ARITHMETIC-MEAN",
+      "shaftN": "LAYER-REPRESENTATIVE_OR_MEASURED-LAYER-MEAN",
+      "boundary": "[top,bottom)",
+      "partition": "D.5/D.6 by geological layer"
+    }
+  },
+  "eqGammaObserved": [
+    {
+      "depthM": 0,
+      "agR_G": 0.0848,
+      "loaiCat": "Cát Chặt ít ẩm và ẩm",
+      "tinhChat": "Cát Chặt ít ẩm và ẩm",
+      "IL": null,
+      "pileType": "Cọc nhồi chiếm chỗ",
+      "groundType": "D",
+      "spectrumType": "Loại 1",
+      "gammaQb": 0.98552,
+      "gammaFi": 0.9355199999999999,
+      "sources": [
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 41,
+          "gammaQbCell": "F41",
+          "gammaFiCell": "K41"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 42,
+          "gammaQbCell": "F42",
+          "gammaFiCell": "K42"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 83,
+          "gammaQbCell": "F83",
+          "gammaFiCell": "K83"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 84,
+          "gammaQbCell": "F84",
+          "gammaFiCell": "K84"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 85,
+          "gammaQbCell": "F85",
+          "gammaFiCell": "K85"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 86,
+          "gammaQbCell": "F86",
+          "gammaFiCell": "K86"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 87,
+          "gammaQbCell": "F87",
+          "gammaFiCell": "K87"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 88,
+          "gammaQbCell": "F88",
+          "gammaFiCell": "K88"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 89,
+          "gammaQbCell": "F89",
+          "gammaFiCell": "K89"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 90,
+          "gammaQbCell": "F90",
+          "gammaFiCell": "K90"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 91,
+          "gammaQbCell": "F91",
+          "gammaFiCell": "K91"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 43,
+          "gammaQbCell": "E43",
+          "gammaFiCell": "J43"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 44,
+          "gammaQbCell": "E44",
+          "gammaFiCell": "J44"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 85,
+          "gammaQbCell": "E85",
+          "gammaFiCell": "J85"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 86,
+          "gammaQbCell": "E86",
+          "gammaFiCell": "J86"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 87,
+          "gammaQbCell": "E87",
+          "gammaFiCell": "J87"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 88,
+          "gammaQbCell": "E88",
+          "gammaFiCell": "J88"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 89,
+          "gammaQbCell": "E89",
+          "gammaFiCell": "J89"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 90,
+          "gammaQbCell": "E90",
+          "gammaFiCell": "J90"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 91,
+          "gammaQbCell": "E91",
+          "gammaFiCell": "J91"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 92,
+          "gammaQbCell": "E92",
+          "gammaFiCell": "J92"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 93,
+          "gammaQbCell": "E93",
+          "gammaFiCell": "J93"
+        }
+      ]
+    },
+    {
+      "depthM": 1.5,
+      "agR_G": 0.0848,
+      "loaiCat": "Đất sét",
+      "tinhChat": "Đất sét",
+      "IL": 0.3,
+      "pileType": "Cọc nhồi chiếm chỗ",
+      "groundType": "D",
+      "spectrumType": "Loại 1",
+      "gammaQb": 0.9427599999999999,
+      "gammaFi": 0.84276,
+      "sources": [
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 43,
+          "gammaQbCell": "F43",
+          "gammaFiCell": "K43"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 44,
+          "gammaQbCell": "F44",
+          "gammaFiCell": "K44"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 45,
+          "gammaQbCell": "F45",
+          "gammaFiCell": "K45"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 46,
+          "gammaQbCell": "F46",
+          "gammaFiCell": "K46"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 47,
+          "gammaQbCell": "F47",
+          "gammaFiCell": "K47"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 48,
+          "gammaQbCell": "F48",
+          "gammaFiCell": "K48"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 45,
+          "gammaQbCell": "E45",
+          "gammaFiCell": "J45"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 46,
+          "gammaQbCell": "E46",
+          "gammaFiCell": "J46"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 47,
+          "gammaQbCell": "E47",
+          "gammaFiCell": "J47"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 48,
+          "gammaQbCell": "E48",
+          "gammaFiCell": "J48"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 49,
+          "gammaQbCell": "E49",
+          "gammaFiCell": "J49"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 50,
+          "gammaQbCell": "E50",
+          "gammaFiCell": "J50"
+        }
+      ]
+    },
+    {
+      "depthM": 7,
+      "agR_G": 0.0848,
+      "loaiCat": "Đất sét",
+      "tinhChat": "Đất sét",
+      "IL": 0.2,
+      "pileType": "Cọc nhồi chiếm chỗ",
+      "groundType": "D",
+      "spectrumType": "Loại 1",
+      "gammaQb": 0.9427599999999999,
+      "gammaFi": 0.84276,
+      "sources": [
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 49,
+          "gammaQbCell": "F49",
+          "gammaFiCell": "K49"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 50,
+          "gammaQbCell": "F50",
+          "gammaFiCell": "K50"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 51,
+          "gammaQbCell": "F51",
+          "gammaFiCell": "K51"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 52,
+          "gammaQbCell": "F52",
+          "gammaFiCell": "K52"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 51,
+          "gammaQbCell": "E51",
+          "gammaFiCell": "J51"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 52,
+          "gammaQbCell": "E52",
+          "gammaFiCell": "J52"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 53,
+          "gammaQbCell": "E53",
+          "gammaFiCell": "J53"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 54,
+          "gammaQbCell": "E54",
+          "gammaFiCell": "J54"
+        }
+      ]
+    },
+    {
+      "depthM": 10.5,
+      "agR_G": 0.0848,
+      "loaiCat": "Đất sét",
+      "tinhChat": "Đất sét",
+      "IL": 0.1,
+      "pileType": "Cọc nhồi chiếm chỗ",
+      "groundType": "D",
+      "spectrumType": "Loại 1",
+      "gammaQb": 0.9427599999999999,
+      "gammaFi": 0.84276,
+      "sources": [
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 53,
+          "gammaQbCell": "F53",
+          "gammaFiCell": "K53"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 54,
+          "gammaQbCell": "F54",
+          "gammaFiCell": "K54"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 55,
+          "gammaQbCell": "F55",
+          "gammaFiCell": "K55"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 55,
+          "gammaQbCell": "E55",
+          "gammaFiCell": "J55"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 56,
+          "gammaQbCell": "E56",
+          "gammaFiCell": "J56"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 57,
+          "gammaQbCell": "E57",
+          "gammaFiCell": "J57"
+        }
+      ]
+    },
+    {
+      "depthM": 12.2,
+      "agR_G": 0.0848,
+      "loaiCat": "Cát Chặt vừa ít ẩm và ẩm",
+      "tinhChat": "Cát Chặt vừa ít ẩm và ẩm",
+      "IL": null,
+      "pileType": "Cọc nhồi chiếm chỗ",
+      "groundType": "D",
+      "spectrumType": "Loại 1",
+      "gammaQb": 0.9355199999999999,
+      "gammaFi": 0.9355199999999999,
+      "sources": [
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 56,
+          "gammaQbCell": "F56",
+          "gammaFiCell": "K56"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 57,
+          "gammaQbCell": "F57",
+          "gammaFiCell": "K57"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 58,
+          "gammaQbCell": "F58",
+          "gammaFiCell": "K58"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 59,
+          "gammaQbCell": "F59",
+          "gammaFiCell": "K59"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 60,
+          "gammaQbCell": "F60",
+          "gammaFiCell": "K60"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 61,
+          "gammaQbCell": "F61",
+          "gammaFiCell": "K61"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 62,
+          "gammaQbCell": "F62",
+          "gammaFiCell": "K62"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 63,
+          "gammaQbCell": "F63",
+          "gammaFiCell": "K63"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 64,
+          "gammaQbCell": "F64",
+          "gammaFiCell": "K64"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 65,
+          "gammaQbCell": "F65",
+          "gammaFiCell": "K65"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 66,
+          "gammaQbCell": "F66",
+          "gammaFiCell": "K66"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 67,
+          "gammaQbCell": "F67",
+          "gammaFiCell": "K67"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 68,
+          "gammaQbCell": "F68",
+          "gammaFiCell": "K68"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 69,
+          "gammaQbCell": "F69",
+          "gammaFiCell": "K69"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 70,
+          "gammaQbCell": "F70",
+          "gammaFiCell": "K70"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 71,
+          "gammaQbCell": "F71",
+          "gammaFiCell": "K71"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 72,
+          "gammaQbCell": "F72",
+          "gammaFiCell": "K72"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 73,
+          "gammaQbCell": "F73",
+          "gammaFiCell": "K73"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 74,
+          "gammaQbCell": "F74",
+          "gammaFiCell": "K74"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 75,
+          "gammaQbCell": "F75",
+          "gammaFiCell": "K75"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 76,
+          "gammaQbCell": "F76",
+          "gammaFiCell": "K76"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 77,
+          "gammaQbCell": "F77",
+          "gammaFiCell": "K77"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 78,
+          "gammaQbCell": "F78",
+          "gammaFiCell": "K78"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 79,
+          "gammaQbCell": "F79",
+          "gammaFiCell": "K79"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 80,
+          "gammaQbCell": "F80",
+          "gammaFiCell": "K80"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 81,
+          "gammaQbCell": "F81",
+          "gammaFiCell": "K81"
+        },
+        {
+          "sheet": "7.2.2-10304-Không moi đất EQ",
+          "row": 82,
+          "gammaQbCell": "F82",
+          "gammaFiCell": "K82"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 58,
+          "gammaQbCell": "E58",
+          "gammaFiCell": "J58"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 59,
+          "gammaQbCell": "E59",
+          "gammaFiCell": "J59"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 60,
+          "gammaQbCell": "E60",
+          "gammaFiCell": "J60"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 61,
+          "gammaQbCell": "E61",
+          "gammaFiCell": "J61"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 62,
+          "gammaQbCell": "E62",
+          "gammaFiCell": "J62"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 63,
+          "gammaQbCell": "E63",
+          "gammaFiCell": "J63"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 64,
+          "gammaQbCell": "E64",
+          "gammaFiCell": "J64"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 65,
+          "gammaQbCell": "E65",
+          "gammaFiCell": "J65"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 66,
+          "gammaQbCell": "E66",
+          "gammaFiCell": "J66"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 67,
+          "gammaQbCell": "E67",
+          "gammaFiCell": "J67"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 68,
+          "gammaQbCell": "E68",
+          "gammaFiCell": "J68"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 69,
+          "gammaQbCell": "E69",
+          "gammaFiCell": "J69"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 70,
+          "gammaQbCell": "E70",
+          "gammaFiCell": "J70"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 71,
+          "gammaQbCell": "E71",
+          "gammaFiCell": "J71"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 72,
+          "gammaQbCell": "E72",
+          "gammaFiCell": "J72"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 73,
+          "gammaQbCell": "E73",
+          "gammaFiCell": "J73"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 74,
+          "gammaQbCell": "E74",
+          "gammaFiCell": "J74"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 75,
+          "gammaQbCell": "E75",
+          "gammaFiCell": "J75"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 76,
+          "gammaQbCell": "E76",
+          "gammaFiCell": "J76"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 77,
+          "gammaQbCell": "E77",
+          "gammaFiCell": "J77"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 78,
+          "gammaQbCell": "E78",
+          "gammaFiCell": "J78"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 79,
+          "gammaQbCell": "E79",
+          "gammaFiCell": "J79"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 80,
+          "gammaQbCell": "E80",
+          "gammaFiCell": "J80"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 81,
+          "gammaQbCell": "E81",
+          "gammaFiCell": "J81"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 82,
+          "gammaQbCell": "E82",
+          "gammaFiCell": "J82"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 83,
+          "gammaQbCell": "E83",
+          "gammaFiCell": "J83"
+        },
+        {
+          "sheet": "7.2.3-10304-Có moi đất EQ",
+          "row": 84,
+          "gammaQbCell": "E84",
+          "gammaFiCell": "J84"
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "group": "NoiSuySPT",
+      "id": "row-35",
+      "actual": 0,
+      "expected": 0,
+      "status": "PASS",
+      "depthM": 0,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-36",
+      "actual": 2.6666666666666665,
+      "expected": 2.6666666666666665,
+      "status": "PASS",
+      "depthM": 1,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-37",
+      "actual": 4,
+      "expected": 4,
+      "status": "PASS",
+      "depthM": 1.5,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-38",
+      "actual": 3.75,
+      "expected": 3.75,
+      "status": "PASS",
+      "depthM": 2,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-39",
+      "actual": 3.25,
+      "expected": 3.25,
+      "status": "PASS",
+      "depthM": 3,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-40",
+      "actual": 3,
+      "expected": 3,
+      "status": "PASS",
+      "depthM": 4,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-41",
+      "actual": 3,
+      "expected": 3,
+      "status": "PASS",
+      "depthM": 5,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-42",
+      "actual": 2.6666666666666665,
+      "expected": 2.6666666666666665,
+      "status": "PASS",
+      "depthM": 6,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-43",
+      "actual": 2,
+      "expected": 2,
+      "status": "PASS",
+      "depthM": 7,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-44",
+      "actual": 4,
+      "expected": 4,
+      "status": "PASS",
+      "depthM": 8,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-45",
+      "actual": 6,
+      "expected": 6,
+      "status": "PASS",
+      "depthM": 9,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-46",
+      "actual": 7.333333333333333,
+      "expected": 7.333333333333333,
+      "status": "PASS",
+      "depthM": 10,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-47",
+      "actual": 8,
+      "expected": 8,
+      "status": "PASS",
+      "depthM": 10.5,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-48",
+      "actual": 9.176470588235295,
+      "expected": 9.176470588235295,
+      "status": "PASS",
+      "depthM": 11,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-49",
+      "actual": 11.529411764705884,
+      "expected": 11.529411764705884,
+      "status": "PASS",
+      "depthM": 12,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-50",
+      "actual": 12,
+      "expected": 12,
+      "status": "PASS",
+      "depthM": 12.2,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-51",
+      "actual": 12.4,
+      "expected": 12.4,
+      "status": "PASS",
+      "depthM": 13,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-52",
+      "actual": 12.9,
+      "expected": 12.9,
+      "status": "PASS",
+      "depthM": 14,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-53",
+      "actual": 13,
+      "expected": 13,
+      "status": "PASS",
+      "depthM": 15,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-54",
+      "actual": 13,
+      "expected": 13,
+      "status": "PASS",
+      "depthM": 16,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-55",
+      "actual": 13,
+      "expected": 13,
+      "status": "PASS",
+      "depthM": 17,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-56",
+      "actual": 13,
+      "expected": 13,
+      "status": "PASS",
+      "depthM": 18,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-57",
+      "actual": 13.4,
+      "expected": 13.4,
+      "status": "PASS",
+      "depthM": 19,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-58",
+      "actual": 13.9,
+      "expected": 13.9,
+      "status": "PASS",
+      "depthM": 20,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-59",
+      "actual": 14,
+      "expected": 14,
+      "status": "PASS",
+      "depthM": 21,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-60",
+      "actual": 14,
+      "expected": 14,
+      "status": "PASS",
+      "depthM": 22,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-61",
+      "actual": 14.4,
+      "expected": 14.4,
+      "status": "PASS",
+      "depthM": 23,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-62",
+      "actual": 14.9,
+      "expected": 14.9,
+      "status": "PASS",
+      "depthM": 24,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-63",
+      "actual": 15,
+      "expected": 15,
+      "status": "PASS",
+      "depthM": 25,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-64",
+      "actual": 15,
+      "expected": 15,
+      "status": "PASS",
+      "depthM": 26,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-65",
+      "actual": 17,
+      "expected": 17,
+      "status": "PASS",
+      "depthM": 27,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-66",
+      "actual": 18.5,
+      "expected": 18.5,
+      "status": "PASS",
+      "depthM": 28,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-67",
+      "actual": 20,
+      "expected": 20,
+      "status": "PASS",
+      "depthM": 29,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-68",
+      "actual": 22.5,
+      "expected": 22.5,
+      "status": "PASS",
+      "depthM": 30,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-69",
+      "actual": 25,
+      "expected": 25,
+      "status": "PASS",
+      "depthM": 31,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-70",
+      "actual": 22.5,
+      "expected": 22.5,
+      "status": "PASS",
+      "depthM": 32,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-71",
+      "actual": 20,
+      "expected": 20,
+      "status": "PASS",
+      "depthM": 33,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-72",
+      "actual": 23.5,
+      "expected": 23.5,
+      "status": "PASS",
+      "depthM": 34,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-73",
+      "actual": 27,
+      "expected": 27,
+      "status": "PASS",
+      "depthM": 35,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-74",
+      "actual": 28.5,
+      "expected": 28.5,
+      "status": "PASS",
+      "depthM": 36,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-75",
+      "actual": 30,
+      "expected": 30,
+      "status": "PASS",
+      "depthM": 37,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-76",
+      "actual": 25.00000000000001,
+      "expected": 25.00000000000001,
+      "status": "PASS",
+      "depthM": 38,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-77",
+      "actual": 24,
+      "expected": 24,
+      "status": "PASS",
+      "depthM": 38.2,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-78",
+      "actual": 34.39999999999996,
+      "expected": 34.39999999999996,
+      "status": "PASS",
+      "depthM": 39,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-79",
+      "actual": 47.39999999999996,
+      "expected": 47.39999999999996,
+      "status": "PASS",
+      "depthM": 40,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-80",
+      "actual": 50,
+      "expected": 50,
+      "status": "PASS",
+      "depthM": 41,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-81",
+      "actual": 50,
+      "expected": 50,
+      "status": "PASS",
+      "depthM": 42,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-82",
+      "actual": 50,
+      "expected": 50,
+      "status": "PASS",
+      "depthM": 43,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-83",
+      "actual": 50,
+      "expected": 50,
+      "status": "PASS",
+      "depthM": 43.2,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-84",
+      "actual": 50,
+      "expected": 50,
+      "status": "PASS",
+      "depthM": 44,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "NoiSuySPT",
+      "id": "row-85",
+      "actual": 50,
+      "expected": 50,
+      "status": "PASS",
+      "depthM": 45,
+      "classification": "DCE_REFERENCE_BEHAVIOR",
+      "productionClone": false
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-35",
+      "actual": 0,
+      "expected": 0,
+      "status": "PASS",
+      "depthM": 0,
+      "N": 0,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-36",
+      "actual": 99.99999999999999,
+      "expected": 99.99999999999999,
+      "status": "PASS",
+      "depthM": 1,
+      "N": 2.6666666666666665,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-37",
+      "actual": 150,
+      "expected": 150,
+      "status": "PASS",
+      "depthM": 1.5,
+      "N": 4,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-38",
+      "actual": 140.625,
+      "expected": 140.625,
+      "status": "PASS",
+      "depthM": 2,
+      "N": 3.75,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-39",
+      "actual": 121.875,
+      "expected": 121.875,
+      "status": "PASS",
+      "depthM": 3,
+      "N": 3.25,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-40",
+      "actual": 112.5,
+      "expected": 112.5,
+      "status": "PASS",
+      "depthM": 4,
+      "N": 3,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-41",
+      "actual": 112.5,
+      "expected": 112.5,
+      "status": "PASS",
+      "depthM": 5,
+      "N": 3,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-42",
+      "actual": 99.99999999999999,
+      "expected": 99.99999999999999,
+      "status": "PASS",
+      "depthM": 6,
+      "N": 2.6666666666666665,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-43",
+      "actual": 75,
+      "expected": 75,
+      "status": "PASS",
+      "depthM": 7,
+      "N": 2,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-44",
+      "actual": 150,
+      "expected": 150,
+      "status": "PASS",
+      "depthM": 8,
+      "N": 4,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-45",
+      "actual": 225,
+      "expected": 225,
+      "status": "PASS",
+      "depthM": 9,
+      "N": 6,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-46",
+      "actual": 275,
+      "expected": 275,
+      "status": "PASS",
+      "depthM": 10,
+      "N": 7.333333333333333,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-47",
+      "actual": 300,
+      "expected": 300,
+      "status": "PASS",
+      "depthM": 10.5,
+      "N": 8,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-48",
+      "actual": 344.11764705882354,
+      "expected": 344.11764705882354,
+      "status": "PASS",
+      "depthM": 11,
+      "N": 9.176470588235295,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-49",
+      "actual": 432.3529411764706,
+      "expected": 432.3529411764706,
+      "status": "PASS",
+      "depthM": 12,
+      "N": 11.529411764705884,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-50",
+      "actual": 1440,
+      "expected": 1440,
+      "status": "PASS",
+      "depthM": 12.2,
+      "N": 12,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-51",
+      "actual": 1488,
+      "expected": 1488,
+      "status": "PASS",
+      "depthM": 13,
+      "N": 12.4,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-52",
+      "actual": 1548,
+      "expected": 1548,
+      "status": "PASS",
+      "depthM": 14,
+      "N": 12.9,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-53",
+      "actual": 1560,
+      "expected": 1560,
+      "status": "PASS",
+      "depthM": 15,
+      "N": 13,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-54",
+      "actual": 1560,
+      "expected": 1560,
+      "status": "PASS",
+      "depthM": 16,
+      "N": 13,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-55",
+      "actual": 1560,
+      "expected": 1560,
+      "status": "PASS",
+      "depthM": 17,
+      "N": 13,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-56",
+      "actual": 1560,
+      "expected": 1560,
+      "status": "PASS",
+      "depthM": 18,
+      "N": 13,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-57",
+      "actual": 1608,
+      "expected": 1608,
+      "status": "PASS",
+      "depthM": 19,
+      "N": 13.4,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-58",
+      "actual": 1668,
+      "expected": 1668,
+      "status": "PASS",
+      "depthM": 20,
+      "N": 13.9,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-59",
+      "actual": 1680,
+      "expected": 1680,
+      "status": "PASS",
+      "depthM": 21,
+      "N": 14,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-60",
+      "actual": 1680,
+      "expected": 1680,
+      "status": "PASS",
+      "depthM": 22,
+      "N": 14,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-61",
+      "actual": 1728,
+      "expected": 1728,
+      "status": "PASS",
+      "depthM": 23,
+      "N": 14.4,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-62",
+      "actual": 1788,
+      "expected": 1788,
+      "status": "PASS",
+      "depthM": 24,
+      "N": 14.9,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-63",
+      "actual": 1800,
+      "expected": 1800,
+      "status": "PASS",
+      "depthM": 25,
+      "N": 15,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-64",
+      "actual": 1800,
+      "expected": 1800,
+      "status": "PASS",
+      "depthM": 26,
+      "N": 15,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-65",
+      "actual": 2040,
+      "expected": 2040,
+      "status": "PASS",
+      "depthM": 27,
+      "N": 17,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-66",
+      "actual": 2220,
+      "expected": 2220,
+      "status": "PASS",
+      "depthM": 28,
+      "N": 18.5,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-67",
+      "actual": 2400,
+      "expected": 2400,
+      "status": "PASS",
+      "depthM": 29,
+      "N": 20,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-68",
+      "actual": 2700,
+      "expected": 2700,
+      "status": "PASS",
+      "depthM": 30,
+      "N": 22.5,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-69",
+      "actual": 3000,
+      "expected": 3000,
+      "status": "PASS",
+      "depthM": 31,
+      "N": 25,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-70",
+      "actual": 2700,
+      "expected": 2700,
+      "status": "PASS",
+      "depthM": 32,
+      "N": 22.5,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-71",
+      "actual": 2400,
+      "expected": 2400,
+      "status": "PASS",
+      "depthM": 33,
+      "N": 20,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-72",
+      "actual": 2820,
+      "expected": 2820,
+      "status": "PASS",
+      "depthM": 34,
+      "N": 23.5,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-73",
+      "actual": 3240,
+      "expected": 3240,
+      "status": "PASS",
+      "depthM": 35,
+      "N": 27,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-74",
+      "actual": 3420,
+      "expected": 3420,
+      "status": "PASS",
+      "depthM": 36,
+      "N": 28.5,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-75",
+      "actual": 3600,
+      "expected": 3600,
+      "status": "PASS",
+      "depthM": 37,
+      "N": 30,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-76",
+      "actual": 3000.0000000000014,
+      "expected": 3000.0000000000014,
+      "status": "PASS",
+      "depthM": 38,
+      "N": 25.00000000000001,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-77",
+      "actual": 2880,
+      "expected": 2880,
+      "status": "PASS",
+      "depthM": 38.2,
+      "N": 24,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-78",
+      "actual": 4127.999999999995,
+      "expected": 4127.999999999995,
+      "status": "PASS",
+      "depthM": 39,
+      "N": 34.39999999999996,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-79",
+      "actual": 5687.999999999995,
+      "expected": 5687.999999999995,
+      "status": "PASS",
+      "depthM": 40,
+      "N": 47.39999999999996,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-80",
+      "actual": 6000,
+      "expected": 6000,
+      "status": "PASS",
+      "depthM": 41,
+      "N": 50,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-81",
+      "actual": 6000,
+      "expected": 6000,
+      "status": "PASS",
+      "depthM": 42,
+      "N": 50,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-82",
+      "actual": 6000,
+      "expected": 6000,
+      "status": "PASS",
+      "depthM": 43,
+      "N": 50,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-83",
+      "actual": 6000,
+      "expected": 6000,
+      "status": "PASS",
+      "depthM": 43.2,
+      "N": 50,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-84",
+      "actual": 6000,
+      "expected": 6000,
+      "status": "PASS",
+      "depthM": 44,
+      "N": 50,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "qb_SPT2025",
+      "id": "row-85",
+      "actual": 6000,
+      "expected": 6000,
+      "status": "PASS",
+      "depthM": 45,
+      "N": 50,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-35",
+      "actual": 0,
+      "expected": 0,
+      "status": "PASS",
+      "depthM": 0,
+      "N": 0,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-36",
+      "actual": 16.666666666666664,
+      "expected": 16.666666666666664,
+      "status": "PASS",
+      "depthM": 1,
+      "N": 2.6666666666666665,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-37",
+      "actual": 25,
+      "expected": 25,
+      "status": "PASS",
+      "depthM": 1.5,
+      "N": 4,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-38",
+      "actual": 23.4375,
+      "expected": 23.4375,
+      "status": "PASS",
+      "depthM": 2,
+      "N": 3.75,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-39",
+      "actual": 20.3125,
+      "expected": 20.3125,
+      "status": "PASS",
+      "depthM": 3,
+      "N": 3.25,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-40",
+      "actual": 18.75,
+      "expected": 18.75,
+      "status": "PASS",
+      "depthM": 4,
+      "N": 3,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-41",
+      "actual": 18.75,
+      "expected": 18.75,
+      "status": "PASS",
+      "depthM": 5,
+      "N": 3,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-42",
+      "actual": 16.666666666666664,
+      "expected": 16.666666666666664,
+      "status": "PASS",
+      "depthM": 6,
+      "N": 2.6666666666666665,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-43",
+      "actual": 12.5,
+      "expected": 12.5,
+      "status": "PASS",
+      "depthM": 7,
+      "N": 2,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-44",
+      "actual": 25,
+      "expected": 25,
+      "status": "PASS",
+      "depthM": 8,
+      "N": 4,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-45",
+      "actual": 37.5,
+      "expected": 37.5,
+      "status": "PASS",
+      "depthM": 9,
+      "N": 6,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-46",
+      "actual": 45.83333333333333,
+      "expected": 45.83333333333333,
+      "status": "PASS",
+      "depthM": 10,
+      "N": 7.333333333333333,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-47",
+      "actual": 50,
+      "expected": 50,
+      "status": "PASS",
+      "depthM": 10.5,
+      "N": 8,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-48",
+      "actual": 57.352941176470594,
+      "expected": 57.352941176470594,
+      "status": "PASS",
+      "depthM": 11,
+      "N": 9.176470588235295,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-49",
+      "actual": 72.05882352941177,
+      "expected": 72.05882352941177,
+      "status": "PASS",
+      "depthM": 12,
+      "N": 11.529411764705884,
+      "soilGroup": "clay",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-50",
+      "actual": 39.599999999999994,
+      "expected": 39.599999999999994,
+      "status": "PASS",
+      "depthM": 12.2,
+      "N": 12,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-51",
+      "actual": 40.92,
+      "expected": 40.92,
+      "status": "PASS",
+      "depthM": 13,
+      "N": 12.4,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-52",
+      "actual": 42.57,
+      "expected": 42.57,
+      "status": "PASS",
+      "depthM": 14,
+      "N": 12.9,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-53",
+      "actual": 42.9,
+      "expected": 42.9,
+      "status": "PASS",
+      "depthM": 15,
+      "N": 13,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-54",
+      "actual": 42.9,
+      "expected": 42.9,
+      "status": "PASS",
+      "depthM": 16,
+      "N": 13,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-55",
+      "actual": 42.9,
+      "expected": 42.9,
+      "status": "PASS",
+      "depthM": 17,
+      "N": 13,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-56",
+      "actual": 42.9,
+      "expected": 42.9,
+      "status": "PASS",
+      "depthM": 18,
+      "N": 13,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-57",
+      "actual": 44.22,
+      "expected": 44.22,
+      "status": "PASS",
+      "depthM": 19,
+      "N": 13.4,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-58",
+      "actual": 45.87,
+      "expected": 45.87,
+      "status": "PASS",
+      "depthM": 20,
+      "N": 13.9,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-59",
+      "actual": 46.199999999999996,
+      "expected": 46.199999999999996,
+      "status": "PASS",
+      "depthM": 21,
+      "N": 14,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-60",
+      "actual": 46.199999999999996,
+      "expected": 46.199999999999996,
+      "status": "PASS",
+      "depthM": 22,
+      "N": 14,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-61",
+      "actual": 47.519999999999996,
+      "expected": 47.519999999999996,
+      "status": "PASS",
+      "depthM": 23,
+      "N": 14.4,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-62",
+      "actual": 49.17,
+      "expected": 49.17,
+      "status": "PASS",
+      "depthM": 24,
+      "N": 14.9,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-63",
+      "actual": 49.5,
+      "expected": 49.5,
+      "status": "PASS",
+      "depthM": 25,
+      "N": 15,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-64",
+      "actual": 49.5,
+      "expected": 49.5,
+      "status": "PASS",
+      "depthM": 26,
+      "N": 15,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-65",
+      "actual": 56.099999999999994,
+      "expected": 56.099999999999994,
+      "status": "PASS",
+      "depthM": 27,
+      "N": 17,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-66",
+      "actual": 61.05,
+      "expected": 61.05,
+      "status": "PASS",
+      "depthM": 28,
+      "N": 18.5,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-67",
+      "actual": 66,
+      "expected": 66,
+      "status": "PASS",
+      "depthM": 29,
+      "N": 20,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-68",
+      "actual": 74.25,
+      "expected": 74.25,
+      "status": "PASS",
+      "depthM": 30,
+      "N": 22.5,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-69",
+      "actual": 82.5,
+      "expected": 82.5,
+      "status": "PASS",
+      "depthM": 31,
+      "N": 25,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-70",
+      "actual": 74.25,
+      "expected": 74.25,
+      "status": "PASS",
+      "depthM": 32,
+      "N": 22.5,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-71",
+      "actual": 66,
+      "expected": 66,
+      "status": "PASS",
+      "depthM": 33,
+      "N": 20,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-72",
+      "actual": 77.55,
+      "expected": 77.55,
+      "status": "PASS",
+      "depthM": 34,
+      "N": 23.5,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-73",
+      "actual": 89.1,
+      "expected": 89.1,
+      "status": "PASS",
+      "depthM": 35,
+      "N": 27,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-74",
+      "actual": 94.05,
+      "expected": 94.05,
+      "status": "PASS",
+      "depthM": 36,
+      "N": 28.5,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-75",
+      "actual": 99,
+      "expected": 99,
+      "status": "PASS",
+      "depthM": 37,
+      "N": 30,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-76",
+      "actual": 82.50000000000003,
+      "expected": 82.50000000000003,
+      "status": "PASS",
+      "depthM": 38,
+      "N": 25.00000000000001,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-77",
+      "actual": 79.19999999999999,
+      "expected": 79.19999999999999,
+      "status": "PASS",
+      "depthM": 38.2,
+      "N": 24,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-78",
+      "actual": 113.51999999999987,
+      "expected": 113.51999999999987,
+      "status": "PASS",
+      "depthM": 39,
+      "N": 34.39999999999996,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-79",
+      "actual": 156.41999999999987,
+      "expected": 156.41999999999987,
+      "status": "PASS",
+      "depthM": 40,
+      "N": 47.39999999999996,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-80",
+      "actual": 165,
+      "expected": 165,
+      "status": "PASS",
+      "depthM": 41,
+      "N": 50,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-81",
+      "actual": 165,
+      "expected": 165,
+      "status": "PASS",
+      "depthM": 42,
+      "N": 50,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-82",
+      "actual": 165,
+      "expected": 165,
+      "status": "PASS",
+      "depthM": 43,
+      "N": 50,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-83",
+      "actual": 165,
+      "expected": 165,
+      "status": "PASS",
+      "depthM": 43.2,
+      "N": 50,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-84",
+      "actual": 165,
+      "expected": 165,
+      "status": "PASS",
+      "depthM": 44,
+      "N": 50,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-unit-f",
+      "id": "row-85",
+      "actual": 165,
+      "expected": 165,
+      "status": "PASS",
+      "depthM": 45,
+      "N": 50,
+      "soilGroup": "sand",
+      "hnlProvenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-35",
+      "actual": 0,
+      "expected": 0,
+      "status": "PASS",
+      "depthM": 0,
+      "segmentLengthM": 0,
+      "fKpa": 0,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-36",
+      "actual": 52.359877559829876,
+      "expected": 52.359877559829876,
+      "status": "PASS",
+      "depthM": 1,
+      "segmentLengthM": 1,
+      "fKpa": 16.666666666666664,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-37",
+      "actual": 91.62978572970229,
+      "expected": 91.62978572970229,
+      "status": "PASS",
+      "depthM": 1.5,
+      "segmentLengthM": 0.5,
+      "fKpa": 25,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-38",
+      "actual": 128.4453246389577,
+      "expected": 128.4453246389577,
+      "status": "PASS",
+      "depthM": 2,
+      "segmentLengthM": 0.5,
+      "fKpa": 23.4375,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-39",
+      "actual": 192.25892541500036,
+      "expected": 192.25892541500036,
+      "status": "PASS",
+      "depthM": 3,
+      "segmentLengthM": 1,
+      "fKpa": 20.3125,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-40",
+      "actual": 251.16378766980898,
+      "expected": 251.16378766980898,
+      "status": "PASS",
+      "depthM": 4,
+      "segmentLengthM": 1,
+      "fKpa": 18.75,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-41",
+      "actual": 310.0686499246176,
+      "expected": 310.0686499246176,
+      "status": "PASS",
+      "depthM": 5,
+      "segmentLengthM": 1,
+      "fKpa": 18.75,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-42",
+      "actual": 362.4285274844475,
+      "expected": 362.4285274844475,
+      "status": "PASS",
+      "depthM": 6,
+      "segmentLengthM": 1,
+      "fKpa": 16.666666666666664,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-43",
+      "actual": 401.6984356543199,
+      "expected": 401.6984356543199,
+      "status": "PASS",
+      "depthM": 7,
+      "segmentLengthM": 1,
+      "fKpa": 12.5,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-44",
+      "actual": 480.23825199406474,
+      "expected": 480.23825199406474,
+      "status": "PASS",
+      "depthM": 8,
+      "segmentLengthM": 1,
+      "fKpa": 25,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-45",
+      "actual": 598.047976503682,
+      "expected": 598.047976503682,
+      "status": "PASS",
+      "depthM": 9,
+      "segmentLengthM": 1,
+      "fKpa": 37.5,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-46",
+      "actual": 742.0376397932141,
+      "expected": 742.0376397932141,
+      "status": "PASS",
+      "depthM": 10,
+      "segmentLengthM": 1,
+      "fKpa": 45.83333333333333,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-47",
+      "actual": 820.5774561329589,
+      "expected": 820.5774561329589,
+      "status": "PASS",
+      "depthM": 10.5,
+      "segmentLengthM": 0.5,
+      "fKpa": 50,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-48",
+      "actual": 910.6672454638427,
+      "expected": 910.6672454638427,
+      "status": "PASS",
+      "depthM": 11,
+      "segmentLengthM": 0.5,
+      "fKpa": 57.352941176470594,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-49",
+      "actual": 1137.046716090166,
+      "expected": 1137.046716090166,
+      "status": "PASS",
+      "depthM": 12,
+      "segmentLengthM": 1,
+      "fKpa": 72.05882352941177,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-50",
+      "actual": 1161.9281299065972,
+      "expected": 1161.9281299065972,
+      "status": "PASS",
+      "depthM": 12.2,
+      "segmentLengthM": 0.1999999999999993,
+      "fKpa": 39.599999999999994,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-51",
+      "actual": 1264.7713070145128,
+      "expected": 1264.7713070145128,
+      "status": "PASS",
+      "depthM": 13,
+      "segmentLengthM": 0.8000000000000007,
+      "fKpa": 40.92,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-52",
+      "actual": 1398.5089062778302,
+      "expected": 1398.5089062778302,
+      "status": "PASS",
+      "depthM": 14,
+      "segmentLengthM": 1,
+      "fKpa": 42.57,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-53",
+      "actual": 1533.2832311168322,
+      "expected": 1533.2832311168322,
+      "status": "PASS",
+      "depthM": 15,
+      "segmentLengthM": 1,
+      "fKpa": 42.9,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-54",
+      "actual": 1668.0575559558342,
+      "expected": 1668.0575559558342,
+      "status": "PASS",
+      "depthM": 16,
+      "segmentLengthM": 1,
+      "fKpa": 42.9,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-55",
+      "actual": 1802.8318807948363,
+      "expected": 1802.8318807948363,
+      "status": "PASS",
+      "depthM": 17,
+      "segmentLengthM": 1,
+      "fKpa": 42.9,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-56",
+      "actual": 1937.6062056338383,
+      "expected": 1937.6062056338383,
+      "status": "PASS",
+      "depthM": 18,
+      "segmentLengthM": 1,
+      "fKpa": 42.9,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-57",
+      "actual": 2076.5274327755787,
+      "expected": 2076.5274327755787,
+      "status": "PASS",
+      "depthM": 19,
+      "segmentLengthM": 1,
+      "fKpa": 44.22,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-58",
+      "actual": 2220.6322877957427,
+      "expected": 2220.6322877957427,
+      "status": "PASS",
+      "depthM": 20,
+      "segmentLengthM": 1,
+      "fKpa": 45.87,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-59",
+      "actual": 2365.7738683915913,
+      "expected": 2365.7738683915913,
+      "status": "PASS",
+      "depthM": 21,
+      "segmentLengthM": 1,
+      "fKpa": 46.199999999999996,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-60",
+      "actual": 2510.91544898744,
+      "expected": 2510.91544898744,
+      "status": "PASS",
+      "depthM": 22,
+      "segmentLengthM": 1,
+      "fKpa": 46.199999999999996,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-61",
+      "actual": 2660.203931886027,
+      "expected": 2660.203931886027,
+      "status": "PASS",
+      "depthM": 23,
+      "segmentLengthM": 1,
+      "fKpa": 47.519999999999996,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-62",
+      "actual": 2814.676042663037,
+      "expected": 2814.676042663037,
+      "status": "PASS",
+      "depthM": 24,
+      "segmentLengthM": 1,
+      "fKpa": 49.17,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-63",
+      "actual": 2970.184879015732,
+      "expected": 2970.184879015732,
+      "status": "PASS",
+      "depthM": 25,
+      "segmentLengthM": 1,
+      "fKpa": 49.5,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-64",
+      "actual": 3125.6937153684266,
+      "expected": 3125.6937153684266,
+      "status": "PASS",
+      "depthM": 26,
+      "segmentLengthM": 1,
+      "fKpa": 49.5,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-65",
+      "actual": 3301.937063234814,
+      "expected": 3301.937063234814,
+      "status": "PASS",
+      "depthM": 27,
+      "segmentLengthM": 1,
+      "fKpa": 56.099999999999994,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-66",
+      "actual": 3493.7312947364708,
+      "expected": 3493.7312947364708,
+      "status": "PASS",
+      "depthM": 28,
+      "segmentLengthM": 1,
+      "fKpa": 61.05,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-67",
+      "actual": 3701.076409873397,
+      "expected": 3701.076409873397,
+      "status": "PASS",
+      "depthM": 29,
+      "segmentLengthM": 1,
+      "fKpa": 66,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-68",
+      "actual": 3934.339664402439,
+      "expected": 3934.339664402439,
+      "status": "PASS",
+      "depthM": 30,
+      "segmentLengthM": 1,
+      "fKpa": 74.25,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-69",
+      "actual": 4193.521058323597,
+      "expected": 4193.521058323597,
+      "status": "PASS",
+      "depthM": 31,
+      "segmentLengthM": 1,
+      "fKpa": 82.5,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-70",
+      "actual": 4426.784312852639,
+      "expected": 4426.784312852639,
+      "status": "PASS",
+      "depthM": 32,
+      "segmentLengthM": 1,
+      "fKpa": 74.25,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-71",
+      "actual": 4634.129427989566,
+      "expected": 4634.129427989566,
+      "status": "PASS",
+      "depthM": 33,
+      "segmentLengthM": 1,
+      "fKpa": 66,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-72",
+      "actual": 4877.759938275454,
+      "expected": 4877.759938275454,
+      "status": "PASS",
+      "depthM": 34,
+      "segmentLengthM": 1,
+      "fKpa": 77.55,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-73",
+      "actual": 5157.675843710304,
+      "expected": 5157.675843710304,
+      "status": "PASS",
+      "depthM": 35,
+      "segmentLengthM": 1,
+      "fKpa": 89.1,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-74",
+      "actual": 5453.142632780425,
+      "expected": 5453.142632780425,
+      "status": "PASS",
+      "depthM": 36,
+      "segmentLengthM": 1,
+      "fKpa": 94.05,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-75",
+      "actual": 5764.160305485814,
+      "expected": 5764.160305485814,
+      "status": "PASS",
+      "depthM": 37,
+      "segmentLengthM": 1,
+      "fKpa": 99,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-76",
+      "actual": 6023.341699406972,
+      "expected": 6023.341699406972,
+      "status": "PASS",
+      "depthM": 38,
+      "segmentLengthM": 1,
+      "fKpa": 82.50000000000003,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-77",
+      "actual": 6073.104527039835,
+      "expected": 6073.104527039835,
+      "status": "PASS",
+      "depthM": 38.2,
+      "segmentLengthM": 0.20000000000000284,
+      "fKpa": 79.19999999999999,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-78",
+      "actual": 6358.411405468245,
+      "expected": 6358.411405468245,
+      "status": "PASS",
+      "depthM": 39,
+      "segmentLengthM": 0.7999999999999972,
+      "fKpa": 113.51999999999987,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-79",
+      "actual": 6849.81932834276,
+      "expected": 6849.81932834276,
+      "status": "PASS",
+      "depthM": 40,
+      "segmentLengthM": 1,
+      "fKpa": 156.41999999999987,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-80",
+      "actual": 7368.182116185076,
+      "expected": 7368.182116185076,
+      "status": "PASS",
+      "depthM": 41,
+      "segmentLengthM": 1,
+      "fKpa": 165,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-81",
+      "actual": 7886.544904027392,
+      "expected": 7886.544904027392,
+      "status": "PASS",
+      "depthM": 42,
+      "segmentLengthM": 1,
+      "fKpa": 165,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-82",
+      "actual": 8404.907691869706,
+      "expected": 8404.907691869706,
+      "status": "PASS",
+      "depthM": 43,
+      "segmentLengthM": 1,
+      "fKpa": 165,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-83",
+      "actual": 8508.580249438171,
+      "expected": 8508.580249438171,
+      "status": "PASS",
+      "depthM": 43.2,
+      "segmentLengthM": 0.20000000000000284,
+      "fKpa": 165,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-84",
+      "actual": 8923.270479712022,
+      "expected": 8923.270479712022,
+      "status": "PASS",
+      "depthM": 44,
+      "segmentLengthM": 0.7999999999999972,
+      "fKpa": 165,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "flu_SPT2025-cumulative",
+      "id": "row-85",
+      "actual": 9441.633267554338,
+      "expected": 9441.633267554338,
+      "status": "PASS",
+      "depthM": 45,
+      "segmentLengthM": 1,
+      "fKpa": 165,
+      "inferredBehavior": "RIGHT-END-RECTANGLE"
+    },
+    {
+      "group": "SPT-full-policy",
+      "id": "tip-Qb",
+      "actual": 4712.38898038469,
+      "expected": 4712.38898038469,
+      "status": "PASS"
+    },
+    {
+      "group": "SPT-full-policy",
+      "id": "shaft-policy-difference",
+      "actual": 6574.222450608145,
+      "expected": 6975.297018321339,
+      "status": "EXPECTED_DIFFERENCE",
+      "deltaKn": -401.0745677131945,
+      "classification": "DIFFERENT_BY_NORMATIVE_POLICY_DECISION"
+    },
+    {
+      "group": "GetKsFromRQD",
+      "id": "direct-RQD-30",
+      "actual": 0.24,
+      "expected": 0.24,
+      "status": "PASS",
+      "hnlProvenance": "TCVN 10304:2025 · Bảng 1 · trang 29 · Chú thích 1–2"
+    },
+    {
+      "group": "GetQbBang8-indirect",
+      "id": "row-48",
+      "actual": 575,
+      "expected": 575,
+      "status": "PASS",
+      "depthM": 4,
+      "IL": 0.3,
+      "mode": "LINEAR-1D",
+      "hnlProvenance": "TCVN 10304:2025 · Bảng 8 · trang 41-42 · Chú thích 2"
+    },
+    {
+      "group": "GetQbBang8-indirect",
+      "id": "row-49",
+      "actual": 650,
+      "expected": 650,
+      "status": "PASS",
+      "depthM": 5,
+      "IL": 0.3,
+      "mode": "EXACT",
+      "hnlProvenance": "TCVN 10304:2025 · Bảng 8 · trang 41-42 · Chú thích 2"
+    },
+    {
+      "group": "GetQbBang8-indirect",
+      "id": "row-50",
+      "actual": 700,
+      "expected": 700,
+      "status": "PASS",
+      "depthM": 6,
+      "IL": 0.3,
+      "mode": "LINEAR-1D",
+      "hnlProvenance": "TCVN 10304:2025 · Bảng 8 · trang 41-42 · Chú thích 2"
+    },
+    {
+      "group": "GetQbBang8-indirect",
+      "id": "row-53",
+      "actual": 983.3333333333334,
+      "expected": 983.3333333333333,
+      "status": "PASS",
+      "depthM": 9,
+      "IL": 0.2,
+      "mode": "LINEAR-1D",
+      "hnlProvenance": "TCVN 10304:2025 · Bảng 8 · trang 41-42 · Chú thích 2"
+    },
+    {
+      "group": "GetQbBang8-indirect",
+      "id": "row-54",
+      "actual": 1050,
+      "expected": 1050,
+      "status": "PASS",
+      "depthM": 10,
+      "IL": 0.2,
+      "mode": "EXACT",
+      "hnlProvenance": "TCVN 10304:2025 · Bảng 8 · trang 41-42 · Chú thích 2"
+    },
+    {
+      "group": "EQ-gamma",
+      "id": "production-safety-gate",
+      "actual": true,
+      "expected": true,
+      "status": "PASS",
+      "observedUniqueTuples": 5,
+      "workflowStatus": "REVIEW",
+      "gammaQbStatus": "REVIEW",
+      "gammaFiStatus": "REVIEW"
+    }
+  ]
+}

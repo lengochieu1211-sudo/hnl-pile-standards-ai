@@ -1,0 +1,32 @@
+{
+  "schema": "HNL-P1-PASS8.3-CI-READY-PREFLIGHT",
+  "version": "1.25.7",
+  "release": "v22",
+  "github": {
+    "repository": "lengochieu1211-sudo/hnl-pile-standards-ai",
+    "baseMain": "0e956d36cbb63c45c24978993bf50da68d43d883",
+    "targetBranch": "p1/pass8.3-runtime-cert-v21",
+    "branchPush": "BLOCKED_GITHUB_APP_403_RESOURCE_NOT_ACCESSIBLE_BY_INTEGRATION"
+  },
+  "localPreflight": {
+    "node": {
+      "tests": 574,
+      "pass": 574,
+      "fail": 0
+    },
+    "versionGate": "PASS",
+    "searchGate": "PASS",
+    "goldens": "PASS",
+    "pass82UiE2E": "PASS",
+    "webBuild": "ENVIRONMENT_BLOCKED_NO_NODE_MODULES_VITE",
+    "windowsBuild": "NOT_RUN_LINUX"
+  },
+  "immutableHashes": {
+    "src/search.js": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2",
+    "src/pdf.js": "5f9dd85f1c932b49f82def27d0c8c4002825a917c490ff11b3922ff5555b11a3",
+    "src/ai.js": "711f9dbe5e2c2e4255a980b8b59fa3fc4b801fad78e5e5dd1b7cd223538a7f11"
+  },
+  "immutablePass": true,
+  "ciWorkflow": ".github/workflows/pass83-runtime-cert.yml",
+  "promotionRule": "MERGE_TO_MAIN_ONLY_WHEN_LINUX_AND_WINDOWS_CERTIFICATION_JOBS_ARE_GREEN"
+}

@@ -1,0 +1,169 @@
+{
+  "schema": "HNL-P1-PASS7-FULL-CALCULATION-LOCK-GATE",
+  "version": "1.25.7",
+  "generatedAt": "2026-08-25T11:21:30.385Z",
+  "checks": [
+    {
+      "name": "CURRENT_TESTS",
+      "status": "PASS",
+      "detail": {
+        "exitCode": 0,
+        "tests": 156,
+        "pass": 156,
+        "fail": 0
+      }
+    },
+    {
+      "name": "FULL_CHAIN_RSOIL",
+      "status": "PASS",
+      "detail": 843.4285714285716
+    },
+    {
+      "name": "FULL_CHAIN_RMATERIAL",
+      "status": "PASS",
+      "detail": 2952
+    },
+    {
+      "name": "FULL_CHAIN_RPILE",
+      "status": "PASS",
+      "detail": 843.4285714285716
+    },
+    {
+      "name": "FULL_CHAIN_NDMAX",
+      "status": "PASS",
+      "detail": 733.4161490683232
+    },
+    {
+      "name": "BOREHOLE_BRANCHES",
+      "status": "PASS",
+      "detail": {
+        "branches": 6,
+        "borehole": "HK2",
+        "method": "10304-driven"
+      }
+    },
+    {
+      "name": "PILE_CHECKS",
+      "status": "PASS",
+      "detail": {
+        "pileCount": 19,
+        "combinationCount": 1,
+        "checkRows": 19,
+        "passRows": 19,
+        "failRows": 0,
+        "blockedRows": 0,
+        "overallPass": true
+      }
+    },
+    {
+      "name": "GOVERNING",
+      "status": "PASS",
+      "detail": {
+        "pile": "168",
+        "combo": "EULS",
+        "util": 0.4980692764464232
+      }
+    },
+    {
+      "name": "VIETNAMESE_CONCLUSION",
+      "status": "PASS",
+      "detail": {
+        "code": "DAT",
+        "statusVi": "ĐẠT",
+        "text": "ĐẠT: cọc bất lợi 168 · tổ hợp EULS · hệ số sử dụng 0.4981 ≤ 1,0000. Sức chịu tải cọc Rpile=843.429 kN; giới hạn tác động Nd,max=733.416 kN/cọc. Địa chất bất lợi: HK2 · CƠ LÝ · 7.2.2 CỌC ĐÓNG/ÉP; đất nền khống chế."
+      }
+    },
+    {
+      "name": "EXCEL_VIETNAMESE",
+      "status": "PASS",
+      "detail": [
+        "00_HƯỚNG_DẪN",
+        "01_TỔNG_HỢP",
+        "02_ĐẦU_VÀO",
+        "03_ĐỊA_CHẤT_SPT",
+        "04_TÍNH_ĐẤT",
+        "05_VẬT_LIỆU",
+        "06_SỨC_CHỊU_TẢI",
+        "07_DỮ_LIỆU_KẾT_CẤU",
+        "08_KIỂM_TRA_CỌC",
+        "09_CỌC_BẤT_LỢI",
+        "10_NGUỒN_ĐỐI_CHIẾU",
+        "11_BẢNG_TRA",
+        "12_KIỂM_TRA_GOLDEN"
+      ]
+    },
+    {
+      "name": "EXCEL_FORMULA_SCAN",
+      "status": "PASS",
+      "detail": {
+        "status": "PASS",
+        "errorMatches": 0,
+        "patterns": [
+          "#REF!",
+          "#DIV/0!",
+          "#VALUE!",
+          "#NAME?",
+          "#N/A"
+        ]
+      }
+    },
+    {
+      "name": "EXCEL_ENGINE_PARITY",
+      "status": "PASS",
+      "detail": {
+        "Rsoil": "PASS",
+        "Rmaterial": "PASS",
+        "Rpile": "PASS",
+        "gammaN": "PASS",
+        "NdMax": "PASS",
+        "governingPile": "PASS",
+        "governingCombination": "PASS",
+        "governingUtilization": "PASS",
+        "conclusion": "PASS"
+      }
+    },
+    {
+      "name": "PRIOR_REGRESSION",
+      "status": "PASS",
+      "detail": {
+        "status": "PASS",
+        "passed": 388,
+        "failed": 0
+      }
+    },
+    {
+      "name": "PRIOR_FULL_TABLE",
+      "status": "PASS",
+      "detail": {
+        "status": "PASS",
+        "passed": 1242,
+        "failed": 0
+      }
+    },
+    {
+      "name": "PRIOR_PASS3",
+      "status": "PASS",
+      "detail": {
+        "status": "PASS",
+        "xlsmRows": "39/39",
+        "xlsmChecks": "273/273",
+        "engineExcel": "12/12",
+        "boundary": "9/9",
+        "benchmarks": "6/6"
+      }
+    },
+    {
+      "name": "PRIOR_SEARCH_BRAIN",
+      "status": "PASS",
+      "detail": {
+        "status": "PASS",
+        "sha256": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2"
+      }
+    }
+  ],
+  "pass": true,
+  "status": "CORE_LOCKED_PATCH",
+  "failed": [],
+  "searchJsTouched": false,
+  "fullSourceIntegration": "DEFERRED_SEPARATE_GATE"
+}

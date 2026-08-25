@@ -1,0 +1,10 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+const src=fs.readFileSync("windows/csi-bridge/HnlCsiLiveBridge.cs","utf8");
+test("Windows bridge uses DatabaseTables.GetTableForDisplayArray 7-parameter contract",()=>assert.match(src,/GetTableForDisplayArray\",7/));
+test("Windows bridge uses Results.JointReact 14-parameter contract",()=>assert.match(src,/JointReact\",14/));
+test("Windows bridge uses PointObj.GetCoordCartesian 5-parameter contract",()=>assert.match(src,/GetCoordCartesian\",5/));
+test("Windows bridge enforces canonical kN_m_C units",()=>assert.match(src,/kN_m_C/));
+test("Windows bridge captures and restores original present units",()=>{assert.match(src,/CaptureUnits/);assert.match(src,/RestoreUnits/);assert.match(src,/finally/);});
+test("Windows bridge attaches through CSiAPIv1 Helper.GetObject",()=>{assert.match(src,/Helper/);assert.match(src,/GetObject/);});

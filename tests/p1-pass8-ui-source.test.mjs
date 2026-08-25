@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const html=fs.readFileSync('ui/pass8/index.html','utf8');
+const app=fs.readFileSync('ui/pass8/app.js','utf8');
+const svg=fs.readFileSync('ui/pass8/icons.svg','utf8');
+const flow=fs.readFileSync('ui/pass8/workflow.svg','utf8');
+test('Pass8 UI is Vietnamese and has TÍNH + XUẤT EXCEL buttons',()=>{assert.match(html,/TÍNH/);assert.match(html,/XUẤT EXCEL TIẾNG VIỆT/);assert.match(html,/Địa chất \+ SPT/);assert.match(html,/Vật liệu/);});
+test('Pass8 UI uses SVG assets instead of raster icons',()=>{assert.match(svg,/<symbol id="ico-pile"/);assert.match(flow,/<svg/);assert.doesNotMatch(html,/\.png|\.jpg|\.jpeg/i);});
+test('Pass8 UI does not contain numeric capacity formulas',()=>{assert.doesNotMatch(app,/Rpile\s*=|Rsoil\s*=|Rmaterial\s*=/);assert.match(app,/runPass8OneClickCalculation/);});
+test('Pass8 export button calls export client, not local engineering recalculation',()=>{assert.match(app,/requestPass8VietnameseExcel/);assert.doesNotMatch(app,/VLOOKUP|SUMIFS|calculateMultiBoreholePileCapacity/);});

@@ -1,0 +1,67 @@
+{
+  "version": "1.25.7",
+  "scope": "DCE UDF Behavioral Golden",
+  "files": [
+    {
+      "path": ".github/workflows/rc-final.yml",
+      "size": 5487,
+      "sha256": "be992fc8c7ac8efffb34dcb8bfc8f1f0f4ae54bbb11a9c37565f904bef02dc1e"
+    },
+    {
+      "path": "package.json",
+      "size": 3794,
+      "sha256": "228ddf9c9fab0bff8142c23b8f1fa7c52c07cc2f98153f448e5c103b9eb159bc"
+    },
+    {
+      "path": "src/production-status-registry.js",
+      "size": 3570,
+      "sha256": "7bca06b67f6dae2d20e7c66ec1f0a5e1ca82eb5beb8eb775cbb84bcf27f116b5"
+    },
+    {
+      "path": "scripts/audit/extract-dce-udf-behavioral.py",
+      "size": 11613,
+      "sha256": "7fb3bbf21278fa3fd44c19211173c460d00ee37438896ba32f0675654c1e5b1c"
+    },
+    {
+      "path": "scripts/dce-udf-behavioral-golden.mjs",
+      "size": 9121,
+      "sha256": "fd4cf27bcb307adae031d5110f672d07423b698f874ef73867603f09952e88e8"
+    },
+    {
+      "path": "scripts/p1-pass1-material-golden.mjs",
+      "size": 9929,
+      "sha256": "c43b8d3751a8fbe0eae3f2790785953776f9bb75fdd16a5bbed85d36181933f8"
+    },
+    {
+      "path": "tests/v1.25.7-dce-udf-behavioral.test.mjs",
+      "size": 4675,
+      "sha256": "7d63c87cc4527358a6afeff5557dd0c36e7fadf901f4c0802256d02ec00ee7b2"
+    },
+    {
+      "path": "docs/DCE_UDF_BEHAVIORAL_GOLDEN_V1.25.7.md",
+      "size": 10229,
+      "sha256": "ebbf0ad9477600ffb1867562f098a22e1a4ef64e5fa28a3122a33b33068cb08e"
+    },
+    {
+      "path": "DCE_UDF_BEHAVIORAL_GOLDEN_SUMMARY_v1.25.7.md",
+      "size": 892,
+      "sha256": "ea1c0dd209cf73e38833a5c22ca3521284233d100423fc945b28d304a7f53ba6"
+    },
+    {
+      "path": "artifacts/dce-udf-behavioral/dce-udf-observed-v1.25.7.json",
+      "size": 56109,
+      "sha256": "670ec9277672a2b4862278c66a0bfc144b7d09748acb26a9cf03203baa3708c5"
+    },
+    {
+      "path": "artifacts/dce-udf-behavioral/dce-udf-behavioral-golden-v1.25.7.json",
+      "size": 79151,
+      "sha256": "114cf78989a33f3b9998dab7d75069c38fa9721b87f840af9cd7858a97dd3ad9"
+    },
+    {
+      "path": "artifacts/dce-udf-behavioral/gate-status-v1.25.7.json",
+      "size": 2463,
+      "sha256": "7c5c8853bda66a284da94ae7f9d12103f6eb31bada755884dbbd31aee8c4fbf8"
+    }
+  ],
+  "proprietaryInputsIncluded": false
+}

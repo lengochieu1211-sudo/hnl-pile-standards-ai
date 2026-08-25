@@ -8,6 +8,7 @@ import os from 'node:os';
 import { spawnSync, spawn } from 'node:child_process';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
+import { executePass81Export, PASS81_ROUTE_STATUS } from '../server/pass81-excel-route.mjs';
 
 const require = createRequire(import.meta.url);
 
@@ -797,6 +798,39 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
+
+
+// P1 Pass 8.2 — Dynamic Excel Production endpoint. Engineering values are always
+// recalculated server-side by Pass 8 before a workbook is emitted.
+app.get('/api/hnl/pile/export-health', (_req, res) => {
+  res.json({
+    ok:true,
+    endpoint:PASS81_ROUTE_STATUS.endpoint,
+    method:PASS81_ROUTE_STATUS.method,
+    template:'HNL_P1_Pass7_Bao_Cao_Tinh_Toan_Coc_San_Xuat_v18.xlsx',
+    serverRecalculation:true,
+    version:'Pass8.2-v21'
+  });
+});
+
+app.post('/api/hnl/pile/export-excel', (req, res) => {
+  try {
+    const out=executePass81Export(req.body || {});
+    res.status(200)
+      .set({
+        'content-type':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'content-disposition':`attachment; filename="${out.fileName}"; filename*=UTF-8''${encodeURIComponent(out.fileName)}`,
+        'cache-control':'no-store',
+        'x-hnl-export-id':out.exportId,
+        'x-hnl-template-sha256':out.templateSha256,
+        'x-hnl-server-verified':'true',
+        'x-hnl-exporter-version':'Pass8.2-v21'
+      })
+      .send(out.buffer);
+  } catch (error) {
+    res.status(422).json({ok:false,error:error?.message||String(error),code:'PASS81_EXPORT_BLOCKED'});
+  }
+});
 
 app.get('/api/ollama/tags', async (_req, res) => {
   try {

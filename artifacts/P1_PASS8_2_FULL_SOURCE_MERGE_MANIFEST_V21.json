@@ -1,0 +1,23 @@
+{
+  "schema": "HNL-P1-PASS8.2-FULL-SOURCE-MERGE-MANIFEST",
+  "version": "1.25.7",
+  "release": "v21",
+  "status": "FULL_SOURCE_MERGED_SOURCE_LOCKED",
+  "productionUi": "MERGED_AND_E2E_GOLDEN_PASS",
+  "dynamicExcel": "MERGED_AND_SERVER_VERIFIED",
+  "nodeTests": "574/574 PASS",
+  "fullTableGolden": "1242/1242 PASS",
+  "dceBehavioral": "213/213 acceptable; 0 FAIL",
+  "sptDecision": "26/26 PASS",
+  "searchBrainSha256": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2",
+  "pdfSha256": "5f9dd85f1c932b49f82def27d0c8c4002825a917c490ff11b3922ff5555b11a3",
+  "aiSha256": "711f9dbe5e2c2e4255a980b8b59fa3fc4b801fad78e5e5dd1b7cd223538a7f11",
+  "templateSha256": "582e897788d3aa96895f7ff63e604899ad489cbe2d5fb59238bb186a4b62b9d1",
+  "githubMainObservedCommit": "0e956d36cbb63c45c24978993bf50da68d43d883",
+  "runtime": {
+    "webBuild": "ENVIRONMENT_BLOCKED_NO_NODE_MODULES_VITE",
+    "electron": "NOT_RUN_LINUX_SANDBOX",
+    "windows": "NOT_RUN_LINUX_SANDBOX"
+  },
+  "remoteGitHubMutation": false
+}

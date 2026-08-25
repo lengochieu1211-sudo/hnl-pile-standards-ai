@@ -1,0 +1,45 @@
+{
+  "schema": "HNL-P1-PASS5-CORE-LOCKED",
+  "version": "1.25.7",
+  "status": "LOCKED",
+  "generatedAt": "2026-08-25T10:51:27.561Z",
+  "scope": {
+    "locked": [
+      "canonical schema",
+      "DCE workbook table adapter",
+      "CSI flat-table contract",
+      "CSV fallback",
+      "Pass3/Pass4 handoff"
+    ],
+    "deferred": [
+      "Live CSi API certification",
+      "Windows Excel COM certification",
+      "full-source integration"
+    ]
+  },
+  "exactCoverage": {
+    "pointCoordinates": 194,
+    "nodalReactionRawRows": 38,
+    "nodalReactionEnvelopes": 19,
+    "pointSpringAssignments": 19,
+    "pierForces": 234,
+    "pierSection": 39
+  },
+  "tests": {
+    "status": 0,
+    "tests": 138,
+    "pass": 138,
+    "fail": 0
+  },
+  "priorRegression": {
+    "regression": "388/388",
+    "fullTable": "1242/1242",
+    "pileQuantity": "39/39 + 273/273",
+    "searchBrainSha256": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2"
+  },
+  "invariant": "Importer remains parse-normalize-map-validate-handoff only; no engineering reaction/capacity/utilization logic.",
+  "liveAdapter": {
+    "status": "READY_NOT_CERTIFIED_LIVE",
+    "futureGate": "windows/csi-bridge/RUN_PASS5_FINAL_LOCK.cmd"
+  }
+}

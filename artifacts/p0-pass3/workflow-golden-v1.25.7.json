@@ -1,0 +1,757 @@
+{
+  "schema": "HNL-P0-PASS3-WORKFLOW-GOLDEN",
+  "version": "1.25.7",
+  "generatedAt": "2026-08-25T13:41:35.315Z",
+  "sourcePolicy": [
+    "TCVN PDF is normative source",
+    "XLSM is workflow/benchmark reference only",
+    "Excel formula model is independent from workflow wrapper and shares only LOCKED table primitives",
+    "No _xll.* is a production dependency"
+  ],
+  "tolerances": {
+    "relative": 1e-9,
+    "absolute": 1e-9
+  },
+  "cases": [
+    {
+      "id": "ROCK-RQD-30",
+      "workflow": "10304-end-bearing-rock",
+      "status": {
+        "status": "LOCKED",
+        "productionNumeric": true,
+        "source": "7.2.1 · CT (5)–(8) · Bảng 1 · P0 Pass 3 E2E"
+      },
+      "input": {
+        "shape": "circle",
+        "diameterM": 1,
+        "rockCompressiveStrengthKpa": 31300,
+        "rqdPercent": 30,
+        "gammaG": 1.4,
+        "embedmentLengthM": 5,
+        "embeddedOuterDiameterM": 1,
+        "minimumQbKpa": 1000,
+        "gammaK": 1.4,
+        "gammaN": 1.15
+      },
+      "engineStatus": "VERIFIED",
+      "metrics": [
+        {
+          "name": "A",
+          "engine": 0.7853981633974483,
+          "excelFormulaModel": 0.7853981633974483,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "m2",
+          "pdf": "§7.2.1 CT(6) geometry",
+          "xlsm": null
+        },
+        {
+          "name": "Ks",
+          "engine": 0.24,
+          "excelFormulaModel": 0.24,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "-",
+          "pdf": "§7.2.1 Bảng 1 p29",
+          "xlsm": {
+            "sheet": "7.2.1-10304-Cọc Chống",
+            "cell": "F38",
+            "cached": 0.24,
+            "status": "MATCH"
+          },
+          "xlsmDiff": 0,
+          "xlsmPass": true
+        },
+        {
+          "name": "Rm",
+          "engine": 5365.714285714286,
+          "excelFormulaModel": 5365.714285714286,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "kPa",
+          "pdf": "§7.2.1 CT(7) p29",
+          "xlsm": {
+            "sheet": "7.2.1-10304-Cọc Chống",
+            "cell": "F40",
+            "cached": 5365.714285714286,
+            "status": "MATCH"
+          },
+          "xlsmDiff": 0,
+          "xlsmPass": true
+        },
+        {
+          "name": "embedmentFactor",
+          "engine": 3,
+          "excelFormulaModel": 3,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "-",
+          "pdf": "§7.2.1 CT(8)",
+          "xlsm": null
+        },
+        {
+          "name": "qbBeforeCap",
+          "engine": 16097.142857142859,
+          "excelFormulaModel": 16097.142857142859,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "kPa",
+          "pdf": "§7.2.1 CT(8)",
+          "xlsm": null
+        },
+        {
+          "name": "qb",
+          "engine": 16097.142857142859,
+          "excelFormulaModel": 16097.142857142859,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "kPa",
+          "pdf": "§7.2.1 CT(8)",
+          "xlsm": {
+            "sheet": "7.2.1-10304-Cọc Chống",
+            "cell": "F41",
+            "cached": 16097.142857142859,
+            "status": "MATCH"
+          },
+          "xlsmDiff": 0,
+          "xlsmPass": true
+        },
+        {
+          "name": "Rk",
+          "engine": 12642.666435946354,
+          "excelFormulaModel": 12642.666435946354,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "kN",
+          "pdf": "§7.2.1 CT(5)-(6)",
+          "xlsm": null
+        },
+        {
+          "name": "Rd",
+          "engine": 9030.476025675967,
+          "excelFormulaModel": 9030.476025675967,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "kN",
+          "pdf": "§7.1.6.1 CT(2) + γk",
+          "xlsm": null
+        },
+        {
+          "name": "NdMax",
+          "engine": 7852.587848413885,
+          "excelFormulaModel": 7852.587848413885,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "kN",
+          "pdf": "§7.1.6.1 CT(2) + γn",
+          "xlsm": null
+        }
+      ],
+      "xlsmTrace": "F38→F40→F41 cached benchmark; XLSM is reference only",
+      "pass": true
+    },
+    {
+      "id": "BORED-CT14-ISOLATED-TIP",
+      "workflow": "10304-bored-raw",
+      "status": {
+        "status": "LOCKED",
+        "productionNumeric": true,
+        "source": "7.2.3 · CT (13)–(16) · Bảng 3,6,7,8 · P0 Pass 3 E2E"
+      },
+      "input": {
+        "shape": "circle",
+        "diameterM": 1,
+        "tipDepthM": 43.2,
+        "shaftStartDepthM": 43.2,
+        "maxSegmentM": 1,
+        "layers": [
+          {
+            "top": 0,
+            "bottom": 1.5,
+            "soilGroup": "sand",
+            "sandType": "silty",
+            "soilClass": "sand",
+            "phiDeg": 0,
+            "gammaKnM3": 8
+          },
+          {
+            "top": 1.5,
+            "bottom": 7,
+            "soilGroup": "clay",
+            "soilClass": "clay",
+            "IL": 0.3,
+            "phiDeg": 9.56,
+            "gammaKnM3": 9
+          },
+          {
+            "top": 7,
+            "bottom": 10.5,
+            "soilGroup": "clay",
+            "soilClass": "clay",
+            "IL": 0.2,
+            "phiDeg": 17.17,
+            "gammaKnM3": 9.3
+          },
+          {
+            "top": 10.5,
+            "bottom": 12.2,
+            "soilGroup": "clay",
+            "soilClass": "clay",
+            "IL": 0.1,
+            "phiDeg": 9.35,
+            "gammaKnM3": 8
+          },
+          {
+            "top": 12.2,
+            "bottom": 27,
+            "soilGroup": "sand",
+            "sandType": "coarse",
+            "soilClass": "sand",
+            "phiDeg": 9.22,
+            "gammaKnM3": 8.7
+          },
+          {
+            "top": 27,
+            "bottom": 38.2,
+            "soilGroup": "sand",
+            "sandType": "coarse",
+            "soilClass": "sand",
+            "phiDeg": 15.5,
+            "gammaKnM3": 9
+          },
+          {
+            "top": 38.2,
+            "bottom": 50,
+            "soilGroup": "sand",
+            "sandType": "gravelly",
+            "soilClass": "sand",
+            "phiDeg": 25.3,
+            "gammaKnM3": 9
+          }
+        ],
+        "methodCaseId": "drilled-water-bentonite",
+        "gammaK": 1.4,
+        "gammaN": 1.15
+      },
+      "engineStatus": "VERIFIED",
+      "metrics": [
+        {
+          "name": "A",
+          "engine": 0.7853981633974483,
+          "excelFormulaModel": 0.7853981633974483,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "m2",
+          "pdf": "§7.2.3 CT(13) geometry",
+          "xlsm": null
+        },
+        {
+          "name": "u",
+          "engine": 3.141592653589793,
+          "excelFormulaModel": 3.141592653589793,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "m",
+          "pdf": "§7.2.3 CT(13) geometry",
+          "xlsm": null
+        },
+        {
+          "name": "embedmentInBearingLayer",
+          "engine": 5,
+          "excelFormulaModel": 5,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "m",
+          "pdf": "§7.2.3 applicability",
+          "xlsm": null
+        },
+        {
+          "name": "qb",
+          "engine": 1149.6421145496095,
+          "excelFormulaModel": 1149.6421145496095,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "kPa",
+          "pdf": "§7.2.3 CT(14)-(16), Bảng 7",
+          "xlsm": {
+            "sheet": "7.2.3-10304-Có moi đất",
+            "cached": 1149.6421145496095,
+            "status": "MATCH"
+          },
+          "xlsmDiff": 0,
+          "xlsmPass": true
+        },
+        {
+          "name": "gammaRR",
+          "engine": 1,
+          "excelFormulaModel": 1,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "-",
+          "pdf": "§7.2.3",
+          "xlsm": null
+        },
+        {
+          "name": "gammaC",
+          "engine": 1,
+          "excelFormulaModel": 1,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "-",
+          "pdf": "§7.2.3 CT(13)",
+          "xlsm": null
+        },
+        {
+          "name": "Qb",
+          "engine": 902.9268053316222,
+          "excelFormulaModel": 902.9268053316222,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "kN",
+          "pdf": "§7.2.3 CT(13)",
+          "xlsm": {
+            "sheet": "7.2.3-10304-Có moi đất",
+            "cached": 902.9268053316222,
+            "status": "MATCH"
+          },
+          "xlsmDiff": 0,
+          "xlsmPass": true
+        },
+        {
+          "name": "Qs",
+          "engine": 0,
+          "excelFormulaModel": 0,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "kN",
+          "pdf": "§7.2.3 CT(13)",
+          "xlsm": null
+        },
+        {
+          "name": "Rk",
+          "engine": 902.9268053316222,
+          "excelFormulaModel": 902.9268053316222,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "kN",
+          "pdf": "§7.2.3 CT(13)",
+          "xlsm": null
+        },
+        {
+          "name": "Rd",
+          "engine": 644.9477180940158,
+          "excelFormulaModel": 644.9477180940158,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "kN",
+          "pdf": "§7.1.6.1 CT(2)",
+          "xlsm": null
+        }
+      ],
+      "xlsmTrace": "CT14 tip diagnostic benchmark; shaft intentionally isolated to avoid XLL plateau beyond Bảng 3 domain",
+      "pass": true
+    },
+    {
+      "id": "SPT-D1-RAW-MEASURED-WINDOW",
+      "workflow": "10304-spt-raw",
+      "status": {
+        "status": "LOCKED",
+        "productionNumeric": true,
+        "source": "Phụ lục D · D.1–D.6 · Bảng D.1 · SPT PDF Decision Pass · measured tip window + layer-representative shaft N; no continuous DCE interpolation"
+      },
+      "input": {
+        "pileType": "bored",
+        "shape": "circle",
+        "diameterM": 1,
+        "lengthM": 12,
+        "tipDepthM": 12,
+        "shaftStartDepthM": 0,
+        "layers": [
+          {
+            "top": 0,
+            "bottom": 6,
+            "soilGroup": "sand",
+            "sptN": 10
+          },
+          {
+            "top": 6,
+            "bottom": 15,
+            "soilGroup": "sand",
+            "sptN": 20
+          }
+        ],
+        "sptPoints": [
+          {
+            "depthM": 11.5,
+            "N": 20
+          },
+          {
+            "depthM": 12,
+            "N": 30
+          },
+          {
+            "depthM": 12.5,
+            "N": 40
+          }
+        ],
+        "gammaK": 1.5,
+        "gammaN": 1.15
+      },
+      "engineStatus": "VERIFIED",
+      "metrics": [
+        {
+          "name": "A",
+          "engine": 0.7853981633974483,
+          "excelFormulaModel": 0.7853981633974483,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "m2",
+          "pdf": "Phụ lục D geometry",
+          "xlsm": null
+        },
+        {
+          "name": "u",
+          "engine": 3.141592653589793,
+          "excelFormulaModel": 3.141592653589793,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "m",
+          "pdf": "Phụ lục D geometry",
+          "xlsm": null
+        },
+        {
+          "name": "eta",
+          "engine": 1,
+          "excelFormulaModel": 1,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "-",
+          "pdf": "Phụ lục D / Bảng D.1",
+          "xlsm": null
+        },
+        {
+          "name": "tipN",
+          "engine": 30,
+          "excelFormulaModel": 30,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "blows",
+          "pdf": "Phụ lục D measured-window averaging",
+          "xlsm": null
+        },
+        {
+          "name": "qb",
+          "engine": 3600,
+          "excelFormulaModel": 3600,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "kPa",
+          "pdf": "Phụ lục D, Bảng D.1",
+          "xlsm": null
+        },
+        {
+          "name": "Qb",
+          "engine": 2827.4333882308138,
+          "excelFormulaModel": 2827.4333882308138,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "kN",
+          "pdf": "Phụ lục D",
+          "xlsm": null
+        },
+        {
+          "name": "Qs",
+          "engine": 1866.1060362323374,
+          "excelFormulaModel": 1866.1060362323374,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "kN",
+          "pdf": "Phụ lục D",
+          "xlsm": null
+        },
+        {
+          "name": "Rk",
+          "engine": 4693.539424463152,
+          "excelFormulaModel": 4693.539424463152,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "kN",
+          "pdf": "Phụ lục D",
+          "xlsm": null
+        },
+        {
+          "name": "Rd",
+          "engine": 3129.0262829754342,
+          "excelFormulaModel": 3129.0262829754342,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "kN",
+          "pdf": "§7.1.6.1 γk for SPT",
+          "xlsm": null
+        },
+        {
+          "name": "NdMax",
+          "engine": 2720.892419978639,
+          "excelFormulaModel": 2720.892419978639,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "kN",
+          "pdf": "§7.1.6.1 γn",
+          "xlsm": null
+        },
+        {
+          "name": "shaft[0].N",
+          "engine": 10,
+          "excelFormulaModel": 10,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "blows",
+          "pdf": "Phụ lục D",
+          "xlsm": null
+        },
+        {
+          "name": "shaft[0].unitResistance",
+          "engine": 33,
+          "excelFormulaModel": 33,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "kPa",
+          "pdf": "Bảng D.1",
+          "xlsm": null
+        },
+        {
+          "name": "shaft[0].Qsi",
+          "engine": 622.0353454107791,
+          "excelFormulaModel": 622.0353454107791,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "kN",
+          "pdf": "Phụ lục D",
+          "xlsm": null
+        },
+        {
+          "name": "shaft[1].N",
+          "engine": 20,
+          "excelFormulaModel": 20,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "blows",
+          "pdf": "Phụ lục D",
+          "xlsm": null
+        },
+        {
+          "name": "shaft[1].unitResistance",
+          "engine": 66,
+          "excelFormulaModel": 66,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "kPa",
+          "pdf": "Bảng D.1",
+          "xlsm": null
+        },
+        {
+          "name": "shaft[1].Qsi",
+          "engine": 1244.0706908215582,
+          "excelFormulaModel": 1244.0706908215582,
+          "diff": 0,
+          "tolerance": {
+            "relative": 1e-9,
+            "absolute": 1e-9
+          },
+          "pass": true,
+          "unit": "kN",
+          "pdf": "Phụ lục D",
+          "xlsm": null
+        }
+      ],
+      "xlsmTrace": "No traceable same-input XLSM case; hidden XLL cached values are not used as verification evidence",
+      "xlsmReferenceStatus": "REFERENCE_UNAVAILABLE_FOR_SAME_INPUT",
+      "pass": true
+    }
+  ],
+  "boundaryCases": [
+    {
+      "id": "rock-rqd-outside",
+      "ok": true,
+      "resultOk": false,
+      "message": "Bảng 1: RQD phải trong miền 0–100%.",
+      "status": "PASS"
+    },
+    {
+      "id": "bored-tip-layer-boundary-needs-2m",
+      "ok": true,
+      "resultOk": false,
+      "message": "7.2.3.2: mũi cọc phải ngàm vào lớp chịu lực ít nhất 2 m; hiện 0.000 m.",
+      "status": "PASS"
+    },
+    {
+      "id": "bored-table3-no-extrapolation",
+      "ok": true,
+      "resultOk": false,
+      "message": "Lớp 1: TCVN 10304 Bảng 3 f_i: 42 lớn hơn phạm vi bảng (40). Không ngoại suy.",
+      "status": "PASS"
+    },
+    {
+      "id": "spt-no-measured-tip-point",
+      "ok": true,
+      "resultOk": false,
+      "message": "Phụ lục D: không có điểm SPT đo thực tế trong vùng lấy N; HNL không nội suy/extrapolate điểm lân cận.",
+      "status": "PASS"
+    },
+    {
+      "id": "spt-driven-open-tip-L-din-under-2",
+      "ok": true,
+      "resultOk": false,
+      "message": "Bảng D.1: L/d_trong <2 không có quy tắc η tự động trong nhánh VERIFIED.",
+      "status": "PASS"
+    }
+  ],
+  "summary": {
+    "workflowCases": 3,
+    "workflowPass": 3,
+    "metricCount": 35,
+    "metricPass": 35,
+    "xlsmBenchmarks": 5,
+    "xlsmBenchmarkPass": 5,
+    "boundaryCases": 5,
+    "boundaryPass": 5,
+    "pass": true
+  },
+  "excelJsRuntimeGate": "PENDING_EXTERNAL_DEPENDENCY_SMOKE"
+}

@@ -1,0 +1,86 @@
+{
+  "schema": "HNL-P1-PASS8-ONE-CLICK-ROUTER-GATE",
+  "version": "1.25.7",
+  "generatedAt": "2026-08-25T11:27:57.722Z",
+  "checks": [
+    {
+      "name": "CURRENT_TESTS",
+      "status": "PASS",
+      "detail": {
+        "tests": 178,
+        "pass": 178,
+        "fail": 0
+      }
+    },
+    {
+      "name": "GOLDEN_SCHEMA",
+      "status": "PASS",
+      "detail": "HNL-P1-PASS8-ONE-CLICK-RESULT"
+    },
+    {
+      "name": "GOLDEN_RSOIL",
+      "status": "PASS",
+      "detail": 843.4285714285716
+    },
+    {
+      "name": "GOLDEN_RMATERIAL",
+      "status": "PASS",
+      "detail": 2952
+    },
+    {
+      "name": "GOLDEN_RPILE",
+      "status": "PASS",
+      "detail": 843.4285714285716
+    },
+    {
+      "name": "GOLDEN_NDMAX",
+      "status": "PASS",
+      "detail": 733.4161490683232
+    },
+    {
+      "name": "GOVERNING",
+      "status": "PASS",
+      "detail": {
+        "pile": "168",
+        "combo": "EULS"
+      }
+    },
+    {
+      "name": "VIETNAMESE_UI",
+      "status": "PASS",
+      "detail": {
+        "language": "vi-VN",
+        "primaryAction": "TÍNH",
+        "exportAction": "XUẤT EXCEL TIẾNG VIỆT",
+        "conclusion": "ĐẠT"
+      }
+    },
+    {
+      "name": "EXCEL_TEMPLATE",
+      "status": "PASS",
+      "detail": "HNL_P1_Pass7_Bao_Cao_Tinh_Toan_Coc_San_Xuat_v18.xlsx"
+    },
+    {
+      "name": "SVG_ASSETS",
+      "status": "PASS",
+      "detail": {
+        "icons": "3e9a284d85b36af4955e350f99a66ba4f0ad82ddadba8d471001157ee781c39f",
+        "workflow": "a05e09d359ae85b419429a008a33f949cd312653a22e22ec89d939691584955f"
+      }
+    },
+    {
+      "name": "ROUTER_BOUNDARY",
+      "status": "PASS",
+      "detail": "Router calls Pass7 only"
+    }
+  ],
+  "pass": true,
+  "status": "CORE_LOCKED_ROUTER_UI",
+  "failed": [],
+  "runtimeBoundaries": {
+    "dynamicExcelExporter": "CONTRACT_READY_NOT_RUNTIME_CERTIFIED",
+    "fullAppIntegration": "NOT_RUN",
+    "liveEtabsSap": "DEFERRED"
+  },
+  "searchJsTouched": false
+}

@@ -1,0 +1,107 @@
+{
+  "schema": "HNL-P1-PASS5-ETABS-SAP-IMPORTER-GATE-V13",
+  "version": "1.25.7",
+  "scope": "Pass 5.1 canonical schema + DCE/CSI table adapter. Importer only parses/maps/validates/handoffs.",
+  "status": {
+    "canonicalSchema": "LOCKED",
+    "dceWorkbookTableAdapter": "LOCKED",
+    "csiFlatTableAdapter": "LOCKED_CONTRACT",
+    "liveCsiApiComAdapter": "REVIEW_NOT_RUN_LINUX",
+    "directEdB_SdbParsing": "NOT_IMPLEMENTED",
+    "fullPass5": "REVIEW"
+  },
+  "sourceEvidence": {
+    "workbook10304": {
+      "file": "10.1 DCE_SctCoc_10304 2025.xlsm",
+      "sha256": "ec38b68f753b08e50d9d1f9df988be5084cab1aedf391ba1aaecf112e9d88bd1",
+      "size": 4837764
+    },
+    "v2020": {
+      "file": "V.2020(1).zip",
+      "sha256": "6b523b82bb362e972d90a9bdb696f129048e55560e44097b11cd54d0d8526415",
+      "size": 11361238
+    },
+    "fileV2020": {
+      "file": "File V.2020.zip",
+      "sha256": "06428b562ae5036812d10ae86c214da9bb69d1dd84e6297947497e9c61b14653",
+      "size": 20010449
+    },
+    "csiApi": {
+      "file": "CSiAPIv1.dll",
+      "sha256": "a4e74cbdb51ff13dfacc2fb81f1d39bf76b4e5260c5d891eeac06431909e27a6",
+      "size": 1187392
+    },
+    "dceExcel": {
+      "file": "DCE Excel.dll",
+      "sha256": "9011a640477decf36dc687e94eb8586081ece1ef540bb62eca3890a6b6efd785",
+      "size": 9451008
+    },
+    "dceEtabsWorkbook": {
+      "file": "01. DCE_Etabs_2020.xlsm",
+      "sha256": "bd075db5fb78a375d6672df5e7fa446e5e41be854b318f2775f2abefb2159d86",
+      "size": 97869
+    }
+  },
+  "exactDceFixtureCounts": {
+    "pointCoordinates": 194,
+    "nodalReactionRawRows": 38,
+    "pointSpringAssignments": 19,
+    "pierForces": 234,
+    "pierSection": 39,
+    "nodalReactionEnvelopes": 19,
+    "compressionCheckRows": 19
+  },
+  "signConventions": {
+    "DCE Nodal Reactions": "compression-positive",
+    "DCE PIERFORCES": "compression-negative",
+    "rule": "sign convention is table/source-specific; importer never assumes one global sign"
+  },
+  "identityContract": {
+    "physicalPileId": "Point/Node ID by default",
+    "springName": "property/type only (e.g. C250), not a unique physical pile ID"
+  },
+  "nodalEnvelopeContract": {
+    "rawRowsPreserved": true,
+    "pointComboDuplicates": "preserved then aggregated as FzMax/FzMin with provenance",
+    "compressionPositiveHandoff": "FzMax",
+    "compressionNegativeHandoff": "FzMin",
+    "engineeringCalculation": false
+  },
+  "golden": {
+    "pass4TmFzEnvelopeRows": "19/19 PASS (F=Max, G=Min; tolerance 1e-9)",
+    "pass3PierforcesSourceRows": "39/39 PASS for P/V2/V3/T/M2/M3 at Location=0",
+    "pass4NumericHandoff": "reproduces exact TM SCT Coc OK/NOT OK when independent capacity is supplied",
+    "fullNode": "101/101 PASS"
+  },
+  "apiBinaryEvidence": {
+    "CSiAPIv1.dll": [
+      "cSapModel",
+      "DatabaseTables",
+      "GetTableForDisplayArray",
+      "GetTableForDisplayCSVString",
+      "GetTableForDisplayXMLString",
+      "Results",
+      "JointReact",
+      "GetCoordCartesian"
+    ],
+    "DCE Excel.dll": [
+      "PIERFORCES",
+      "PIERSECTION",
+      "POINT COORDINATES",
+      "OGPointCoordinates"
+    ],
+    "claimBoundary": "binary symbol evidence only; live API invocation not run in Linux"
+  },
+  "forbiddenImporterLogic": [
+    "pile reaction calculation",
+    "pile capacity calculation",
+    "utilization calculation",
+    "governing combination selection",
+    "rigid-cap distribution"
+  ],
+  "searchJsTouched": false,
+  "environment": {
+    "liveEtabsSapCom": "NOT_RUN_LINUX",
+    "windowsRequired": true
+  }
+}

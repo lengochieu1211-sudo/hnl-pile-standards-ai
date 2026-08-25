@@ -1,0 +1,77 @@
+{
+  "schema": "HNL-P1-PASS4-TM-SCT-COC-EXACT-GATE-V11",
+  "version": "1.25.7",
+  "workbookSha256": "ec38b68f753b08e50d9d1f9df988be5084cab1aedf391ba1aaecf112e9d88bd1",
+  "exactInventory": {
+    "formulaCells": 6082,
+    "sharedGroups": 104,
+    "sharedFollowers": 5918,
+    "fingerprints": 22,
+    "status": "PASS"
+  },
+  "fingerprintMapping": {
+    "blockCounts": {
+      "STATUS": 3945,
+      "JOIN": 2078,
+      "CAPACITY": 39,
+      "UTILIZATION": 19,
+      "ACTION": 1
+    },
+    "mappedFormulaCells": 6082,
+    "unmapped": 0,
+    "status": "PASS"
+  },
+  "xlsmCachedIndependent": {
+    "checks": 304,
+    "pass": 304,
+    "fail": 0,
+    "status": "PASS"
+  },
+  "engineExactRows": {
+    "rows": 19,
+    "pass": 19,
+    "fail": 0,
+    "status": "PASS"
+  },
+  "pass4Node": {
+    "tests": 81,
+    "pass": 81,
+    "fail": 0,
+    "status": "PASS"
+  },
+  "excelV11": {
+    "formulaErrorScan": "PASS",
+    "status": "PASS"
+  },
+  "udf": {
+    "NhomCoc": {
+      "calls": 19,
+      "observedInputGroups": [
+        1
+      ],
+      "observedOutput": [
+        "Đài 1 cọc"
+      ],
+      "numericCapacityDependency": false,
+      "status": "PARTIAL_BEHAVIOR_ONLY"
+    }
+  },
+  "lockDecision": {
+    "tmSctCocImportedCompressionNumericCore": "LOCKED",
+    "tmSctCocFormulaFingerprintEquivalence": "LOCKED",
+    "tmSctCocGroupLabelBehavior": "LOCKED_REFERENCE_BEHAVIOR",
+    "tmSctCocProximityGrouping": "LOCKED_REFERENCE_DCE_HEURISTIC_NON_NUMERIC",
+    "analyticalRigidCapMode": "REVIEW",
+    "integratedFullSourceRelease": "BLOCKED_UNTIL_PASS3_FULL_SOURCE_IS_AVAILABLE_FOR_PATCH_AND_FULL_REGRESSION",
+    "pass5ImporterReady": "YES_FOR_IMPORTED_NODAL_REACTION_CONTRACT"
+  },
+  "searchJsTouched": false,
+  "vbaReverseEngineering": {
+    "NhomCoc": "EXACT",
+    "DoTimSoLuongCocGanNhau": "EXACT_LOGIC_RECONSTRUCTED",
+    "CountPointsWithinDistance": "EXACT_LOGIC_RECONSTRUCTED",
+    "currentWorkbookMacroFixture": "19/19 group counts reconstructed",
+    "dceHeuristicAsymmetry": "CONFIRMED for unequal diameters",
+    "numericReactionDependency": false
+  }
+}

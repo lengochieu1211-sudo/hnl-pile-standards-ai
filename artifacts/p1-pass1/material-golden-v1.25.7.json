@@ -1,0 +1,963 @@
+{
+  "schema": "HNL-P1-PASS1-PILE-MATERIAL-GOLDEN",
+  "version": "1.25.7",
+  "generatedAt": "2026-08-25T13:41:35.501Z",
+  "sourceHierarchy": [
+    "TCVN 5574:2018 PDF is normative",
+    "Deterministic PileMaterialEngine is Production calculation source",
+    "Formula-Only Excel graph is independent benchmark",
+    "XLSM SCT VatLieu is workflow/bugged benchmark reference only"
+  ],
+  "tolerances": {
+    "relative": 1e-10,
+    "absolute": 1e-10
+  },
+  "materialChecks": [
+    {
+      "id": "B30-concrete",
+      "actual": {
+        "Rb": 17,
+        "Eb": 32500
+      },
+      "expected": {
+        "Rb": 17,
+        "Eb": 32500
+      },
+      "pass": true,
+      "source": "TCVN 5574:2018 Bảng 7/10"
+    },
+    {
+      "id": "B60-concrete",
+      "actual": {
+        "Rb": 33,
+        "Eb": 39500
+      },
+      "expected": {
+        "Rb": 33,
+        "Eb": 39500
+      },
+      "pass": true,
+      "source": "TCVN 5574:2018 Bảng 7/10"
+    },
+    {
+      "id": "B100-concrete",
+      "actual": {
+        "Rb": 47.5,
+        "Eb": 43000
+      },
+      "expected": {
+        "Rb": 47.5,
+        "Eb": 43000
+      },
+      "pass": true,
+      "source": "TCVN 5574:2018 Bảng 7/10"
+    },
+    {
+      "id": "CB400-V-steel",
+      "actual": {
+        "Rs": 350,
+        "Rsc": 350
+      },
+      "expected": {
+        "Rs": 350,
+        "Rsc": 350
+      },
+      "pass": true,
+      "source": "TCVN 5574:2018 Bảng 13"
+    },
+    {
+      "id": "CB500-V-steel",
+      "actual": {
+        "Rs": 435,
+        "Rsc": 435
+      },
+      "expected": {
+        "Rs": 435,
+        "Rsc": 435
+      },
+      "pass": true,
+      "source": "TCVN 5574:2018 Bảng 13"
+    }
+  ],
+  "table16Checks": [
+    {
+      "grade": "B30",
+      "ratio": 6,
+      "actual": 0.92,
+      "expected": 0.92,
+      "mode": "EXACT",
+      "pass": true,
+      "source": "TCVN 5574:2018 Bảng 16"
+    },
+    {
+      "grade": "B30",
+      "ratio": 10,
+      "actual": 0.9,
+      "expected": 0.9,
+      "mode": "EXACT",
+      "pass": true,
+      "source": "TCVN 5574:2018 Bảng 16"
+    },
+    {
+      "grade": "B30",
+      "ratio": 12.5,
+      "actual": 0.865,
+      "expected": 0.865,
+      "mode": "LINEAR_1D",
+      "pass": true,
+      "source": "TCVN 5574:2018 Bảng 16"
+    },
+    {
+      "grade": "B30",
+      "ratio": 15,
+      "actual": 0.83,
+      "expected": 0.83,
+      "mode": "EXACT",
+      "pass": true,
+      "source": "TCVN 5574:2018 Bảng 16"
+    },
+    {
+      "grade": "B60",
+      "ratio": 15,
+      "actual": 0.8,
+      "expected": 0.8,
+      "mode": "EXACT",
+      "pass": true,
+      "source": "TCVN 5574:2018 Bảng 16"
+    },
+    {
+      "grade": "B80",
+      "ratio": 20,
+      "actual": 0.64,
+      "expected": 0.64,
+      "mode": "EXACT",
+      "pass": true,
+      "source": "TCVN 5574:2018 Bảng 16"
+    },
+    {
+      "grade": "B100",
+      "ratio": 20,
+      "actual": 0.63,
+      "expected": 0.63,
+      "mode": "EXACT",
+      "pass": true,
+      "source": "TCVN 5574:2018 Bảng 16"
+    }
+  ],
+  "capacityCases": [
+    {
+      "id": "B30-R6-LONG",
+      "input": {
+        "id": "B30-R6-LONG",
+        "grade": "B30",
+        "steel": "CB400-V",
+        "shape": "square",
+        "sideMm": 400,
+        "AsTotMm2": 1600,
+        "L0Mm": 2400,
+        "e0Mm": 13.333333333333334,
+        "e0IncludesRandom": true,
+        "reinforcementOppositeSides": true,
+        "loadDuration": "long"
+      },
+      "engineStatus": "VERIFIED",
+      "engineOk": true,
+      "excelModelOk": true,
+      "metrics": [
+        {
+          "name": "A",
+          "engine": 160000,
+          "excelFormulaModel": 160000,
+          "diff": 0,
+          "unit": "mm2",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "L0/h",
+          "engine": 6,
+          "excelFormulaModel": 6,
+          "diff": 0,
+          "unit": "-",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "phi",
+          "engine": 0.92,
+          "excelFormulaModel": 0.92,
+          "diff": 0,
+          "unit": "-",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "Rb",
+          "engine": 17,
+          "excelFormulaModel": 17,
+          "diff": 0,
+          "unit": "MPa",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "Rsc",
+          "engine": 350,
+          "excelFormulaModel": 350,
+          "diff": 0,
+          "unit": "MPa",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "Nu",
+          "engine": 3017.6,
+          "excelFormulaModel": 3017.6,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        }
+      ],
+      "pass": true
+    },
+    {
+      "id": "B30-R10-LONG",
+      "input": {
+        "id": "B30-R10-LONG",
+        "grade": "B30",
+        "steel": "CB400-V",
+        "shape": "square",
+        "sideMm": 400,
+        "AsTotMm2": 1600,
+        "L0Mm": 4000,
+        "e0Mm": 13.333333333333334,
+        "e0IncludesRandom": true,
+        "reinforcementOppositeSides": true,
+        "loadDuration": "long"
+      },
+      "engineStatus": "VERIFIED",
+      "engineOk": true,
+      "excelModelOk": true,
+      "metrics": [
+        {
+          "name": "A",
+          "engine": 160000,
+          "excelFormulaModel": 160000,
+          "diff": 0,
+          "unit": "mm2",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "L0/h",
+          "engine": 10,
+          "excelFormulaModel": 10,
+          "diff": 0,
+          "unit": "-",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "phi",
+          "engine": 0.9,
+          "excelFormulaModel": 0.9,
+          "diff": 0,
+          "unit": "-",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "Rb",
+          "engine": 17,
+          "excelFormulaModel": 17,
+          "diff": 0,
+          "unit": "MPa",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "Rsc",
+          "engine": 350,
+          "excelFormulaModel": 350,
+          "diff": 0,
+          "unit": "MPa",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "Nu",
+          "engine": 2952,
+          "excelFormulaModel": 2952,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        }
+      ],
+      "pass": true
+    },
+    {
+      "id": "B30-R12.5-LONG",
+      "input": {
+        "id": "B30-R12.5-LONG",
+        "grade": "B30",
+        "steel": "CB400-V",
+        "shape": "square",
+        "sideMm": 400,
+        "AsTotMm2": 1600,
+        "L0Mm": 5000,
+        "e0Mm": 13.333333333333334,
+        "e0IncludesRandom": true,
+        "reinforcementOppositeSides": true,
+        "loadDuration": "long"
+      },
+      "engineStatus": "VERIFIED",
+      "engineOk": true,
+      "excelModelOk": true,
+      "metrics": [
+        {
+          "name": "A",
+          "engine": 160000,
+          "excelFormulaModel": 160000,
+          "diff": 0,
+          "unit": "mm2",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "L0/h",
+          "engine": 12.5,
+          "excelFormulaModel": 12.5,
+          "diff": 0,
+          "unit": "-",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "phi",
+          "engine": 0.865,
+          "excelFormulaModel": 0.865,
+          "diff": 0,
+          "unit": "-",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "Rb",
+          "engine": 17,
+          "excelFormulaModel": 17,
+          "diff": 0,
+          "unit": "MPa",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "Rsc",
+          "engine": 350,
+          "excelFormulaModel": 350,
+          "diff": 0,
+          "unit": "MPa",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "Nu",
+          "engine": 2837.2,
+          "excelFormulaModel": 2837.2,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        }
+      ],
+      "pass": true
+    },
+    {
+      "id": "B60-R15-LONG",
+      "input": {
+        "id": "B60-R15-LONG",
+        "grade": "B60",
+        "steel": "CB400-V",
+        "shape": "square",
+        "sideMm": 400,
+        "AsTotMm2": 1600,
+        "L0Mm": 6000,
+        "e0Mm": 13.333333333333334,
+        "e0IncludesRandom": true,
+        "reinforcementOppositeSides": true,
+        "loadDuration": "long"
+      },
+      "engineStatus": "VERIFIED",
+      "engineOk": true,
+      "excelModelOk": true,
+      "metrics": [
+        {
+          "name": "A",
+          "engine": 160000,
+          "excelFormulaModel": 160000,
+          "diff": 0,
+          "unit": "mm2",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "L0/h",
+          "engine": 15,
+          "excelFormulaModel": 15,
+          "diff": 0,
+          "unit": "-",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "phi",
+          "engine": 0.8,
+          "excelFormulaModel": 0.8,
+          "diff": 0,
+          "unit": "-",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "Rb",
+          "engine": 33,
+          "excelFormulaModel": 33,
+          "diff": 0,
+          "unit": "MPa",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "Rsc",
+          "engine": 350,
+          "excelFormulaModel": 350,
+          "diff": 0,
+          "unit": "MPa",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "Nu",
+          "engine": 4672,
+          "excelFormulaModel": 4672,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        }
+      ],
+      "pass": true
+    },
+    {
+      "id": "B100-R20-LONG",
+      "input": {
+        "id": "B100-R20-LONG",
+        "grade": "B100",
+        "steel": "CB500-V",
+        "shape": "square",
+        "sideMm": 400,
+        "AsTotMm2": 1600,
+        "L0Mm": 8000,
+        "e0Mm": 13.333333333333334,
+        "e0IncludesRandom": true,
+        "reinforcementOppositeSides": true,
+        "loadDuration": "long"
+      },
+      "engineStatus": "VERIFIED",
+      "engineOk": true,
+      "excelModelOk": true,
+      "metrics": [
+        {
+          "name": "A",
+          "engine": 160000,
+          "excelFormulaModel": 160000,
+          "diff": 0,
+          "unit": "mm2",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "L0/h",
+          "engine": 20,
+          "excelFormulaModel": 20,
+          "diff": 0,
+          "unit": "-",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "phi",
+          "engine": 0.63,
+          "excelFormulaModel": 0.63,
+          "diff": 0,
+          "unit": "-",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "Rb",
+          "engine": 47.5,
+          "excelFormulaModel": 47.5,
+          "diff": 0,
+          "unit": "MPa",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "Rsc",
+          "engine": 435,
+          "excelFormulaModel": 435,
+          "diff": 0,
+          "unit": "MPa",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "Nu",
+          "engine": 5226.48,
+          "excelFormulaModel": 5226.48,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        }
+      ],
+      "pass": true
+    },
+    {
+      "id": "B30-R15-SHORT",
+      "input": {
+        "id": "B30-R15-SHORT",
+        "grade": "B30",
+        "steel": "CB400-V",
+        "shape": "square",
+        "sideMm": 400,
+        "AsTotMm2": 1600,
+        "L0Mm": 6000,
+        "e0Mm": 13.333333333333334,
+        "e0IncludesRandom": true,
+        "reinforcementOppositeSides": true,
+        "loadDuration": "short"
+      },
+      "engineStatus": "VERIFIED",
+      "engineOk": true,
+      "excelModelOk": true,
+      "metrics": [
+        {
+          "name": "A",
+          "engine": 160000,
+          "excelFormulaModel": 160000,
+          "diff": 0,
+          "unit": "mm2",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "L0/h",
+          "engine": 15,
+          "excelFormulaModel": 15,
+          "diff": 0,
+          "unit": "-",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "phi",
+          "engine": 0.875,
+          "excelFormulaModel": 0.875,
+          "diff": 0,
+          "unit": "-",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "Rb",
+          "engine": 17,
+          "excelFormulaModel": 17,
+          "diff": 0,
+          "unit": "MPa",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "Rsc",
+          "engine": 350,
+          "excelFormulaModel": 350,
+          "diff": 0,
+          "unit": "MPa",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "Nu",
+          "engine": 2870,
+          "excelFormulaModel": 2870,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        }
+      ],
+      "pass": true
+    },
+    {
+      "id": "RECT-R12.5-E10",
+      "input": {
+        "id": "RECT-R12.5-E10",
+        "grade": "B30",
+        "steel": "CB400-V",
+        "shape": "rectangle",
+        "widthMm": 450,
+        "heightMm": 500,
+        "AsTotMm2": 2400,
+        "L0Mm": 6250,
+        "e0Mm": 16.666666666666668,
+        "e0IncludesRandom": true,
+        "reinforcementOppositeSides": true,
+        "loadDuration": "long"
+      },
+      "engineStatus": "VERIFIED",
+      "engineOk": true,
+      "excelModelOk": true,
+      "metrics": [
+        {
+          "name": "A",
+          "engine": 225000,
+          "excelFormulaModel": 225000,
+          "diff": 0,
+          "unit": "mm2",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "L0/h",
+          "engine": 12.5,
+          "excelFormulaModel": 12.5,
+          "diff": 0,
+          "unit": "-",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "phi",
+          "engine": 0.865,
+          "excelFormulaModel": 0.865,
+          "diff": 0,
+          "unit": "-",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "Rb",
+          "engine": 17,
+          "excelFormulaModel": 17,
+          "diff": 0,
+          "unit": "MPa",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "Rsc",
+          "engine": 350,
+          "excelFormulaModel": 350,
+          "diff": 0,
+          "unit": "MPa",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        },
+        {
+          "name": "Nu",
+          "engine": 4035.225,
+          "excelFormulaModel": 4035.225,
+          "diff": 0,
+          "unit": "kN",
+          "pass": true,
+          "tolerance": {
+            "relative": 1e-10,
+            "absolute": 1e-10
+          }
+        }
+      ],
+      "pass": true
+    }
+  ],
+  "benchmarkCheck": {
+    "id": "CT50-B30-CB400-400x400",
+    "actual": 2952,
+    "expected": 2952,
+    "pass": true,
+    "source": "CT (50) + Bảng 7/13/16"
+  },
+  "governingCases": [
+    {
+      "soilRdKn": 2800,
+      "engine": {
+        "ok": true,
+        "status": "VERIFIED",
+        "capacityBasis": "DESIGN_RESISTANCE",
+        "soilResistanceKn": 2800,
+        "materialResistanceKn": 2952,
+        "pileResistanceKn": 2800,
+        "governing": "SOIL",
+        "utilizationBasisNote": "So sánh Rd đất nền với Nu vật liệu; γn/Nd,max không tự trộn vào phép min.",
+        "steps": [
+          "Rsoil=2800.000 kN.",
+          "Rmaterial=2952.000 kN.",
+          "Rpile=min(Rsoil,Rmaterial)=2800.000 kN → ĐẤT NỀN khống chế."
+        ]
+      },
+      "excelFormulaModel": {
+        "ok": true,
+        "pileResistanceKn": 2800,
+        "governing": "SOIL"
+      },
+      "pass": true
+    },
+    {
+      "soilRdKn": 3200,
+      "engine": {
+        "ok": true,
+        "status": "VERIFIED",
+        "capacityBasis": "DESIGN_RESISTANCE",
+        "soilResistanceKn": 3200,
+        "materialResistanceKn": 2952,
+        "pileResistanceKn": 2952,
+        "governing": "MATERIAL",
+        "utilizationBasisNote": "So sánh Rd đất nền với Nu vật liệu; γn/Nd,max không tự trộn vào phép min.",
+        "steps": [
+          "Rsoil=3200.000 kN.",
+          "Rmaterial=2952.000 kN.",
+          "Rpile=min(Rsoil,Rmaterial)=2952.000 kN → VẬT LIỆU khống chế."
+        ]
+      },
+      "excelFormulaModel": {
+        "ok": true,
+        "pileResistanceKn": 2952,
+        "governing": "MATERIAL"
+      },
+      "pass": true
+    }
+  ],
+  "boundaryCases": [
+    {
+      "id": "long-ratio-under-6",
+      "resultOk": false,
+      "status": "REVIEW",
+      "message": "Bảng 16 dài hạn chỉ có miền L0/h=6…20; HNL không ngoại suy ra ngoài bảng.",
+      "pass": true
+    },
+    {
+      "id": "long-ratio-over-20",
+      "resultOk": false,
+      "status": "OUT_OF_SCOPE",
+      "message": "8.1.2.4.3 yêu cầu L0/h ≤ 20.",
+      "pass": true
+    },
+    {
+      "id": "short-ratio-under-10",
+      "resultOk": false,
+      "status": "REVIEW",
+      "message": "Tải ngắn hạn chỉ nội suy giữa hai mốc VERIFIED L0/h=10…20; HNL không ngoại suy.",
+      "pass": true
+    },
+    {
+      "id": "e0-over-h30",
+      "resultOk": false,
+      "status": "OUT_OF_SCOPE",
+      "message": "8.1.2.4.3 yêu cầu e0 ≤ h/30.",
+      "pass": true
+    },
+    {
+      "id": "non-rectangular-ct50",
+      "resultOk": false,
+      "status": "REVIEW",
+      "message": "CT (49)–(50) chỉ mở Production cho tiết diện chữ nhật/vuông.",
+      "pass": true
+    }
+  ],
+  "circularSafety": {
+    "engineOk": true,
+    "capacityBasis": "DEMAND_CHECK_ONLY",
+    "materialResistanceKn": null,
+    "combineOk": false,
+    "pass": true
+  },
+  "xlsmReference": {
+    "status": "REFERENCE/BUGGED",
+    "productionNumeric": false,
+    "workbookCachedKn": 12012.497578072185,
+    "expectedWorkbookCachedKn": 12012.497578072185,
+    "workbookOwnTableFixedKn": 12197.78764512835,
+    "expectedWorkbookOwnTableFixedKn": 12197.78764512835,
+    "workbookLookupRscMpa": 350,
+    "workbookOwnTableRscMpa": 365,
+    "pdfCorrectRscMpa": 350,
+    "expectedMismatch": true,
+    "pass": true,
+    "note": "XLSM là REFERENCE/BUGGED. Mismatch 365↔350 là bằng chứng lỗi, không phải Production failure."
+  },
+  "registryChecks": [
+    {
+      "id": "5574-pile-material-near-centered-rect",
+      "actual": {
+        "status": "LOCKED",
+        "productionNumeric": true,
+        "source": "TCVN 5574:2018 · 8.1.2.4.3 · CT (49)–(50) · Bảng 16 · P1 Pass 1"
+      },
+      "pass": true
+    },
+    {
+      "id": "xlsm-sct-vatlieu",
+      "actual": {
+        "status": "REFERENCE",
+        "productionNumeric": false,
+        "source": "10.1 DCE_SctCoc_10304 2025.xlsm · SCT VatLieu · bugged benchmark only"
+      },
+      "pass": true
+    }
+  ],
+  "summary": {
+    "materialChecks": 5,
+    "materialPass": 5,
+    "table16Checks": 7,
+    "table16Pass": 7,
+    "capacityCases": 7,
+    "capacityPass": 7,
+    "capacityMetrics": 42,
+    "capacityMetricPass": 42,
+    "governingCases": 2,
+    "governingPass": 2,
+    "boundaryCases": 5,
+    "boundaryPass": 5,
+    "benchmarkPass": 1,
+    "circularSafetyPass": 1,
+    "xlsmReferencePass": 1,
+    "registryPass": 2,
+    "pass": true
+  },
+  "excelJsRuntimeGate": "PENDING_DEPENDENCY_RUNTIME_SMOKE"
+}

@@ -1,0 +1,33 @@
+{
+  "schema": "HNL-P1-MULTI-BOREHOLE-GATE-STATUS",
+  "version": "1.25.7",
+  "pureNode": {
+    "focused": {"pass": 8, "fail": 0},
+    "regression": {"pass": 378, "fail": 0},
+    "fullTableGolden": {"pass": 1242, "fail": 0},
+    "p0WorkflowIntermediate": {"pass": 35, "fail": 0},
+    "materialEngineExcelModel": {"pass": 42, "fail": 0},
+    "materialE2EIntermediate": {"pass": 20, "fail": 0},
+    "dceBehavioral": {"acceptable": 213, "fail": 0},
+    "sptPdfDecision": {"pass": 26, "fail": 0},
+    "multiBorehole": {
+      "rows": 6,
+      "rowMetricPass": 42,
+      "rowMetricFail": 0,
+      "summaryPass": 5,
+      "summaryFail": 0,
+      "boundaryPass": 5,
+      "boundaryFail": 0,
+      "benchmarkPass": 3,
+      "benchmarkFail": 0
+    },
+    "searchBrainSha256": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2"
+  },
+  "runtimeEnvironment": {
+    "npmCi": {"status": "BLOCKED", "reason": "Source ZIP does not contain package-lock.json."},
+    "excelJsSmoke": {"status": "BLOCKED", "reason": "exceljs is not installed because locked dependencies are unavailable locally."},
+    "webBuild": {"status": "BLOCKED", "reason": "vite is not installed because locked dependencies are unavailable locally."},
+    "windowsExcelCom": {"status": "NOT_RUN", "reason": "Linux sandbox; gate is wired into Windows RC workflow."},
+    "windowsExe": {"status": "NOT_RUN", "reason": "Linux sandbox; Windows build is wired into RC workflow."}
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "schema": "HNL-P1-PILE-QUANTITY-GATE-STATUS",
+  "version": "1.25.7",
+  "generatedAt": "2026-08-25T04:55:20.614Z",
+  "pureNode": {
+    "regression": {
+      "status": "PASS",
+      "passed": 388,
+      "failed": 0
+    },
+    "fullTableGolden": {
+      "status": "PASS",
+      "passed": 1242,
+      "failed": 0
+    },
+    "p0Workflow": {
+      "status": "PASS",
+      "intermediate": "35/35"
+    },
+    "material": {
+      "status": "PASS",
+      "engineExcel": "42/42"
+    },
+    "materialE2E": {
+      "status": "PASS",
+      "intermediate": "20/20"
+    },
+    "dceBehavioral": {
+      "status": "PASS_ACCEPTABLE",
+      "checks": "213/213",
+      "fail": 0
+    },
+    "sptDecision": {
+      "status": "PASS",
+      "checks": "26/26"
+    },
+    "multiBorehole": {
+      "status": "PASS",
+      "rowIntermediate": "42/42",
+      "summary": "5/5"
+    },
+    "pileQuantity": {
+      "status": "PASS",
+      "xlsmRows": "39/39",
+      "xlsmChecks": "273/273",
+      "engineExcel": "12/12",
+      "boundary": "9/9",
+      "benchmarks": "6/6"
+    },
+    "version": {
+      "status": "PASS"
+    },
+    "searchBrain": {
+      "status": "PASS",
+      "sha256": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2"
+    }
+  },
+  "environment": {
+    "npmCi": {
+      "status": "BLOCKED",
+      "exitCode": 1,
+      "reason": "Source ZIP has no package-lock.json; npm ci requires an existing lock."
+    },
+    "excelJsSmoke": {
+      "status": "BLOCKED",
+      "exitCode": 1,
+      "reason": "exceljs is not installed because dependencies cannot be installed with npm ci in this sandbox."
+    },
+    "webBuild": {
+      "status": "BLOCKED",
+      "exitCode": 127,
+      "reason": "vite is unavailable because node_modules is absent."
+    },
+    "windowsExcelCom": {
+      "status": "NOT_RUN",
+      "reason": "Linux sandbox; Windows + Microsoft Excel required."
+    },
+    "windowsExe": {
+      "status": "NOT_RUN",
+      "reason": "Linux sandbox; dist:win gate belongs to Windows/CI."
+    }
+  }
+}

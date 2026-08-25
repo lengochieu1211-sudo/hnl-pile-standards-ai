@@ -1,0 +1,213 @@
+{
+  "schema": "HNL-SPT-PDF-DECISION-GOLDEN-V1",
+  "version": "1.25.7",
+  "generatedAt": "2026-08-25T13:41:35.869Z",
+  "normativeSource": {
+    "standard": "TCVN 10304:2025",
+    "scope": "Phụ lục D · D.1–D.6 · Bảng D.1",
+    "standardPages": "110–111"
+  },
+  "decision": {
+    "status": "LOCKED",
+    "tipN": "Arithmetic mean of actual measured SPT points in the prescribed tip window; mean capped at 100.",
+    "shaftN": "Per geological layer: explicit representative N with provenance, otherwise arithmetic mean of actual measured SPT points in that layer.",
+    "shaftBoundary": "Half-open [top,bottom); a point exactly at a layer boundary belongs to the deeper layer.",
+    "noSyntheticN": "No continuous interpolation/extrapolation creates SPT points for Production.",
+    "d56Partition": "D.5/D.6 are applied piecewise by homogeneous geological layer and summed. This is an HNL deterministic partition of the standard identity, not a newly claimed TCVN formula.",
+    "dce": "NoiSuySPT and DCE right-end rectangle accumulation remain REFERENCE-only."
+  },
+  "dceReference": {
+    "xlsmSha256": "ec38b68f753b08e50d9d1f9df988be5084cab1aedf391ba1aaecf112e9d88bd1",
+    "behavioralEvidence": "artifacts/dce-udf-behavioral/dce-udf-observed-v1.25.7.json"
+  },
+  "summary": {
+    "checks": 26,
+    "pass": 26,
+    "fail": 0,
+    "status": "PASS"
+  },
+  "checks": [
+    {
+      "id": "TIP-WINDOW-START",
+      "actual": 9,
+      "expected": 9,
+      "status": "PASS",
+      "source": "Bảng D.1"
+    },
+    {
+      "id": "TIP-WINDOW-END",
+      "actual": 11,
+      "expected": 11,
+      "status": "PASS",
+      "source": "Bảng D.1"
+    },
+    {
+      "id": "TIP-MEASURED-COUNT",
+      "actual": 3,
+      "expected": 3,
+      "status": "PASS"
+    },
+    {
+      "id": "TIP-MEAN-RAW",
+      "actual": 120,
+      "expected": 120,
+      "status": "PASS"
+    },
+    {
+      "id": "TIP-MEAN-CAP100",
+      "actual": 100,
+      "expected": 100,
+      "status": "PASS",
+      "decision": "CAP applies to tip mean N"
+    },
+    {
+      "id": "SHAFT-LAYER1-N",
+      "actual": 10,
+      "expected": 10,
+      "status": "PASS",
+      "boundary": "[0,5)"
+    },
+    {
+      "id": "SHAFT-LAYER2-N",
+      "actual": 50,
+      "expected": 50,
+      "status": "PASS",
+      "boundary": "[5,10) after shaft clipping"
+    },
+    {
+      "id": "BOUNDARY-DEPTH5-NOT-IN-LAYER1",
+      "actual": false,
+      "expected": false,
+      "status": "PASS"
+    },
+    {
+      "id": "BOUNDARY-DEPTH5-IN-DEEPER-LAYER",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "id": "ENGINE-EXCEL-LAYER1-N",
+      "actual": 10,
+      "expected": 10,
+      "status": "PASS"
+    },
+    {
+      "id": "ENGINE-EXCEL-LAYER2-N",
+      "actual": 50,
+      "expected": 50,
+      "status": "PASS"
+    },
+    {
+      "id": "ENGINE-EXCEL-QS",
+      "actual": 3110.1767270538953,
+      "expected": 3110.1767270538953,
+      "status": "PASS",
+      "unit": "kN"
+    },
+    {
+      "id": "ENGINE-EXCEL-RK",
+      "actual": 5937.6101152847095,
+      "expected": 5937.6101152847095,
+      "status": "PASS",
+      "unit": "kN"
+    },
+    {
+      "id": "POLICY-METADATA",
+      "actual": "PDF-DECISION-LOCKED",
+      "expected": "PDF-DECISION-LOCKED",
+      "status": "PASS"
+    },
+    {
+      "id": "CONTINUOUS-INTERPOLATION",
+      "actual": false,
+      "expected": false,
+      "status": "PASS"
+    },
+    {
+      "id": "MISSING-SHAFT-LAYER-BLOCK",
+      "actual": false,
+      "expected": false,
+      "status": "PASS",
+      "message": "Lớp 1: Bảng D.1: đất rời dọc thân cần N_s đo được."
+    },
+    {
+      "id": "MISSING-SHAFT-NO-NOISUY",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "id": "SHAFT-N-NOT-CAPPED",
+      "actual": 175,
+      "expected": 175,
+      "status": "PASS"
+    },
+    {
+      "id": "SHAFT-F-CAPPED-BY-D1",
+      "actual": 165,
+      "expected": 165,
+      "status": "PASS",
+      "unit": "kPa"
+    },
+    {
+      "id": "REPORT-REPRESENTATIVE-OVERRIDES-RAW",
+      "actual": 25,
+      "expected": 25,
+      "status": "PASS"
+    },
+    {
+      "id": "REPORT-REPRESENTATIVE-PROVENANCE",
+      "actual": "REPORT-LAYER-REPRESENTATIVE",
+      "expected": "REPORT-LAYER-REPRESENTATIVE",
+      "status": "PASS"
+    },
+    {
+      "id": "DCE-TIP-QB-REFERENCE",
+      "actual": 4712.38898038469,
+      "expected": 4712.38898038469,
+      "status": "PASS",
+      "classification": "REFERENCE-CONSISTENT"
+    },
+    {
+      "id": "DCE-SHAFT-DIFFERENCE-REMAINS",
+      "actual": true,
+      "expected": true,
+      "status": "PASS",
+      "dceQsKn": 6975.297018321339,
+      "hnlQsKn": 6574.222450608145,
+      "deltaKn": -401.0745677131945,
+      "classification": "DIFFERENT_BY_NORMATIVE_POLICY_DECISION"
+    },
+    {
+      "id": "DCE-RK-DIFFERENCE-CLASSIFIED",
+      "actual": -401.0745677131963,
+      "expected": -401.0745677131963,
+      "status": "PASS",
+      "classification": "DIFFERENT_BY_NORMATIVE_POLICY_DECISION",
+      "decision": "DCE NoiSuySPT + right-end rectangle remain REFERENCE-only"
+    },
+    {
+      "id": "SPT-PRODUCTION-LOCKED",
+      "actual": true,
+      "expected": true,
+      "status": "PASS",
+      "registry": {
+        "status": "LOCKED",
+        "productionNumeric": true,
+        "source": "Phụ lục D · D.1–D.6 · Bảng D.1 · SPT PDF Decision Pass · measured tip window + layer-representative shaft N; no continuous DCE interpolation"
+      }
+    },
+    {
+      "id": "DCE-NOISUY-REFERENCE-ONLY",
+      "actual": false,
+      "expected": false,
+      "status": "PASS",
+      "registry": {
+        "status": "REFERENCE",
+        "productionNumeric": false,
+        "source": "DCE Excel.dll signature + 51 cached diagnostic depths characterized as LINEAR-1D reference; SPT PDF Decision Pass explicitly rejects it as a normative Production requirement"
+      }
+    }
+  ]
+}

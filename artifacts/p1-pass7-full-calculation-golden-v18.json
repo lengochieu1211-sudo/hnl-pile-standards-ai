@@ -1,0 +1,5082 @@
+{
+  "schema": "HNL-P1-PASS7-FULL-CALCULATION-GOLDEN",
+  "version": "1.25.7",
+  "generatedAt": "2026-08-25T11:16:40.848Z",
+  "scope": "Full chain Rsoil -> Rmaterial -> Rpile -> structural import -> per-pile check -> governing -> Vietnamese conclusion",
+  "capacityInput": {
+    "mechanicalWorkflowId": "10304-driven",
+    "pileInput": {
+      "shape": "square",
+      "sideM": 0.4,
+      "lengthM": 12,
+      "tipDepthM": 12,
+      "shaftStartDepthM": 0,
+      "maxSegmentM": 2,
+      "gammaN": 1.15
+    },
+    "mechanicalInput": {
+      "method": "hammer",
+      "gammaK": 1.4
+    },
+    "sptInput": {
+      "gammaK": 1.5,
+      "pileType": "driven"
+    },
+    "materialInput": {
+      "grade": "B30",
+      "steel": "CB400-V",
+      "shape": "square",
+      "sideMm": 400,
+      "widthMm": 400,
+      "heightMm": 400,
+      "AsTotMm2": 1600,
+      "L0Mm": 4000,
+      "e0Mm": 13.333333333333334,
+      "e0IncludesRandom": true,
+      "reinforcementOppositeSides": true,
+      "loadDuration": "long"
+    },
+    "gammaN": 1.15,
+    "boreholes": [
+      {
+        "id": "HK1",
+        "layers": [
+          {
+            "top": 0,
+            "bottom": 4,
+            "soilGroup": "sand",
+            "sandType": "medium",
+            "sptN": 18
+          },
+          {
+            "top": 4,
+            "bottom": 9,
+            "soilGroup": "sand",
+            "sandType": "medium",
+            "sptN": 24
+          },
+          {
+            "top": 9,
+            "bottom": 15,
+            "soilGroup": "sand",
+            "sandType": "medium",
+            "sptN": 30
+          }
+        ],
+        "sptPoints": [
+          {
+            "depthM": 10,
+            "N": 25
+          },
+          {
+            "depthM": 11,
+            "N": 30
+          },
+          {
+            "depthM": 12,
+            "N": 35
+          },
+          {
+            "depthM": 13,
+            "N": 30
+          },
+          {
+            "depthM": 14,
+            "N": 25
+          }
+        ]
+      },
+      {
+        "id": "HK2",
+        "layers": [
+          {
+            "top": 0,
+            "bottom": 4,
+            "soilGroup": "sand",
+            "sandType": "fine",
+            "sptN": 10
+          },
+          {
+            "top": 4,
+            "bottom": 9,
+            "soilGroup": "sand",
+            "sandType": "fine",
+            "sptN": 15
+          },
+          {
+            "top": 9,
+            "bottom": 15,
+            "soilGroup": "sand",
+            "sandType": "fine",
+            "sptN": 20
+          }
+        ],
+        "sptPoints": [
+          {
+            "depthM": 10,
+            "N": 15
+          },
+          {
+            "depthM": 11,
+            "N": 20
+          },
+          {
+            "depthM": 12,
+            "N": 25
+          },
+          {
+            "depthM": 13,
+            "N": 20
+          },
+          {
+            "depthM": 14,
+            "N": 15
+          }
+        ]
+      },
+      {
+        "id": "HK3",
+        "layers": [
+          {
+            "top": 0,
+            "bottom": 4,
+            "soilGroup": "sand",
+            "sandType": "coarse",
+            "sptN": 25
+          },
+          {
+            "top": 4,
+            "bottom": 9,
+            "soilGroup": "sand",
+            "sandType": "coarse",
+            "sptN": 35
+          },
+          {
+            "top": 9,
+            "bottom": 15,
+            "soilGroup": "sand",
+            "sandType": "coarse",
+            "sptN": 45
+          }
+        ],
+        "sptPoints": [
+          {
+            "depthM": 10,
+            "N": 40
+          },
+          {
+            "depthM": 11,
+            "N": 45
+          },
+          {
+            "depthM": 12,
+            "N": 50
+          },
+          {
+            "depthM": 13,
+            "N": 45
+          },
+          {
+            "depthM": 14,
+            "N": 40
+          }
+        ]
+      }
+    ]
+  },
+  "structuralSourceSummary": {
+    "kind": "DCE_TABLES",
+    "sourceId": "DCE_EXACT_PASS7_GOLDEN"
+  },
+  "result": {
+    "schema": "HNL-P1-PASS7-FULL-CALCULATION-RESULT",
+    "version": "1.25.7",
+    "status": "VERIFIED_PASS",
+    "productionNumeric": true,
+    "capacityBatch": {
+      "ok": true,
+      "workflow": "pile-capacity-multiborehole",
+      "status": "VERIFIED",
+      "productionNumeric": true,
+      "mechanicalWorkflowId": "10304-driven",
+      "materialResult": {
+        "ok": true,
+        "workflow": "pile-material-5574-near-centered-rect",
+        "status": "VERIFIED",
+        "productionNumeric": true,
+        "inputs": {
+          "grade": "B30",
+          "steel": "CB400-V",
+          "shape": "square",
+          "widthMm": 400,
+          "heightMm": 400,
+          "concreteAreaMm2": 160000,
+          "AsTotMm2": 1600,
+          "L0Mm": 4000,
+          "e0Mm": 13.333333333333334,
+          "e0IncludesRandom": true,
+          "reinforcementOppositeSides": true,
+          "memberLengthMm": null,
+          "staticEccentricityMm": null,
+          "structuralSystem": "",
+          "loadDuration": "long"
+        },
+        "materials": {
+          "RbMpa": 17,
+          "EbMpa": 32500,
+          "RscMpa": 350,
+          "RsMpa": 350
+        },
+        "randomEccentricityMm": null,
+        "minimumRandomEccentricityWithoutLengthMm": 13.333333333333334,
+        "slendernessRatio": 10,
+        "phi": 0.9,
+        "phiMode": "EXACT",
+        "phiBracket": [
+          10,
+          10
+        ],
+        "concreteContributionKn": 2448,
+        "steelContributionKn": 504,
+        "materialResistanceKn": 2952,
+        "NuKn": 2952,
+        "capacityBasis": "DESIGN_RESISTANCE_TTGH1",
+        "steps": [
+          "Bảng 7/13: Rb=17 MPa; Rsc=350 MPa.",
+          "8.1.2.2.4: e0=13.333 mm đã kể ea; ea tối thiểu không xét L là 13.333 mm.",
+          "8.1.2.4.3: cốt dọc ở các phía đối diện; e0≤h/30=13.333 mm; L0/h=10.0000≤20.",
+          "φ=0.900000 (EXACT, bracket 10–10).",
+          "CT (50): Nu=φ(Rb·A+Rsc·As,tot)=2952.000 kN."
+        ],
+        "provenance": [
+          {
+            "standard": "TCVN 5574:2018",
+            "clause": "8.1.2.4.3",
+            "formula": "(49)–(50)",
+            "table": "Bảng 16",
+            "standardPage": "61–62",
+            "pdfPage": "59–60",
+            "status": "VERIFIED"
+          },
+          {
+            "standard": "TCVN 5574:2018",
+            "tables": "Bảng 7, 10, 13, 14",
+            "standardPage": "35, 38, 47, 48",
+            "pdfPage": "33, 36, 45, 46",
+            "status": "VERIFIED"
+          },
+          "Bảng 7 · trang chuẩn 35 · PDF 33",
+          "Bảng 10 · trang chuẩn 38 · PDF 36",
+          "Bảng 13 · trang chuẩn 47 · PDF 45",
+          "Bảng 14 · trang chuẩn 48 · PDF 46"
+        ]
+      },
+      "rows": [
+        {
+          "boreholeId": "HK1",
+          "boreholeName": "HK1",
+          "methodId": "10304-driven",
+          "methodLabel": "CƠ LÝ · 7.2.2 CỌC ĐÓNG/ÉP",
+          "ok": true,
+          "coverage": {
+            "ok": true,
+            "gaps": [],
+            "coveredM": 12,
+            "requestedM": 12,
+            "verification": {
+              "status": "VERIFIED",
+              "scope": "DETERMINISTIC_PROFILE_GEOMETRY",
+              "basis": "Interval arithmetic independently implemented and regression tested; no XLL/VBA dependency."
+            }
+          },
+          "soilInput": {
+            "shape": "square",
+            "sideM": 0.4,
+            "lengthM": 12,
+            "tipDepthM": 12,
+            "shaftStartDepthM": 0,
+            "maxSegmentM": 2,
+            "gammaN": 1.15,
+            "layers": [
+              {
+                "top": 0,
+                "bottom": 4,
+                "soilGroup": "sand",
+                "sandType": "medium",
+                "sptN": 18,
+                "index": 1
+              },
+              {
+                "top": 4,
+                "bottom": 9,
+                "soilGroup": "sand",
+                "sandType": "medium",
+                "sptN": 24,
+                "index": 2
+              },
+              {
+                "top": 9,
+                "bottom": 15,
+                "soilGroup": "sand",
+                "sandType": "medium",
+                "sptN": 30,
+                "index": 3
+              }
+            ],
+            "method": "hammer",
+            "gammaK": 1.4
+          },
+          "soilResult": {
+            "ok": true,
+            "geometry": {
+              "shape": "square",
+              "outerDimensionM": 0.4,
+              "tipInnerDimensionM": 0,
+              "massInnerDimensionM": 0,
+              "tipAreaM2": 0.16000000000000003,
+              "areaM2": 0.16000000000000003,
+              "concreteAreaM2": 0.16000000000000003,
+              "perimeterM": 1.6,
+              "secondMomentM4": 0.002133333333333334,
+              "lengthM": 12,
+              "derivedLengthM": null,
+              "volumeM3": 1.9200000000000004,
+              "unitWeightKnM3": null,
+              "selfWeightKn": null,
+              "headCoordinateM": null,
+              "tipCoordinateM": null,
+              "lengthConflict": false,
+              "verification": {
+                "status": "VERIFIED",
+                "scope": "DETERMINISTIC_GEOMETRY",
+                "basis": "Independent geometry identities + visible XLSM formula benchmark; no XLL/VBA dependency."
+              }
+            },
+            "tipDepthM": 12,
+            "shaftStartDepthM": 0,
+            "maxSegmentM": 2,
+            "tipLayer": {
+              "index": 3,
+              "top": 9,
+              "bottom": 15,
+              "soilGroup": "sand",
+              "sandType": "medium",
+              "IL": null,
+              "fiOverride": null
+            },
+            "qbKpa": 4160,
+            "gammaRR": 1,
+            "tipResistanceKn": 665.6000000000001,
+            "layerResults": [
+              {
+                "index": 1,
+                "top": 0,
+                "bottom": 4,
+                "soilGroup": "sand",
+                "sandType": "medium",
+                "IL": null,
+                "fiOverride": null,
+                "hM": 4,
+                "avgDepthM": 2,
+                "fiKpa": 41.5,
+                "gammaRf": 1,
+                "resistanceKn": 265.6,
+                "segmentCount": 2,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "note": "Tổng hợp 2 phân đoạn ≤2 m; xem segmentResults để audit từng đoạn."
+                }
+              },
+              {
+                "index": 2,
+                "top": 4,
+                "bottom": 9,
+                "soilGroup": "sand",
+                "sandType": "medium",
+                "IL": null,
+                "fiOverride": null,
+                "hM": 5,
+                "avgDepthM": 6.5,
+                "fiKpa": 58.95,
+                "gammaRf": 1,
+                "resistanceKn": 471.6,
+                "segmentCount": 3,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "note": "Tổng hợp 3 phân đoạn ≤2 m; xem segmentResults để audit từng đoạn."
+                }
+              },
+              {
+                "index": 3,
+                "top": 9,
+                "bottom": 15,
+                "soilGroup": "sand",
+                "sandType": "medium",
+                "IL": null,
+                "fiOverride": null,
+                "hM": 3,
+                "avgDepthM": 10.5,
+                "fiKpa": 65.7,
+                "gammaRf": 1,
+                "resistanceKn": 315.36,
+                "segmentCount": 2,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "note": "Tổng hợp 2 phân đoạn ≤2 m; xem segmentResults để audit từng đoạn."
+                }
+              }
+            ],
+            "segmentResults": [
+              {
+                "index": 1,
+                "top": 0,
+                "bottom": 2,
+                "soilGroup": "sand",
+                "sandType": "medium",
+                "IL": null,
+                "fiOverride": null,
+                "parentIndex": 1,
+                "segmentIndex": 1,
+                "hM": 2,
+                "avgDepthM": 1,
+                "fiKpa": 35,
+                "gammaRf": 1,
+                "resistanceKn": 112,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "interpolation": "EXACT",
+                  "note": "mode=EXACT · x:[1;1], t=0.0000"
+                },
+                "factorProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 4",
+                  "standardPage": "34-35",
+                  "pdfPage": "34-35",
+                  "status": "VERIFIED",
+                  "unit": "-",
+                  "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+                }
+              },
+              {
+                "index": 1,
+                "top": 2,
+                "bottom": 4,
+                "soilGroup": "sand",
+                "sandType": "medium",
+                "IL": null,
+                "fiOverride": null,
+                "parentIndex": 1,
+                "segmentIndex": 2,
+                "hM": 2,
+                "avgDepthM": 3,
+                "fiKpa": 48,
+                "gammaRf": 1,
+                "resistanceKn": 153.60000000000002,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "interpolation": "EXACT",
+                  "note": "mode=EXACT · x:[3;3], t=0.0000"
+                },
+                "factorProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 4",
+                  "standardPage": "34-35",
+                  "pdfPage": "34-35",
+                  "status": "VERIFIED",
+                  "unit": "-",
+                  "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+                }
+              },
+              {
+                "index": 2,
+                "top": 4,
+                "bottom": 6,
+                "soilGroup": "sand",
+                "sandType": "medium",
+                "IL": null,
+                "fiOverride": null,
+                "parentIndex": 2,
+                "segmentIndex": 1,
+                "hM": 2,
+                "avgDepthM": 5,
+                "fiKpa": 56,
+                "gammaRf": 1,
+                "resistanceKn": 179.20000000000002,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "interpolation": "EXACT",
+                  "note": "mode=EXACT · x:[5;5], t=0.0000"
+                },
+                "factorProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 4",
+                  "standardPage": "34-35",
+                  "pdfPage": "34-35",
+                  "status": "VERIFIED",
+                  "unit": "-",
+                  "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+                }
+              },
+              {
+                "index": 2,
+                "top": 6,
+                "bottom": 8,
+                "soilGroup": "sand",
+                "sandType": "medium",
+                "IL": null,
+                "fiOverride": null,
+                "parentIndex": 2,
+                "segmentIndex": 2,
+                "hM": 2,
+                "avgDepthM": 7,
+                "fiKpa": 60,
+                "gammaRf": 1,
+                "resistanceKn": 192,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "interpolation": "LINEAR-1D",
+                  "note": "mode=LINEAR-1D · x:[6;8], t=0.5000"
+                },
+                "factorProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 4",
+                  "standardPage": "34-35",
+                  "pdfPage": "34-35",
+                  "status": "VERIFIED",
+                  "unit": "-",
+                  "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+                }
+              },
+              {
+                "index": 2,
+                "top": 8,
+                "bottom": 9,
+                "soilGroup": "sand",
+                "sandType": "medium",
+                "IL": null,
+                "fiOverride": null,
+                "parentIndex": 2,
+                "segmentIndex": 3,
+                "hM": 1,
+                "avgDepthM": 8.5,
+                "fiKpa": 62.75,
+                "gammaRf": 1,
+                "resistanceKn": 100.4,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "interpolation": "LINEAR-1D",
+                  "note": "mode=LINEAR-1D · x:[8;10], t=0.2500"
+                },
+                "factorProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 4",
+                  "standardPage": "34-35",
+                  "pdfPage": "34-35",
+                  "status": "VERIFIED",
+                  "unit": "-",
+                  "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+                }
+              },
+              {
+                "index": 3,
+                "top": 9,
+                "bottom": 11,
+                "soilGroup": "sand",
+                "sandType": "medium",
+                "IL": null,
+                "fiOverride": null,
+                "parentIndex": 3,
+                "segmentIndex": 1,
+                "hM": 2,
+                "avgDepthM": 10,
+                "fiKpa": 65,
+                "gammaRf": 1,
+                "resistanceKn": 208,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "interpolation": "EXACT",
+                  "note": "mode=EXACT · x:[10;10], t=0.0000"
+                },
+                "factorProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 4",
+                  "standardPage": "34-35",
+                  "pdfPage": "34-35",
+                  "status": "VERIFIED",
+                  "unit": "-",
+                  "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+                }
+              },
+              {
+                "index": 3,
+                "top": 11,
+                "bottom": 12,
+                "soilGroup": "sand",
+                "sandType": "medium",
+                "IL": null,
+                "fiOverride": null,
+                "parentIndex": 3,
+                "segmentIndex": 2,
+                "hM": 1,
+                "avgDepthM": 11.5,
+                "fiKpa": 67.1,
+                "gammaRf": 1,
+                "resistanceKn": 107.36,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "interpolation": "LINEAR-1D",
+                  "note": "mode=LINEAR-1D · x:[10;15], t=0.3000"
+                },
+                "factorProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 4",
+                  "standardPage": "34-35",
+                  "pdfPage": "34-35",
+                  "status": "VERIFIED",
+                  "unit": "-",
+                  "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+                }
+              }
+            ],
+            "sideResistanceKn": 1052.56,
+            "gammaC": 1,
+            "RkKn": 1718.16,
+            "gammaK": 1.4,
+            "RdKn": 1227.257142857143,
+            "gammaN": 1.15,
+            "NdMaxKn": 1067.1801242236027,
+            "status": "VERIFIED",
+            "provenance": {
+              "standard": "TCVN 10304:2025",
+              "edition": 2025,
+              "clause": "7.2.2.1",
+              "formula": "(9)",
+              "standardPage": 31,
+              "pdfPage": 31,
+              "status": "VERIFIED",
+              "unit": "kN"
+            },
+            "qbProvenance": {
+              "standard": "TCVN 10304:2025",
+              "edition": 2025,
+              "clause": "7.2.2.1",
+              "table": "Bảng 2",
+              "standardPage": "32-33",
+              "pdfPage": "32-33",
+              "status": "VERIFIED",
+              "unit": "kPa",
+              "interpolation": "LINEAR-1D",
+              "note": "mode=LINEAR-1D · x:[10;15], t=0.4000"
+            },
+            "tipFactorProvenance": {
+              "standard": "TCVN 10304:2025",
+              "edition": 2025,
+              "clause": "7.2.2.1",
+              "table": "Bảng 4",
+              "standardPage": "34-35",
+              "pdfPage": "34-35",
+              "status": "VERIFIED",
+              "unit": "-",
+              "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+            }
+          },
+          "materialResult": {
+            "ok": true,
+            "workflow": "pile-material-5574-near-centered-rect",
+            "status": "VERIFIED",
+            "productionNumeric": true,
+            "inputs": {
+              "grade": "B30",
+              "steel": "CB400-V",
+              "shape": "square",
+              "widthMm": 400,
+              "heightMm": 400,
+              "concreteAreaMm2": 160000,
+              "AsTotMm2": 1600,
+              "L0Mm": 4000,
+              "e0Mm": 13.333333333333334,
+              "e0IncludesRandom": true,
+              "reinforcementOppositeSides": true,
+              "memberLengthMm": null,
+              "staticEccentricityMm": null,
+              "structuralSystem": "",
+              "loadDuration": "long"
+            },
+            "materials": {
+              "RbMpa": 17,
+              "EbMpa": 32500,
+              "RscMpa": 350,
+              "RsMpa": 350
+            },
+            "randomEccentricityMm": null,
+            "minimumRandomEccentricityWithoutLengthMm": 13.333333333333334,
+            "slendernessRatio": 10,
+            "phi": 0.9,
+            "phiMode": "EXACT",
+            "phiBracket": [
+              10,
+              10
+            ],
+            "concreteContributionKn": 2448,
+            "steelContributionKn": 504,
+            "materialResistanceKn": 2952,
+            "NuKn": 2952,
+            "capacityBasis": "DESIGN_RESISTANCE_TTGH1",
+            "steps": [
+              "Bảng 7/13: Rb=17 MPa; Rsc=350 MPa.",
+              "8.1.2.2.4: e0=13.333 mm đã kể ea; ea tối thiểu không xét L là 13.333 mm.",
+              "8.1.2.4.3: cốt dọc ở các phía đối diện; e0≤h/30=13.333 mm; L0/h=10.0000≤20.",
+              "φ=0.900000 (EXACT, bracket 10–10).",
+              "CT (50): Nu=φ(Rb·A+Rsc·As,tot)=2952.000 kN."
+            ],
+            "provenance": [
+              {
+                "standard": "TCVN 5574:2018",
+                "clause": "8.1.2.4.3",
+                "formula": "(49)–(50)",
+                "table": "Bảng 16",
+                "standardPage": "61–62",
+                "pdfPage": "59–60",
+                "status": "VERIFIED"
+              },
+              {
+                "standard": "TCVN 5574:2018",
+                "tables": "Bảng 7, 10, 13, 14",
+                "standardPage": "35, 38, 47, 48",
+                "pdfPage": "33, 36, 45, 46",
+                "status": "VERIFIED"
+              },
+              "Bảng 7 · trang chuẩn 35 · PDF 33",
+              "Bảng 10 · trang chuẩn 38 · PDF 36",
+              "Bảng 13 · trang chuẩn 47 · PDF 45",
+              "Bảng 14 · trang chuẩn 48 · PDF 46"
+            ]
+          },
+          "combined": {
+            "ok": true,
+            "workflow": "pile-capacity-integrated",
+            "status": "VERIFIED",
+            "productionNumeric": true,
+            "capacityBasis": "DESIGN_RESISTANCE",
+            "soilWorkflowId": "10304-driven",
+            "soilRegistryId": "10304-driven",
+            "soilResistanceKn": 1227.257142857143,
+            "materialResistanceKn": 2952,
+            "pileResistanceKn": 1227.257142857143,
+            "governing": "SOIL",
+            "gammaN": 1.15,
+            "demandLimitKn": 1067.1801242236027,
+            "NdMaxFinalKn": 1067.1801242236027,
+            "geometry": {
+              "soil": {
+                "shape": "square",
+                "sideM": 0.4,
+                "diameterM": null,
+                "areaM2": 0.16000000000000003
+              },
+              "material": {
+                "shape": "square",
+                "widthMm": 400,
+                "heightMm": 400,
+                "sideMm": null
+              }
+            },
+            "childStatus": {
+              "soil": {
+                "registry": {
+                  "status": "LOCKED",
+                  "productionNumeric": true,
+                  "source": "7.2.2.1 · CT (9) · Bảng 2–4"
+                },
+                "status": "VERIFIED"
+              },
+              "material": {
+                "registry": {
+                  "status": "LOCKED",
+                  "productionNumeric": true,
+                  "source": "TCVN 5574:2018 · 8.1.2.4.3 · CT (49)–(50) · Bảng 16 · P1 Pass 1"
+                },
+                "status": "VERIFIED"
+              }
+            },
+            "steps": [
+              "Rsoil=Rd,10304=1227.257 kN (sau γk).",
+              "Rmaterial=Nu,5574=2952.000 kN (TTGH1).",
+              "Rpile=min(Rsoil,Rmaterial)=1227.257 kN → ĐẤT NỀN khống chế.",
+              "γn=1.15: giới hạn tác động Nd,max=Rpile/γn=1067.180 kN. γn không tham gia phép min sức kháng."
+            ],
+            "provenance": {
+              "soil": {
+                "standard": "TCVN 10304:2025",
+                "edition": 2025,
+                "clause": "7.2.2.1",
+                "formula": "(9)",
+                "standardPage": 31,
+                "pdfPage": 31,
+                "status": "VERIFIED",
+                "unit": "kN"
+              },
+              "material": [
+                {
+                  "standard": "TCVN 5574:2018",
+                  "clause": "8.1.2.4.3",
+                  "formula": "(49)–(50)",
+                  "table": "Bảng 16",
+                  "standardPage": "61–62",
+                  "pdfPage": "59–60",
+                  "status": "VERIFIED"
+                },
+                {
+                  "standard": "TCVN 5574:2018",
+                  "tables": "Bảng 7, 10, 13, 14",
+                  "standardPage": "35, 38, 47, 48",
+                  "pdfPage": "33, 36, 45, 46",
+                  "status": "VERIFIED"
+                },
+                "Bảng 7 · trang chuẩn 35 · PDF 33",
+                "Bảng 10 · trang chuẩn 38 · PDF 36",
+                "Bảng 13 · trang chuẩn 47 · PDF 45",
+                "Bảng 14 · trang chuẩn 48 · PDF 46"
+              ],
+              "governing": {
+                "rule": "Rpile = min(Rsoil, Rmaterial)",
+                "status": "HNL-LOCKED-COMPOSITION",
+                "note": "Chỉ ghép hai sức kháng thiết kế đã VERIFIED; γn được áp dụng sau phép min nếu người dùng cần giới hạn tác động."
+              }
+            }
+          },
+          "QbKn": 665.6000000000001,
+          "QsKn": 1052.56,
+          "RkKn": 1718.16,
+          "RdKn": 1227.257142857143,
+          "RmaterialKn": 2952,
+          "RpileKn": 1227.257142857143,
+          "NdMaxFinalKn": 1067.1801242236027,
+          "governing": "SOIL",
+          "soilAtTip": {
+            "index": 3,
+            "top": 9,
+            "bottom": 15,
+            "soilGroup": "sand",
+            "soilClass": null,
+            "sandType": "medium",
+            "IL": null,
+            "sptN": null,
+            "cuKpa": null
+          },
+          "issues": []
+        },
+        {
+          "boreholeId": "HK1",
+          "boreholeName": "HK1",
+          "methodId": "10304-spt",
+          "methodLabel": "SPT · PHỤ LỤC D",
+          "ok": true,
+          "coverage": {
+            "ok": true,
+            "gaps": [],
+            "coveredM": 12,
+            "requestedM": 12,
+            "verification": {
+              "status": "VERIFIED",
+              "scope": "DETERMINISTIC_PROFILE_GEOMETRY",
+              "basis": "Interval arithmetic independently implemented and regression tested; no XLL/VBA dependency."
+            }
+          },
+          "soilInput": {
+            "shape": "square",
+            "sideM": 0.4,
+            "lengthM": 12,
+            "tipDepthM": 12,
+            "shaftStartDepthM": 0,
+            "maxSegmentM": 2,
+            "gammaN": 1.15,
+            "layers": [
+              {
+                "top": 0,
+                "bottom": 4,
+                "soilGroup": "sand",
+                "sandType": "medium",
+                "sptN": 18,
+                "index": 1
+              },
+              {
+                "top": 4,
+                "bottom": 9,
+                "soilGroup": "sand",
+                "sandType": "medium",
+                "sptN": 24,
+                "index": 2
+              },
+              {
+                "top": 9,
+                "bottom": 15,
+                "soilGroup": "sand",
+                "sandType": "medium",
+                "sptN": 30,
+                "index": 3
+              }
+            ],
+            "gammaK": 1.5,
+            "pileType": "driven",
+            "sptPoints": [
+              {
+                "depthM": 10,
+                "N": 25
+              },
+              {
+                "depthM": 11,
+                "N": 30
+              },
+              {
+                "depthM": 12,
+                "N": 35
+              },
+              {
+                "depthM": 13,
+                "N": 30
+              },
+              {
+                "depthM": 14,
+                "N": 25
+              }
+            ]
+          },
+          "soilResult": {
+            "ok": true,
+            "status": "VERIFIED",
+            "inputs": {
+              "shape": "square",
+              "sideM": 0.4,
+              "lengthM": 12,
+              "tipDepthM": 12,
+              "shaftStartDepthM": 0,
+              "maxSegmentM": 2,
+              "gammaN": 1.15,
+              "layers": [
+                {
+                  "top": 0,
+                  "bottom": 4,
+                  "soilGroup": "sand",
+                  "sandType": "medium",
+                  "sptN": 18,
+                  "index": 1
+                },
+                {
+                  "top": 4,
+                  "bottom": 9,
+                  "soilGroup": "sand",
+                  "sandType": "medium",
+                  "sptN": 24,
+                  "index": 2
+                },
+                {
+                  "top": 9,
+                  "bottom": 15,
+                  "soilGroup": "sand",
+                  "sandType": "medium",
+                  "sptN": 30,
+                  "index": 3
+                }
+              ],
+              "gammaK": 1.5,
+              "pileType": "driven",
+              "sptPoints": [
+                {
+                  "depthM": 10,
+                  "N": 25
+                },
+                {
+                  "depthM": 11,
+                  "N": 30
+                },
+                {
+                  "depthM": 12,
+                  "N": 35
+                },
+                {
+                  "depthM": 13,
+                  "N": 30
+                },
+                {
+                  "depthM": 14,
+                  "N": 25
+                }
+              ],
+              "areaM2": 0.16000000000000003,
+              "perimeterM": 1.6,
+              "eta": 1
+            },
+            "geometry": {
+              "shape": "square",
+              "outerDimensionM": 0.4,
+              "tipInnerDimensionM": 0,
+              "massInnerDimensionM": 0,
+              "tipAreaM2": 0.16000000000000003,
+              "areaM2": 0.16000000000000003,
+              "concreteAreaM2": 0.16000000000000003,
+              "perimeterM": 1.6,
+              "secondMomentM4": 0.002133333333333334,
+              "lengthM": 12,
+              "derivedLengthM": null,
+              "volumeM3": 1.9200000000000004,
+              "unitWeightKnM3": null,
+              "selfWeightKn": null,
+              "headCoordinateM": null,
+              "tipCoordinateM": null,
+              "lengthConflict": false,
+              "verification": {
+                "status": "VERIFIED",
+                "scope": "DETERMINISTIC_GEOMETRY",
+                "basis": "Independent geometry identities + visible XLSM formula benchmark; no XLL/VBA dependency."
+              }
+            },
+            "pileType": "driven",
+            "eta": 1,
+            "tipDepthM": 12,
+            "shaftStartDepthM": 0,
+            "tipLayer": {
+              "top": 9,
+              "bottom": 15,
+              "soilGroup": "sand",
+              "sandType": "medium",
+              "sptN": 30,
+              "index": 3,
+              "soilClass": "sand",
+              "IL": null,
+              "fiOverride": null,
+              "phiDeg": null,
+              "gammaKnM3": null,
+              "gammaEffectiveKnM3": null,
+              "cuKpa": null,
+              "Sr": null
+            },
+            "tipN": 32.5,
+            "tipNAudit": {
+              "value": 32.5,
+              "raw": 32.5,
+              "count": 2,
+              "used": [
+                {
+                  "index": 2,
+                  "depthM": 11,
+                  "N": 30
+                },
+                {
+                  "index": 3,
+                  "depthM": 12,
+                  "N": 35
+                }
+              ],
+              "mode": "MEASURED-WINDOW-AVERAGE",
+              "cap": 100,
+              "provenance": "TCVN 10304:2025 · Phụ lục D · trang 110–111"
+            },
+            "qbKpa": 9750,
+            "qbLookup": {
+              "value": 9750,
+              "raw": 9750,
+              "cap": 18000,
+              "mode": "FORMULA+CAP",
+              "provenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+            },
+            "RubKn": 1560.0000000000002,
+            "segmentResults": [
+              {
+                "top": 0,
+                "bottom": 4,
+                "soilGroup": "sand",
+                "sandType": "medium",
+                "sptN": 18,
+                "index": 1,
+                "soilClass": "sand",
+                "IL": null,
+                "fiOverride": null,
+                "phiDeg": null,
+                "gammaKnM3": null,
+                "gammaEffectiveKnM3": null,
+                "cuKpa": null,
+                "Sr": null,
+                "hM": 4,
+                "NUsed": 18,
+                "NSource": "REPORT-LAYER-REPRESENTATIVE",
+                "NMeasuredPoints": [],
+                "unitResistanceKpa": 36,
+                "resistanceKn": 230.4,
+                "lookup": {
+                  "value": 36,
+                  "raw": 36,
+                  "cap": 100,
+                  "mode": "FORMULA+CAP",
+                  "provenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+                }
+              },
+              {
+                "top": 4,
+                "bottom": 9,
+                "soilGroup": "sand",
+                "sandType": "medium",
+                "sptN": 24,
+                "index": 2,
+                "soilClass": "sand",
+                "IL": null,
+                "fiOverride": null,
+                "phiDeg": null,
+                "gammaKnM3": null,
+                "gammaEffectiveKnM3": null,
+                "cuKpa": null,
+                "Sr": null,
+                "hM": 5,
+                "NUsed": 24,
+                "NSource": "REPORT-LAYER-REPRESENTATIVE",
+                "NMeasuredPoints": [],
+                "unitResistanceKpa": 48,
+                "resistanceKn": 384,
+                "lookup": {
+                  "value": 48,
+                  "raw": 48,
+                  "cap": 100,
+                  "mode": "FORMULA+CAP",
+                  "provenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+                }
+              },
+              {
+                "top": 9,
+                "bottom": 12,
+                "soilGroup": "sand",
+                "sandType": "medium",
+                "sptN": 30,
+                "index": 3,
+                "soilClass": "sand",
+                "IL": null,
+                "fiOverride": null,
+                "phiDeg": null,
+                "gammaKnM3": null,
+                "gammaEffectiveKnM3": null,
+                "cuKpa": null,
+                "Sr": null,
+                "hM": 3,
+                "NUsed": 30,
+                "NSource": "REPORT-LAYER-REPRESENTATIVE",
+                "NMeasuredPoints": [],
+                "unitResistanceKpa": 60,
+                "resistanceKn": 288,
+                "lookup": {
+                  "value": 60,
+                  "raw": 60,
+                  "cap": 100,
+                  "mode": "FORMULA+CAP",
+                  "provenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+                }
+              }
+            ],
+            "RufKn": 902.4,
+            "RkKn": 2462.4,
+            "gammaK": 1.5,
+            "RdKn": 1641.6000000000001,
+            "gammaN": 1.15,
+            "NdMaxKn": 1427.4782608695655,
+            "noInterpolationPolicy": true,
+            "sptDataPolicy": {
+              "decision": "PDF-DECISION-LOCKED",
+              "normativeSource": "TCVN 10304:2025 · Phụ lục D · D.1–D.6 · Bảng D.1 · trang 110–111",
+              "tipN": "MEASURED-WINDOW-ARITHMETIC-MEAN; CAP-100",
+              "shaftN": "REPORT-LAYER-REPRESENTATIVE / DERIVED-MEASURED-LAYER-MEAN",
+              "shaftBoundary": "HALF-OPEN [top,bottom); boundary point → deeper layer",
+              "continuousInterpolation": false,
+              "dceNoiSuySPT": "REFERENCE-ONLY",
+              "dceRightEndIntegration": "REFERENCE-ONLY",
+              "partitionedD56": true,
+              "partitionNote": "HNL áp dụng D.5/D.6 theo từng lớp địa chất đồng nhất rồi cộng; đây là phép phân hoạch deterministic, không phải công thức mới của TCVN."
+            },
+            "steps": [
+              "Phụ lục D/Bảng D.1: N mũi là trung bình số học các điểm SPT đo thực trong cửa sổ quy định, giới hạn N≤100; không sinh điểm bằng nội suy.",
+              "Bảng D.1: qb=9750.000 kPa; Ru,b=1560.000 kN.",
+              "D.5–D.6: HNL phân hoạch theo từng lớp địa chất; Ns/Nc của lớp lấy từ giá trị đại diện có provenance hoặc trung bình điểm đo thực trong [top,bottom), không nội suy theo z; Ru,f=902.400 kN.",
+              "D.1–D.2: Rk=Ru=2462.400 kN."
+            ],
+            "provenance": {
+              "standard": "TCVN 10304:2025",
+              "edition": 2025,
+              "clause": "Phụ lục D",
+              "formula": "D.1–D.6",
+              "table": "Bảng D.1",
+              "standardPage": "110-111",
+              "pdfPage": "110-111",
+              "status": "VERIFIED",
+              "unit": "kN"
+            }
+          },
+          "materialResult": {
+            "ok": true,
+            "workflow": "pile-material-5574-near-centered-rect",
+            "status": "VERIFIED",
+            "productionNumeric": true,
+            "inputs": {
+              "grade": "B30",
+              "steel": "CB400-V",
+              "shape": "square",
+              "widthMm": 400,
+              "heightMm": 400,
+              "concreteAreaMm2": 160000,
+              "AsTotMm2": 1600,
+              "L0Mm": 4000,
+              "e0Mm": 13.333333333333334,
+              "e0IncludesRandom": true,
+              "reinforcementOppositeSides": true,
+              "memberLengthMm": null,
+              "staticEccentricityMm": null,
+              "structuralSystem": "",
+              "loadDuration": "long"
+            },
+            "materials": {
+              "RbMpa": 17,
+              "EbMpa": 32500,
+              "RscMpa": 350,
+              "RsMpa": 350
+            },
+            "randomEccentricityMm": null,
+            "minimumRandomEccentricityWithoutLengthMm": 13.333333333333334,
+            "slendernessRatio": 10,
+            "phi": 0.9,
+            "phiMode": "EXACT",
+            "phiBracket": [
+              10,
+              10
+            ],
+            "concreteContributionKn": 2448,
+            "steelContributionKn": 504,
+            "materialResistanceKn": 2952,
+            "NuKn": 2952,
+            "capacityBasis": "DESIGN_RESISTANCE_TTGH1",
+            "steps": [
+              "Bảng 7/13: Rb=17 MPa; Rsc=350 MPa.",
+              "8.1.2.2.4: e0=13.333 mm đã kể ea; ea tối thiểu không xét L là 13.333 mm.",
+              "8.1.2.4.3: cốt dọc ở các phía đối diện; e0≤h/30=13.333 mm; L0/h=10.0000≤20.",
+              "φ=0.900000 (EXACT, bracket 10–10).",
+              "CT (50): Nu=φ(Rb·A+Rsc·As,tot)=2952.000 kN."
+            ],
+            "provenance": [
+              {
+                "standard": "TCVN 5574:2018",
+                "clause": "8.1.2.4.3",
+                "formula": "(49)–(50)",
+                "table": "Bảng 16",
+                "standardPage": "61–62",
+                "pdfPage": "59–60",
+                "status": "VERIFIED"
+              },
+              {
+                "standard": "TCVN 5574:2018",
+                "tables": "Bảng 7, 10, 13, 14",
+                "standardPage": "35, 38, 47, 48",
+                "pdfPage": "33, 36, 45, 46",
+                "status": "VERIFIED"
+              },
+              "Bảng 7 · trang chuẩn 35 · PDF 33",
+              "Bảng 10 · trang chuẩn 38 · PDF 36",
+              "Bảng 13 · trang chuẩn 47 · PDF 45",
+              "Bảng 14 · trang chuẩn 48 · PDF 46"
+            ]
+          },
+          "combined": {
+            "ok": true,
+            "workflow": "pile-capacity-integrated",
+            "status": "VERIFIED",
+            "productionNumeric": true,
+            "capacityBasis": "DESIGN_RESISTANCE",
+            "soilWorkflowId": "10304-spt",
+            "soilRegistryId": "10304-spt-raw",
+            "soilResistanceKn": 1641.6000000000001,
+            "materialResistanceKn": 2952,
+            "pileResistanceKn": 1641.6000000000001,
+            "governing": "SOIL",
+            "gammaN": 1.15,
+            "demandLimitKn": 1427.4782608695655,
+            "NdMaxFinalKn": 1427.4782608695655,
+            "geometry": {
+              "soil": {
+                "shape": "square",
+                "sideM": 0.4,
+                "diameterM": null,
+                "areaM2": 0.16000000000000003
+              },
+              "material": {
+                "shape": "square",
+                "widthMm": 400,
+                "heightMm": 400,
+                "sideMm": null
+              }
+            },
+            "childStatus": {
+              "soil": {
+                "registry": {
+                  "status": "LOCKED",
+                  "productionNumeric": true,
+                  "source": "Phụ lục D · D.1–D.6 · Bảng D.1 · SPT PDF Decision Pass · measured tip window + layer-representative shaft N; no continuous DCE interpolation"
+                },
+                "status": "VERIFIED"
+              },
+              "material": {
+                "registry": {
+                  "status": "LOCKED",
+                  "productionNumeric": true,
+                  "source": "TCVN 5574:2018 · 8.1.2.4.3 · CT (49)–(50) · Bảng 16 · P1 Pass 1"
+                },
+                "status": "VERIFIED"
+              }
+            },
+            "steps": [
+              "Rsoil=Rd,10304=1641.600 kN (sau γk).",
+              "Rmaterial=Nu,5574=2952.000 kN (TTGH1).",
+              "Rpile=min(Rsoil,Rmaterial)=1641.600 kN → ĐẤT NỀN khống chế.",
+              "γn=1.15: giới hạn tác động Nd,max=Rpile/γn=1427.478 kN. γn không tham gia phép min sức kháng."
+            ],
+            "provenance": {
+              "soil": {
+                "standard": "TCVN 10304:2025",
+                "edition": 2025,
+                "clause": "Phụ lục D",
+                "formula": "D.1–D.6",
+                "table": "Bảng D.1",
+                "standardPage": "110-111",
+                "pdfPage": "110-111",
+                "status": "VERIFIED",
+                "unit": "kN"
+              },
+              "material": [
+                {
+                  "standard": "TCVN 5574:2018",
+                  "clause": "8.1.2.4.3",
+                  "formula": "(49)–(50)",
+                  "table": "Bảng 16",
+                  "standardPage": "61–62",
+                  "pdfPage": "59–60",
+                  "status": "VERIFIED"
+                },
+                {
+                  "standard": "TCVN 5574:2018",
+                  "tables": "Bảng 7, 10, 13, 14",
+                  "standardPage": "35, 38, 47, 48",
+                  "pdfPage": "33, 36, 45, 46",
+                  "status": "VERIFIED"
+                },
+                "Bảng 7 · trang chuẩn 35 · PDF 33",
+                "Bảng 10 · trang chuẩn 38 · PDF 36",
+                "Bảng 13 · trang chuẩn 47 · PDF 45",
+                "Bảng 14 · trang chuẩn 48 · PDF 46"
+              ],
+              "governing": {
+                "rule": "Rpile = min(Rsoil, Rmaterial)",
+                "status": "HNL-LOCKED-COMPOSITION",
+                "note": "Chỉ ghép hai sức kháng thiết kế đã VERIFIED; γn được áp dụng sau phép min nếu người dùng cần giới hạn tác động."
+              }
+            }
+          },
+          "QbKn": 1560.0000000000002,
+          "QsKn": 902.4,
+          "RkKn": 2462.4,
+          "RdKn": 1641.6000000000001,
+          "RmaterialKn": 2952,
+          "RpileKn": 1641.6000000000001,
+          "NdMaxFinalKn": 1427.4782608695655,
+          "governing": "SOIL",
+          "soilAtTip": {
+            "index": 3,
+            "top": 9,
+            "bottom": 15,
+            "soilGroup": "sand",
+            "soilClass": "sand",
+            "sandType": "medium",
+            "IL": null,
+            "sptN": 30,
+            "cuKpa": null
+          },
+          "issues": []
+        },
+        {
+          "boreholeId": "HK2",
+          "boreholeName": "HK2",
+          "methodId": "10304-driven",
+          "methodLabel": "CƠ LÝ · 7.2.2 CỌC ĐÓNG/ÉP",
+          "ok": true,
+          "coverage": {
+            "ok": true,
+            "gaps": [],
+            "coveredM": 12,
+            "requestedM": 12,
+            "verification": {
+              "status": "VERIFIED",
+              "scope": "DETERMINISTIC_PROFILE_GEOMETRY",
+              "basis": "Interval arithmetic independently implemented and regression tested; no XLL/VBA dependency."
+            }
+          },
+          "soilInput": {
+            "shape": "square",
+            "sideM": 0.4,
+            "lengthM": 12,
+            "tipDepthM": 12,
+            "shaftStartDepthM": 0,
+            "maxSegmentM": 2,
+            "gammaN": 1.15,
+            "layers": [
+              {
+                "top": 0,
+                "bottom": 4,
+                "soilGroup": "sand",
+                "sandType": "fine",
+                "sptN": 10,
+                "index": 1
+              },
+              {
+                "top": 4,
+                "bottom": 9,
+                "soilGroup": "sand",
+                "sandType": "fine",
+                "sptN": 15,
+                "index": 2
+              },
+              {
+                "top": 9,
+                "bottom": 15,
+                "soilGroup": "sand",
+                "sandType": "fine",
+                "sptN": 20,
+                "index": 3
+              }
+            ],
+            "method": "hammer",
+            "gammaK": 1.4
+          },
+          "soilResult": {
+            "ok": true,
+            "geometry": {
+              "shape": "square",
+              "outerDimensionM": 0.4,
+              "tipInnerDimensionM": 0,
+              "massInnerDimensionM": 0,
+              "tipAreaM2": 0.16000000000000003,
+              "areaM2": 0.16000000000000003,
+              "concreteAreaM2": 0.16000000000000003,
+              "perimeterM": 1.6,
+              "secondMomentM4": 0.002133333333333334,
+              "lengthM": 12,
+              "derivedLengthM": null,
+              "volumeM3": 1.9200000000000004,
+              "unitWeightKnM3": null,
+              "selfWeightKn": null,
+              "headCoordinateM": null,
+              "tipCoordinateM": null,
+              "lengthConflict": false,
+              "verification": {
+                "status": "VERIFIED",
+                "scope": "DETERMINISTIC_GEOMETRY",
+                "basis": "Independent geometry identities + visible XLSM formula benchmark; no XLL/VBA dependency."
+              }
+            },
+            "tipDepthM": 12,
+            "shaftStartDepthM": 0,
+            "maxSegmentM": 2,
+            "tipLayer": {
+              "index": 3,
+              "top": 9,
+              "bottom": 15,
+              "soilGroup": "sand",
+              "sandType": "fine",
+              "IL": null,
+              "fiOverride": null
+            },
+            "qbKpa": 2720,
+            "gammaRR": 1,
+            "tipResistanceKn": 435.2000000000001,
+            "layerResults": [
+              {
+                "index": 1,
+                "top": 0,
+                "bottom": 4,
+                "soilGroup": "sand",
+                "sandType": "fine",
+                "IL": null,
+                "fiOverride": null,
+                "hM": 4,
+                "avgDepthM": 2,
+                "fiKpa": 29,
+                "gammaRf": 1,
+                "resistanceKn": 185.60000000000002,
+                "segmentCount": 2,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "note": "Tổng hợp 2 phân đoạn ≤2 m; xem segmentResults để audit từng đoạn."
+                }
+              },
+              {
+                "index": 2,
+                "top": 4,
+                "bottom": 9,
+                "soilGroup": "sand",
+                "sandType": "fine",
+                "IL": null,
+                "fiOverride": null,
+                "hM": 5,
+                "avgDepthM": 6.5,
+                "fiKpa": 42.1,
+                "gammaRf": 1,
+                "resistanceKn": 336.8,
+                "segmentCount": 3,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "note": "Tổng hợp 3 phân đoạn ≤2 m; xem segmentResults để audit từng đoạn."
+                }
+              },
+              {
+                "index": 3,
+                "top": 9,
+                "bottom": 15,
+                "soilGroup": "sand",
+                "sandType": "fine",
+                "IL": null,
+                "fiOverride": null,
+                "hM": 3,
+                "avgDepthM": 10.5,
+                "fiKpa": 46.5,
+                "gammaRf": 1,
+                "resistanceKn": 223.20000000000002,
+                "segmentCount": 2,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "note": "Tổng hợp 2 phân đoạn ≤2 m; xem segmentResults để audit từng đoạn."
+                }
+              }
+            ],
+            "segmentResults": [
+              {
+                "index": 1,
+                "top": 0,
+                "bottom": 2,
+                "soilGroup": "sand",
+                "sandType": "fine",
+                "IL": null,
+                "fiOverride": null,
+                "parentIndex": 1,
+                "segmentIndex": 1,
+                "hM": 2,
+                "avgDepthM": 1,
+                "fiKpa": 23,
+                "gammaRf": 1,
+                "resistanceKn": 73.60000000000001,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "interpolation": "EXACT",
+                  "note": "mode=EXACT · x:[1;1], t=0.0000"
+                },
+                "factorProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 4",
+                  "standardPage": "34-35",
+                  "pdfPage": "34-35",
+                  "status": "VERIFIED",
+                  "unit": "-",
+                  "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+                }
+              },
+              {
+                "index": 1,
+                "top": 2,
+                "bottom": 4,
+                "soilGroup": "sand",
+                "sandType": "fine",
+                "IL": null,
+                "fiOverride": null,
+                "parentIndex": 1,
+                "segmentIndex": 2,
+                "hM": 2,
+                "avgDepthM": 3,
+                "fiKpa": 35,
+                "gammaRf": 1,
+                "resistanceKn": 112,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "interpolation": "EXACT",
+                  "note": "mode=EXACT · x:[3;3], t=0.0000"
+                },
+                "factorProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 4",
+                  "standardPage": "34-35",
+                  "pdfPage": "34-35",
+                  "status": "VERIFIED",
+                  "unit": "-",
+                  "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+                }
+              },
+              {
+                "index": 2,
+                "top": 4,
+                "bottom": 6,
+                "soilGroup": "sand",
+                "sandType": "fine",
+                "IL": null,
+                "fiOverride": null,
+                "parentIndex": 2,
+                "segmentIndex": 1,
+                "hM": 2,
+                "avgDepthM": 5,
+                "fiKpa": 40,
+                "gammaRf": 1,
+                "resistanceKn": 128,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "interpolation": "EXACT",
+                  "note": "mode=EXACT · x:[5;5], t=0.0000"
+                },
+                "factorProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 4",
+                  "standardPage": "34-35",
+                  "pdfPage": "34-35",
+                  "status": "VERIFIED",
+                  "unit": "-",
+                  "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+                }
+              },
+              {
+                "index": 2,
+                "top": 6,
+                "bottom": 8,
+                "soilGroup": "sand",
+                "sandType": "fine",
+                "IL": null,
+                "fiOverride": null,
+                "parentIndex": 2,
+                "segmentIndex": 2,
+                "hM": 2,
+                "avgDepthM": 7,
+                "fiKpa": 43,
+                "gammaRf": 1,
+                "resistanceKn": 137.6,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "interpolation": "LINEAR-1D",
+                  "note": "mode=LINEAR-1D · x:[6;8], t=0.5000"
+                },
+                "factorProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 4",
+                  "standardPage": "34-35",
+                  "pdfPage": "34-35",
+                  "status": "VERIFIED",
+                  "unit": "-",
+                  "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+                }
+              },
+              {
+                "index": 2,
+                "top": 8,
+                "bottom": 9,
+                "soilGroup": "sand",
+                "sandType": "fine",
+                "IL": null,
+                "fiOverride": null,
+                "parentIndex": 2,
+                "segmentIndex": 3,
+                "hM": 1,
+                "avgDepthM": 8.5,
+                "fiKpa": 44.5,
+                "gammaRf": 1,
+                "resistanceKn": 71.2,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "interpolation": "LINEAR-1D",
+                  "note": "mode=LINEAR-1D · x:[8;10], t=0.2500"
+                },
+                "factorProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 4",
+                  "standardPage": "34-35",
+                  "pdfPage": "34-35",
+                  "status": "VERIFIED",
+                  "unit": "-",
+                  "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+                }
+              },
+              {
+                "index": 3,
+                "top": 9,
+                "bottom": 11,
+                "soilGroup": "sand",
+                "sandType": "fine",
+                "IL": null,
+                "fiOverride": null,
+                "parentIndex": 3,
+                "segmentIndex": 1,
+                "hM": 2,
+                "avgDepthM": 10,
+                "fiKpa": 46,
+                "gammaRf": 1,
+                "resistanceKn": 147.20000000000002,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "interpolation": "EXACT",
+                  "note": "mode=EXACT · x:[10;10], t=0.0000"
+                },
+                "factorProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 4",
+                  "standardPage": "34-35",
+                  "pdfPage": "34-35",
+                  "status": "VERIFIED",
+                  "unit": "-",
+                  "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+                }
+              },
+              {
+                "index": 3,
+                "top": 11,
+                "bottom": 12,
+                "soilGroup": "sand",
+                "sandType": "fine",
+                "IL": null,
+                "fiOverride": null,
+                "parentIndex": 3,
+                "segmentIndex": 2,
+                "hM": 1,
+                "avgDepthM": 11.5,
+                "fiKpa": 47.5,
+                "gammaRf": 1,
+                "resistanceKn": 76,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "interpolation": "LINEAR-1D",
+                  "note": "mode=LINEAR-1D · x:[10;15], t=0.3000"
+                },
+                "factorProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 4",
+                  "standardPage": "34-35",
+                  "pdfPage": "34-35",
+                  "status": "VERIFIED",
+                  "unit": "-",
+                  "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+                }
+              }
+            ],
+            "sideResistanceKn": 745.6000000000001,
+            "gammaC": 1,
+            "RkKn": 1180.8000000000002,
+            "gammaK": 1.4,
+            "RdKn": 843.4285714285716,
+            "gammaN": 1.15,
+            "NdMaxKn": 733.4161490683232,
+            "status": "VERIFIED",
+            "provenance": {
+              "standard": "TCVN 10304:2025",
+              "edition": 2025,
+              "clause": "7.2.2.1",
+              "formula": "(9)",
+              "standardPage": 31,
+              "pdfPage": 31,
+              "status": "VERIFIED",
+              "unit": "kN"
+            },
+            "qbProvenance": {
+              "standard": "TCVN 10304:2025",
+              "edition": 2025,
+              "clause": "7.2.2.1",
+              "table": "Bảng 2",
+              "standardPage": "32-33",
+              "pdfPage": "32-33",
+              "status": "VERIFIED",
+              "unit": "kPa",
+              "interpolation": "LINEAR-1D",
+              "note": "mode=LINEAR-1D · x:[10;15], t=0.4000"
+            },
+            "tipFactorProvenance": {
+              "standard": "TCVN 10304:2025",
+              "edition": 2025,
+              "clause": "7.2.2.1",
+              "table": "Bảng 4",
+              "standardPage": "34-35",
+              "pdfPage": "34-35",
+              "status": "VERIFIED",
+              "unit": "-",
+              "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+            }
+          },
+          "materialResult": {
+            "ok": true,
+            "workflow": "pile-material-5574-near-centered-rect",
+            "status": "VERIFIED",
+            "productionNumeric": true,
+            "inputs": {
+              "grade": "B30",
+              "steel": "CB400-V",
+              "shape": "square",
+              "widthMm": 400,
+              "heightMm": 400,
+              "concreteAreaMm2": 160000,
+              "AsTotMm2": 1600,
+              "L0Mm": 4000,
+              "e0Mm": 13.333333333333334,
+              "e0IncludesRandom": true,
+              "reinforcementOppositeSides": true,
+              "memberLengthMm": null,
+              "staticEccentricityMm": null,
+              "structuralSystem": "",
+              "loadDuration": "long"
+            },
+            "materials": {
+              "RbMpa": 17,
+              "EbMpa": 32500,
+              "RscMpa": 350,
+              "RsMpa": 350
+            },
+            "randomEccentricityMm": null,
+            "minimumRandomEccentricityWithoutLengthMm": 13.333333333333334,
+            "slendernessRatio": 10,
+            "phi": 0.9,
+            "phiMode": "EXACT",
+            "phiBracket": [
+              10,
+              10
+            ],
+            "concreteContributionKn": 2448,
+            "steelContributionKn": 504,
+            "materialResistanceKn": 2952,
+            "NuKn": 2952,
+            "capacityBasis": "DESIGN_RESISTANCE_TTGH1",
+            "steps": [
+              "Bảng 7/13: Rb=17 MPa; Rsc=350 MPa.",
+              "8.1.2.2.4: e0=13.333 mm đã kể ea; ea tối thiểu không xét L là 13.333 mm.",
+              "8.1.2.4.3: cốt dọc ở các phía đối diện; e0≤h/30=13.333 mm; L0/h=10.0000≤20.",
+              "φ=0.900000 (EXACT, bracket 10–10).",
+              "CT (50): Nu=φ(Rb·A+Rsc·As,tot)=2952.000 kN."
+            ],
+            "provenance": [
+              {
+                "standard": "TCVN 5574:2018",
+                "clause": "8.1.2.4.3",
+                "formula": "(49)–(50)",
+                "table": "Bảng 16",
+                "standardPage": "61–62",
+                "pdfPage": "59–60",
+                "status": "VERIFIED"
+              },
+              {
+                "standard": "TCVN 5574:2018",
+                "tables": "Bảng 7, 10, 13, 14",
+                "standardPage": "35, 38, 47, 48",
+                "pdfPage": "33, 36, 45, 46",
+                "status": "VERIFIED"
+              },
+              "Bảng 7 · trang chuẩn 35 · PDF 33",
+              "Bảng 10 · trang chuẩn 38 · PDF 36",
+              "Bảng 13 · trang chuẩn 47 · PDF 45",
+              "Bảng 14 · trang chuẩn 48 · PDF 46"
+            ]
+          },
+          "combined": {
+            "ok": true,
+            "workflow": "pile-capacity-integrated",
+            "status": "VERIFIED",
+            "productionNumeric": true,
+            "capacityBasis": "DESIGN_RESISTANCE",
+            "soilWorkflowId": "10304-driven",
+            "soilRegistryId": "10304-driven",
+            "soilResistanceKn": 843.4285714285716,
+            "materialResistanceKn": 2952,
+            "pileResistanceKn": 843.4285714285716,
+            "governing": "SOIL",
+            "gammaN": 1.15,
+            "demandLimitKn": 733.4161490683232,
+            "NdMaxFinalKn": 733.4161490683232,
+            "geometry": {
+              "soil": {
+                "shape": "square",
+                "sideM": 0.4,
+                "diameterM": null,
+                "areaM2": 0.16000000000000003
+              },
+              "material": {
+                "shape": "square",
+                "widthMm": 400,
+                "heightMm": 400,
+                "sideMm": null
+              }
+            },
+            "childStatus": {
+              "soil": {
+                "registry": {
+                  "status": "LOCKED",
+                  "productionNumeric": true,
+                  "source": "7.2.2.1 · CT (9) · Bảng 2–4"
+                },
+                "status": "VERIFIED"
+              },
+              "material": {
+                "registry": {
+                  "status": "LOCKED",
+                  "productionNumeric": true,
+                  "source": "TCVN 5574:2018 · 8.1.2.4.3 · CT (49)–(50) · Bảng 16 · P1 Pass 1"
+                },
+                "status": "VERIFIED"
+              }
+            },
+            "steps": [
+              "Rsoil=Rd,10304=843.429 kN (sau γk).",
+              "Rmaterial=Nu,5574=2952.000 kN (TTGH1).",
+              "Rpile=min(Rsoil,Rmaterial)=843.429 kN → ĐẤT NỀN khống chế.",
+              "γn=1.15: giới hạn tác động Nd,max=Rpile/γn=733.416 kN. γn không tham gia phép min sức kháng."
+            ],
+            "provenance": {
+              "soil": {
+                "standard": "TCVN 10304:2025",
+                "edition": 2025,
+                "clause": "7.2.2.1",
+                "formula": "(9)",
+                "standardPage": 31,
+                "pdfPage": 31,
+                "status": "VERIFIED",
+                "unit": "kN"
+              },
+              "material": [
+                {
+                  "standard": "TCVN 5574:2018",
+                  "clause": "8.1.2.4.3",
+                  "formula": "(49)–(50)",
+                  "table": "Bảng 16",
+                  "standardPage": "61–62",
+                  "pdfPage": "59–60",
+                  "status": "VERIFIED"
+                },
+                {
+                  "standard": "TCVN 5574:2018",
+                  "tables": "Bảng 7, 10, 13, 14",
+                  "standardPage": "35, 38, 47, 48",
+                  "pdfPage": "33, 36, 45, 46",
+                  "status": "VERIFIED"
+                },
+                "Bảng 7 · trang chuẩn 35 · PDF 33",
+                "Bảng 10 · trang chuẩn 38 · PDF 36",
+                "Bảng 13 · trang chuẩn 47 · PDF 45",
+                "Bảng 14 · trang chuẩn 48 · PDF 46"
+              ],
+              "governing": {
+                "rule": "Rpile = min(Rsoil, Rmaterial)",
+                "status": "HNL-LOCKED-COMPOSITION",
+                "note": "Chỉ ghép hai sức kháng thiết kế đã VERIFIED; γn được áp dụng sau phép min nếu người dùng cần giới hạn tác động."
+              }
+            }
+          },
+          "QbKn": 435.2000000000001,
+          "QsKn": 745.6000000000001,
+          "RkKn": 1180.8000000000002,
+          "RdKn": 843.4285714285716,
+          "RmaterialKn": 2952,
+          "RpileKn": 843.4285714285716,
+          "NdMaxFinalKn": 733.4161490683232,
+          "governing": "SOIL",
+          "soilAtTip": {
+            "index": 3,
+            "top": 9,
+            "bottom": 15,
+            "soilGroup": "sand",
+            "soilClass": null,
+            "sandType": "fine",
+            "IL": null,
+            "sptN": null,
+            "cuKpa": null
+          },
+          "issues": []
+        },
+        {
+          "boreholeId": "HK2",
+          "boreholeName": "HK2",
+          "methodId": "10304-spt",
+          "methodLabel": "SPT · PHỤ LỤC D",
+          "ok": true,
+          "coverage": {
+            "ok": true,
+            "gaps": [],
+            "coveredM": 12,
+            "requestedM": 12,
+            "verification": {
+              "status": "VERIFIED",
+              "scope": "DETERMINISTIC_PROFILE_GEOMETRY",
+              "basis": "Interval arithmetic independently implemented and regression tested; no XLL/VBA dependency."
+            }
+          },
+          "soilInput": {
+            "shape": "square",
+            "sideM": 0.4,
+            "lengthM": 12,
+            "tipDepthM": 12,
+            "shaftStartDepthM": 0,
+            "maxSegmentM": 2,
+            "gammaN": 1.15,
+            "layers": [
+              {
+                "top": 0,
+                "bottom": 4,
+                "soilGroup": "sand",
+                "sandType": "fine",
+                "sptN": 10,
+                "index": 1
+              },
+              {
+                "top": 4,
+                "bottom": 9,
+                "soilGroup": "sand",
+                "sandType": "fine",
+                "sptN": 15,
+                "index": 2
+              },
+              {
+                "top": 9,
+                "bottom": 15,
+                "soilGroup": "sand",
+                "sandType": "fine",
+                "sptN": 20,
+                "index": 3
+              }
+            ],
+            "gammaK": 1.5,
+            "pileType": "driven",
+            "sptPoints": [
+              {
+                "depthM": 10,
+                "N": 15
+              },
+              {
+                "depthM": 11,
+                "N": 20
+              },
+              {
+                "depthM": 12,
+                "N": 25
+              },
+              {
+                "depthM": 13,
+                "N": 20
+              },
+              {
+                "depthM": 14,
+                "N": 15
+              }
+            ]
+          },
+          "soilResult": {
+            "ok": true,
+            "status": "VERIFIED",
+            "inputs": {
+              "shape": "square",
+              "sideM": 0.4,
+              "lengthM": 12,
+              "tipDepthM": 12,
+              "shaftStartDepthM": 0,
+              "maxSegmentM": 2,
+              "gammaN": 1.15,
+              "layers": [
+                {
+                  "top": 0,
+                  "bottom": 4,
+                  "soilGroup": "sand",
+                  "sandType": "fine",
+                  "sptN": 10,
+                  "index": 1
+                },
+                {
+                  "top": 4,
+                  "bottom": 9,
+                  "soilGroup": "sand",
+                  "sandType": "fine",
+                  "sptN": 15,
+                  "index": 2
+                },
+                {
+                  "top": 9,
+                  "bottom": 15,
+                  "soilGroup": "sand",
+                  "sandType": "fine",
+                  "sptN": 20,
+                  "index": 3
+                }
+              ],
+              "gammaK": 1.5,
+              "pileType": "driven",
+              "sptPoints": [
+                {
+                  "depthM": 10,
+                  "N": 15
+                },
+                {
+                  "depthM": 11,
+                  "N": 20
+                },
+                {
+                  "depthM": 12,
+                  "N": 25
+                },
+                {
+                  "depthM": 13,
+                  "N": 20
+                },
+                {
+                  "depthM": 14,
+                  "N": 15
+                }
+              ],
+              "areaM2": 0.16000000000000003,
+              "perimeterM": 1.6,
+              "eta": 1
+            },
+            "geometry": {
+              "shape": "square",
+              "outerDimensionM": 0.4,
+              "tipInnerDimensionM": 0,
+              "massInnerDimensionM": 0,
+              "tipAreaM2": 0.16000000000000003,
+              "areaM2": 0.16000000000000003,
+              "concreteAreaM2": 0.16000000000000003,
+              "perimeterM": 1.6,
+              "secondMomentM4": 0.002133333333333334,
+              "lengthM": 12,
+              "derivedLengthM": null,
+              "volumeM3": 1.9200000000000004,
+              "unitWeightKnM3": null,
+              "selfWeightKn": null,
+              "headCoordinateM": null,
+              "tipCoordinateM": null,
+              "lengthConflict": false,
+              "verification": {
+                "status": "VERIFIED",
+                "scope": "DETERMINISTIC_GEOMETRY",
+                "basis": "Independent geometry identities + visible XLSM formula benchmark; no XLL/VBA dependency."
+              }
+            },
+            "pileType": "driven",
+            "eta": 1,
+            "tipDepthM": 12,
+            "shaftStartDepthM": 0,
+            "tipLayer": {
+              "top": 9,
+              "bottom": 15,
+              "soilGroup": "sand",
+              "sandType": "fine",
+              "sptN": 20,
+              "index": 3,
+              "soilClass": "sand",
+              "IL": null,
+              "fiOverride": null,
+              "phiDeg": null,
+              "gammaKnM3": null,
+              "gammaEffectiveKnM3": null,
+              "cuKpa": null,
+              "Sr": null
+            },
+            "tipN": 22.5,
+            "tipNAudit": {
+              "value": 22.5,
+              "raw": 22.5,
+              "count": 2,
+              "used": [
+                {
+                  "index": 2,
+                  "depthM": 11,
+                  "N": 20
+                },
+                {
+                  "index": 3,
+                  "depthM": 12,
+                  "N": 25
+                }
+              ],
+              "mode": "MEASURED-WINDOW-AVERAGE",
+              "cap": 100,
+              "provenance": "TCVN 10304:2025 · Phụ lục D · trang 110–111"
+            },
+            "qbKpa": 6750,
+            "qbLookup": {
+              "value": 6750,
+              "raw": 6750,
+              "cap": 18000,
+              "mode": "FORMULA+CAP",
+              "provenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+            },
+            "RubKn": 1080.0000000000002,
+            "segmentResults": [
+              {
+                "top": 0,
+                "bottom": 4,
+                "soilGroup": "sand",
+                "sandType": "fine",
+                "sptN": 10,
+                "index": 1,
+                "soilClass": "sand",
+                "IL": null,
+                "fiOverride": null,
+                "phiDeg": null,
+                "gammaKnM3": null,
+                "gammaEffectiveKnM3": null,
+                "cuKpa": null,
+                "Sr": null,
+                "hM": 4,
+                "NUsed": 10,
+                "NSource": "REPORT-LAYER-REPRESENTATIVE",
+                "NMeasuredPoints": [],
+                "unitResistanceKpa": 20,
+                "resistanceKn": 128,
+                "lookup": {
+                  "value": 20,
+                  "raw": 20,
+                  "cap": 100,
+                  "mode": "FORMULA+CAP",
+                  "provenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+                }
+              },
+              {
+                "top": 4,
+                "bottom": 9,
+                "soilGroup": "sand",
+                "sandType": "fine",
+                "sptN": 15,
+                "index": 2,
+                "soilClass": "sand",
+                "IL": null,
+                "fiOverride": null,
+                "phiDeg": null,
+                "gammaKnM3": null,
+                "gammaEffectiveKnM3": null,
+                "cuKpa": null,
+                "Sr": null,
+                "hM": 5,
+                "NUsed": 15,
+                "NSource": "REPORT-LAYER-REPRESENTATIVE",
+                "NMeasuredPoints": [],
+                "unitResistanceKpa": 30,
+                "resistanceKn": 240,
+                "lookup": {
+                  "value": 30,
+                  "raw": 30,
+                  "cap": 100,
+                  "mode": "FORMULA+CAP",
+                  "provenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+                }
+              },
+              {
+                "top": 9,
+                "bottom": 12,
+                "soilGroup": "sand",
+                "sandType": "fine",
+                "sptN": 20,
+                "index": 3,
+                "soilClass": "sand",
+                "IL": null,
+                "fiOverride": null,
+                "phiDeg": null,
+                "gammaKnM3": null,
+                "gammaEffectiveKnM3": null,
+                "cuKpa": null,
+                "Sr": null,
+                "hM": 3,
+                "NUsed": 20,
+                "NSource": "REPORT-LAYER-REPRESENTATIVE",
+                "NMeasuredPoints": [],
+                "unitResistanceKpa": 40,
+                "resistanceKn": 192,
+                "lookup": {
+                  "value": 40,
+                  "raw": 40,
+                  "cap": 100,
+                  "mode": "FORMULA+CAP",
+                  "provenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+                }
+              }
+            ],
+            "RufKn": 560,
+            "RkKn": 1640.0000000000002,
+            "gammaK": 1.5,
+            "RdKn": 1093.3333333333335,
+            "gammaN": 1.15,
+            "NdMaxKn": 950.7246376811596,
+            "noInterpolationPolicy": true,
+            "sptDataPolicy": {
+              "decision": "PDF-DECISION-LOCKED",
+              "normativeSource": "TCVN 10304:2025 · Phụ lục D · D.1–D.6 · Bảng D.1 · trang 110–111",
+              "tipN": "MEASURED-WINDOW-ARITHMETIC-MEAN; CAP-100",
+              "shaftN": "REPORT-LAYER-REPRESENTATIVE / DERIVED-MEASURED-LAYER-MEAN",
+              "shaftBoundary": "HALF-OPEN [top,bottom); boundary point → deeper layer",
+              "continuousInterpolation": false,
+              "dceNoiSuySPT": "REFERENCE-ONLY",
+              "dceRightEndIntegration": "REFERENCE-ONLY",
+              "partitionedD56": true,
+              "partitionNote": "HNL áp dụng D.5/D.6 theo từng lớp địa chất đồng nhất rồi cộng; đây là phép phân hoạch deterministic, không phải công thức mới của TCVN."
+            },
+            "steps": [
+              "Phụ lục D/Bảng D.1: N mũi là trung bình số học các điểm SPT đo thực trong cửa sổ quy định, giới hạn N≤100; không sinh điểm bằng nội suy.",
+              "Bảng D.1: qb=6750.000 kPa; Ru,b=1080.000 kN.",
+              "D.5–D.6: HNL phân hoạch theo từng lớp địa chất; Ns/Nc của lớp lấy từ giá trị đại diện có provenance hoặc trung bình điểm đo thực trong [top,bottom), không nội suy theo z; Ru,f=560.000 kN.",
+              "D.1–D.2: Rk=Ru=1640.000 kN."
+            ],
+            "provenance": {
+              "standard": "TCVN 10304:2025",
+              "edition": 2025,
+              "clause": "Phụ lục D",
+              "formula": "D.1–D.6",
+              "table": "Bảng D.1",
+              "standardPage": "110-111",
+              "pdfPage": "110-111",
+              "status": "VERIFIED",
+              "unit": "kN"
+            }
+          },
+          "materialResult": {
+            "ok": true,
+            "workflow": "pile-material-5574-near-centered-rect",
+            "status": "VERIFIED",
+            "productionNumeric": true,
+            "inputs": {
+              "grade": "B30",
+              "steel": "CB400-V",
+              "shape": "square",
+              "widthMm": 400,
+              "heightMm": 400,
+              "concreteAreaMm2": 160000,
+              "AsTotMm2": 1600,
+              "L0Mm": 4000,
+              "e0Mm": 13.333333333333334,
+              "e0IncludesRandom": true,
+              "reinforcementOppositeSides": true,
+              "memberLengthMm": null,
+              "staticEccentricityMm": null,
+              "structuralSystem": "",
+              "loadDuration": "long"
+            },
+            "materials": {
+              "RbMpa": 17,
+              "EbMpa": 32500,
+              "RscMpa": 350,
+              "RsMpa": 350
+            },
+            "randomEccentricityMm": null,
+            "minimumRandomEccentricityWithoutLengthMm": 13.333333333333334,
+            "slendernessRatio": 10,
+            "phi": 0.9,
+            "phiMode": "EXACT",
+            "phiBracket": [
+              10,
+              10
+            ],
+            "concreteContributionKn": 2448,
+            "steelContributionKn": 504,
+            "materialResistanceKn": 2952,
+            "NuKn": 2952,
+            "capacityBasis": "DESIGN_RESISTANCE_TTGH1",
+            "steps": [
+              "Bảng 7/13: Rb=17 MPa; Rsc=350 MPa.",
+              "8.1.2.2.4: e0=13.333 mm đã kể ea; ea tối thiểu không xét L là 13.333 mm.",
+              "8.1.2.4.3: cốt dọc ở các phía đối diện; e0≤h/30=13.333 mm; L0/h=10.0000≤20.",
+              "φ=0.900000 (EXACT, bracket 10–10).",
+              "CT (50): Nu=φ(Rb·A+Rsc·As,tot)=2952.000 kN."
+            ],
+            "provenance": [
+              {
+                "standard": "TCVN 5574:2018",
+                "clause": "8.1.2.4.3",
+                "formula": "(49)–(50)",
+                "table": "Bảng 16",
+                "standardPage": "61–62",
+                "pdfPage": "59–60",
+                "status": "VERIFIED"
+              },
+              {
+                "standard": "TCVN 5574:2018",
+                "tables": "Bảng 7, 10, 13, 14",
+                "standardPage": "35, 38, 47, 48",
+                "pdfPage": "33, 36, 45, 46",
+                "status": "VERIFIED"
+              },
+              "Bảng 7 · trang chuẩn 35 · PDF 33",
+              "Bảng 10 · trang chuẩn 38 · PDF 36",
+              "Bảng 13 · trang chuẩn 47 · PDF 45",
+              "Bảng 14 · trang chuẩn 48 · PDF 46"
+            ]
+          },
+          "combined": {
+            "ok": true,
+            "workflow": "pile-capacity-integrated",
+            "status": "VERIFIED",
+            "productionNumeric": true,
+            "capacityBasis": "DESIGN_RESISTANCE",
+            "soilWorkflowId": "10304-spt",
+            "soilRegistryId": "10304-spt-raw",
+            "soilResistanceKn": 1093.3333333333335,
+            "materialResistanceKn": 2952,
+            "pileResistanceKn": 1093.3333333333335,
+            "governing": "SOIL",
+            "gammaN": 1.15,
+            "demandLimitKn": 950.7246376811596,
+            "NdMaxFinalKn": 950.7246376811596,
+            "geometry": {
+              "soil": {
+                "shape": "square",
+                "sideM": 0.4,
+                "diameterM": null,
+                "areaM2": 0.16000000000000003
+              },
+              "material": {
+                "shape": "square",
+                "widthMm": 400,
+                "heightMm": 400,
+                "sideMm": null
+              }
+            },
+            "childStatus": {
+              "soil": {
+                "registry": {
+                  "status": "LOCKED",
+                  "productionNumeric": true,
+                  "source": "Phụ lục D · D.1–D.6 · Bảng D.1 · SPT PDF Decision Pass · measured tip window + layer-representative shaft N; no continuous DCE interpolation"
+                },
+                "status": "VERIFIED"
+              },
+              "material": {
+                "registry": {
+                  "status": "LOCKED",
+                  "productionNumeric": true,
+                  "source": "TCVN 5574:2018 · 8.1.2.4.3 · CT (49)–(50) · Bảng 16 · P1 Pass 1"
+                },
+                "status": "VERIFIED"
+              }
+            },
+            "steps": [
+              "Rsoil=Rd,10304=1093.333 kN (sau γk).",
+              "Rmaterial=Nu,5574=2952.000 kN (TTGH1).",
+              "Rpile=min(Rsoil,Rmaterial)=1093.333 kN → ĐẤT NỀN khống chế.",
+              "γn=1.15: giới hạn tác động Nd,max=Rpile/γn=950.725 kN. γn không tham gia phép min sức kháng."
+            ],
+            "provenance": {
+              "soil": {
+                "standard": "TCVN 10304:2025",
+                "edition": 2025,
+                "clause": "Phụ lục D",
+                "formula": "D.1–D.6",
+                "table": "Bảng D.1",
+                "standardPage": "110-111",
+                "pdfPage": "110-111",
+                "status": "VERIFIED",
+                "unit": "kN"
+              },
+              "material": [
+                {
+                  "standard": "TCVN 5574:2018",
+                  "clause": "8.1.2.4.3",
+                  "formula": "(49)–(50)",
+                  "table": "Bảng 16",
+                  "standardPage": "61–62",
+                  "pdfPage": "59–60",
+                  "status": "VERIFIED"
+                },
+                {
+                  "standard": "TCVN 5574:2018",
+                  "tables": "Bảng 7, 10, 13, 14",
+                  "standardPage": "35, 38, 47, 48",
+                  "pdfPage": "33, 36, 45, 46",
+                  "status": "VERIFIED"
+                },
+                "Bảng 7 · trang chuẩn 35 · PDF 33",
+                "Bảng 10 · trang chuẩn 38 · PDF 36",
+                "Bảng 13 · trang chuẩn 47 · PDF 45",
+                "Bảng 14 · trang chuẩn 48 · PDF 46"
+              ],
+              "governing": {
+                "rule": "Rpile = min(Rsoil, Rmaterial)",
+                "status": "HNL-LOCKED-COMPOSITION",
+                "note": "Chỉ ghép hai sức kháng thiết kế đã VERIFIED; γn được áp dụng sau phép min nếu người dùng cần giới hạn tác động."
+              }
+            }
+          },
+          "QbKn": 1080.0000000000002,
+          "QsKn": 560,
+          "RkKn": 1640.0000000000002,
+          "RdKn": 1093.3333333333335,
+          "RmaterialKn": 2952,
+          "RpileKn": 1093.3333333333335,
+          "NdMaxFinalKn": 950.7246376811596,
+          "governing": "SOIL",
+          "soilAtTip": {
+            "index": 3,
+            "top": 9,
+            "bottom": 15,
+            "soilGroup": "sand",
+            "soilClass": "sand",
+            "sandType": "fine",
+            "IL": null,
+            "sptN": 20,
+            "cuKpa": null
+          },
+          "issues": []
+        },
+        {
+          "boreholeId": "HK3",
+          "boreholeName": "HK3",
+          "methodId": "10304-driven",
+          "methodLabel": "CƠ LÝ · 7.2.2 CỌC ĐÓNG/ÉP",
+          "ok": true,
+          "coverage": {
+            "ok": true,
+            "gaps": [],
+            "coveredM": 12,
+            "requestedM": 12,
+            "verification": {
+              "status": "VERIFIED",
+              "scope": "DETERMINISTIC_PROFILE_GEOMETRY",
+              "basis": "Interval arithmetic independently implemented and regression tested; no XLL/VBA dependency."
+            }
+          },
+          "soilInput": {
+            "shape": "square",
+            "sideM": 0.4,
+            "lengthM": 12,
+            "tipDepthM": 12,
+            "shaftStartDepthM": 0,
+            "maxSegmentM": 2,
+            "gammaN": 1.15,
+            "layers": [
+              {
+                "top": 0,
+                "bottom": 4,
+                "soilGroup": "sand",
+                "sandType": "coarse",
+                "sptN": 25,
+                "index": 1
+              },
+              {
+                "top": 4,
+                "bottom": 9,
+                "soilGroup": "sand",
+                "sandType": "coarse",
+                "sptN": 35,
+                "index": 2
+              },
+              {
+                "top": 9,
+                "bottom": 15,
+                "soilGroup": "sand",
+                "sandType": "coarse",
+                "sptN": 45,
+                "index": 3
+              }
+            ],
+            "method": "hammer",
+            "gammaK": 1.4
+          },
+          "soilResult": {
+            "ok": true,
+            "geometry": {
+              "shape": "square",
+              "outerDimensionM": 0.4,
+              "tipInnerDimensionM": 0,
+              "massInnerDimensionM": 0,
+              "tipAreaM2": 0.16000000000000003,
+              "areaM2": 0.16000000000000003,
+              "concreteAreaM2": 0.16000000000000003,
+              "perimeterM": 1.6,
+              "secondMomentM4": 0.002133333333333334,
+              "lengthM": 12,
+              "derivedLengthM": null,
+              "volumeM3": 1.9200000000000004,
+              "unitWeightKnM3": null,
+              "selfWeightKn": null,
+              "headCoordinateM": null,
+              "tipCoordinateM": null,
+              "lengthConflict": false,
+              "verification": {
+                "status": "VERIFIED",
+                "scope": "DETERMINISTIC_GEOMETRY",
+                "basis": "Independent geometry identities + visible XLSM formula benchmark; no XLL/VBA dependency."
+              }
+            },
+            "tipDepthM": 12,
+            "shaftStartDepthM": 0,
+            "maxSegmentM": 2,
+            "tipLayer": {
+              "index": 3,
+              "top": 9,
+              "bottom": 15,
+              "soilGroup": "sand",
+              "sandType": "coarse",
+              "IL": null,
+              "fiOverride": null
+            },
+            "qbKpa": 7900,
+            "gammaRR": 1,
+            "tipResistanceKn": 1264.0000000000002,
+            "layerResults": [
+              {
+                "index": 1,
+                "top": 0,
+                "bottom": 4,
+                "soilGroup": "sand",
+                "sandType": "coarse",
+                "IL": null,
+                "fiOverride": null,
+                "hM": 4,
+                "avgDepthM": 2,
+                "fiKpa": 41.5,
+                "gammaRf": 1,
+                "resistanceKn": 265.6,
+                "segmentCount": 2,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "note": "Tổng hợp 2 phân đoạn ≤2 m; xem segmentResults để audit từng đoạn."
+                }
+              },
+              {
+                "index": 2,
+                "top": 4,
+                "bottom": 9,
+                "soilGroup": "sand",
+                "sandType": "coarse",
+                "IL": null,
+                "fiOverride": null,
+                "hM": 5,
+                "avgDepthM": 6.5,
+                "fiKpa": 58.95,
+                "gammaRf": 1,
+                "resistanceKn": 471.6,
+                "segmentCount": 3,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "note": "Tổng hợp 3 phân đoạn ≤2 m; xem segmentResults để audit từng đoạn."
+                }
+              },
+              {
+                "index": 3,
+                "top": 9,
+                "bottom": 15,
+                "soilGroup": "sand",
+                "sandType": "coarse",
+                "IL": null,
+                "fiOverride": null,
+                "hM": 3,
+                "avgDepthM": 10.5,
+                "fiKpa": 65.7,
+                "gammaRf": 1,
+                "resistanceKn": 315.36,
+                "segmentCount": 2,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "note": "Tổng hợp 2 phân đoạn ≤2 m; xem segmentResults để audit từng đoạn."
+                }
+              }
+            ],
+            "segmentResults": [
+              {
+                "index": 1,
+                "top": 0,
+                "bottom": 2,
+                "soilGroup": "sand",
+                "sandType": "coarse",
+                "IL": null,
+                "fiOverride": null,
+                "parentIndex": 1,
+                "segmentIndex": 1,
+                "hM": 2,
+                "avgDepthM": 1,
+                "fiKpa": 35,
+                "gammaRf": 1,
+                "resistanceKn": 112,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "interpolation": "EXACT",
+                  "note": "mode=EXACT · x:[1;1], t=0.0000"
+                },
+                "factorProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 4",
+                  "standardPage": "34-35",
+                  "pdfPage": "34-35",
+                  "status": "VERIFIED",
+                  "unit": "-",
+                  "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+                }
+              },
+              {
+                "index": 1,
+                "top": 2,
+                "bottom": 4,
+                "soilGroup": "sand",
+                "sandType": "coarse",
+                "IL": null,
+                "fiOverride": null,
+                "parentIndex": 1,
+                "segmentIndex": 2,
+                "hM": 2,
+                "avgDepthM": 3,
+                "fiKpa": 48,
+                "gammaRf": 1,
+                "resistanceKn": 153.60000000000002,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "interpolation": "EXACT",
+                  "note": "mode=EXACT · x:[3;3], t=0.0000"
+                },
+                "factorProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 4",
+                  "standardPage": "34-35",
+                  "pdfPage": "34-35",
+                  "status": "VERIFIED",
+                  "unit": "-",
+                  "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+                }
+              },
+              {
+                "index": 2,
+                "top": 4,
+                "bottom": 6,
+                "soilGroup": "sand",
+                "sandType": "coarse",
+                "IL": null,
+                "fiOverride": null,
+                "parentIndex": 2,
+                "segmentIndex": 1,
+                "hM": 2,
+                "avgDepthM": 5,
+                "fiKpa": 56,
+                "gammaRf": 1,
+                "resistanceKn": 179.20000000000002,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "interpolation": "EXACT",
+                  "note": "mode=EXACT · x:[5;5], t=0.0000"
+                },
+                "factorProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 4",
+                  "standardPage": "34-35",
+                  "pdfPage": "34-35",
+                  "status": "VERIFIED",
+                  "unit": "-",
+                  "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+                }
+              },
+              {
+                "index": 2,
+                "top": 6,
+                "bottom": 8,
+                "soilGroup": "sand",
+                "sandType": "coarse",
+                "IL": null,
+                "fiOverride": null,
+                "parentIndex": 2,
+                "segmentIndex": 2,
+                "hM": 2,
+                "avgDepthM": 7,
+                "fiKpa": 60,
+                "gammaRf": 1,
+                "resistanceKn": 192,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "interpolation": "LINEAR-1D",
+                  "note": "mode=LINEAR-1D · x:[6;8], t=0.5000"
+                },
+                "factorProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 4",
+                  "standardPage": "34-35",
+                  "pdfPage": "34-35",
+                  "status": "VERIFIED",
+                  "unit": "-",
+                  "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+                }
+              },
+              {
+                "index": 2,
+                "top": 8,
+                "bottom": 9,
+                "soilGroup": "sand",
+                "sandType": "coarse",
+                "IL": null,
+                "fiOverride": null,
+                "parentIndex": 2,
+                "segmentIndex": 3,
+                "hM": 1,
+                "avgDepthM": 8.5,
+                "fiKpa": 62.75,
+                "gammaRf": 1,
+                "resistanceKn": 100.4,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "interpolation": "LINEAR-1D",
+                  "note": "mode=LINEAR-1D · x:[8;10], t=0.2500"
+                },
+                "factorProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 4",
+                  "standardPage": "34-35",
+                  "pdfPage": "34-35",
+                  "status": "VERIFIED",
+                  "unit": "-",
+                  "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+                }
+              },
+              {
+                "index": 3,
+                "top": 9,
+                "bottom": 11,
+                "soilGroup": "sand",
+                "sandType": "coarse",
+                "IL": null,
+                "fiOverride": null,
+                "parentIndex": 3,
+                "segmentIndex": 1,
+                "hM": 2,
+                "avgDepthM": 10,
+                "fiKpa": 65,
+                "gammaRf": 1,
+                "resistanceKn": 208,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "interpolation": "EXACT",
+                  "note": "mode=EXACT · x:[10;10], t=0.0000"
+                },
+                "factorProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 4",
+                  "standardPage": "34-35",
+                  "pdfPage": "34-35",
+                  "status": "VERIFIED",
+                  "unit": "-",
+                  "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+                }
+              },
+              {
+                "index": 3,
+                "top": 11,
+                "bottom": 12,
+                "soilGroup": "sand",
+                "sandType": "coarse",
+                "IL": null,
+                "fiOverride": null,
+                "parentIndex": 3,
+                "segmentIndex": 2,
+                "hM": 1,
+                "avgDepthM": 11.5,
+                "fiKpa": 67.1,
+                "gammaRf": 1,
+                "resistanceKn": 107.36,
+                "fiProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 3",
+                  "standardPage": "33-34",
+                  "pdfPage": "33-34",
+                  "status": "VERIFIED",
+                  "unit": "kPa",
+                  "interpolation": "LINEAR-1D",
+                  "note": "mode=LINEAR-1D · x:[10;15], t=0.3000"
+                },
+                "factorProvenance": {
+                  "standard": "TCVN 10304:2025",
+                  "edition": 2025,
+                  "clause": "7.2.2.1",
+                  "table": "Bảng 4",
+                  "standardPage": "34-35",
+                  "pdfPage": "34-35",
+                  "status": "VERIFIED",
+                  "unit": "-",
+                  "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+                }
+              }
+            ],
+            "sideResistanceKn": 1052.56,
+            "gammaC": 1,
+            "RkKn": 2316.5600000000004,
+            "gammaK": 1.4,
+            "RdKn": 1654.6857142857148,
+            "gammaN": 1.15,
+            "NdMaxKn": 1438.8571428571433,
+            "status": "VERIFIED",
+            "provenance": {
+              "standard": "TCVN 10304:2025",
+              "edition": 2025,
+              "clause": "7.2.2.1",
+              "formula": "(9)",
+              "standardPage": 31,
+              "pdfPage": 31,
+              "status": "VERIFIED",
+              "unit": "kN"
+            },
+            "qbProvenance": {
+              "standard": "TCVN 10304:2025",
+              "edition": 2025,
+              "clause": "7.2.2.1",
+              "table": "Bảng 2",
+              "standardPage": "32-33",
+              "pdfPage": "32-33",
+              "status": "VERIFIED",
+              "unit": "kPa",
+              "interpolation": "LINEAR-1D",
+              "note": "mode=LINEAR-1D · x:[10;15], t=0.4000"
+            },
+            "tipFactorProvenance": {
+              "standard": "TCVN 10304:2025",
+              "edition": 2025,
+              "clause": "7.2.2.1",
+              "table": "Bảng 4",
+              "standardPage": "34-35",
+              "pdfPage": "34-35",
+              "status": "VERIFIED",
+              "unit": "-",
+              "row": "1 · hạ bằng búa cơ khí/hơi/diesel"
+            }
+          },
+          "materialResult": {
+            "ok": true,
+            "workflow": "pile-material-5574-near-centered-rect",
+            "status": "VERIFIED",
+            "productionNumeric": true,
+            "inputs": {
+              "grade": "B30",
+              "steel": "CB400-V",
+              "shape": "square",
+              "widthMm": 400,
+              "heightMm": 400,
+              "concreteAreaMm2": 160000,
+              "AsTotMm2": 1600,
+              "L0Mm": 4000,
+              "e0Mm": 13.333333333333334,
+              "e0IncludesRandom": true,
+              "reinforcementOppositeSides": true,
+              "memberLengthMm": null,
+              "staticEccentricityMm": null,
+              "structuralSystem": "",
+              "loadDuration": "long"
+            },
+            "materials": {
+              "RbMpa": 17,
+              "EbMpa": 32500,
+              "RscMpa": 350,
+              "RsMpa": 350
+            },
+            "randomEccentricityMm": null,
+            "minimumRandomEccentricityWithoutLengthMm": 13.333333333333334,
+            "slendernessRatio": 10,
+            "phi": 0.9,
+            "phiMode": "EXACT",
+            "phiBracket": [
+              10,
+              10
+            ],
+            "concreteContributionKn": 2448,
+            "steelContributionKn": 504,
+            "materialResistanceKn": 2952,
+            "NuKn": 2952,
+            "capacityBasis": "DESIGN_RESISTANCE_TTGH1",
+            "steps": [
+              "Bảng 7/13: Rb=17 MPa; Rsc=350 MPa.",
+              "8.1.2.2.4: e0=13.333 mm đã kể ea; ea tối thiểu không xét L là 13.333 mm.",
+              "8.1.2.4.3: cốt dọc ở các phía đối diện; e0≤h/30=13.333 mm; L0/h=10.0000≤20.",
+              "φ=0.900000 (EXACT, bracket 10–10).",
+              "CT (50): Nu=φ(Rb·A+Rsc·As,tot)=2952.000 kN."
+            ],
+            "provenance": [
+              {
+                "standard": "TCVN 5574:2018",
+                "clause": "8.1.2.4.3",
+                "formula": "(49)–(50)",
+                "table": "Bảng 16",
+                "standardPage": "61–62",
+                "pdfPage": "59–60",
+                "status": "VERIFIED"
+              },
+              {
+                "standard": "TCVN 5574:2018",
+                "tables": "Bảng 7, 10, 13, 14",
+                "standardPage": "35, 38, 47, 48",
+                "pdfPage": "33, 36, 45, 46",
+                "status": "VERIFIED"
+              },
+              "Bảng 7 · trang chuẩn 35 · PDF 33",
+              "Bảng 10 · trang chuẩn 38 · PDF 36",
+              "Bảng 13 · trang chuẩn 47 · PDF 45",
+              "Bảng 14 · trang chuẩn 48 · PDF 46"
+            ]
+          },
+          "combined": {
+            "ok": true,
+            "workflow": "pile-capacity-integrated",
+            "status": "VERIFIED",
+            "productionNumeric": true,
+            "capacityBasis": "DESIGN_RESISTANCE",
+            "soilWorkflowId": "10304-driven",
+            "soilRegistryId": "10304-driven",
+            "soilResistanceKn": 1654.6857142857148,
+            "materialResistanceKn": 2952,
+            "pileResistanceKn": 1654.6857142857148,
+            "governing": "SOIL",
+            "gammaN": 1.15,
+            "demandLimitKn": 1438.8571428571433,
+            "NdMaxFinalKn": 1438.8571428571433,
+            "geometry": {
+              "soil": {
+                "shape": "square",
+                "sideM": 0.4,
+                "diameterM": null,
+                "areaM2": 0.16000000000000003
+              },
+              "material": {
+                "shape": "square",
+                "widthMm": 400,
+                "heightMm": 400,
+                "sideMm": null
+              }
+            },
+            "childStatus": {
+              "soil": {
+                "registry": {
+                  "status": "LOCKED",
+                  "productionNumeric": true,
+                  "source": "7.2.2.1 · CT (9) · Bảng 2–4"
+                },
+                "status": "VERIFIED"
+              },
+              "material": {
+                "registry": {
+                  "status": "LOCKED",
+                  "productionNumeric": true,
+                  "source": "TCVN 5574:2018 · 8.1.2.4.3 · CT (49)–(50) · Bảng 16 · P1 Pass 1"
+                },
+                "status": "VERIFIED"
+              }
+            },
+            "steps": [
+              "Rsoil=Rd,10304=1654.686 kN (sau γk).",
+              "Rmaterial=Nu,5574=2952.000 kN (TTGH1).",
+              "Rpile=min(Rsoil,Rmaterial)=1654.686 kN → ĐẤT NỀN khống chế.",
+              "γn=1.15: giới hạn tác động Nd,max=Rpile/γn=1438.857 kN. γn không tham gia phép min sức kháng."
+            ],
+            "provenance": {
+              "soil": {
+                "standard": "TCVN 10304:2025",
+                "edition": 2025,
+                "clause": "7.2.2.1",
+                "formula": "(9)",
+                "standardPage": 31,
+                "pdfPage": 31,
+                "status": "VERIFIED",
+                "unit": "kN"
+              },
+              "material": [
+                {
+                  "standard": "TCVN 5574:2018",
+                  "clause": "8.1.2.4.3",
+                  "formula": "(49)–(50)",
+                  "table": "Bảng 16",
+                  "standardPage": "61–62",
+                  "pdfPage": "59–60",
+                  "status": "VERIFIED"
+                },
+                {
+                  "standard": "TCVN 5574:2018",
+                  "tables": "Bảng 7, 10, 13, 14",
+                  "standardPage": "35, 38, 47, 48",
+                  "pdfPage": "33, 36, 45, 46",
+                  "status": "VERIFIED"
+                },
+                "Bảng 7 · trang chuẩn 35 · PDF 33",
+                "Bảng 10 · trang chuẩn 38 · PDF 36",
+                "Bảng 13 · trang chuẩn 47 · PDF 45",
+                "Bảng 14 · trang chuẩn 48 · PDF 46"
+              ],
+              "governing": {
+                "rule": "Rpile = min(Rsoil, Rmaterial)",
+                "status": "HNL-LOCKED-COMPOSITION",
+                "note": "Chỉ ghép hai sức kháng thiết kế đã VERIFIED; γn được áp dụng sau phép min nếu người dùng cần giới hạn tác động."
+              }
+            }
+          },
+          "QbKn": 1264.0000000000002,
+          "QsKn": 1052.56,
+          "RkKn": 2316.5600000000004,
+          "RdKn": 1654.6857142857148,
+          "RmaterialKn": 2952,
+          "RpileKn": 1654.6857142857148,
+          "NdMaxFinalKn": 1438.8571428571433,
+          "governing": "SOIL",
+          "soilAtTip": {
+            "index": 3,
+            "top": 9,
+            "bottom": 15,
+            "soilGroup": "sand",
+            "soilClass": null,
+            "sandType": "coarse",
+            "IL": null,
+            "sptN": null,
+            "cuKpa": null
+          },
+          "issues": []
+        },
+        {
+          "boreholeId": "HK3",
+          "boreholeName": "HK3",
+          "methodId": "10304-spt",
+          "methodLabel": "SPT · PHỤ LỤC D",
+          "ok": true,
+          "coverage": {
+            "ok": true,
+            "gaps": [],
+            "coveredM": 12,
+            "requestedM": 12,
+            "verification": {
+              "status": "VERIFIED",
+              "scope": "DETERMINISTIC_PROFILE_GEOMETRY",
+              "basis": "Interval arithmetic independently implemented and regression tested; no XLL/VBA dependency."
+            }
+          },
+          "soilInput": {
+            "shape": "square",
+            "sideM": 0.4,
+            "lengthM": 12,
+            "tipDepthM": 12,
+            "shaftStartDepthM": 0,
+            "maxSegmentM": 2,
+            "gammaN": 1.15,
+            "layers": [
+              {
+                "top": 0,
+                "bottom": 4,
+                "soilGroup": "sand",
+                "sandType": "coarse",
+                "sptN": 25,
+                "index": 1
+              },
+              {
+                "top": 4,
+                "bottom": 9,
+                "soilGroup": "sand",
+                "sandType": "coarse",
+                "sptN": 35,
+                "index": 2
+              },
+              {
+                "top": 9,
+                "bottom": 15,
+                "soilGroup": "sand",
+                "sandType": "coarse",
+                "sptN": 45,
+                "index": 3
+              }
+            ],
+            "gammaK": 1.5,
+            "pileType": "driven",
+            "sptPoints": [
+              {
+                "depthM": 10,
+                "N": 40
+              },
+              {
+                "depthM": 11,
+                "N": 45
+              },
+              {
+                "depthM": 12,
+                "N": 50
+              },
+              {
+                "depthM": 13,
+                "N": 45
+              },
+              {
+                "depthM": 14,
+                "N": 40
+              }
+            ]
+          },
+          "soilResult": {
+            "ok": true,
+            "status": "VERIFIED",
+            "inputs": {
+              "shape": "square",
+              "sideM": 0.4,
+              "lengthM": 12,
+              "tipDepthM": 12,
+              "shaftStartDepthM": 0,
+              "maxSegmentM": 2,
+              "gammaN": 1.15,
+              "layers": [
+                {
+                  "top": 0,
+                  "bottom": 4,
+                  "soilGroup": "sand",
+                  "sandType": "coarse",
+                  "sptN": 25,
+                  "index": 1
+                },
+                {
+                  "top": 4,
+                  "bottom": 9,
+                  "soilGroup": "sand",
+                  "sandType": "coarse",
+                  "sptN": 35,
+                  "index": 2
+                },
+                {
+                  "top": 9,
+                  "bottom": 15,
+                  "soilGroup": "sand",
+                  "sandType": "coarse",
+                  "sptN": 45,
+                  "index": 3
+                }
+              ],
+              "gammaK": 1.5,
+              "pileType": "driven",
+              "sptPoints": [
+                {
+                  "depthM": 10,
+                  "N": 40
+                },
+                {
+                  "depthM": 11,
+                  "N": 45
+                },
+                {
+                  "depthM": 12,
+                  "N": 50
+                },
+                {
+                  "depthM": 13,
+                  "N": 45
+                },
+                {
+                  "depthM": 14,
+                  "N": 40
+                }
+              ],
+              "areaM2": 0.16000000000000003,
+              "perimeterM": 1.6,
+              "eta": 1
+            },
+            "geometry": {
+              "shape": "square",
+              "outerDimensionM": 0.4,
+              "tipInnerDimensionM": 0,
+              "massInnerDimensionM": 0,
+              "tipAreaM2": 0.16000000000000003,
+              "areaM2": 0.16000000000000003,
+              "concreteAreaM2": 0.16000000000000003,
+              "perimeterM": 1.6,
+              "secondMomentM4": 0.002133333333333334,
+              "lengthM": 12,
+              "derivedLengthM": null,
+              "volumeM3": 1.9200000000000004,
+              "unitWeightKnM3": null,
+              "selfWeightKn": null,
+              "headCoordinateM": null,
+              "tipCoordinateM": null,
+              "lengthConflict": false,
+              "verification": {
+                "status": "VERIFIED",
+                "scope": "DETERMINISTIC_GEOMETRY",
+                "basis": "Independent geometry identities + visible XLSM formula benchmark; no XLL/VBA dependency."
+              }
+            },
+            "pileType": "driven",
+            "eta": 1,
+            "tipDepthM": 12,
+            "shaftStartDepthM": 0,
+            "tipLayer": {
+              "top": 9,
+              "bottom": 15,
+              "soilGroup": "sand",
+              "sandType": "coarse",
+              "sptN": 45,
+              "index": 3,
+              "soilClass": "sand",
+              "IL": null,
+              "fiOverride": null,
+              "phiDeg": null,
+              "gammaKnM3": null,
+              "gammaEffectiveKnM3": null,
+              "cuKpa": null,
+              "Sr": null
+            },
+            "tipN": 47.5,
+            "tipNAudit": {
+              "value": 47.5,
+              "raw": 47.5,
+              "count": 2,
+              "used": [
+                {
+                  "index": 2,
+                  "depthM": 11,
+                  "N": 45
+                },
+                {
+                  "index": 3,
+                  "depthM": 12,
+                  "N": 50
+                }
+              ],
+              "mode": "MEASURED-WINDOW-AVERAGE",
+              "cap": 100,
+              "provenance": "TCVN 10304:2025 · Phụ lục D · trang 110–111"
+            },
+            "qbKpa": 14250,
+            "qbLookup": {
+              "value": 14250,
+              "raw": 14250,
+              "cap": 18000,
+              "mode": "FORMULA+CAP",
+              "provenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+            },
+            "RubKn": 2280.0000000000005,
+            "segmentResults": [
+              {
+                "top": 0,
+                "bottom": 4,
+                "soilGroup": "sand",
+                "sandType": "coarse",
+                "sptN": 25,
+                "index": 1,
+                "soilClass": "sand",
+                "IL": null,
+                "fiOverride": null,
+                "phiDeg": null,
+                "gammaKnM3": null,
+                "gammaEffectiveKnM3": null,
+                "cuKpa": null,
+                "Sr": null,
+                "hM": 4,
+                "NUsed": 25,
+                "NSource": "REPORT-LAYER-REPRESENTATIVE",
+                "NMeasuredPoints": [],
+                "unitResistanceKpa": 50,
+                "resistanceKn": 320,
+                "lookup": {
+                  "value": 50,
+                  "raw": 50,
+                  "cap": 100,
+                  "mode": "FORMULA+CAP",
+                  "provenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+                }
+              },
+              {
+                "top": 4,
+                "bottom": 9,
+                "soilGroup": "sand",
+                "sandType": "coarse",
+                "sptN": 35,
+                "index": 2,
+                "soilClass": "sand",
+                "IL": null,
+                "fiOverride": null,
+                "phiDeg": null,
+                "gammaKnM3": null,
+                "gammaEffectiveKnM3": null,
+                "cuKpa": null,
+                "Sr": null,
+                "hM": 5,
+                "NUsed": 35,
+                "NSource": "REPORT-LAYER-REPRESENTATIVE",
+                "NMeasuredPoints": [],
+                "unitResistanceKpa": 70,
+                "resistanceKn": 560,
+                "lookup": {
+                  "value": 70,
+                  "raw": 70,
+                  "cap": 100,
+                  "mode": "FORMULA+CAP",
+                  "provenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+                }
+              },
+              {
+                "top": 9,
+                "bottom": 12,
+                "soilGroup": "sand",
+                "sandType": "coarse",
+                "sptN": 45,
+                "index": 3,
+                "soilClass": "sand",
+                "IL": null,
+                "fiOverride": null,
+                "phiDeg": null,
+                "gammaKnM3": null,
+                "gammaEffectiveKnM3": null,
+                "cuKpa": null,
+                "Sr": null,
+                "hM": 3,
+                "NUsed": 45,
+                "NSource": "REPORT-LAYER-REPRESENTATIVE",
+                "NMeasuredPoints": [],
+                "unitResistanceKpa": 90,
+                "resistanceKn": 432,
+                "lookup": {
+                  "value": 90,
+                  "raw": 90,
+                  "cap": 100,
+                  "mode": "FORMULA+CAP",
+                  "provenance": "TCVN 10304:2025 · Phụ lục D · Bảng D.1 · trang 111"
+                }
+              }
+            ],
+            "RufKn": 1312,
+            "RkKn": 3592.0000000000005,
+            "gammaK": 1.5,
+            "RdKn": 2394.666666666667,
+            "gammaN": 1.15,
+            "NdMaxKn": 2082.3188405797105,
+            "noInterpolationPolicy": true,
+            "sptDataPolicy": {
+              "decision": "PDF-DECISION-LOCKED",
+              "normativeSource": "TCVN 10304:2025 · Phụ lục D · D.1–D.6 · Bảng D.1 · trang 110–111",
+              "tipN": "MEASURED-WINDOW-ARITHMETIC-MEAN; CAP-100",
+              "shaftN": "REPORT-LAYER-REPRESENTATIVE / DERIVED-MEASURED-LAYER-MEAN",
+              "shaftBoundary": "HALF-OPEN [top,bottom); boundary point → deeper layer",
+              "continuousInterpolation": false,
+              "dceNoiSuySPT": "REFERENCE-ONLY",
+              "dceRightEndIntegration": "REFERENCE-ONLY",
+              "partitionedD56": true,
+              "partitionNote": "HNL áp dụng D.5/D.6 theo từng lớp địa chất đồng nhất rồi cộng; đây là phép phân hoạch deterministic, không phải công thức mới của TCVN."
+            },
+            "steps": [
+              "Phụ lục D/Bảng D.1: N mũi là trung bình số học các điểm SPT đo thực trong cửa sổ quy định, giới hạn N≤100; không sinh điểm bằng nội suy.",
+              "Bảng D.1: qb=14250.000 kPa; Ru,b=2280.000 kN.",
+              "D.5–D.6: HNL phân hoạch theo từng lớp địa chất; Ns/Nc của lớp lấy từ giá trị đại diện có provenance hoặc trung bình điểm đo thực trong [top,bottom), không nội suy theo z; Ru,f=1312.000 kN.",
+              "D.1–D.2: Rk=Ru=3592.000 kN."
+            ],
+            "provenance": {
+              "standard": "TCVN 10304:2025",
+              "edition": 2025,
+              "clause": "Phụ lục D",
+              "formula": "D.1–D.6",
+              "table": "Bảng D.1",
+              "standardPage": "110-111",
+              "pdfPage": "110-111",
+              "status": "VERIFIED",
+              "unit": "kN"
+            }
+          },
+          "materialResult": {
+            "ok": true,
+            "workflow": "pile-material-5574-near-centered-rect",
+            "status": "VERIFIED",
+            "productionNumeric": true,
+            "inputs": {
+              "grade": "B30",
+              "steel": "CB400-V",
+              "shape": "square",
+              "widthMm": 400,
+              "heightMm": 400,
+              "concreteAreaMm2": 160000,
+              "AsTotMm2": 1600,
+              "L0Mm": 4000,
+              "e0Mm": 13.333333333333334,
+              "e0IncludesRandom": true,
+              "reinforcementOppositeSides": true,
+              "memberLengthMm": null,
+              "staticEccentricityMm": null,
+              "structuralSystem": "",
+              "loadDuration": "long"
+            },
+            "materials": {
+              "RbMpa": 17,
+              "EbMpa": 32500,
+              "RscMpa": 350,
+              "RsMpa": 350
+            },
+            "randomEccentricityMm": null,
+            "minimumRandomEccentricityWithoutLengthMm": 13.333333333333334,
+            "slendernessRatio": 10,
+            "phi": 0.9,
+            "phiMode": "EXACT",
+            "phiBracket": [
+              10,
+              10
+            ],
+            "concreteContributionKn": 2448,
+            "steelContributionKn": 504,
+            "materialResistanceKn": 2952,
+            "NuKn": 2952,
+            "capacityBasis": "DESIGN_RESISTANCE_TTGH1",
+            "steps": [
+              "Bảng 7/13: Rb=17 MPa; Rsc=350 MPa.",
+              "8.1.2.2.4: e0=13.333 mm đã kể ea; ea tối thiểu không xét L là 13.333 mm.",
+              "8.1.2.4.3: cốt dọc ở các phía đối diện; e0≤h/30=13.333 mm; L0/h=10.0000≤20.",
+              "φ=0.900000 (EXACT, bracket 10–10).",
+              "CT (50): Nu=φ(Rb·A+Rsc·As,tot)=2952.000 kN."
+            ],
+            "provenance": [
+              {
+                "standard": "TCVN 5574:2018",
+                "clause": "8.1.2.4.3",
+                "formula": "(49)–(50)",
+                "table": "Bảng 16",
+                "standardPage": "61–62",
+                "pdfPage": "59–60",
+                "status": "VERIFIED"
+              },
+              {
+                "standard": "TCVN 5574:2018",
+                "tables": "Bảng 7, 10, 13, 14",
+                "standardPage": "35, 38, 47, 48",
+                "pdfPage": "33, 36, 45, 46",
+                "status": "VERIFIED"
+              },
+              "Bảng 7 · trang chuẩn 35 · PDF 33",
+              "Bảng 10 · trang chuẩn 38 · PDF 36",
+              "Bảng 13 · trang chuẩn 47 · PDF 45",
+              "Bảng 14 · trang chuẩn 48 · PDF 46"
+            ]
+          },
+          "combined": {
+            "ok": true,
+            "workflow": "pile-capacity-integrated",
+            "status": "VERIFIED",
+            "productionNumeric": true,
+            "capacityBasis": "DESIGN_RESISTANCE",
+            "soilWorkflowId": "10304-spt",
+            "soilRegistryId": "10304-spt-raw",
+            "soilResistanceKn": 2394.666666666667,
+            "materialResistanceKn": 2952,
+            "pileResistanceKn": 2394.666666666667,
+            "governing": "SOIL",
+            "gammaN": 1.15,
+            "demandLimitKn": 2082.3188405797105,
+            "NdMaxFinalKn": 2082.3188405797105,
+            "geometry": {
+              "soil": {
+                "shape": "square",
+                "sideM": 0.4,
+                "diameterM": null,
+                "areaM2": 0.16000000000000003
+              },
+              "material": {
+                "shape": "square",
+                "widthMm": 400,
+                "heightMm": 400,
+                "sideMm": null
+              }
+            },
+            "childStatus": {
+              "soil": {
+                "registry": {
+                  "status": "LOCKED",
+                  "productionNumeric": true,
+                  "source": "Phụ lục D · D.1–D.6 · Bảng D.1 · SPT PDF Decision Pass · measured tip window + layer-representative shaft N; no continuous DCE interpolation"
+                },
+                "status": "VERIFIED"
+              },
+              "material": {
+                "registry": {
+                  "status": "LOCKED",
+                  "productionNumeric": true,
+                  "source": "TCVN 5574:2018 · 8.1.2.4.3 · CT (49)–(50) · Bảng 16 · P1 Pass 1"
+                },
+                "status": "VERIFIED"
+              }
+            },
+            "steps": [
+              "Rsoil=Rd,10304=2394.667 kN (sau γk).",
+              "Rmaterial=Nu,5574=2952.000 kN (TTGH1).",
+              "Rpile=min(Rsoil,Rmaterial)=2394.667 kN → ĐẤT NỀN khống chế.",
+              "γn=1.15: giới hạn tác động Nd,max=Rpile/γn=2082.319 kN. γn không tham gia phép min sức kháng."
+            ],
+            "provenance": {
+              "soil": {
+                "standard": "TCVN 10304:2025",
+                "edition": 2025,
+                "clause": "Phụ lục D",
+                "formula": "D.1–D.6",
+                "table": "Bảng D.1",
+                "standardPage": "110-111",
+                "pdfPage": "110-111",
+                "status": "VERIFIED",
+                "unit": "kN"
+              },
+              "material": [
+                {
+                  "standard": "TCVN 5574:2018",
+                  "clause": "8.1.2.4.3",
+                  "formula": "(49)–(50)",
+                  "table": "Bảng 16",
+                  "standardPage": "61–62",
+                  "pdfPage": "59–60",
+                  "status": "VERIFIED"
+                },
+                {
+                  "standard": "TCVN 5574:2018",
+                  "tables": "Bảng 7, 10, 13, 14",
+                  "standardPage": "35, 38, 47, 48",
+                  "pdfPage": "33, 36, 45, 46",
+                  "status": "VERIFIED"
+                },
+                "Bảng 7 · trang chuẩn 35 · PDF 33",
+                "Bảng 10 · trang chuẩn 38 · PDF 36",
+                "Bảng 13 · trang chuẩn 47 · PDF 45",
+                "Bảng 14 · trang chuẩn 48 · PDF 46"
+              ],
+              "governing": {
+                "rule": "Rpile = min(Rsoil, Rmaterial)",
+                "status": "HNL-LOCKED-COMPOSITION",
+                "note": "Chỉ ghép hai sức kháng thiết kế đã VERIFIED; γn được áp dụng sau phép min nếu người dùng cần giới hạn tác động."
+              }
+            }
+          },
+          "QbKn": 2280.0000000000005,
+          "QsKn": 1312,
+          "RkKn": 3592.0000000000005,
+          "RdKn": 2394.666666666667,
+          "RmaterialKn": 2952,
+          "RpileKn": 2394.666666666667,
+          "NdMaxFinalKn": 2082.3188405797105,
+          "governing": "SOIL",
+          "soilAtTip": {
+            "index": 3,
+            "top": 9,
+            "bottom": 15,
+            "soilGroup": "sand",
+            "soilClass": "sand",
+            "sandType": "coarse",
+            "IL": null,
+            "sptN": 45,
+            "cuKpa": null
+          },
+          "issues": []
+        }
+      ],
+      "perBorehole": [
+        {
+          "boreholeId": "HK1",
+          "minimumPileResistanceKn": 1227.257142857143,
+          "adverseMethodIds": [
+            "10304-driven"
+          ],
+          "tie": false,
+          "rows": [
+            "HK1:10304-driven",
+            "HK1:10304-spt"
+          ]
+        },
+        {
+          "boreholeId": "HK2",
+          "minimumPileResistanceKn": 843.4285714285716,
+          "adverseMethodIds": [
+            "10304-driven"
+          ],
+          "tie": false,
+          "rows": [
+            "HK2:10304-driven",
+            "HK2:10304-spt"
+          ]
+        },
+        {
+          "boreholeId": "HK3",
+          "minimumPileResistanceKn": 1654.6857142857148,
+          "adverseMethodIds": [
+            "10304-driven"
+          ],
+          "tie": false,
+          "rows": [
+            "HK3:10304-driven",
+            "HK3:10304-spt"
+          ]
+        }
+      ],
+      "pileResistanceMinKn": 843.4285714285716,
+      "criticalRows": [
+        "HK2:10304-driven"
+      ],
+      "criticalBoreholeId": "HK2",
+      "criticalMethodId": "10304-driven",
+      "criticalMethodLabel": "CƠ LÝ · 7.2.2 CỌC ĐÓNG/ÉP",
+      "criticalTie": false,
+      "materialTie": false,
+      "governingCause": "ĐẤT NỀN KHỐNG CHẾ · THÀNH PHẦN MŨI NHỎ HƠN",
+      "soilMinimum": {
+        "valueKn": 843.4285714285716,
+        "rows": [
+          "HK2:10304-driven"
+        ],
+        "boreholeId": "HK2",
+        "methodId": "10304-driven"
+      },
+      "tipMinimum": {
+        "valueKn": 435.2000000000001,
+        "rows": [
+          "HK2:10304-driven"
+        ]
+      },
+      "shaftMinimum": {
+        "valueKn": 560,
+        "rows": [
+          "HK2:10304-spt"
+        ]
+      },
+      "gammaN": 1.15,
+      "NdMaxBatchKn": 733.4161490683232,
+      "steps": [
+        "Chạy 3 lỗ khoan × 2 phương pháp = 6 nhánh deterministic.",
+        "Rpile,min=843.429 kN từ min[Rsoil(HK,method), Rmaterial].",
+        "Bất lợi tổng hợp: HK2 · CƠ LÝ · 7.2.2 CỌC ĐÓNG/ÉP · ĐẤT NỀN KHỐNG CHẾ · THÀNH PHẦN MŨI NHỎ HƠN.",
+        "Bất lợi riêng đất: HK2 · CƠ LÝ · 7.2.2 CỌC ĐÓNG/ÉP · Rd,min=843.429 kN."
+      ],
+      "provenance": {
+        "batch": {
+          "status": "HNL-LOCKED-COMPOSITION",
+          "rule": "For each borehole: run Mechanical + SPT; Rpile=min(Rd, Rmaterial); batch governing=min(Rpile)."
+        },
+        "material": [
+          {
+            "standard": "TCVN 5574:2018",
+            "clause": "8.1.2.4.3",
+            "formula": "(49)–(50)",
+            "table": "Bảng 16",
+            "standardPage": "61–62",
+            "pdfPage": "59–60",
+            "status": "VERIFIED"
+          },
+          {
+            "standard": "TCVN 5574:2018",
+            "tables": "Bảng 7, 10, 13, 14",
+            "standardPage": "35, 38, 47, 48",
+            "pdfPage": "33, 36, 45, 46",
+            "status": "VERIFIED"
+          },
+          "Bảng 7 · trang chuẩn 35 · PDF 33",
+          "Bảng 10 · trang chuẩn 38 · PDF 36",
+          "Bảng 13 · trang chuẩn 47 · PDF 45",
+          "Bảng 14 · trang chuẩn 48 · PDF 46"
+        ],
+        "boreholes": [
+          {
+            "id": "HK1",
+            "source": "USER/PROJECT-BOREHOLE",
+            "layerCount": 3,
+            "sptPointCount": 5
+          },
+          {
+            "id": "HK2",
+            "source": "USER/PROJECT-BOREHOLE",
+            "layerCount": 3,
+            "sptPointCount": 5
+          },
+          {
+            "id": "HK3",
+            "source": "USER/PROJECT-BOREHOLE",
+            "layerCount": 3,
+            "sptPointCount": 5
+          }
+        ]
+      }
+    },
+    "capacity": {
+      "status": "LOCKED_PASS7_DERIVED_FROM_VERIFIED_CHILDREN",
+      "RpileKn": 843.4285714285716,
+      "gammaN": 1.15,
+      "NdMaxPerPileKn": 733.4161490683232,
+      "sourceModule": "MultiBoreholePileEngine + PileCapacityEngine + PileMaterialEngine",
+      "sourceArtifact": "PASS7_GOLDEN_V18",
+      "governingBasis": "Rpile=min(Rsoil,Rmaterial); Nd,max=Rpile/gammaN",
+      "sourceBorehole": "HK2",
+      "materialGoverning": false,
+      "soilResistanceKn": 843.4285714285716,
+      "materialResistanceKn": 2952,
+      "pileResistanceKn": 843.4285714285716,
+      "demandLimitKn": 733.4161490683232,
+      "criticalMethodId": "10304-driven",
+      "criticalMethodLabel": "CƠ LÝ · 7.2.2 CỌC ĐÓNG/ÉP"
+    },
+    "structural": {
+      "schema": "HNL-P1-PASS6-STRUCTURAL-E2E-RESULT",
+      "version": "1.25.7",
+      "status": "PASS",
+      "workflow": "PASS5_IMPORT_TO_PASS4_IMPORTED_REACTION_WITH_LOCKED_CAPACITY",
+      "sourceKind": "DCE_TABLES",
+      "capacity": {
+        "status": "LOCKED_PASS7_DERIVED_FROM_VERIFIED_CHILDREN",
+        "RpileKn": 843.4285714285716,
+        "gammaN": 1.15,
+        "NdMaxPerPileKn": 733.4161490683232,
+        "sourceModule": "MultiBoreholePileEngine + PileCapacityEngine + PileMaterialEngine",
+        "sourceArtifact": "PASS7_GOLDEN_V18",
+        "governingBasis": "Rpile=min(Rsoil,Rmaterial); Nd,max=Rpile/gammaN",
+        "sourceBorehole": "HK2",
+        "materialGoverning": false
+      },
+      "combinationIds": [
+        "EULS"
+      ],
+      "importAudit": {
+        "pointCoordinates": 194,
+        "pointSpringAssignments": 19,
+        "nodalReactionRawRows": 38,
+        "nodalReactionEnvelopes": 19,
+        "compressionCheckRows": 19,
+        "pierForces": 234,
+        "pierSection": 39,
+        "joinAudit": {
+          "pass": true,
+          "missingCoordinates": [],
+          "missingReactions": [],
+          "orphanReactionPoints": []
+        }
+      },
+      "rows": [
+        {
+          "combinationId": "EULS",
+          "pileId": "136",
+          "pointId": "136",
+          "x": 1.8499999999999999,
+          "y": 4.96,
+          "z": 0,
+          "rawFzKn": 286.91991774862805,
+          "demandKn": 286.91991774862805,
+          "checkType": "COMPRESSION",
+          "capacityKn": 733.4161490683232,
+          "utilization": 0.39121025370536167,
+          "pass": true,
+          "blockReason": null,
+          "FxKn": 6.114587136873498,
+          "FyKn": 7.60160881133767,
+          "MxKnm": 0,
+          "MyKnm": 0,
+          "MzKnm": 0
+        },
+        {
+          "combinationId": "EULS",
+          "pileId": "137",
+          "pointId": "137",
+          "x": 1.68,
+          "y": 4.03,
+          "z": 0,
+          "rawFzKn": 260.9278268061119,
+          "demandKn": 260.9278268061119,
+          "checkType": "COMPRESSION",
+          "capacityKn": 733.4161490683232,
+          "utilization": 0.3557704955605014,
+          "pass": true,
+          "blockReason": null,
+          "FxKn": 6.024313228742632,
+          "FyKn": 7.565465189987405,
+          "MxKnm": 0,
+          "MyKnm": 0,
+          "MzKnm": 0
+        },
+        {
+          "combinationId": "EULS",
+          "pileId": "144",
+          "pointId": "144",
+          "x": 0.75,
+          "y": 4.03,
+          "z": 0,
+          "rawFzKn": 270.8934985824897,
+          "demandKn": 270.8934985824897,
+          "checkType": "COMPRESSION",
+          "capacityKn": 733.4161490683232,
+          "utilization": 0.3693585134805287,
+          "pass": true,
+          "blockReason": null,
+          "FxKn": 6.023922627709259,
+          "FyKn": 7.367116593119833,
+          "MxKnm": 0,
+          "MyKnm": 0,
+          "MzKnm": 0
+        },
+        {
+          "combinationId": "EULS",
+          "pileId": "145",
+          "pointId": "145",
+          "x": 0.75,
+          "y": 4.96,
+          "z": 0,
+          "rawFzKn": 285.1184277095996,
+          "demandKn": 285.1184277095996,
+          "checkType": "COMPRESSION",
+          "capacityKn": 733.4161490683232,
+          "utilization": 0.3887539537707107,
+          "pass": true,
+          "blockReason": null,
+          "FxKn": 6.115032894584146,
+          "FyKn": 7.367175449779903,
+          "MxKnm": 0,
+          "MyKnm": 0,
+          "MzKnm": 0
+        },
+        {
+          "combinationId": "EULS",
+          "pileId": "146",
+          "pointId": "146",
+          "x": 3.33,
+          "y": 5.39,
+          "z": 0,
+          "rawFzKn": 297.4859063516979,
+          "demandKn": 297.4859063516979,
+          "checkType": "COMPRESSION",
+          "capacityKn": 733.4161490683232,
+          "utilization": 0.4056167930438969,
+          "pass": true,
+          "blockReason": null,
+          "FxKn": 6.151526405771362,
+          "FyKn": 7.920268130304808,
+          "MxKnm": 0,
+          "MyKnm": 0,
+          "MzKnm": 0
+        },
+        {
+          "combinationId": "EULS",
+          "pileId": "147",
+          "pointId": "147",
+          "x": 4.07,
+          "y": 5.48,
+          "z": 0,
+          "rawFzKn": 300.3376508670345,
+          "demandKn": 300.3376508670345,
+          "checkType": "COMPRESSION",
+          "capacityKn": 733.4161490683232,
+          "utilization": 0.40950509645657635,
+          "pass": true,
+          "blockReason": null,
+          "FxKn": 6.161931381625057,
+          "FyKn": 8.087346492023325,
+          "MxKnm": 0,
+          "MyKnm": 0,
+          "MzKnm": 0
+        },
+        {
+          "combinationId": "EULS",
+          "pileId": "148",
+          "pointId": "148",
+          "x": 4.81,
+          "y": 5.57,
+          "z": 0,
+          "rawFzKn": 300.04555821930734,
+          "demandKn": 300.04555821930734,
+          "checkType": "COMPRESSION",
+          "capacityKn": 733.4161490683232,
+          "utilization": 0.40910683327666386,
+          "pass": true,
+          "blockReason": null,
+          "FxKn": 6.1732453085127945,
+          "FyKn": 8.252345699073759,
+          "MxKnm": 0,
+          "MyKnm": 0,
+          "MzKnm": 0
+        },
+        {
+          "combinationId": "EULS",
+          "pileId": "159",
+          "pointId": "159",
+          "x": 7.19,
+          "y": 5.72,
+          "z": 0,
+          "rawFzKn": 303.4136821443748,
+          "demandKn": 303.4136821443748,
+          "checkType": "COMPRESSION",
+          "capacityKn": 733.4161490683232,
+          "utilization": 0.41369921091839706,
+          "pass": true,
+          "blockReason": null,
+          "FxKn": 6.142195768650366,
+          "FyKn": 8.859360969705284,
+          "MxKnm": 0,
+          "MyKnm": 0,
+          "MzKnm": 0
+        },
+        {
+          "combinationId": "EULS",
+          "pileId": "160",
+          "pointId": "160",
+          "x": 7.93,
+          "y": 5.81,
+          "z": 0,
+          "rawFzKn": 343.63918974684805,
+          "demandKn": 343.63918974684805,
+          "checkType": "COMPRESSION",
+          "capacityKn": 733.4161490683232,
+          "utilization": 0.46854598195496716,
+          "pass": true,
+          "blockReason": null,
+          "FxKn": 6.1583195951613225,
+          "FyKn": 9.061839847568978,
+          "MxKnm": 0,
+          "MyKnm": 0,
+          "MzKnm": 0
+        },
+        {
+          "combinationId": "EULS",
+          "pileId": "161",
+          "pointId": "161",
+          "x": 8.2,
+          "y": 5.11,
+          "z": 0,
+          "rawFzKn": 280.22771574243876,
+          "demandKn": 280.22771574243876,
+          "checkType": "COMPRESSION",
+          "capacityKn": 733.4161490683232,
+          "utilization": 0.3820855541542397,
+          "pass": true,
+          "blockReason": null,
+          "FxKn": 6.031814131395742,
+          "FyKn": 9.13403868642082,
+          "MxKnm": 0,
+          "MyKnm": 0,
+          "MzKnm": 0
+        },
+        {
+          "combinationId": "EULS",
+          "pileId": "167",
+          "pointId": "167",
+          "x": 6.9,
+          "y": 0.46,
+          "z": 0,
+          "rawFzKn": 310.9017790337088,
+          "demandKn": 310.9017790337088,
+          "checkType": "COMPRESSION",
+          "capacityKn": 733.4161490683232,
+          "utilization": 0.42390909912285824,
+          "pass": true,
+          "blockReason": null,
+          "FxKn": 5.786179924709186,
+          "FyKn": 8.706874064178617,
+          "MxKnm": 0,
+          "MyKnm": 0,
+          "MzKnm": 0
+        },
+        {
+          "combinationId": "EULS",
+          "pileId": "168",
+          "pointId": "168",
+          "x": 7.65,
+          "y": 0.46,
+          "z": 0,
+          "rawFzKn": 365.2920507005818,
+          "demandKn": 365.2920507005818,
+          "checkType": "COMPRESSION",
+          "capacityKn": 733.4161490683232,
+          "utilization": 0.4980692764464232,
+          "pass": true,
+          "blockReason": null,
+          "FxKn": 5.785111990798642,
+          "FyKn": 8.93949061197766,
+          "MxKnm": 0,
+          "MyKnm": 0,
+          "MzKnm": 0
+        },
+        {
+          "combinationId": "EULS",
+          "pileId": "169",
+          "pointId": "169",
+          "x": 7.65,
+          "y": 1.1,
+          "z": 0,
+          "rawFzKn": 290.52138193625683,
+          "demandKn": 290.52138193625683,
+          "checkType": "COMPRESSION",
+          "capacityKn": 733.4161490683232,
+          "utilization": 0.3961207866847674,
+          "pass": true,
+          "blockReason": null,
+          "FxKn": 5.821947418471196,
+          "FyKn": 8.940186832427152,
+          "MxKnm": 0,
+          "MyKnm": 0,
+          "MzKnm": 0
+        },
+        {
+          "combinationId": "EULS",
+          "pileId": "170",
+          "pointId": "170",
+          "x": 4.82,
+          "y": 0.49,
+          "z": 0,
+          "rawFzKn": 285.949573636969,
+          "demandKn": 285.949573636969,
+          "checkType": "COMPRESSION",
+          "capacityKn": 733.4161490683232,
+          "utilization": 0.38988720660189696,
+          "pass": true,
+          "blockReason": null,
+          "FxKn": 5.8191715581666035,
+          "FyKn": 8.237220549414246,
+          "MxKnm": 0,
+          "MyKnm": 0,
+          "MzKnm": 0
+        },
+        {
+          "combinationId": "EULS",
+          "pileId": "171",
+          "pointId": "171",
+          "x": 4.07,
+          "y": 0.49,
+          "z": 0,
+          "rawFzKn": 285.78082587948563,
+          "demandKn": 285.78082587948563,
+          "checkType": "COMPRESSION",
+          "capacityKn": 733.4161490683232,
+          "utilization": 0.3896571220070899,
+          "pass": true,
+          "blockReason": null,
+          "FxKn": 5.819147985537895,
+          "FyKn": 8.075804450906592,
+          "MxKnm": 0,
+          "MyKnm": 0,
+          "MzKnm": 0
+        },
+        {
+          "combinationId": "EULS",
+          "pileId": "172",
+          "pointId": "172",
+          "x": 3.32,
+          "y": 0.49,
+          "z": 0,
+          "rawFzKn": 282.45435302362756,
+          "demandKn": 282.45435302362756,
+          "checkType": "COMPRESSION",
+          "capacityKn": 733.4161490683232,
+          "utilization": 0.3851215348645327,
+          "pass": true,
+          "blockReason": null,
+          "FxKn": 5.817643430921133,
+          "FyKn": 7.914175544381543,
+          "MxKnm": 0,
+          "MyKnm": 0,
+          "MzKnm": 0
+        },
+        {
+          "combinationId": "EULS",
+          "pileId": "177",
+          "pointId": "177",
+          "x": 1.98,
+          "y": 0.46,
+          "z": 0,
+          "rawFzKn": 284.1586952648752,
+          "demandKn": 284.1586952648752,
+          "checkType": "COMPRESSION",
+          "capacityKn": 733.4161490683232,
+          "utilization": 0.38744537548818503,
+          "pass": true,
+          "blockReason": null,
+          "FxKn": 5.784678789736269,
+          "FyKn": 7.630793336483799,
+          "MxKnm": 0,
+          "MyKnm": 0,
+          "MzKnm": 0
+        },
+        {
+          "combinationId": "EULS",
+          "pileId": "178",
+          "pointId": "178",
+          "x": 1.23,
+          "y": 0.46,
+          "z": 0,
+          "rawFzKn": 275.85595425892734,
+          "demandKn": 275.85595425892734,
+          "checkType": "COMPRESSION",
+          "capacityKn": 733.4161490683232,
+          "utilization": 0.37612473438082056,
+          "pass": true,
+          "blockReason": null,
+          "FxKn": 5.783701766742128,
+          "FyKn": 7.4669307380468535,
+          "MxKnm": 0,
+          "MyKnm": 0,
+          "MzKnm": 0
+        },
+        {
+          "combinationId": "EULS",
+          "pileId": "179",
+          "pointId": "179",
+          "x": 0.48,
+          "y": 0.46,
+          "z": 0,
+          "rawFzKn": 273.6354927832871,
+          "demandKn": 273.6354927832871,
+          "checkType": "COMPRESSION",
+          "capacityKn": 733.4161490683232,
+          "utilization": 0.3730971742726051,
+          "pass": true,
+          "blockReason": null,
+          "FxKn": 5.78352852822504,
+          "FyKn": 7.307158132585056,
+          "MxKnm": 0,
+          "MyKnm": 0,
+          "MzKnm": 0
+        }
+      ],
+      "governing": {
+        "pileId": "168",
+        "pointId": "168",
+        "combinationId": "EULS",
+        "demandKn": 365.2920507005818,
+        "capacityKn": 733.4161490683232,
+        "utilization": 0.4980692764464232,
+        "checkType": "COMPRESSION",
+        "pass": true
+      },
+      "envelope": {
+        "maxCompression": {
+          "pileId": "168",
+          "pointId": "168",
+          "x": 7.65,
+          "y": 0.46,
+          "z": 0,
+          "combinationId": "EULS",
+          "rawFzKn": 365.2920507005818,
+          "demandKn": 365.2920507005818,
+          "checkType": "COMPRESSION",
+          "capacityKn": 733.4161490683232,
+          "utilization": 0.4980692764464232,
+          "pass": true,
+          "blockReason": null,
+          "sourceBorehole": "HK2",
+          "method": "Rpile=min(Rsoil,Rmaterial); Nd,max=Rpile/gammaN",
+          "materialGoverning": false,
+          "importedActions": {
+            "FxKn": 5.785111990798642,
+            "FyKn": 8.93949061197766,
+            "FzKn": 365.2920507005818,
+            "MxKnm": 0,
+            "MyKnm": 0,
+            "MzKnm": 0
+          }
+        },
+        "maxTension": null,
+        "governing": {
+          "pileId": "168",
+          "pointId": "168",
+          "x": 7.65,
+          "y": 0.46,
+          "z": 0,
+          "combinationId": "EULS",
+          "rawFzKn": 365.2920507005818,
+          "demandKn": 365.2920507005818,
+          "checkType": "COMPRESSION",
+          "capacityKn": 733.4161490683232,
+          "utilization": 0.4980692764464232,
+          "pass": true,
+          "blockReason": null,
+          "sourceBorehole": "HK2",
+          "method": "Rpile=min(Rsoil,Rmaterial); Nd,max=Rpile/gammaN",
+          "materialGoverning": false,
+          "importedActions": {
+            "FxKn": 5.785111990798642,
+            "FyKn": 8.93949061197766,
+            "FzKn": 365.2920507005818,
+            "MxKnm": 0,
+            "MyKnm": 0,
+            "MzKnm": 0
+          }
+        }
+      },
+      "summary": {
+        "pileCount": 19,
+        "combinationCount": 1,
+        "checkRows": 19,
+        "passRows": 19,
+        "failRows": 0,
+        "blockedRows": 0,
+        "overallPass": true
+      },
+      "provenance": {
+        "structuralImporter": "LOCKED_DCE_TABLE_ADAPTER",
+        "structuralSourceId": "DCE_EXACT_PASS7_GOLDEN",
+        "reactionEngine": "P1_PASS4_IMPORTED_NUMERIC_CORE_LOCKED",
+        "capacitySource": "MultiBoreholePileEngine + PileCapacityEngine + PileMaterialEngine",
+        "capacityArtifact": "PASS7_GOLDEN_V18",
+        "claimBoundary": "No rigid-cap reaction derivation and no capacity derivation occurs in Pass 6."
+      }
+    },
+    "governing": {
+      "pileId": "168",
+      "pointId": "168",
+      "combinationId": "EULS",
+      "demandKn": 365.2920507005818,
+      "capacityKn": 733.4161490683232,
+      "utilization": 0.4980692764464232,
+      "checkType": "COMPRESSION",
+      "pass": true
+    },
+    "conclusion": {
+      "code": "DAT",
+      "statusVi": "ĐẠT",
+      "text": "ĐẠT: cọc bất lợi 168 · tổ hợp EULS · hệ số sử dụng 0.4981 ≤ 1,0000. Sức chịu tải cọc Rpile=843.429 kN; giới hạn tác động Nd,max=733.416 kN/cọc. Địa chất bất lợi: HK2 · CƠ LÝ · 7.2.2 CỌC ĐÓNG/ÉP; đất nền khống chế."
+    },
+    "report": {
+      "tieuDe": "BÁO CÁO TÍNH TOÁN SỨC CHỊU TẢI VÀ KIỂM TRA PHẢN LỰC CỌC",
+      "phienBan": "1.25.7",
+      "trangThai": "ĐẠT",
+      "ketLuan": "ĐẠT: cọc bất lợi 168 · tổ hợp EULS · hệ số sử dụng 0.4981 ≤ 1,0000. Sức chịu tải cọc Rpile=843.429 kN; giới hạn tác động Nd,max=733.416 kN/cọc. Địa chất bất lợi: HK2 · CƠ LÝ · 7.2.2 CỌC ĐÓNG/ÉP; đất nền khống chế.",
+      "tongHop": {
+        "RsoilKn": 843.4285714285716,
+        "RmaterialKn": 2952,
+        "RpileKn": 843.4285714285716,
+        "gammaN": 1.15,
+        "NdMaxMoiCocKn": 733.4161490683232,
+        "loKhoanBatLoi": "HK2",
+        "phuongPhapBatLoi": "CƠ LÝ · 7.2.2 CỌC ĐÓNG/ÉP",
+        "cocBatLoi": "168",
+        "toHopBatLoi": "EULS",
+        "phanLucBatLoiKn": 365.2920507005818,
+        "heSoSuDungBatLoi": 0.4980692764464232
+      },
+      "diaChat": [
+        {
+          "loKhoan": "HK1",
+          "phuongPhap": "CƠ LÝ · 7.2.2 CỌC ĐÓNG/ÉP",
+          "QbKn": 665.6000000000001,
+          "QsKn": 1052.56,
+          "RkKn": 1718.16,
+          "RdKn": 1227.257142857143,
+          "RmaterialKn": 2952,
+          "RpileKn": 1227.257142857143,
+          "NdMaxKn": 1067.1801242236027,
+          "khongChe": "ĐẤT NỀN",
+          "lopDatMui": {
+            "index": 3,
+            "top": 9,
+            "bottom": 15,
+            "soilGroup": "sand",
+            "soilClass": null,
+            "sandType": "medium",
+            "IL": null,
+            "sptN": null,
+            "cuKpa": null
+          }
+        },
+        {
+          "loKhoan": "HK1",
+          "phuongPhap": "SPT · PHỤ LỤC D",
+          "QbKn": 1560.0000000000002,
+          "QsKn": 902.4,
+          "RkKn": 2462.4,
+          "RdKn": 1641.6000000000001,
+          "RmaterialKn": 2952,
+          "RpileKn": 1641.6000000000001,
+          "NdMaxKn": 1427.4782608695655,
+          "khongChe": "ĐẤT NỀN",
+          "lopDatMui": {
+            "index": 3,
+            "top": 9,
+            "bottom": 15,
+            "soilGroup": "sand",
+            "soilClass": "sand",
+            "sandType": "medium",
+            "IL": null,
+            "sptN": 30,
+            "cuKpa": null
+          }
+        },
+        {
+          "loKhoan": "HK2",
+          "phuongPhap": "CƠ LÝ · 7.2.2 CỌC ĐÓNG/ÉP",
+          "QbKn": 435.2000000000001,
+          "QsKn": 745.6000000000001,
+          "RkKn": 1180.8000000000002,
+          "RdKn": 843.4285714285716,
+          "RmaterialKn": 2952,
+          "RpileKn": 843.4285714285716,
+          "NdMaxKn": 733.4161490683232,
+          "khongChe": "ĐẤT NỀN",
+          "lopDatMui": {
+            "index": 3,
+            "top": 9,
+            "bottom": 15,
+            "soilGroup": "sand",
+            "soilClass": null,
+            "sandType": "fine",
+            "IL": null,
+            "sptN": null,
+            "cuKpa": null
+          }
+        },
+        {
+          "loKhoan": "HK2",
+          "phuongPhap": "SPT · PHỤ LỤC D",
+          "QbKn": 1080.0000000000002,
+          "QsKn": 560,
+          "RkKn": 1640.0000000000002,
+          "RdKn": 1093.3333333333335,
+          "RmaterialKn": 2952,
+          "RpileKn": 1093.3333333333335,
+          "NdMaxKn": 950.7246376811596,
+          "khongChe": "ĐẤT NỀN",
+          "lopDatMui": {
+            "index": 3,
+            "top": 9,
+            "bottom": 15,
+            "soilGroup": "sand",
+            "soilClass": "sand",
+            "sandType": "fine",
+            "IL": null,
+            "sptN": 20,
+            "cuKpa": null
+          }
+        },
+        {
+          "loKhoan": "HK3",
+          "phuongPhap": "CƠ LÝ · 7.2.2 CỌC ĐÓNG/ÉP",
+          "QbKn": 1264.0000000000002,
+          "QsKn": 1052.56,
+          "RkKn": 2316.5600000000004,
+          "RdKn": 1654.6857142857148,
+          "RmaterialKn": 2952,
+          "RpileKn": 1654.6857142857148,
+          "NdMaxKn": 1438.8571428571433,
+          "khongChe": "ĐẤT NỀN",
+          "lopDatMui": {
+            "index": 3,
+            "top": 9,
+            "bottom": 15,
+            "soilGroup": "sand",
+            "soilClass": null,
+            "sandType": "coarse",
+            "IL": null,
+            "sptN": null,
+            "cuKpa": null
+          }
+        },
+        {
+          "loKhoan": "HK3",
+          "phuongPhap": "SPT · PHỤ LỤC D",
+          "QbKn": 2280.0000000000005,
+          "QsKn": 1312,
+          "RkKn": 3592.0000000000005,
+          "RdKn": 2394.666666666667,
+          "RmaterialKn": 2952,
+          "RpileKn": 2394.666666666667,
+          "NdMaxKn": 2082.3188405797105,
+          "khongChe": "ĐẤT NỀN",
+          "lopDatMui": {
+            "index": 3,
+            "top": 9,
+            "bottom": 15,
+            "soilGroup": "sand",
+            "soilClass": "sand",
+            "sandType": "coarse",
+            "IL": null,
+            "sptN": 45,
+            "cuKpa": null
+          }
+        }
+      ],
+      "vatLieu": {
+        "status": "VERIFIED",
+        "NuKn": 2952,
+        "dauVao": {
+          "grade": "B30",
+          "steel": "CB400-V",
+          "shape": "square",
+          "widthMm": 400,
+          "heightMm": 400,
+          "concreteAreaMm2": 160000,
+          "AsTotMm2": 1600,
+          "L0Mm": 4000,
+          "e0Mm": 13.333333333333334,
+          "e0IncludesRandom": true,
+          "reinforcementOppositeSides": true,
+          "memberLengthMm": null,
+          "staticEccentricityMm": null,
+          "structuralSystem": "",
+          "loadDuration": "long"
+        },
+        "provenance": [
+          {
+            "standard": "TCVN 5574:2018",
+            "clause": "8.1.2.4.3",
+            "formula": "(49)–(50)",
+            "table": "Bảng 16",
+            "standardPage": "61–62",
+            "pdfPage": "59–60",
+            "status": "VERIFIED"
+          },
+          {
+            "standard": "TCVN 5574:2018",
+            "tables": "Bảng 7, 10, 13, 14",
+            "standardPage": "35, 38, 47, 48",
+            "pdfPage": "33, 36, 45, 46",
+            "status": "VERIFIED"
+          },
+          "Bảng 7 · trang chuẩn 35 · PDF 33",
+          "Bảng 10 · trang chuẩn 38 · PDF 36",
+          "Bảng 13 · trang chuẩn 47 · PDF 45",
+          "Bảng 14 · trang chuẩn 48 · PDF 46"
+        ]
+      },
+      "kiemTraCoc": [
+        {
+          "coc": "136",
+          "diem": "136",
+          "toHop": "EULS",
+          "nhuCauKn": 286.91991774862805,
+          "sucChiuTaiChoPhepKn": 733.4161490683232,
+          "heSoSuDung": 0.39121025370536167,
+          "trangThai": "ĐẠT",
+          "lyDoKhoa": null,
+          "x": 1.8499999999999999,
+          "y": 4.96,
+          "loaiKiemTra": "COMPRESSION"
+        },
+        {
+          "coc": "137",
+          "diem": "137",
+          "toHop": "EULS",
+          "nhuCauKn": 260.9278268061119,
+          "sucChiuTaiChoPhepKn": 733.4161490683232,
+          "heSoSuDung": 0.3557704955605014,
+          "trangThai": "ĐẠT",
+          "lyDoKhoa": null,
+          "x": 1.68,
+          "y": 4.03,
+          "loaiKiemTra": "COMPRESSION"
+        },
+        {
+          "coc": "144",
+          "diem": "144",
+          "toHop": "EULS",
+          "nhuCauKn": 270.8934985824897,
+          "sucChiuTaiChoPhepKn": 733.4161490683232,
+          "heSoSuDung": 0.3693585134805287,
+          "trangThai": "ĐẠT",
+          "lyDoKhoa": null,
+          "x": 0.75,
+          "y": 4.03,
+          "loaiKiemTra": "COMPRESSION"
+        },
+        {
+          "coc": "145",
+          "diem": "145",
+          "toHop": "EULS",
+          "nhuCauKn": 285.1184277095996,
+          "sucChiuTaiChoPhepKn": 733.4161490683232,
+          "heSoSuDung": 0.3887539537707107,
+          "trangThai": "ĐẠT",
+          "lyDoKhoa": null,
+          "x": 0.75,
+          "y": 4.96,
+          "loaiKiemTra": "COMPRESSION"
+        },
+        {
+          "coc": "146",
+          "diem": "146",
+          "toHop": "EULS",
+          "nhuCauKn": 297.4859063516979,
+          "sucChiuTaiChoPhepKn": 733.4161490683232,
+          "heSoSuDung": 0.4056167930438969,
+          "trangThai": "ĐẠT",
+          "lyDoKhoa": null,
+          "x": 3.33,
+          "y": 5.39,
+          "loaiKiemTra": "COMPRESSION"
+        },
+        {
+          "coc": "147",
+          "diem": "147",
+          "toHop": "EULS",
+          "nhuCauKn": 300.3376508670345,
+          "sucChiuTaiChoPhepKn": 733.4161490683232,
+          "heSoSuDung": 0.40950509645657635,
+          "trangThai": "ĐẠT",
+          "lyDoKhoa": null,
+          "x": 4.07,
+          "y": 5.48,
+          "loaiKiemTra": "COMPRESSION"
+        },
+        {
+          "coc": "148",
+          "diem": "148",
+          "toHop": "EULS",
+          "nhuCauKn": 300.04555821930734,
+          "sucChiuTaiChoPhepKn": 733.4161490683232,
+          "heSoSuDung": 0.40910683327666386,
+          "trangThai": "ĐẠT",
+          "lyDoKhoa": null,
+          "x": 4.81,
+          "y": 5.57,
+          "loaiKiemTra": "COMPRESSION"
+        },
+        {
+          "coc": "159",
+          "diem": "159",
+          "toHop": "EULS",
+          "nhuCauKn": 303.4136821443748,
+          "sucChiuTaiChoPhepKn": 733.4161490683232,
+          "heSoSuDung": 0.41369921091839706,
+          "trangThai": "ĐẠT",
+          "lyDoKhoa": null,
+          "x": 7.19,
+          "y": 5.72,
+          "loaiKiemTra": "COMPRESSION"
+        },
+        {
+          "coc": "160",
+          "diem": "160",
+          "toHop": "EULS",
+          "nhuCauKn": 343.63918974684805,
+          "sucChiuTaiChoPhepKn": 733.4161490683232,
+          "heSoSuDung": 0.46854598195496716,
+          "trangThai": "ĐẠT",
+          "lyDoKhoa": null,
+          "x": 7.93,
+          "y": 5.81,
+          "loaiKiemTra": "COMPRESSION"
+        },
+        {
+          "coc": "161",
+          "diem": "161",
+          "toHop": "EULS",
+          "nhuCauKn": 280.22771574243876,
+          "sucChiuTaiChoPhepKn": 733.4161490683232,
+          "heSoSuDung": 0.3820855541542397,
+          "trangThai": "ĐẠT",
+          "lyDoKhoa": null,
+          "x": 8.2,
+          "y": 5.11,
+          "loaiKiemTra": "COMPRESSION"
+        },
+        {
+          "coc": "167",
+          "diem": "167",
+          "toHop": "EULS",
+          "nhuCauKn": 310.9017790337088,
+          "sucChiuTaiChoPhepKn": 733.4161490683232,
+          "heSoSuDung": 0.42390909912285824,
+          "trangThai": "ĐẠT",
+          "lyDoKhoa": null,
+          "x": 6.9,
+          "y": 0.46,
+          "loaiKiemTra": "COMPRESSION"
+        },
+        {
+          "coc": "168",
+          "diem": "168",
+          "toHop": "EULS",
+          "nhuCauKn": 365.2920507005818,
+          "sucChiuTaiChoPhepKn": 733.4161490683232,
+          "heSoSuDung": 0.4980692764464232,
+          "trangThai": "ĐẠT",
+          "lyDoKhoa": null,
+          "x": 7.65,
+          "y": 0.46,
+          "loaiKiemTra": "COMPRESSION"
+        },
+        {
+          "coc": "169",
+          "diem": "169",
+          "toHop": "EULS",
+          "nhuCauKn": 290.52138193625683,
+          "sucChiuTaiChoPhepKn": 733.4161490683232,
+          "heSoSuDung": 0.3961207866847674,
+          "trangThai": "ĐẠT",
+          "lyDoKhoa": null,
+          "x": 7.65,
+          "y": 1.1,
+          "loaiKiemTra": "COMPRESSION"
+        },
+        {
+          "coc": "170",
+          "diem": "170",
+          "toHop": "EULS",
+          "nhuCauKn": 285.949573636969,
+          "sucChiuTaiChoPhepKn": 733.4161490683232,
+          "heSoSuDung": 0.38988720660189696,
+          "trangThai": "ĐẠT",
+          "lyDoKhoa": null,
+          "x": 4.82,
+          "y": 0.49,
+          "loaiKiemTra": "COMPRESSION"
+        },
+        {
+          "coc": "171",
+          "diem": "171",
+          "toHop": "EULS",
+          "nhuCauKn": 285.78082587948563,
+          "sucChiuTaiChoPhepKn": 733.4161490683232,
+          "heSoSuDung": 0.3896571220070899,
+          "trangThai": "ĐẠT",
+          "lyDoKhoa": null,
+          "x": 4.07,
+          "y": 0.49,
+          "loaiKiemTra": "COMPRESSION"
+        },
+        {
+          "coc": "172",
+          "diem": "172",
+          "toHop": "EULS",
+          "nhuCauKn": 282.45435302362756,
+          "sucChiuTaiChoPhepKn": 733.4161490683232,
+          "heSoSuDung": 0.3851215348645327,
+          "trangThai": "ĐẠT",
+          "lyDoKhoa": null,
+          "x": 3.32,
+          "y": 0.49,
+          "loaiKiemTra": "COMPRESSION"
+        },
+        {
+          "coc": "177",
+          "diem": "177",
+          "toHop": "EULS",
+          "nhuCauKn": 284.1586952648752,
+          "sucChiuTaiChoPhepKn": 733.4161490683232,
+          "heSoSuDung": 0.38744537548818503,
+          "trangThai": "ĐẠT",
+          "lyDoKhoa": null,
+          "x": 1.98,
+          "y": 0.46,
+          "loaiKiemTra": "COMPRESSION"
+        },
+        {
+          "coc": "178",
+          "diem": "178",
+          "toHop": "EULS",
+          "nhuCauKn": 275.85595425892734,
+          "sucChiuTaiChoPhepKn": 733.4161490683232,
+          "heSoSuDung": 0.37612473438082056,
+          "trangThai": "ĐẠT",
+          "lyDoKhoa": null,
+          "x": 1.23,
+          "y": 0.46,
+          "loaiKiemTra": "COMPRESSION"
+        },
+        {
+          "coc": "179",
+          "diem": "179",
+          "toHop": "EULS",
+          "nhuCauKn": 273.6354927832871,
+          "sucChiuTaiChoPhepKn": 733.4161490683232,
+          "heSoSuDung": 0.3730971742726051,
+          "trangThai": "ĐẠT",
+          "lyDoKhoa": null,
+          "x": 0.48,
+          "y": 0.46,
+          "loaiKiemTra": "COMPRESSION"
+        }
+      ],
+      "provenance": {
+        "batch": {
+          "batch": {
+            "status": "HNL-LOCKED-COMPOSITION",
+            "rule": "For each borehole: run Mechanical + SPT; Rpile=min(Rd, Rmaterial); batch governing=min(Rpile)."
+          },
+          "material": [
+            {
+              "standard": "TCVN 5574:2018",
+              "clause": "8.1.2.4.3",
+              "formula": "(49)–(50)",
+              "table": "Bảng 16",
+              "standardPage": "61–62",
+              "pdfPage": "59–60",
+              "status": "VERIFIED"
+            },
+            {
+              "standard": "TCVN 5574:2018",
+              "tables": "Bảng 7, 10, 13, 14",
+              "standardPage": "35, 38, 47, 48",
+              "pdfPage": "33, 36, 45, 46",
+              "status": "VERIFIED"
+            },
+            "Bảng 7 · trang chuẩn 35 · PDF 33",
+            "Bảng 10 · trang chuẩn 38 · PDF 36",
+            "Bảng 13 · trang chuẩn 47 · PDF 45",
+            "Bảng 14 · trang chuẩn 48 · PDF 46"
+          ],
+          "boreholes": [
+            {
+              "id": "HK1",
+              "source": "USER/PROJECT-BOREHOLE",
+              "layerCount": 3,
+              "sptPointCount": 5
+            },
+            {
+              "id": "HK2",
+              "source": "USER/PROJECT-BOREHOLE",
+              "layerCount": 3,
+              "sptPointCount": 5
+            },
+            {
+              "id": "HK3",
+              "source": "USER/PROJECT-BOREHOLE",
+              "layerCount": 3,
+              "sptPointCount": 5
+            }
+          ]
+        },
+        "structural": {
+          "structuralImporter": "LOCKED_DCE_TABLE_ADAPTER",
+          "structuralSourceId": "DCE_EXACT_PASS7_GOLDEN",
+          "reactionEngine": "P1_PASS4_IMPORTED_NUMERIC_CORE_LOCKED",
+          "capacitySource": "MultiBoreholePileEngine + PileCapacityEngine + PileMaterialEngine",
+          "capacityArtifact": "PASS7_GOLDEN_V18",
+          "claimBoundary": "No rigid-cap reaction derivation and no capacity derivation occurs in Pass 6."
+        },
+        "claimBoundary": "Pass 7 chỉ ghép các engine đã khóa; không thay công thức TCVN hoặc phân phối phản lực."
+      }
+    },
+    "summary": {
+      "RsoilKn": 843.4285714285716,
+      "RmaterialKn": 2952,
+      "RpileKn": 843.4285714285716,
+      "gammaN": 1.15,
+      "NdMaxPerPileKn": 733.4161490683232,
+      "boreholeBranches": 6,
+      "pileChecks": 19,
+      "governingPileId": "168",
+      "governingCombinationId": "EULS",
+      "governingUtilization": 0.4980692764464232,
+      "overallPass": true
+    },
+    "provenance": {
+      "soilMaterialCapacity": "P1 Pass 2 LOCKED child engines",
+      "structuralImporter": "P1 Pass 5 Core LOCKED",
+      "importedReactionCheck": "P1 Pass 4 numeric core LOCKED",
+      "structuralOrchestration": "P1 Pass 6 Core LOCKED",
+      "reportIntegration": "P1 Pass 7 orchestration only"
+    }
+  }
+}

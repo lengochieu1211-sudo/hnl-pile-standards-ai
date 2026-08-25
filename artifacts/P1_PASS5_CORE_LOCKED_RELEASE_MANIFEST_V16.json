@@ -1,0 +1,64 @@
+{
+  "schema": "HNL-P1-PASS5-CORE-LOCKED-RELEASE-MANIFEST",
+  "version": "1.25.7",
+  "release": "P1 Pass 5 Core Locked v16",
+  "status": "LOCKED",
+  "releaseType": "CORE_LOCKED_PATCH",
+  "tests": {
+    "tests": 138,
+    "pass": 138,
+    "fail": 0
+  },
+  "lockedScope": [
+    "Canonical structural import schema",
+    "DCE workbook table adapter",
+    "CSI flat-table payload contract",
+    "CSV fallback with explicit kN_m_C unit profile",
+    "Source-specific sign conventions",
+    "Nodal raw-row preservation + envelope provenance",
+    "Pass 3 PIERFORCES handoff",
+    "Pass 4 imported nodal-reaction handoff",
+    "Join/missing/orphan/duplicate validation",
+    "Importer non-numeric responsibility boundary"
+  ],
+  "deferredScope": [
+    "Live ETABS/SAP CSi API certification",
+    "Windows Excel COM runtime certification",
+    "Full-source integration release"
+  ],
+  "exactCoverage": {
+    "pointCoordinates": 194,
+    "nodalReactionRawRows": 38,
+    "nodalReactionEnvelopes": 19,
+    "pointSpringAssignments": 19,
+    "pierForces": 234,
+    "pierSection": 39
+  },
+  "golden": {
+    "tmSctCocEnvelope": "19/19 PASS",
+    "pass3Pierforces": "39/39 PASS",
+    "pass3XlsmBehavior": "273/273 PASS",
+    "priorRegression": "388/388 PASS",
+    "priorFullTable": "1242/1242 PASS",
+    "searchBrainSha256": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2"
+  },
+  "liveAdapter": {
+    "status": "READY_NOT_CERTIFIED_LIVE",
+    "futureCertificationRunner": "windows/csi-bridge/RUN_PASS5_FINAL_LOCK.cmd"
+  },
+  "keyFileSha256": {
+    "src/etabs-sap-importer.js": "ce5ad7c1d2e14721f14467bfe19e7e29531629fc4f5a3682ed38dc01dff1bd3d",
+    "src/csi-live-bridge.js": "c9bf005b3ef9d0035256d98caeefa2d4a0469477ec11fb83838843f3661d8095",
+    "src/pass5-core-status.js": "4d7a5f59c1879c0868f74b41b2c52ff8caa7404ccc1935299a4d2ec28feeb55c",
+    "src/pile-reaction-engine.js": "69a5efe4b5e25d6a88b34817dc9e6ea77ad03932996eed05d2b006e75fec5ce8",
+    "src/tm-sct-coc-pattern.js": "ed317472efc3c098fae25534548c9b6bd0bae153874bf0e74f412ce07feec2d8",
+    "src/tm-sct-coc-grouping-engine.js": "fe857131abf3c9eb8daf1b98c78b3d3704b37cbf97e64c23c2bded77965a3dd3",
+    "tools/p1-pass5-core-lock-gate.mjs": "4727bad2ed617596ffa881db30ec348bc1170e686b564b545cee0eedc31e2146",
+    "tools/p1-pass5-final-lock-gate.mjs": "8bf01a38caaf9fa950cb5ddaa38683cb9ab18119b0b44688b4805571e084336c",
+    "tools/p1-pass5-live-golden.mjs": "801aaa26de4396b84f263ed61bb156a33bcb82916d3a3a3bf1c2e9aafb92c56c",
+    "windows/csi-bridge/HnlCsiLiveBridge.cs": "27f67cd0e3ef7834dd5398c875b3be9f6ff4c7dccfa45cb803f0b2675d841607",
+    "windows/csi-bridge/RUN_PASS5_FINAL_LOCK.cmd": "e639f9286e77877db791284b8fdfc2c1bc2e45fb940a8ae9a91bfbabc20d21e2",
+    "windows/excel-fallback/HnlExcelFallback.ps1": "04fbb6b782c02f355bad61eba49c6f53d998ff88be478d26bcf3ee217da46b78"
+  },
+  "invariant": "Pass 5 Core importer is parse-normalize-map-validate-handoff only and must not calculate pile reactions, capacity, utilization, pile count, governing combinations, or rigid-cap distribution."
+}

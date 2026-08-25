@@ -1,0 +1,93 @@
+{
+  "schema": "HNL-P1-PASS5-2-LIVE-CSI-BRIDGE-GATE-V14",
+  "version": "1.25.7",
+  "status": {
+    "pass51CanonicalSchema": "LOCKED",
+    "pass51DceTableAdapter": "LOCKED",
+    "pass52BridgePayloadAdapter": "LOCKED_CONTRACT",
+    "pass52CsvFallback": "LOCKED",
+    "pass52ExcelFallback": "LOCKED_CONTRACT_WINDOWS_COM_NOT_RUN",
+    "pass52WindowsCsiBridgeSource": "STATIC_VERIFIED_LIVE_NOT_RUN",
+    "liveGoldenReplay": "PASS",
+    "fullPass5": "REVIEW_PENDING_WINDOWS_LIVE_GOLDEN"
+  },
+  "contract": {
+    "pipeline": "cSapModel -> read raw API/tables -> JSON -> canonical importer -> Pass4/Pass3 handoff",
+    "forbidden": [
+      "reaction calculation",
+      "capacity calculation",
+      "utilization calculation",
+      "governing-combination selection",
+      "pile-count selection",
+      "rigid-cap distribution"
+    ],
+    "signConvention": "explicit per source/table; never global or inferred",
+    "units": "live bridge must set+verify kN_m_C, then restore original CSi units; CSV/Excel fallback requires explicit kN_m_C profile"
+  },
+  "liveApiImplementation": {
+    "attach": "CSiAPIv1.Helper.GetObject with ETABS/SAP2000 ProgID candidates",
+    "databaseTables": [
+      "GetAvailableTables",
+      "GetTableForDisplayArray"
+    ],
+    "coordinates": "PointObj.GetNameList + GetCoordCartesian",
+    "reactions": "Results.JointReact using eItemTypeElm.ObjectElm=0",
+    "units": [
+      "GetPresentUnits/GetPresentUnits_2",
+      "SetPresentUnits/SetPresentUnits_2",
+      "restore in finally"
+    ],
+    "crossChecks": [
+      "GetCoordCartesian vs DatabaseTables coordinates",
+      "JointReact vs DatabaseTables reactions"
+    ],
+    "mismatchPolicy": "BLOCK canonical live import when both API paths exist and disagree beyond tolerance"
+  },
+  "goldenReplay": {
+    "source": "exact DCE fixture replayed through live-API payload shape",
+    "coordinates": "194/194 PASS",
+    "directVsTableCoordinateGroups": "194 PASS",
+    "nodalRawRows": 38,
+    "nodalEnvelopes": "19/19 PASS",
+    "directVsTableReactionGroups": "19 PASS",
+    "pierForces": "234/234 PASS",
+    "pointSpringAssignments": 19,
+    "pierSection": 39,
+    "pass4Handoff": "PASS when locked capacity is supplied externally",
+    "issues": 0
+  },
+  "fallback": {
+    "csv": "pure Node parser; exact fixture counts 194/38/19/234/39 PASS; units profile mandatory",
+    "excel": "Windows Excel COM extractor for five DCE-compatible sheets; canonical adapter replay PASS; Windows COM execution NOT_RUN in Linux"
+  },
+  "tests": {
+    "node": "126/126 PASS",
+    "fail": 0
+  },
+  "windowsLiveGate": {
+    "runner": "windows/csi-bridge/RUN_LIVE_GOLDEN.cmd",
+    "bridge": "windows/csi-bridge/HnlCsiLiveBridge.cs",
+    "goldenCli": "tools/p1-pass5-live-golden.mjs",
+    "requiredBeforeFullLock": [
+      "compile bridge on Windows",
+      "attach to running ETABS/SAP2000",
+      "same reference model/output cases",
+      "live direct/table cross-check PASS",
+      "Live vs DCE reference Golden PASS",
+      "prior regression/full-table/Search Brain gates still PASS"
+    ]
+  },
+  "environment": {
+    "linuxLiveCsiApi": "NOT_RUN",
+    "windowsCompiler": "NOT_RUN",
+    "excelCom": "NOT_RUN"
+  },
+  "searchJsTouched": false,
+  "sourceEvidenceSha256": {
+    "CSiAPIv1.dll": "a4e74cbdb51ff13dfacc2fb81f1d39bf76b4e5260c5d891eeac06431909e27a6",
+    "DCE Excel.dll": "9011a640477decf36dc687e94eb8586081ece1ef540bb62eca3890a6b6efd785",
+    "10.1 DCE_SctCoc_10304 2025.xlsm": "ec38b68f753b08e50d9d1f9df988be5084cab1aedf391ba1aaecf112e9d88bd1",
+    "pile-quantity-golden-v1.25.7.json": "880a3f9a7eb970db17b5438f5b483193a054f4c480f7b43d3667f8182acbd920",
+    "gate-status-v1.25.7.json": "16d1493d7710332ddbf3904414dd662b673c6e01283fb6bbc3c17da60a1e7af8"
+  }
+}

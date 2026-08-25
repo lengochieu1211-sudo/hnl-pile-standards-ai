@@ -1,0 +1,30 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HNL – Tính cọc một nút</title><link rel="stylesheet" href="styles.css"></head><body>
+<svg width="0" height="0" aria-hidden="true"><use href="icons.svg#ico-pile"/></svg>
+<div class="shell">
+ <header class="topbar"><div class="brand"><h1>HNL Pile Standards AI · Tính cọc một nút</h1><p>Pass 8 · Router gọi các workflow đã khóa · giao diện tiếng Việt</p></div><span class="badge">KHÔNG TÍNH BẰNG AI</span></header>
+ <section class="flow"><img src="workflow.svg" alt="Luồng tính toán Pass 8"></section>
+ <div class="grid">
+  <section class="card"><h2><svg class="icon"><use href="icons.svg#ico-pile"/></svg>1. Loại cọc</h2><div class="fields">
+   <label>Phương pháp thi công<select id="construction"><option value="driven">Cọc đóng/ép · §7.2.2</option><option value="bored">Cọc khoan/nhồi · §7.2.3</option></select></label>
+   <label>Hình dạng<select id="shape"><option value="square">Cọc vuông</option></select></label>
+   <label>Cạnh cọc (mm)<input id="sideMm" type="number" value="400"></label><label>Chiều dài cọc (m)<input id="lengthM" type="number" value="12"></label>
+   <label>Độ sâu mũi (m)<input id="tipDepthM" type="number" value="12"></label><label>γn<input id="gammaN" type="number" step="0.01" value="1.15"></label>
+  </div></section>
+  <section class="card"><h2><svg class="icon"><use href="icons.svg#ico-soil"/></svg>2. Địa chất + SPT</h2><div class="fields">
+   <label>γk cơ lý<input id="mechanicalGammaK" type="number" step="0.1" value="1.4"></label><label>γk SPT<input id="sptGammaK" type="number" step="0.1" value="1.5"></label>
+  </div><label>Dữ liệu lỗ khoan JSON<textarea id="boreholes" placeholder='[{"id":"HK1","layers":[...],"sptPoints":[...]}]'></textarea></label></section>
+  <section class="card"><h2><svg class="icon"><use href="icons.svg#ico-material"/></svg>3. Vật liệu</h2><div class="fields">
+   <label>Bê tông<select id="grade"><option>B20</option><option>B25</option><option selected>B30</option><option>B35</option><option>B40</option></select></label>
+   <label>Thép<select id="steel"><option>CB300-V</option><option selected>CB400-V</option><option>CB500-V</option></select></label>
+   <label>As,tot (mm²)<input id="AsTotMm2" type="number" value="1600"></label><label>L0 (mm)<input id="L0Mm" type="number" value="4000"></label>
+   <label>e0 (mm)<input id="e0Mm" type="number" step="0.01" value="13.3333333333"></label><label>Thời hạn tải<select id="loadDuration"><option value="long">Dài hạn</option></select></label>
+  </div></section>
+  <section class="card"><h2><svg class="icon"><use href="icons.svg#ico-structure"/></svg>4. File kết cấu</h2>
+   <div class="filebox"><label>JSON bundle từ Pass 5<input id="structuralFile" type="file" accept=".json,application/json"></label><p class="message">Nhận DCE_TABLES/Pass 5 JSON. XLSM/ETABS raw phải qua adapter Pass 5 trước; không tự đoán sign/unit.</p></div>
+   <div style="margin-top:12px"><button class="btn secondary" id="loadGolden">Nạp dữ liệu mẫu Golden</button></div>
+  </section>
+ </div>
+ <div class="actions"><button class="btn primary" id="calculate"><svg class="icon"><use href="icons.svg#ico-calc"/></svg>TÍNH</button><button class="btn secondary" id="export" disabled><svg class="icon"><use href="icons.svg#ico-excel"/></svg>XUẤT EXCEL TIẾNG VIỆT</button><span class="message" id="actionMsg">Chưa tính.</span></div>
+ <div class="error" id="error"></div>
+ <section class="result" id="result"><div class="kpis" id="kpis"></div><div class="card steps"><h2>Kết quả từng bước</h2><div id="steps"></div></div></section>
+</div><script type="module" src="app.js"></script></body></html>

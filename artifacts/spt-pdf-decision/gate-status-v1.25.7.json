@@ -1,0 +1,84 @@
+{
+  "version": "1.25.7",
+  "generatedAt": "2026-08-25T03:34:04.599892+00:00",
+  "scope": "SPT PDF Decision Pass",
+  "normativeAuthority": "TCVN 10304:2025 · Phụ lục D · D.1–D.6 · Bảng D.1 · trang 110–111",
+  "decision": {
+    "status": "LOCKED",
+    "tipN": "Arithmetic mean of actual measured SPT points in the prescribed tip window; mean capped at 100.",
+    "shaftN": "Per geological layer: explicit representative N with provenance, otherwise arithmetic mean of actual measured SPT points in that layer.",
+    "shaftBoundary": "Half-open [top,bottom); a point exactly at a layer boundary belongs to the deeper layer.",
+    "noSyntheticN": "No continuous interpolation/extrapolation creates SPT points for Production.",
+    "d56Partition": "D.5/D.6 are applied piecewise by homogeneous geological layer and summed. This is an HNL deterministic partition of the standard identity, not a newly claimed TCVN formula.",
+    "dce": "NoiSuySPT and DCE right-end rectangle accumulation remain REFERENCE-only."
+  },
+  "availableGates": {
+    "focusedSptPlusDce": "18/18 PASS",
+    "npmTest": "361/361 PASS",
+    "fullTableGolden": "1242/1242 PASS",
+    "p0WorkflowGolden": "3/3 workflows; 35/35 metrics PASS",
+    "p1MaterialGolden": "7/7 capacity; 42/42 metrics PASS",
+    "dceBehavioralGolden": "213/213 acceptable; 0 FAIL",
+    "sptPdfDecisionGolden": "26/26 PASS",
+    "versionGate": "PASS v1.25.7",
+    "searchBrain": "PASS f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2"
+  },
+  "dceReferenceDifference": {
+    "dce": {
+      "QbKn": 4712.38898038469,
+      "RufKn": 6975.297018321339,
+      "RkKn": 11687.68599870603
+    },
+    "hnl": {
+      "QbKn": 4712.38898038469,
+      "RufKn": 6574.222450608145,
+      "RkKn": 11286.611430992834,
+      "tipN": 50,
+      "noInterpolationPolicy": true
+    },
+    "delta": {
+      "QbKn": 0,
+      "RufKn": -401.0745677131945,
+      "RkKn": -401.0745677131963
+    },
+    "classification": "DIFFERENT_BY_NORMATIVE_POLICY_DECISION",
+    "decision": "SPT_PDF_DECISION_LOCKED__NO_CONTINUOUS_N_INTERPOLATION__NO_DCE_RIGHT_END_INTEGRATION",
+    "pdfDecision": {
+      "tipN": "MEASURED-WINDOW-ARITHMETIC-MEAN",
+      "shaftN": "LAYER-REPRESENTATIVE_OR_MEASURED-LAYER-MEAN",
+      "boundary": "[top,bottom)",
+      "partition": "D.5/D.6 by geological layer"
+    }
+  },
+  "localRuntimeGates": {
+    "npmCi": {
+      "status": "BLOCKED",
+      "exitCode": 1,
+      "reason": "source package has no package-lock.json",
+      "log": "artifacts/spt-pdf-decision/npm-ci.log"
+    },
+    "excelSmoke": {
+      "status": "BLOCKED",
+      "exitCode": 1,
+      "reason": "exceljs not installed because dependencies cannot be installed without lockfile",
+      "log": "artifacts/spt-pdf-decision/excel-smoke.log"
+    },
+    "webBuild": {
+      "status": "BLOCKED",
+      "exitCode": 127,
+      "reason": "vite not installed",
+      "log": "artifacts/spt-pdf-decision/build-web.log"
+    },
+    "windowsBuild": {
+      "status": "NOT_RUN_LOCAL",
+      "reason": "Linux sandbox"
+    },
+    "excelComRecalc": {
+      "status": "NOT_RUN_LOCAL",
+      "reason": "Requires Windows + Microsoft Excel; CI script updated to verify SPT half-open boundary"
+    }
+  },
+  "ciWiring": "golden:spt-decision runs on Linux and Windows rc-final gates; artifact uploaded with release evidence",
+  "xllProductionDependency": false,
+  "eqProductionUnlocked": false
+}

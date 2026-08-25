@@ -1,0 +1,21 @@
+{
+  "version": "1.25.7",
+  "algorithmGate": "PASS",
+  "regression": {"pass": 328, "total": 328},
+  "fullTableGolden": {"pass": 1242, "total": 1242},
+  "workflowGolden": {"workflows": "3/3", "metrics": "35/35", "xlsmTraceableBenchmarks": "5/5", "boundary": "5/5", "status": "PASS"},
+  "versionGate": "PASS",
+  "searchBrain": {"status": "PASS", "normalizedSha256": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2"},
+  "localRuntime": {
+    "npmCi": "BLOCKED_MISSING_PACKAGE_LOCK",
+    "excelJsSmoke": "BLOCKED_MISSING_EXCELJS",
+    "webBuild": "BLOCKED_MISSING_VITE",
+    "windowsBuild": "NOT_RUN_LINUX_SANDBOX",
+    "microsoftExcelCom": "NOT_RUN_LINUX_SANDBOX"
+  },
+  "ciWiring": {
+    "workflowGolden": true,
+    "excelJsRawRockBoredSpt": true,
+    "windowsExcelComRecalcRawRockBoredSpt": true
+  }
+}

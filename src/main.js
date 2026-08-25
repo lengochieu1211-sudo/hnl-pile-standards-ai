@@ -7,7 +7,7 @@ import { searchChunks, searchEveryPage, smartSearchChunks, deepSearchChunks, loc
 import { PROVIDERS, buildRagPrompt, callBridge, callDirect, bridgeHealth, testDirectProvider, listAvailableModelsDetailed, semanticRerank, localEngineDiagnostics, supportsNativePdf } from './ai.js';
 import { annulusAreaMm2, axialResistance, loadClassSigmaCe, tcvn7888Checklist } from './calculators.js';
 import { calculateDrivenPile10304 } from './pile-workflows.js';
-import { deterministicEngineeringContext, solveEngineeringQuestion, engineeringExcelPayload } from './engineering-router.js';
+import { deterministicEngineeringContext, solveEngineeringQuestion, engineeringExcelPayload, canExportEngineeringResult } from './engineering-router.js';
 import { diameters7888, lookup7888, lookupPileType7888, classesForDiameter7888, classesForPileType7888, isTcvn7888_2014Document } from './tcvn7888.js';
 import { extractFormulaLibrary, formulaStats, verifiedFormulaLibrary, evaluateExpression, clearFormulaCache } from './formulas.js';
 import { parsePageSpec } from './scope.js';
@@ -15,6 +15,8 @@ import { codePackSearch, codePackFormulaItems, codePackStats, codePackForDoc } f
 import { exportFormulaWorkbook, exportCodePackWorkbook, exportDrivenPileWorkflowWorkbook, export10304AdvancedWorkflowWorkbook, export5574WorkflowWorkbook, export7888WorkflowWorkbook, exportUnifiedEngineeringWorkbook } from './excel-export.js';
 import { buildImageEngineeringExtractionPrompt, parseImageEngineeringExtraction, normalizeImageEngineeringExtraction, imageEngineeringNeedsConfirmation, imageEngineeringFieldRows, updateImageEngineeringField, buildConfirmedEngineeringQuestion, imageEngineeringProvenance, isSupportedEngineeringImage, IMAGE_ENGINEERING_MAX_FILES, IMAGE_ENGINEERING_MAX_BYTES } from './image-engineering.js';
 import { normalizeEngineeringText, normalizeEngineeringPaste } from './engineering-text-normalizer.js';
+import { createPass82DefaultDraft, runPass82UiCalculation, checkPass82Exporter, exportPass82Excel } from './pass82-ui-controller.js';
+import { parseStructuralJsonText } from './pass8-structural-file-parser.js';
 
 const SOURCE_META = Object.freeze({
   version: typeof __HNL_APP_VERSION__ !== 'undefined' ? __HNL_APP_VERSION__ : '0.0.0',
@@ -106,6 +108,14 @@ const state = {
   calculations: [],
   calcDraft: null,
   pile10304Draft: null,
+  pass8Draft: createPass82DefaultDraft(),
+  pass8Structural: null,
+  pass8StructuralName: '',
+  pass8Output: null,
+  pass8Request: null,
+  pass8ExporterStatus: 'Chưa kiểm tra dịch vụ Excel',
+  pass8ExporterReady: false,
+  pass8ExportBusy: false,
   lookup: {
     query: '', draft: '', hits: [],
     scope: localStorage.getItem(STORAGE.lookupScope) || 'smart',
@@ -1902,7 +1912,7 @@ function chatCalcTransferHtml() {
   const payload=transfer?.payload;
   if(!payload?.recognized) return '';
   const wf=payload.workflow||{}; const result=payload.result||{};
-  const ready=String(wf.status||'').startsWith('VERIFIED') && Boolean(result.ok||result.methodOnly);
+  const ready=Boolean(payload.canExport ?? canExportEngineeringResult(payload));
   const missing=Array.isArray(result.missing)?result.missing:[];
   const facts=engineeringResultFacts(result);
   return `<div class="panel-section chat-calc-transfer">
@@ -1929,19 +1939,115 @@ function recalculateChatTransfer() {
   state.chatCalcTransfer={...transfer,payload};
   syncChatTransferToDedicatedCalculator(payload);
   render();
-  showToast(payload.result?.ok||payload.result?.methodOnly?'Calculation Engine đã đủ dữ liệu. Có thể xuất Excel.':'Đã tính lại; vẫn còn dữ liệu cần bổ sung.', payload.result?.ok||payload.result?.methodOnly?'success':'warning');
+  showToast(payload.canExport?'Calculation Engine đã đủ dữ liệu. Có thể xuất Excel.':'Đã tính lại; vẫn còn dữ liệu cần bổ sung.', payload.canExport?'success':'warning');
 }
 
 async function exportChatCalcTransferExcel() {
   const transfer=state.chatCalcTransfer; const payload=transfer?.payload;
   if(!payload?.recognized) return showToast('Không có workflow kỹ thuật để xuất Excel.', 'warning');
   if(!String(payload.workflow?.status||'').startsWith('VERIFIED')) return showToast('Workflow chưa VERIFIED nên không được xuất Excel số học.', 'warning');
-  if(!(payload.result?.ok||payload.result?.methodOnly)) return showToast('Đề bài chưa đủ dữ liệu để xuất Excel.', 'warning');
+  if(!payload.canExport) return showToast('Đề bài chưa đủ dữ liệu để xuất Excel.', 'warning');
   try{
     const imageProvenance=transfer.imageProvenance||[];
     await exportUnifiedEngineeringWorkbook({...payload,imageProvenance},{imageProvenance});
     showToast(`Đã xuất Excel v1.25.7: ${payload.workflow.title}.`,'success');
   }catch(error){ showToast(`Không xuất được Excel: ${error.message}`,'error'); }
+}
+
+
+function pass8IconSvg(kind='pile') {
+  const paths={
+    pile:'<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M9 7h6M9 11h6M9 15h6"/>',
+    soil:'<path d="M3 7h18M5 11h14M7 15h10M9 19h6"/><circle cx="7" cy="5" r="1"/><circle cx="16" cy="9" r="1"/>',
+    material:'<path d="M4 19V8l8-4 8 4v11z"/><path d="M8 19v-6h8v6M8 9h8"/>',
+    structure:'<path d="M4 20V4h16v16M8 20V8h8v12M4 12h4M16 12h4"/>',
+    excel:'<path d="M5 3h10l4 4v14H5z"/><path d="M15 3v5h5M8 11l5 6M13 11l-5 6"/>'
+  };
+  return `<svg class="pass8-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${paths[kind]||paths.pile}</svg>`;
+}
+
+function pass82DraftValue(key, fallback='') { const v=state.pass8Draft?.[key]; return v==null?fallback:v; }
+
+function syncPass82DraftFromDom() {
+  const ids={
+    constructionMethod:'pass8Construction',sideMm:'pass8Side',lengthM:'pass8Length',tipDepthM:'pass8TipDepth',shaftStartDepthM:'pass8ShaftStart',maxSegmentM:'pass8MaxSegment',
+    mechanicalGammaK:'pass8MechGamma',sptGammaK:'pass8SptGamma',gammaN:'pass8GammaN',grade:'pass8Concrete',steel:'pass8Steel',AsTotMm2:'pass8As',L0Mm:'pass8L0',e0Mm:'pass8E0',
+    combinationIdsText:'pass8Combos',boreholesJson:'pass8BoreholesJson'
+  };
+  const next={...(state.pass8Draft||createPass82DefaultDraft())};
+  for(const [key,id] of Object.entries(ids)){const el=document.querySelector(`#${id}`); if(el) next[key]=el.value;}
+  state.pass8Draft=next;
+  return next;
+}
+
+function pass8OneClickHtml() {
+  const d=state.pass8Draft||createPass82DefaultDraft(); const vm=state.pass8Output?.view;
+  const num=(v,digits=3)=>Number.isFinite(Number(v))?Number(v).toLocaleString('vi-VN',{maximumFractionDigits:digits}):esc(v??'-');
+  const resultHtml=vm?`<div class="pass8-result-head"><div><b>Kết quả một nút</b><small>${esc(vm.conclusion||'')}</small></div><span class="status-chip ${vm.statusVi==='ĐẠT'?'ok':'warn'}">${esc(vm.statusVi)}</span></div>
+    <div class="pass8-kpis">${vm.kpis.map(([k,v,u])=>`<div class="pass8-kpi"><span>${esc(k)}</span><b>${typeof v==='number'?num(v,k.includes('sử dụng')?4:3):esc(v??'-')}</b><small>${esc(u)}</small></div>`).join('')}</div>
+    <div class="pass8-steps">${vm.steps.map(step=>`<div class="pass8-step"><span class="pass8-step-status">${esc(step.status)}</span><div><b>${esc(step.title)}</b><small>${esc(step.detail)}</small></div></div>`).join('')}</div>`:'';
+  return `<div class="panel-section pass8-oneclick" id="pass8OneClickPanel">
+    <div class="panel-section-title"><h3>⚙ TÍNH CỌC MỘT NÚT · PASS 8</h3><span>Workflow đã khóa</span></div>
+    <div class="notice">Nhập cọc + địa chất/SPT + vật liệu + file kết cấu đã chuẩn hóa Pass 5, sau đó bấm <b>TÍNH</b>. HNL gọi nguyên chuỗi Pass 7 LOCKED; giao diện không tự tính công thức kỹ thuật.</div>
+    <div class="pass8-grid">
+      <section class="pass8-card"><div class="pass8-card-title">${pass8IconSvg('pile')}<b>1. Cọc</b></div>
+        <label class="field"><span>Phương pháp thi công</span><select id="pass8Construction"><option value="driven" ${d.constructionMethod==='driven'?'selected':''}>Cọc đóng/ép · §7.2.2</option><option value="bored" ${d.constructionMethod==='bored'?'selected':''}>Cọc khoan/nhồi · §7.2.3</option></select></label>
+        <div class="grid2"><label class="field"><span>Cạnh cọc (mm)</span><input id="pass8Side" type="number" value="${esc(d.sideMm)}"></label><label class="field"><span>Chiều dài (m)</span><input id="pass8Length" type="number" value="${esc(d.lengthM)}"></label></div>
+        <div class="grid2"><label class="field"><span>Độ sâu mũi (m)</span><input id="pass8TipDepth" type="number" value="${esc(d.tipDepthM)}"></label><label class="field"><span>γn</span><input id="pass8GammaN" type="number" step="0.01" value="${esc(d.gammaN)}"></label></div>
+        <div class="grid2"><label class="field"><span>Bắt đầu ma sát z (m)</span><input id="pass8ShaftStart" type="number" value="${esc(d.shaftStartDepthM)}"></label><label class="field"><span>Đoạn chia max (m)</span><input id="pass8MaxSegment" type="number" value="${esc(d.maxSegmentM)}"></label></div>
+      </section>
+      <section class="pass8-card"><div class="pass8-card-title">${pass8IconSvg('soil')}<b>2. Địa chất + SPT</b></div>
+        <div class="grid2"><label class="field"><span>γk cơ lý</span><input id="pass8MechGamma" type="number" step="0.01" value="${esc(d.mechanicalGammaK)}"></label><label class="field"><span>γk SPT</span><input id="pass8SptGamma" type="number" step="0.01" value="${esc(d.sptGammaK)}"></label></div>
+        <label class="field"><span>Danh sách lỗ khoan JSON</span><textarea id="pass8BoreholesJson" rows="7" placeholder='[{"id":"HK1","layers":[...],"sptPoints":[...]}]'>${esc(d.boreholesJson||'[]')}</textarea></label>
+        <small class="footnote">Không ngoại suy. Tối thiểu 2 lỗ khoan; dữ liệu ngoài miền VERIFIED sẽ bị KHÓA TÍNH.</small>
+      </section>
+      <section class="pass8-card"><div class="pass8-card-title">${pass8IconSvg('material')}<b>3. Vật liệu</b></div>
+        <div class="grid2"><label class="field"><span>Bê tông</span><input id="pass8Concrete" value="${esc(d.grade)}"></label><label class="field"><span>Thép</span><input id="pass8Steel" value="${esc(d.steel)}"></label></div>
+        <div class="grid2"><label class="field"><span>As,tot (mm²)</span><input id="pass8As" type="number" value="${esc(d.AsTotMm2)}"></label><label class="field"><span>L0 (mm)</span><input id="pass8L0" type="number" value="${esc(d.L0Mm)}"></label></div>
+        <label class="field"><span>e0 (mm)</span><input id="pass8E0" type="number" step="0.001" value="${esc(d.e0Mm)}"></label>
+      </section>
+      <section class="pass8-card"><div class="pass8-card-title">${pass8IconSvg('structure')}<b>4. Kết cấu</b></div>
+        <label class="field"><span>File JSON chuẩn hóa Pass 5</span><input id="pass8StructuralFile" type="file" accept=".json,application/json"></label>
+        <div class="pass8-file-state"><b>${esc(state.pass8StructuralName||'Chưa chọn file')}</b><small>${state.pass8Structural?'Đã đọc · sẵn sàng đưa vào canonical importer':'Nhận DCE_TABLES hoặc CSV bundle có profile kN_m_C.'}</small></div>
+        <label class="field"><span>Tổ hợp kiểm (ngăn cách dấu phẩy)</span><input id="pass8Combos" value="${esc(d.combinationIdsText||'EULS')}"></label>
+        <div id="pass8ExporterStatus" class="footnote">Excel: ${esc(state.pass8ExporterStatus)}</div>
+      </section>
+    </div>
+    <div class="action-row pass8-actions"><button class="btn primary" id="pass8CalculateBtn">TÍNH</button><button class="btn" id="pass8ExporterHealthBtn">Kiểm tra Excel</button><button class="btn" id="pass8ExportBtn" ${!state.pass8Output?.output?.excelExport?.enabled||state.pass8ExportBusy?'disabled':''}>${pass8IconSvg('excel')} XUẤT EXCEL TIẾNG VIỆT</button></div>
+    ${resultHtml}
+  </div>`;
+}
+
+async function runPass82FromProductionUi(){
+  try{
+    const draft=syncPass82DraftFromDom();
+    const x=runPass82UiCalculation({draft,structural:state.pass8Structural});
+    state.pass8Request=x.request; state.pass8Output=x;
+    render();
+    showToast(x.view.statusVi==='ĐẠT'?'Pass 8: tính hoàn tất; có thể xuất Excel.':`Pass 8: ${x.view.statusVi}.`,x.view.statusVi==='ĐẠT'?'success':'warning');
+    await refreshPass82ExporterHealth(false);
+  }catch(error){state.pass8Output=null;showToast(`Pass 8 KHÓA TÍNH: ${error.message}`,'error');render();}
+}
+
+async function refreshPass82ExporterHealth(show=true){
+  try{
+    const data=await checkPass82Exporter({bridgeUrl:state.settings.bridgeUrl});
+    state.pass8ExporterReady=true; state.pass8ExporterStatus=`Sẵn sàng · ${data.version||'Dynamic Excel'}`;
+    const el=document.querySelector('#pass8ExporterStatus'); if(el) el.textContent=`Excel: ${state.pass8ExporterStatus}`;
+    if(show) showToast('Dịch vụ Xuất Excel tiếng Việt đã sẵn sàng.','success');
+  }catch(error){state.pass8ExporterReady=false;state.pass8ExporterStatus=`Chưa sẵn sàng · ${error.message}`;const el=document.querySelector('#pass8ExporterStatus');if(el)el.textContent=`Excel: ${state.pass8ExporterStatus}`;if(show)showToast(`Excel: ${error.message}`,'warning');}
+}
+
+async function exportPass82FromProductionUi(){
+  if(!state.pass8Output?.output) return showToast('Hãy bấm TÍNH trước khi xuất Excel.','warning');
+  state.pass8ExportBusy=true;
+  try{
+    const out=await exportPass82Excel({output:state.pass8Output.output,bridgeUrl:state.settings.bridgeUrl});
+    downloadBlob(out.blob,out.fileName);
+    state.pass8ExporterStatus=`Đã xuất · server verified${out.exportId?` · ${out.exportId}`:''}`;
+    showToast(`Đã xuất Excel tiếng Việt: ${out.fileName}`,'success');
+  }catch(error){showToast(`Không xuất được Excel: ${error.message}`,'error');}
+  finally{state.pass8ExportBusy=false;render();}
 }
 
 function calcHtml() {
@@ -1955,7 +2061,7 @@ function calcHtml() {
   const calcClass = classList.includes(String(draft.loadClass || '').toUpperCase()) ? String(draft.loadClass).toUpperCase() : (classList.includes('B') ? 'B' : classList[0]);
   const calcClassOptions = classList.map(x => `<option value="${x}" ${x === calcClass ? 'selected' : ''}>${x}</option>`).join('');
   const tableStatus = draft.tableSource ? `Đã nạp ${draft.tableSource}${draft.designation ? ` · ${draft.designation}` : ''}${draft.tablePage ? ` · trang ${draft.tablePage}` : ''}` : 'Giá trị đang nhập tay; bấm Nạp bảng để đồng bộ t và σce theo tiêu chuẩn.';
-  return `${transferCard}${pile10304Html()}
+  return `${transferCard}${pass8OneClickHtml()}${pile10304Html()}
   <div class="panel-section">
     <div class="panel-section-title"><h3>Máy tính đã xác minh · TCVN 7888:2014</h3><span>Phụ lục B</span></div>
     <div class="notice">Bộ tính này được khóa theo công thức đã kiểm tra thủ công của TCVN 7888:2014. Kết quả không thay thế hồ sơ thiết kế.</div>
@@ -2253,6 +2359,9 @@ function bind() {
       }
       if (el.id === 'lookupBtn') { await runLookup(); return; }
       if (el.id === 'tableLookupBtn') { runTableLookup(); return; }
+      if (el.id === 'pass8CalculateBtn') { await runPass82FromProductionUi(); return; }
+      if (el.id === 'pass8ExporterHealthBtn') { await refreshPass82ExporterHealth(true); return; }
+      if (el.id === 'pass8ExportBtn') { await exportPass82FromProductionUi(); return; }
       if (el.id === 'calcBtn') { runCalc(); return; }
       if (el.id === 'calc10304Btn') { runPile10304Calc(); return; }
       if (el.id === 'calc10304Excel') { await exportPile10304Excel(); return; }
@@ -2348,6 +2457,13 @@ function bind() {
     if (el.id === 'scopeSelect') { state.settings.scope = el.value; state.searchStats = null; saveSettings(); showToast(`Phạm vi: ${scopeLabel()}.`, 'success'); render(); return; }
     if (el.id === 'pageInput') { jumpPage(Number(el.value)); return; }
     if (el.id === 'pageRange') { jumpPage(Number(el.value)); return; }
+    if (el.id === 'pass8StructuralFile') {
+      syncPass82DraftFromDom(); const file=el.files?.[0];
+      if(!file){state.pass8Structural=null;state.pass8StructuralName='';return;}
+      try{state.pass8Structural=parseStructuralJsonText(await file.text(),{sourceId:`PASS8_UI:${file.name}`});state.pass8StructuralName=file.name;state.pass8Output=null;showToast(`Đã nạp kết cấu: ${file.name}`,'success');render();}
+      catch(error){state.pass8Structural=null;state.pass8StructuralName='';showToast(`File kết cấu không hợp lệ: ${error.message}`,'error');render();}
+      return;
+    }
     if (el.id === 'tableDiameter') { updateTableClassOptions(); return; }
     if (el.id === 'cType' || el.id === 'cClass') { syncCalcDefaults(); return; }
     if (el.id === 'cDiameter') { syncCalcClassOptions(); syncCalcDraftFromDom({clearTableSource:true}); return; }
@@ -2435,7 +2551,7 @@ function bind() {
       if(!text) return;
       event.preventDefault();
       const changed=insertNormalizedEngineeringPaste(target,text);
-      if(changed) showToast('Đã chuẩn hóa ký hiệu/công thức khi dán từ PDF, Word hoặc LaTeX.', 'success');
+      if(changed) showToast('Đã giữ nguyên nội dung gốc; HNL sẽ chuẩn hóa ký hiệu/công thức ở lớp tính toán.', 'success');
     });
     document.addEventListener('dragover', event => { if(event.target?.closest?.('.chat-composer')) event.preventDefault(); });
     document.addEventListener('drop', event => {
@@ -3869,14 +3985,16 @@ async function getAnswer(question, docsOverride = null, extraImages = []) {
 }
 
 function insertNormalizedEngineeringPaste(target, rawText='') {
-  const pasted=String(rawText||'');
+  const pasted=String(rawText||'').replace(/\r\n?/g,'\n');
   if(!pasted) return false;
+  // Build the parser-friendly view now so malformed clipboard text is detected,
+  // but never overwrite the user's visible/raw LaTeX or PDF text with it.
   const normalized=normalizeEngineeringPaste(pasted);
   if(!normalized) return false;
   const start=Number.isInteger(target.selectionStart)?target.selectionStart:String(target.value||'').length;
   const end=Number.isInteger(target.selectionEnd)?target.selectionEnd:start;
-  if(typeof target.setRangeText==='function') target.setRangeText(normalized,start,end,'end');
-  else target.value=`${String(target.value||'').slice(0,start)}${normalized}${String(target.value||'').slice(end)}`;
+  if(typeof target.setRangeText==='function') target.setRangeText(pasted,start,end,'end');
+  else target.value=`${String(target.value||'').slice(0,start)}${pasted}${String(target.value||'').slice(end)}`;
   target.dispatchEvent(new Event('input',{bubbles:true}));
   target.dispatchEvent(new Event('change',{bubbles:true}));
   return normalized!==pasted;
@@ -3921,7 +4039,7 @@ async function askQuestion(questionOverride = '', options = {}) {
   const engineeringSolved = solveEngineeringQuestion(normalizedQuestion);
   const engineeringMeta = engineeringSolved.recognized ? {
     workflowId:engineeringSolved.workflow.id,title:engineeringSolved.workflow.title,standard:engineeringSolved.workflow.standard,
-    status:engineeringSolved.workflow.status,question,normalizedQuestion,canExport:Boolean(engineeringSolved.result?.ok || engineeringSolved.result?.methodOnly),
+    status:engineeringSolved.workflow.status,question,normalizedQuestion,canExport:Boolean(engineeringSolved.canExport ?? canExportEngineeringResult(engineeringSolved)),
     resultOk:Boolean(engineeringSolved.result?.ok),methodOnly:Boolean(engineeringSolved.result?.methodOnly),
     missing:Array.isArray(engineeringSolved.result?.missing)?engineeringSolved.result.missing:[],
     imageInput
@@ -3955,7 +4073,7 @@ async function exportEngineeringMessageExcel(index) {
   if(!meta?.question) return showToast('Không tìm thấy đề bài kỹ thuật để xuất Excel.', 'warning');
   const payload=engineeringExcelPayload(meta.normalizedQuestion||meta.question);
   if(!payload.recognized || !/^(7888|10304|5574)-/.test(payload.workflow?.id||'')) return showToast('Workflow này chưa có Excel kỹ thuật chuyên dụng.', 'warning');
-  if(!(payload.result?.ok || payload.result?.methodOnly)) return showToast('Đề bài chưa đủ input để tạo Excel tính toán. Hãy bổ sung dữ liệu còn thiếu rồi hỏi lại.', 'warning');
+  if(!payload.canExport) return showToast('Đề bài chưa đủ input để tạo Excel tính toán. Hãy bổ sung dữ liệu còn thiếu rồi hỏi lại.', 'warning');
   if(!String(payload.workflow.status||'').startsWith('VERIFIED')) return showToast(`Workflow ${payload.workflow.title} chưa VERIFIED, không được xuất Excel số học.`, 'warning');
   try {
     await exportUnifiedEngineeringWorkbook({...payload,imageProvenance},{imageProvenance});

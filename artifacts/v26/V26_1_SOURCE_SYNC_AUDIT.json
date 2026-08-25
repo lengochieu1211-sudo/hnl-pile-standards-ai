@@ -1,0 +1,17 @@
+{
+  "schema": "HNL-V26.1-SOURCE-SYNC-GATE-REFRESH",
+  "status": "PATCH_READY",
+  "reason": "Pass 8.3 source sync gate pinned pre-V26 hashes for three intentionally modified V26 integration files",
+  "updatedExpectedHashes": {
+    "src/pile-workflows.js": "e47f37b940857e079bb8031d574cc5ea79f84379a0553ecd69f860cd1cf39805",
+    "src/excel-export.js": "32048bc31f5c32bfad553479a651998bc32fa7b419e2a9fe7858ffcb533530ea",
+    "src/main.js": "b70689d4688480955f90458e70110a4be4bb5c0aeb3f224e454cb46c2b5a34fd"
+  },
+  "preservedLocks": {
+    "src/search.js": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2",
+    "src/pdf.js": "5f9dd85f1c932b49f82def27d0c8c4002825a917c490ff11b3922ff5555b11a3",
+    "src/ai.js": "711f9dbe5e2c2e4255a980b8b59fa3fc4b801fad78e5e5dd1b7cd223538a7f11"
+  },
+  "engineeringLogicChangedByThisPatch": false,
+  "requiresGithubRerun": true
+}

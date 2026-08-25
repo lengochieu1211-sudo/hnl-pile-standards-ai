@@ -1,0 +1,20 @@
+{
+  "schema": "HNL-P1-PASS4-PILE-REACTION-REVIEW-SEED",
+  "version": "1.25.7",
+  "status": "REVIEW",
+  "productionNumeric": false,
+  "model": "Ni=a+b*x+c*y, solved from full 3x3 static-equilibrium matrix",
+  "equilibrium": [
+    "sum(Ni)=N",
+    "sum(Ni*x_i)=My",
+    "sum(Ni*y_i)=Mx"
+  ],
+  "mandatoryBeforeLock": [
+    "TM SCT Coc cell-by-cell formula mapping",
+    "XLSM fixture benchmark",
+    "Engine vs Formula-Only Excel benchmark",
+    "sign convention verification",
+    "capacity basis verification",
+    "regression and Search Brain gate"
+  ]
+}

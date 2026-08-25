@@ -1,0 +1,33 @@
+{
+  "version": "1.25.7",
+  "pass": "P1 Pass 4",
+  "status": "REVIEW",
+  "criticalFinding": "TM SCT Coc audited workflow is imported nodal-reaction checking; rigid-cap derivation is a separate HNL analytical mode.",
+  "modes": {
+    "ANALYTICAL_RIGID_CAP": {
+      "status": "REVIEW",
+      "logic": "derive Ni from N/Mx/My using full 3x3 equilibrium"
+    },
+    "IMPORTED_NODAL_REACTION": {
+      "status": "REVIEW",
+      "logic": "Point Coordinates + Point Spring Assignments + Nodal Reactions + verified pile capacity -> per-pile utilization",
+      "tests": {
+        "pass": 12,
+        "fail": 0
+      }
+    }
+  },
+  "totalPass4Tests": {
+    "pass": 36,
+    "fail": 0
+  },
+  "xlsmEvidence": {
+    "workbookSha256": "ec38b68f753b08e50d9d1f9df988be5084cab1aedf391ba1aaecf112e9d88bd1",
+    "sheet": "TM SCT Coc",
+    "formulaCount": 6082,
+    "udfCount": 0,
+    "cellLevelBenchmark": "PENDING"
+  },
+  "searchJsTouched": false,
+  "productionNumeric": false
+}

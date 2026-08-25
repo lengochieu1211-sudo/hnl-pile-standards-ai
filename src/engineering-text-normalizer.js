@@ -144,7 +144,7 @@ export function extractEngineeringNumber(raw='', aliases=[], unitPattern='') {
     const assignment=`(?:=|:|≈|~)`;
     // Permit up to two intermediate symbolic aliases in a copied equality chain.
     const symbolic=`(?:[A-Za-z][A-Za-z0-9_,'-]*\\s*${assignment}\\s*)`;
-    const re=new RegExp(`(?:^|[^A-Za-z0-9_])(?:${a})(?=$|\\s|[=:≈~])\\s*${assignment}\\s*(?:${symbolic}){0,2}(-?\\d+(?:[.,]\\d+)?)${unit}`,'i');
+    const re=new RegExp(`(?:^|[^A-Za-z0-9_])(?:${a})(?=$|\\s|[\\)\\]=:≈~])\\s*[\\)\\]]?\\s*${assignment}\\s*(?:${symbolic}){0,2}(-?\\d+(?:[.,]\\d+)?)${unit}`,'i');
     const m=text.match(re);
     if(m) return Number(String(m[1]).replace(',','.'));
     const plain=normalizeEngineeringText(alias).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');

@@ -1,7 +1,7 @@
 {
   "schema": "HNL-P1-PASS1-PILE-MATERIAL-GOLDEN",
   "version": "1.25.7",
-  "generatedAt": "2026-08-25T13:41:35.501Z",
+  "generatedAt": "2026-08-25T14:04:40.081Z",
   "sourceHierarchy": [
     "TCVN 5574:2018 PDF is normative",
     "Deterministic PileMaterialEngine is Production calculation source",

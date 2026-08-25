@@ -45,6 +45,7 @@ for (const f of CODEPACK_10304.formulas || []) {
 const T5574_WORKFLOW_VERIFIED = new Map([
   ...['(31)','(32)','(33)','(34)','(35)','(36)','(37)','(38)'].map(x=>[x,'5574-bending-rect']),
   ...['(40)','(41)','(42)','(43)','(44)','(45)','(46)','(47)','(48)'].map(x=>[x,'5574-eccentric']),
+  ...['(49)','(50)'].map(x=>[x,'5574-pile-material']),
   ...['(88)','(92)','(93)','(94)','(95)','(96)'].map(x=>[x,'5574-shear']),
   ...['(102)','(107)','(109)','(111)','(112)','(113)'].map(x=>[x,'5574-torsion']),
   ...['(116)','(117)','(118)'].map(x=>[x,'5574-local']),
@@ -65,6 +66,7 @@ for (const t of CODEPACK_5574.tables || []) {
   if (String(t.number)==='10') { t.status='Verified'; t.keywords='Eb mô đun đàn hồi B15 B20 B25 B30 B35 B40 B50 B60 B70 B80 B90 B100'; }
   if (String(t.number)==='13') { t.status='Verified'; t.keywords='Rs Rsc CB240-T CB300-T CB300-V CB400-V CB500-V cường độ cốt thép'; }
   if (String(t.number)==='14') { t.status='Verified'; t.keywords='Rsw CB240-T CB300-T CB300-V CB400-V CB500-V cốt thép ngang đai'; }
+  if (String(t.number)==='16') { t.status='Verified'; t.keywords='phi φ nén gần đúng tâm L0/h B20 B55 B60 B70 B80 B90 B100 nội suy tuyến tính'; }
 }
 for (const t of CODEPACK_10304.tables || []) {
   if (['1','5','9','10','14','17','18'].includes(String(t.number))) { t.status='Verified'; t.keywords=`bảng tra verified ${t.title}`; }

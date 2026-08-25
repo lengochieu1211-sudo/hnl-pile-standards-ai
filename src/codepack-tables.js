@@ -161,3 +161,28 @@ export function lookup5574PrestressFriction(surface='metal-duct',steelType='cabl
 
 // v1.25.3 — strict interpolation/table-policy registry for TCVN 10304:2025.
 export { T10304_INTERPOLATION_POLICIES, T10304_TABLE6, T10304_TABLE7_PHI, T10304_TABLE7_A1, T10304_TABLE7_A2, T10304_TABLE7_HD, T10304_TABLE7_A3, T10304_TABLE7_D, T10304_TABLE7_A4, T10304_TABLE8_DEPTH, T10304_TABLE8_IL, T10304_TABLE8_QB, T10304_TABLE12, T10304_TABLE16_QC, T10304_TABLE16, T10304_TABLE17_V, T10304_TABLE17_MV } from './tcvn10304-table-engine.js';
+
+// TCVN 5574:2018 · 8.1.2.4.3 · Bảng 16 — hệ số φ cho nén gần đúng tâm,
+// tải trọng dài hạn. Chỉ dùng trong phạm vi CT (49)–(50): tiết diện chữ nhật,
+// e0 <= h/30, L0/h <= 20. Giá trị trung gian L0/h nội suy tuyến tính.
+export const TCVN5574_TABLE16_LONG_TERM_PHI = Object.freeze([
+  {gradeMin:20,gradeMax:55,label:'B20–B55',ratios:[6,10,15,20],phi:[0.92,0.90,0.83,0.70]},
+  {gradeMin:60,gradeMax:70,label:'B60–B70',ratios:[6,10,15,20],phi:[0.91,0.89,0.80,0.65]},
+  {gradeMin:80,gradeMax:90,label:'B80–B90',ratios:[6,10,15,20],phi:[0.90,0.88,0.79,0.64]},
+  {gradeMin:100,gradeMax:100,label:'B100',ratios:[6,10,15,20],phi:[0.89,0.87,0.78,0.63]}
+].map(r=>Object.freeze({...r,standard:'TCVN 5574:2018',clause:'8.1.2.4.3',table:'Bảng 16',standardPage:62,pdfPage:60,status:'Verified'})));
+
+export function lookup5574Table16LongTermPhi(grade='B30', slendernessRatio){
+  const g=Number(String(grade||'').toUpperCase().replace('B','').replace(',','.'));
+  const x=Number(slendernessRatio);
+  if(!Number.isFinite(g)||!Number.isFinite(x)) return {ok:false,error:'INVALID_INPUT'};
+  const row=TCVN5574_TABLE16_LONG_TERM_PHI.find(r=>g>=r.gradeMin&&g<=r.gradeMax);
+  if(!row) return {ok:false,error:'GRADE_OUTSIDE_TABLE16',grade:g};
+  if(x<row.ratios[0]||x>row.ratios[row.ratios.length-1]) return {ok:false,error:'SLENDERNESS_OUTSIDE_TABLE16',value:x,domain:[6,20],row};
+  for(let i=0;i<row.ratios.length;i++) if(Math.abs(x-row.ratios[i])<1e-12) return {ok:true,value:row.phi[i],mode:'EXACT',row,bracket:[row.ratios[i],row.ratios[i]]};
+  for(let i=0;i<row.ratios.length-1;i++) if(x>row.ratios[i]&&x<row.ratios[i+1]){
+    const x1=row.ratios[i],x2=row.ratios[i+1],y1=row.phi[i],y2=row.phi[i+1];
+    return {ok:true,value:y1+(x-x1)*(y2-y1)/(x2-x1),mode:'LINEAR_1D',row,bracket:[x1,x2]};
+  }
+  return {ok:false,error:'LOOKUP_FAILED'};
+}

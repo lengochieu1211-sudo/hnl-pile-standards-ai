@@ -1,0 +1,164 @@
+{
+  "fixtureId": "TM-SCT-COC-GOLDEN-SEED-IMPORT-001",
+  "status": "GOLDEN_SEED_ENGINE_EXCEL_NOT_XLSM_GOLDEN",
+  "reactionCompressionSign": "compression-negative",
+  "pointCoordinates": [
+    {
+      "pointId": "N1",
+      "x": -1,
+      "y": -1,
+      "z": 0
+    },
+    {
+      "pointId": "N2",
+      "x": 1,
+      "y": -1,
+      "z": 0
+    },
+    {
+      "pointId": "N3",
+      "x": -1,
+      "y": 1,
+      "z": 0
+    },
+    {
+      "pointId": "N4",
+      "x": 1,
+      "y": 1,
+      "z": 0
+    }
+  ],
+  "pointSpringAssignments": [
+    {
+      "pointId": "N1",
+      "pileId": "P1"
+    },
+    {
+      "pointId": "N2",
+      "pileId": "P2"
+    },
+    {
+      "pointId": "N3",
+      "pileId": "P3"
+    },
+    {
+      "pointId": "N4",
+      "pileId": "P4"
+    }
+  ],
+  "pileCapacities": [
+    {
+      "pileId": "P1",
+      "compressionCapacityKn": 800,
+      "tensionCapacityKn": 200
+    },
+    {
+      "pileId": "P2",
+      "compressionCapacityKn": 800,
+      "tensionCapacityKn": 200
+    },
+    {
+      "pileId": "P3",
+      "compressionCapacityKn": 800,
+      "tensionCapacityKn": 200
+    },
+    {
+      "pileId": "P4",
+      "compressionCapacityKn": 800,
+      "tensionCapacityKn": 200
+    }
+  ],
+  "nodalReactions": [
+    {
+      "pointId": "N1",
+      "combinationId": "C1",
+      "Fz": -400
+    },
+    {
+      "pointId": "N2",
+      "combinationId": "C1",
+      "Fz": -500
+    },
+    {
+      "pointId": "N3",
+      "combinationId": "C1",
+      "Fz": -600
+    },
+    {
+      "pointId": "N4",
+      "combinationId": "C1",
+      "Fz": -700
+    },
+    {
+      "pointId": "N1",
+      "combinationId": "C2",
+      "Fz": -300
+    },
+    {
+      "pointId": "N2",
+      "combinationId": "C2",
+      "Fz": -350
+    },
+    {
+      "pointId": "N3",
+      "combinationId": "C2",
+      "Fz": -650
+    },
+    {
+      "pointId": "N4",
+      "combinationId": "C2",
+      "Fz": -400
+    }
+  ],
+  "expected": {
+    "C1": {
+      "P1": {
+        "demandKn": 400,
+        "utilization": 0.5,
+        "status": "PASS"
+      },
+      "P2": {
+        "demandKn": 500,
+        "utilization": 0.625,
+        "status": "PASS"
+      },
+      "P3": {
+        "demandKn": 600,
+        "utilization": 0.75,
+        "status": "PASS"
+      },
+      "P4": {
+        "demandKn": 700,
+        "utilization": 0.875,
+        "status": "PASS"
+      }
+    },
+    "C2": {
+      "P1": {
+        "demandKn": 300,
+        "utilization": 0.375,
+        "status": "PASS"
+      },
+      "P2": {
+        "demandKn": 350,
+        "utilization": 0.4375,
+        "status": "PASS"
+      },
+      "P3": {
+        "demandKn": 650,
+        "utilization": 0.8125,
+        "status": "PASS"
+      },
+      "P4": {
+        "demandKn": 400,
+        "utilization": 0.5,
+        "status": "PASS"
+      }
+    },
+    "governing": {
+      "combinationId": "C1",
+      "pileId": "P4",
+      "utilization": 0.875
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "schema": "HNL-P1-PASS8.3-REPAIR-SYNC-V23",
+  "status": "REPAIR_READY_LOCAL_GATES_PASS",
+  "currentMainCommit": "c73d8530669f4cdd9a8f282ab7ac0e60e4fb31b9",
+  "uploadedActionLogs": [
+    {
+      "file": "logs_89003133427.zip",
+      "workflow": "Build HNL Desktop AI for Windows",
+      "tests": 463,
+      "pass": 448,
+      "fail": 15
+    },
+    {
+      "file": "logs_89003133318.zip",
+      "workflow": "Deploy HNL Web to GitHub Pages",
+      "tests": 463,
+      "pass": 448,
+      "fail": 15
+    },
+    {
+      "file": "logs_89003133254.zip",
+      "workflow": "HNL v1.25.6 RC Final Gate",
+      "tests": 463,
+      "pass": 448,
+      "fail": 15
+    }
+  ],
+  "rootCauseGroups": [
+    {
+      "file": "src/codepack-tables.js",
+      "issue": "GitHub main old; missing lookup5574Table16LongTermPhi",
+      "affected": "Pass7/8/8.1/8.2 + material/multiborehole"
+    },
+    {
+      "file": "src/tcvn10304-table-engine.js",
+      "issue": "GitHub main old; missing averageMeasuredSptN10304",
+      "affected": "P0 Pass2/Pass3 + DCE/SPT"
+    },
+    {
+      "file": "src/pile-workflows.js",
+      "issue": "GitHub main old driven workflow; shaftStartDepthM/maxSegmentM not wired",
+      "affected": "2 P0 XLSM tests"
+    },
+    {
+      "file": "src/excel-export.js",
+      "issue": "GitHub main old Formula-Only driven exporter; missing shaft start/max segment inputs",
+      "affected": "1 P0 XLSM Excel test"
+    },
+    {
+      "file": "tests/v1.25.6.test.mjs",
+      "issue": "GitHub test expectation stale vs latest clipboard-preserve + internal normalize behavior",
+      "affected": "1 UI paste regression test"
+    }
+  ],
+  "localRepairGates": {
+    "sourceSync": "PASS",
+    "tests": "574/574 PASS, 0 FAIL",
+    "fullTable": "1242/1242 PASS",
+    "workflows": "35/35 + XLSM 5/5 + boundaries 5/5 PASS",
+    "dceUdf": "213/213 acceptable, 0 FAIL",
+    "spt": "26/26 PASS",
+    "material": "PASS",
+    "materialE2E": "PASS",
+    "multiBorehole": "PASS",
+    "pass82E2E": "8/8 PASS"
+  },
+  "protectedFilesNotIncludedInOverlay": {
+    "src/search.js": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2",
+    "src/pdf.js": "5f9dd85f1c932b49f82def27d0c8c4002825a917c490ff11b3922ff5555b11a3",
+    "src/ai.js": "711f9dbe5e2c2e4255a980b8b59fa3fc4b801fad78e5e5dd1b7cd223538a7f11"
+  },
+  "workflowChange": "Pass8.3 now auto-triggers on main and enforces exact 574/574 via gate:pass83-tests plus source hash sync gate."
+}

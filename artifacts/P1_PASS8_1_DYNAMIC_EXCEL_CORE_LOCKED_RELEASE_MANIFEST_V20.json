@@ -1,0 +1,142 @@
+{
+  "schema": "HNL-P1-PASS8.1-DYNAMIC-EXCEL-CORE-LOCKED-RELEASE-MANIFEST",
+  "version": "1.25.7",
+  "release": "v20",
+  "status": "CORE_LOCKED_DYNAMIC_EXCEL_EXPORTER_PATCH",
+  "language": "vi-VN",
+  "endpoint": "/api/hnl/pile/export-excel",
+  "runtimeIntegration": {
+    "pass8UiToEndpoint": "LOCKED_IN_SCOPED_RUNTIME",
+    "serverSidePass8Rerun": "LOCKED",
+    "clientServerSummaryCheck": "MANDATORY_LOCKED",
+    "dynamicOoxmlExporter": "LOCKED",
+    "excelOfficeDependency": "NONE",
+    "upstreamFullSourceMerge": "SEPARATE_GATE_NOT_CLAIMED"
+  },
+  "gate": {
+    "pass": true,
+    "status": "CORE_LOCKED_DYNAMIC_EXCEL_EXPORTER",
+    "checks": 12,
+    "failed": []
+  },
+  "currentRegression": {
+    "tests": 188,
+    "pass": 188,
+    "fail": 0,
+    "status": 0
+  },
+  "runtimeHttp": {
+    "validExport": {
+      "status": 200,
+      "serverVerified": "true",
+      "exportId": "2dfd87e4-3b59-4a52-9571-a6c8dcda1d2f",
+      "templateSha256": "582e897788d3aa96895f7ff63e604899ad489cbe2d5fb59238bb186a4b62b9d1",
+      "bytes": 146517,
+      "health": {
+        "ok": true,
+        "status": "PASS8.1_DYNAMIC_EXCEL_LOCKED_PATCH",
+        "route": {
+          "status": "CORE_LOCKED_DYNAMIC_EXPORTER_PATCH",
+          "endpoint": "/api/hnl/pile/export-excel",
+          "method": "POST",
+          "serverRecalculation": "Pass 8 router server-side",
+          "clientServerSummaryCheck": "MANDATORY",
+          "exporter": "p1-pass8.1-v18-dynamic-excel-exporter",
+          "templatePath": "/mnt/data/HNL-P1-Pass8.1-DynamicExcel-v20/artifacts/HNL_P1_Pass7_Bao_Cao_Tinh_Toan_Coc_San_Xuat_v18.xlsx"
+        }
+      }
+    },
+    "tamperedBlocked": {
+      "status": 422,
+      "response": "{\"ok\":false,\"error\":\"Kết quả client/server không khớp; không xuất Excel. RpileKn: client=999999 server=843.4285714285716\",\"code\":\"PASS81_EXPORT_BLOCKED\"}"
+    }
+  },
+  "dynamicProof": {
+    "base": {
+      "gammaN": 1.15,
+      "NdMaxPerPileKn": 733.4161490683232,
+      "governingUtilization": 0.4980692764464232,
+      "sha256": "502e897e32553cbbf98a1add5f2eb5e9b7fb5688e38ada5d813950197bc028ea"
+    },
+    "variant": {
+      "gammaN": 1.2,
+      "NdMaxPerPileKn": 702.857142857143,
+      "governingUtilization": 0.5197244623788765,
+      "sha256": "b1bfc8fddfcc5272110c5a04273fa60c14b860db6bd565a530e18cea3fc91aa9"
+    }
+  },
+  "artifactToolExcelAudit": {
+    "schema": "HNL-P1-PASS8.1-ARTIFACT-TOOL-EXCEL-AUDIT",
+    "version": "1.25.7",
+    "workbook": "HNL_P1_Pass8_1_Dynamic_Excel_Golden_v20.xlsx",
+    "formulaErrors": 0,
+    "verifiedRanges": [
+      "01_TỔNG_HỢP!A3:B12",
+      "00_HƯỚNG_DẪN!A19:B23"
+    ],
+    "status": "PASS"
+  },
+  "templateLimits": {
+    "maxStructuralRows": 70,
+    "maxSoilBranchRows": 50,
+    "maxSegmentRows": 70,
+    "maxGeologyRows": 70
+  },
+  "priorLocked": {
+    "regression": "388/388 PASS",
+    "fullTable": "1242/1242 PASS",
+    "searchBrainSha256": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2"
+  },
+  "hashes": {
+    "dynamicExporter": {
+      "path": "src/pass81-v18-dynamic-exporter.js",
+      "sha256": "db181fced5ad309266f40549c9bcfe42ee2d56715ccf3f93d45cfab43d2c8e83"
+    },
+    "zipWriter": {
+      "path": "src/pass81-zip.js",
+      "sha256": "34bdb6877688c352c8763f351a219f434ffc0a2723a04b7a9b9d601cd1572641"
+    },
+    "route": {
+      "path": "server/pass81-excel-route.mjs",
+      "sha256": "19037233e1c0d4ac930cd92e78b3d385742110d75603bf39f5798f00814caf8b"
+    },
+    "httpServer": {
+      "path": "server/pass81-http-server.mjs",
+      "sha256": "d366c729177bbe300ce2033818da59945e640867bf3277eb7750cee4c2242fab"
+    },
+    "client": {
+      "path": "src/pass8-excel-export-client.js",
+      "sha256": "1da363be856a7e2e9125e691ae928e823ecba02910043125fbd06713c2d3476f"
+    },
+    "ui": {
+      "path": "ui/pass8/app.js",
+      "sha256": "0e0f2c4a3135b2cd2eaf87a29b91faa51de182fbbb9aeef44c75b6e2de7b32cf"
+    },
+    "router": {
+      "path": "src/pass8-workflow-router.js",
+      "sha256": "06f3ac117a7a7434444f28eff4ddaecef1f75a55f602ad2058bd4d6a1442f16a"
+    },
+    "pass7": {
+      "path": "src/pass7-full-calculation-workflow.js",
+      "sha256": "f7c336df776a911fe6e295b51a023a3057e84465cab490c257e42f4cb5fbc313"
+    },
+    "gate": {
+      "path": "tools/pass81-lock-gate.mjs",
+      "sha256": "6f438d1daad2ff20896c0c689e6615194ac50e575f2669967f6089c726c0cbe2"
+    },
+    "templateV18": {
+      "path": "artifacts/HNL_P1_Pass7_Bao_Cao_Tinh_Toan_Coc_San_Xuat_v18.xlsx",
+      "sha256": "582e897788d3aa96895f7ff63e604899ad489cbe2d5fb59238bb186a4b62b9d1"
+    },
+    "goldenDynamic": {
+      "path": "artifacts/HNL_P1_Pass8_1_Dynamic_Excel_Golden_v20.xlsx",
+      "sha256": "502e897e32553cbbf98a1add5f2eb5e9b7fb5688e38ada5d813950197bc028ea"
+    },
+    "variantGamma120": {
+      "path": "artifacts/pass81-runtime/HNL_Dynamic_Variant_GammaN_1_20_v20.xlsx",
+      "sha256": "b1bfc8fddfcc5272110c5a04273fa60c14b860db6bd565a530e18cea3fc91aa9"
+    }
+  },
+  "searchJsTouched": false,
+  "notes": "Scoped patch integrates UI + local HTTP backend + dynamic exporter. It does not claim merge into an upstream full-source application tree that was not supplied as the current base."
+}

@@ -4,7 +4,10 @@ on:
   workflow_dispatch:
   push:
     branches:
+      - main
       - 'p1/pass8.3-runtime-cert-v21'
+      - 'p1/pass8.3-runtime-cert-v22'
+      - 'p1/pass8.3-repair-v23'
   pull_request:
     branches:
       - main
@@ -30,8 +33,11 @@ jobs:
       - name: Install exact dependencies
         run: npm ci
 
-      - name: Locked regression suite
-        run: npm test
+      - name: Source sync gate
+        run: npm run gate:pass83-source-sync
+
+      - name: Locked regression suite · exact 574
+        run: npm run gate:pass83-tests
 
       - name: Full Table Golden 1242
         run: npm run golden:tables
@@ -89,8 +95,11 @@ jobs:
       - name: Install exact dependencies
         run: npm ci
 
-      - name: Locked regression suite on Windows
-        run: npm test
+      - name: Source sync gate on Windows
+        run: npm run gate:pass83-source-sync
+
+      - name: Locked regression suite on Windows · exact 574
+        run: npm run gate:pass83-tests
 
       - name: Build desktop UI
         run: npm run build:desktop

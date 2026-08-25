@@ -1,5 +1,7 @@
 import { tcvn7888Rows, nph7888Rows, lookupPileType7888 } from './tcvn7888.js';
-import { structuredTablesForPack } from './codepack-tables.js';
+import { structuredTablesForPack, TCVN5574_CONCRETE_HEAVY, TCVN5574_STEEL, TCVN5574_TABLE16_LONG_TERM_PHI } from './codepack-tables.js';
+import { TCVN10304_QB_DEPTHS, TCVN10304_QB, TCVN10304_FI_DEPTHS, TCVN10304_FI } from './pile-workflows.js';
+import { T10304_TABLE1_RQD, T10304_TABLE1_KS, T10304_TABLE6, T10304_TABLE7_PHI, T10304_TABLE7_A1, T10304_TABLE7_A2, T10304_TABLE7_HD, T10304_TABLE7_A3, T10304_TABLE7_D, T10304_TABLE7_A4, T10304_TABLE8_DEPTH, T10304_TABLE8_IL, T10304_TABLE8_QB, T10304_SPT_D1 } from './tcvn10304-table-engine.js';
 
 function safeName(s='formula') { return String(s).replace(/[^A-Za-z0-9._-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,80) || 'formula'; }
 function exprToExcel(rhs='', varCells={}) {
@@ -188,7 +190,7 @@ export async function exportCodePackWorkbook(pack){
   const buf=await wb.xlsx.writeBuffer(); saveBlob(buf,`HNL_CodePack_${safeName(pack.standard)}.xlsx`);
 }
 
-export async function exportDrivenPileWorkflowWorkbook(input = {}) {
+export async function exportDrivenPileWorkflowWorkbook(input = {}, options = {}) {
   const mod=await import('exceljs'); const ExcelJS=mod.default || mod; const wb=new ExcelJS.Workbook();
   wb.creator='HNL Pile Standards AI'; wb.created=new Date(); wb.calcProperties.fullCalcOnLoad=true; wb.calcProperties.forceFullCalc=true;
   const yellow={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF2CC'}};
@@ -199,7 +201,7 @@ export async function exportDrivenPileWorkflowWorkbook(input = {}) {
   guide.addRows([
     ['HNL – TCVN 10304:2025','Workflow sức chịu tải cọc đóng/ép không moi đất theo công thức (9).'],
     ['Nguyên tắc','Ô vàng = INPUT/override. Bảng 2, Bảng 3, Bảng 4 đã nạp sẵn. Thay đầu vào → Excel tự tính lại.'],
-    ['Chuỗi tính','Hình học → tự chia mỗi lớp thành phân đoạn ≤2 m → z trung bình → tra/nội suy fi → Rfi từng đoạn → lớp mũi → tra/nội suy qb → Rb → Rk → Rd.'],
+    ['Chuỗi tính','Hình học → giới hạn vùng ma sát từ shaftStartDepthM đến mũi → tự chia mỗi lớp theo Δz≤2 m → z trung bình → tra/nội suy fi → Rfi từng đoạn → lớp mũi → tra/nội suy qb → Rb → Rk → Rd.'],
     ['Nguồn','TCVN 10304:2025: CT (9) trang 31; Bảng 2 trang 32–33; Bảng 3 trang 33–34; Bảng 4 trang 34–35.'],
     ['An toàn','Nếu sửa q_b/f_i/hệ số bằng tay, trạng thái phải là NHẬP TAY; không được ghi là tự tra tiêu chuẩn.'],
     ['Giới hạn workbook','Workflow tự động trong file mẫu tập trung cọc vuông/tròn, đóng bằng búa hoặc ép. Phương pháp khác cần đối chiếu Bảng 4 trước khi dùng.']
@@ -218,11 +220,16 @@ export async function exportDrivenPileWorkflowWorkbook(input = {}) {
     ['gamma_k',Number(input.gammaK)||1.4,'-','Điều 7.1.6.1'],
     ['q_b override',Number.isFinite(Number(input.qbOverride))?Number(input.qbOverride):'','kPa','Để trống = tự tra'],
     ['gamma_RR override',Number.isFinite(Number(input.gammaRR))?Number(input.gammaRR):'','-','Để trống = tự tra Bảng 4'],
-    ['gamma_Rf override',Number.isFinite(Number(input.gammaRf))?Number(input.gammaRf):'','-','Để trống = tự tra Bảng 4']
+    ['gamma_Rf override',Number.isFinite(Number(input.gammaRf))?Number(input.gammaRf):'','-','Để trống = tự tra Bảng 4'],
+    ['gamma_n',Number.isFinite(Number(input.gammaN))?Number(input.gammaN):'','-','Nếu có: điều kiện γn·Nd ≤ Rd → Nd,max=Rd/γn'],
+    ['Độ sâu bắt đầu ma sát thân',Number.isFinite(Number(input.shaftStartDepthM))?Number(input.shaftStartDepthM):0,'m','Mặc định 0. Dùng khi đầu cọc nằm dưới mốc địa chất; benchmark workbook tương đương Qs(tip)-Qs(head).'],
+    ['Bước phân đoạn tối đa',Number.isFinite(Number(input.maxSegmentM))?Number(input.maxSegmentM):2,'m','Bắt buộc 0 < Δz ≤ 2 m; mặc định 2 m.']
   ]; rows.forEach(r=>inp.addRow(r));
-  for(let r=2;r<=12;r++) inp.getCell(r,2).fill=yellow;
+  for(let r=2;r<=15;r++) inp.getCell(r,2).fill=yellow;
   inp.dataValidations.add('B2',{type:'list',allowBlank:false,formulae:['"square,circle"']});
   inp.dataValidations.add('B7',{type:'list',allowBlank:false,formulae:['"hammer,press"']});
+  inp.dataValidations.add('B14',{type:'decimal',operator:'between',allowBlank:false,formulae:[0,1000],showErrorMessage:true,errorTitle:'Độ sâu không hợp lệ',error:'shaftStartDepthM phải ≥ 0 và nhỏ hơn độ sâu mũi.'});
+  inp.dataValidations.add('B15',{type:'decimal',operator:'between',allowBlank:false,formulae:[0.000001,2],showErrorMessage:true,errorTitle:'Bước phân đoạn không hợp lệ',error:'Bước phân đoạn phải > 0 và ≤ 2 m.'});
   styleSheet(inp);
 
   const geo=wb.addWorksheet('02_DIA_CHAT'); geo.columns=[{width:8},{width:12},{width:12},{width:16},{width:16},{width:12},{width:16},{width:55}];
@@ -236,15 +243,15 @@ export async function exportDrivenPileWorkflowWorkbook(input = {}) {
   geo.dataValidations.add('D2:D9',{type:'list',allowBlank:false,formulae:['"clay,sand"']}); geo.dataValidations.add('E2:E9',{type:'list',allowBlank:true,formulae:['"gravelly,coarse,medium,fine,silty"']}); styleSheet(geo);
 
   const seg=wb.addWorksheet('03_PHAN_DOAN'); seg.columns=[{width:8},{width:8},{width:12},{width:12},{width:12},{width:12},{width:14},{width:14},{width:12},{width:15},{width:16},{width:14},{width:18},{width:58}];
-  seg.addRow(['Lớp','Đoạn','Từ m','Đến m','h≤2m','z TB','Nhóm đất','Loại cát','IL','f_i override','f_i tra','γR,f','R_fi kN','Phương pháp tra']); styleHeader(seg.getRow(1),blue);
+  seg.addRow(['Lớp','Đoạn','Từ m','Đến m','h≤Δz','z TB','Nhóm đất','Loại cát','IL','f_i override','f_i tra','γR,f','R_fi kN','Phương pháp tra']); styleHeader(seg.getRow(1),blue);
   const fiDepthRef="'04_TRA_BANG_10304'!$A$3:$A$16", fiTableRef="'04_TRA_BANG_10304'!$B$3:$M$16";
   let sr=2;
   for(let i=0;i<8;i++){
     const raw=i+2;
     for(let j=0;j<20;j++,sr++){
       seg.getCell(`A${sr}`).value=i+1; seg.getCell(`B${sr}`).value=j+1;
-      seg.getCell(`C${sr}`).value={formula:`IF(OR('02_DIA_CHAT'!B${raw}="",'02_DIA_CHAT'!C${raw}=""),"",'02_DIA_CHAT'!B${raw}+2*${j})`};
-      seg.getCell(`D${sr}`).value={formula:`IF(OR(C${sr}="",C${sr}>=MIN('02_DIA_CHAT'!C${raw},'01_INPUT'!B6)),"",MIN(C${sr}+2,'02_DIA_CHAT'!C${raw},'01_INPUT'!B6))`};
+      seg.getCell(`C${sr}`).value={formula:`IF(OR('02_DIA_CHAT'!B${raw}="",'02_DIA_CHAT'!C${raw}=""),"",MAX('02_DIA_CHAT'!B${raw},'01_INPUT'!B14)+'01_INPUT'!B15*${j})`};
+      seg.getCell(`D${sr}`).value={formula:`IF(OR(C${sr}="",C${sr}>=MIN('02_DIA_CHAT'!C${raw},'01_INPUT'!B6)),"",MIN(C${sr}+'01_INPUT'!B15,'02_DIA_CHAT'!C${raw},'01_INPUT'!B6))`};
       seg.getCell(`E${sr}`).value={formula:`IF(OR(C${sr}="",D${sr}=""),0,MAX(0,D${sr}-C${sr}))`};
       seg.getCell(`F${sr}`).value={formula:`IF(E${sr}=0,"",(C${sr}+D${sr})/2)`};
       seg.getCell(`G${sr}`).value={formula:`'02_DIA_CHAT'!D${raw}`}; seg.getCell(`H${sr}`).value={formula:`'02_DIA_CHAT'!E${raw}`}; seg.getCell(`I${sr}`).value={formula:`'02_DIA_CHAT'!F${raw}`}; seg.getCell(`J${sr}`).value={formula:`'02_DIA_CHAT'!G${raw}`};
@@ -285,22 +292,144 @@ export async function exportDrivenPileWorkflowWorkbook(input = {}) {
   calc.addRow(['R ma sát',{formula:`SUM('03_PHAN_DOAN'!M2:M161)`},'kN','u·ΣγRf·fi·hi; mỗi phân đoạn h≤2m']);
   calc.addRow(['R_k',{formula:`'01_INPUT'!B8*(B7+B8)`},'kN','Công thức (9)']);
   calc.addRow(['R_d',{formula:`B9/'01_INPUT'!B9`},'kN','Rk/γk']);
-  calc.getCell('B9').fill=green; calc.getCell('B10').fill=green; styleSheet(calc);
+  calc.addRow(['N_d,max',{formula:`IF(ISNUMBER('01_INPUT'!B13),B10/'01_INPUT'!B13,"")`},'kN','Nếu có γn: γn·Nd≤Rd → Nd,max=Rd/γn']);
+  calc.getCell('B9').fill=green; calc.getCell('B10').fill=green; calc.getCell('B11').fill=green; styleSheet(calc);
 
   const result=wb.addWorksheet('07_KET_QUA'); result.columns=[{width:32},{width:24},{width:15},{width:70}]; result.addRow(['Kết quả','Giá trị','Đơn vị','Nguồn']); styleHeader(result.getRow(1),blue);
-  result.addRow(['A',{formula:`'05_CALC_10304'!B2`},'m²','Hình học']); result.addRow(['u',{formula:`'05_CALC_10304'!B3`},'m','Hình học']); result.addRow(['R mũi',{formula:`'05_CALC_10304'!B7`},'kN','Bảng 2 + Bảng 4']); result.addRow(['R ma sát',{formula:`'05_CALC_10304'!B8`},'kN','Bảng 3 + Bảng 4']); result.addRow(['Rk',{formula:`'05_CALC_10304'!B9`},'kN','CT (9)']); result.addRow(['Rd',{formula:`'05_CALC_10304'!B10`},'kN','Rk/γk']); styleSheet(result);
+  result.addRow(['A',{formula:`'05_CALC_10304'!B2`},'m²','Hình học']); result.addRow(['u',{formula:`'05_CALC_10304'!B3`},'m','Hình học']); result.addRow(['R mũi',{formula:`'05_CALC_10304'!B7`},'kN','Bảng 2 + Bảng 4']); result.addRow(['R ma sát',{formula:`'05_CALC_10304'!B8`},'kN','Bảng 3 + Bảng 4']); result.addRow(['Rk',{formula:`'05_CALC_10304'!B9`},'kN','CT (9)']); result.addRow(['Rd',{formula:`'05_CALC_10304'!B10`},'kN','Rk/γk']); result.addRow(['Nd,max',{formula:`'05_CALC_10304'!B11`},'kN','γn·Nd≤Rd; chỉ hiện khi có γn']); styleSheet(result);
 
   const trace=wb.addWorksheet('08_THUYET_MINH_NGUON'); trace.columns=[{width:18},{width:28},{width:18},{width:18},{width:18},{width:18},{width:65}]; trace.addRow(['Mục','Tiêu chuẩn','Điều/Bảng/CT','Trang chuẩn','Trang PDF','Trạng thái','Diễn giải']); styleHeader(trace.getRow(1),blue);
   [['Sức chịu tải','TCVN 10304:2025','7.2.2.1 · CT (9)',31,31,'VERIFIED','Rk=γc(γRR·qb·A+uΣγRf·fi·hi)'],['q_b','TCVN 10304:2025','Bảng 2','32-33','32-33','VERIFIED','Sức kháng đơn vị dưới mũi'],['f_i','TCVN 10304:2025','Bảng 3','33-34','33-34','VERIFIED','Sức kháng đơn vị mặt bên; Excel tự chia phân đoạn h≤2m; z/IL trung gian nội suy tuyến tính, không ngoại suy ngoài bảng'],['Hệ số','TCVN 10304:2025','Bảng 4','34-35','34-35','VERIFIED','Hệ số theo phương pháp hạ cọc'],['Override','HNL','','','','MANUAL','Nếu người dùng nhập q_b/f_i/γ thì provenance đổi sang NHẬP TAY.']].forEach(r=>trace.addRow(r)); styleSheet(trace);
 
   addImageInputProvenance(wb,input.imageProvenance);
-  const buf=await wb.xlsx.writeBuffer(); saveBlob(buf,'HNL_TCVN10304_Coc_Dong_Ep_Workflow_v1.25.7.xlsx');
+  const buf=await wb.xlsx.writeBuffer(); const fileName='HNL_TCVN10304_Coc_Dong_Ep_Workflow_v1.25.7.xlsx'; return options.returnBuffer?{buffer:buf,fileName}:saveBlob(buf,fileName);
+}
+
+// P0 Pass 3 — raw-profile Formula-Only Excel builders.
+// These workbooks never copy final Engine results into Excel cells. They receive
+// only normalized inputs and reconstruct the calculation graph with formulas.
+function pass3Title(ws,title,blue='FF17365D'){ ws.mergeCells('A1:F1'); ws.getCell('A1').value=title; styleHeader(ws.getRow(1),blue); ws.getCell('A1').font={bold:true,color:{argb:'FFFFFFFF'},size:15}; }
+function pass3InputRow(ws,label,value,unit,note,yellow){ const r=ws.addRow([label,value??'',unit,note]); r.getCell(2).fill=yellow; return r.number; }
+function pass3SourceSheet(wb,rows,blue='FF17365D'){
+  const ws=wb.addWorksheet('SOURCE'); ws.columns=[{width:25},{width:26},{width:22},{width:15},{width:15},{width:18},{width:76}];
+  ws.addRow(['Mục','Tiêu chuẩn','Điều / CT / Bảng','Trang chuẩn','Trang PDF','Trạng thái','Ghi chú']); styleHeader(ws.getRow(1),blue); rows.forEach(r=>ws.addRow(r)); styleSheet(ws); return ws;
+}
+
+async function export10304RockRawWorkbook(ExcelJS,input={},options={}){
+  const wb=new ExcelJS.Workbook(); wb.creator='HNL Pile Standards AI'; wb.created=new Date(); wb.calcProperties={fullCalcOnLoad:true,forceFullCalc:true,calcMode:'auto'};
+  const blue='FF17365D',yellow={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF2CC'}},green={type:'pattern',pattern:'solid',fgColor:{argb:'FFE2F0D9'}};
+  const guide=wb.addWorksheet('README'); guide.columns=[{width:27},{width:100}]; pass3Title(guide,'HNL · TCVN 10304:2025 · CỌC CHỐNG TRÊN ĐÁ · P0 PASS 3',blue);
+  guide.addRows([
+    ['Chuỗi tính','Hình học → RQD → Bảng 1 Ks → Rc,m,n → Rm → CT (7)/(8) q_b → giới hạn 20 000 kPa + lower-bound có nguồn → Rk → Rd → Nd,max.'],
+    ['Formula-Only','Excel tự tính lại từ INPUT; không chép kết quả HNL thành số chết.'],
+    ['Safety','Nếu chưa nhập q_b lower-bound có căn cứ cho CT (7)/(8), workbook chỉ cho q_b sơ bộ và không phát hành kết quả thiết kế cuối.'],
+    ['Nguồn','TCVN 10304:2025 §7.2.1 · CT (5)–(8) · Bảng 1 · trang 28–30.']
+  ]); styleSheet(guide);
+  const inp=wb.addWorksheet('INPUT'); inp.columns=[{width:34},{width:22},{width:15},{width:82}]; inp.addRow(['Thông số','Giá trị','Đơn vị','Nguồn / ghi chú']); styleHeader(inp.getRow(1),blue);
+  const r={};
+  r.shape=pass3InputRow(inp,'Tiết diện',input.shape||'circle','-','circle / square',yellow);
+  r.side=pass3InputRow(inp,'Cạnh cọc',Number(input.sideM)||'','m','Dùng khi square',yellow);
+  r.dia=pass3InputRow(inp,'Đường kính ngoài',Number(input.diameterM)||'','m','Dùng khi circle',yellow);
+  r.area=pass3InputRow(inp,'A override',Number.isFinite(Number(input.areaM2))?Number(input.areaM2):'','m²','Để trống = Excel tự tính hình học',yellow);
+  r.rcn=pass3InputRow(inp,'Rc,n',Number(input.rockCompressiveStrengthKpa??input.RcN)||'','kPa','Cường độ nén một trục mẫu đá',yellow);
+  r.rqd=pass3InputRow(inp,'RQD',Number(input.rqdPercent??input.rqd),'%','Bảng 1',yellow);
+  r.gg=pass3InputRow(inp,'γg',Number(input.gammaG??1.4),'-','CT (7)',yellow);
+  r.ld=pass3InputRow(inp,'Ld',Number(input.embedmentLengthM??input.Ld??0),'m','Chiều sâu ngàm thực tế',yellow);
+  r.df=pass3InputRow(inp,'df',Number(input.embeddedOuterDiameterM??input.df??input.diameterM??input.sideM)||'','m','Đường kính/cạnh ngoài phần ngàm',yellow);
+  r.floor=pass3InputRow(inp,'q_b lower-bound',Number.isFinite(Number(input.minimumQbKpa))?Number(input.minimumQbKpa):'','kPa','Bắt buộc để chốt thiết kế CT (7)/(8); phải có provenance riêng',yellow);
+  r.gk=pass3InputRow(inp,'γk',Number.isFinite(Number(input.gammaK))?Number(input.gammaK):'','-','Nếu cần quy đổi Rd',yellow);
+  r.gn=pass3InputRow(inp,'γn',Number.isFinite(Number(input.gammaN))?Number(input.gammaN):'','-','Nếu kiểm γn·Nd≤Rd',yellow);
+  inp.dataValidations.add(`B${r.shape}`,{type:'list',allowBlank:false,formulae:['"circle,square"']}); inp.dataValidations.add(`B${r.rqd}`,{type:'decimal',operator:'between',allowBlank:false,formulae:[0,100]}); styleSheet(inp);
+  const t=wb.addWorksheet('LOOKUP_BANG1'); t.columns=[{width:20},{width:18},{width:70}]; t.addRow(['RQD (%)','Ks','Nguồn']); styleHeader(t.getRow(1),'FF548235'); T10304_TABLE1_RQD.forEach((x,i)=>t.addRow([x,T10304_TABLE1_KS[i],'TCVN 10304:2025 · Bảng 1 · trang 29'])); styleSheet(t);
+  const c=wb.addWorksheet('CALC_ROCK'); c.columns=[{width:34},{width:26},{width:15},{width:88}]; c.addRow(['Bước','Giá trị','Đơn vị','Công thức / trace']); styleHeader(c.getRow(1),blue);
+  const x=k=>`'INPUT'!B${r[k]}`;
+  const rows={};
+  rows.A=c.addRow(['A',{formula:`IF(ISNUMBER(${x('area')}),${x('area')},IF(${x('shape')}="circle",PI()*${x('dia')}^2/4,${x('side')}^2))`},'m²','Hình học']).number;
+  rows.Ks=c.addRow(['Ks',{formula:`IF(OR(${x('rqd')}<0,${x('rqd')}>100),"NGOÀI BẢNG",LET(q,${x('rqd')},xs,'LOOKUP_BANG1'!$A$2:$A$7,ys,'LOOKUP_BANG1'!$B$2:$B$7,i,MATCH(q,xs,1),j,MIN(i+1,ROWS(xs)),x1,INDEX(xs,i),x2,INDEX(xs,j),y1,INDEX(ys,i),y2,INDEX(ys,j),IF(x1=x2,y1,y1+(q-x1)*(y2-y1)/(x2-x1))))`},'-','Bảng 1 · exact / linear / plateau']).number;
+  rows.Rm=c.addRow(['Rm',{formula:`IF(NOT(ISNUMBER(B${rows.Ks})),"",${x('rcn')}*B${rows.Ks}/${x('gg')})`},'kPa','CT (7): Rc,m,n/γg']).number;
+  rows.fac=c.addRow(['Hệ số ngàm',{formula:`IF(${x('ld')}<0.5,1,IF(${x('df')}<=0,"THIẾU df",MIN(1+0.4*${x('ld')}/${x('df')},3)))`},'-','CT (8), giới hạn ≤3']).number;
+  rows.raw=c.addRow(['q_b trước cap',{formula:`IF(OR(NOT(ISNUMBER(B${rows.Rm})),NOT(ISNUMBER(B${rows.fac}))),"",B${rows.Rm}*B${rows.fac})`},'kPa','CT (7)/(8)']).number;
+  rows.cap=c.addRow(['q_b sau cap 20 000',{formula:`IF(ISNUMBER(B${rows.raw}),MIN(B${rows.raw},20000),"")`},'kPa','Giới hạn §7.2.1']).number;
+  rows.qb=c.addRow(['q_b thiết kế',{formula:`IF(NOT(ISNUMBER(${x('floor')})),"CHƯA ĐỦ LOWER-BOUND",MAX(B${rows.cap},${x('floor')}))`},'kPa','Không tự bịa lower-bound']).number;
+  rows.Rk=c.addRow(['Rk',{formula:`IF(ISNUMBER(B${rows.qb}),B${rows.qb}*B${rows.A},"")`},'kN','CT (5)–(6), γc=1']).number;
+  rows.Rd=c.addRow(['Rd',{formula:`IF(AND(ISNUMBER(B${rows.Rk}),ISNUMBER(${x('gk')}),${x('gk')}>0),B${rows.Rk}/${x('gk')},"")`},'kN','Rk/γk']).number;
+  rows.Nd=c.addRow(['Nd,max',{formula:`IF(AND(ISNUMBER(B${rows.Rd}),ISNUMBER(${x('gn')}),${x('gn')}>0),B${rows.Rd}/${x('gn')},"")`},'kN','γn·Nd≤Rd']).number;
+  [rows.Rk,rows.Rd,rows.Nd].forEach(n=>c.getCell(`B${n}`).fill=green); styleSheet(c);
+  pass3SourceSheet(wb,[['Cọc chống','TCVN 10304:2025','§7.2.1 · CT (5)–(8)','28–30','28–30','LOCKED','PDF → Engine → Excel P0 Pass 3'],['Ks','TCVN 10304:2025','Bảng 1','29','29','LOCKED','RQD trung gian nội suy tuyến tính theo chú thích'],['DCE GetKsFromRQD','XLSM/DCE XLL','_xll.GetKsFromRQD','','','REFERENCE','Không sao chép XLL; chỉ benchmark tham khảo.']],blue);
+  addImageInputProvenance(wb,input.imageProvenance); const buf=await wb.xlsx.writeBuffer(); const fileName='HNL_TCVN10304_Rock_EndBearing_P0Pass3_v1.25.7.xlsx'; return options.returnBuffer?{buffer:buf,fileName}:saveBlob(buf,fileName);
+}
+
+function addPass3B3Sheet(wb,blue){
+  const ws=wb.addWorksheet('LOOKUP_BANG3_6'); ws.addRow(['BẢNG 3 · f_i']); styleHeader(ws.getRow(1),'FF548235'); ws.addRow(['z TB','cát thô/vừa','cát mịn','cát bụi','IL≤0,2','IL0,3','IL0,4','IL0,5','IL0,6','IL0,7','IL0,8','IL0,9','IL1,0']); styleHeader(ws.getRow(2),'FF6B8E23');
+  const cols=[TCVN10304_FI.sand_coarse_medium,TCVN10304_FI.sand_fine,TCVN10304_FI.sand_silty,TCVN10304_FI.clay_0_2,TCVN10304_FI.clay_0_3,TCVN10304_FI.clay_0_4,TCVN10304_FI.clay_0_5,TCVN10304_FI.clay_0_6,TCVN10304_FI.clay_0_7,TCVN10304_FI.clay_0_8,TCVN10304_FI.clay_0_9,TCVN10304_FI.clay_1_0]; TCVN10304_FI_DEPTHS.forEach((d,i)=>ws.addRow([d,...cols.map(c=>c[i])]));
+  ws.getCell('P1').value='BẢNG 6 · γR,f'; ws.getCell('P1').font={bold:true}; ['caseId','sand','sandyClay','clayeySand','clay','Mô tả'].forEach((v,i)=>ws.getCell(2,16+i).value=v); styleHeader(ws.getRow(2),'FF6B8E23');
+  T10304_TABLE6.forEach((row,i)=>{const rr=3+i; [row.caseId,row.sand,row.sandyClay,row.clayeySand,row.clay,row.label].forEach((v,j)=>ws.getCell(rr,16+j).value=v);}); ws.columns.forEach(c=>c.width=16); styleSheet(ws); return ws;
+}
+function addPass3TipTables(wb,blue){
+  const ws=wb.addWorksheet('LOOKUP_MUI'); ws.addRow(['BẢNG 7']); styleHeader(ws.getRow(1),'FF548235'); ws.addRow(['Thông số',...T10304_TABLE7_PHI]); styleHeader(ws.getRow(2),'FF6B8E23'); ws.addRow(['alpha1',...T10304_TABLE7_A1]); ws.addRow(['alpha2',...T10304_TABLE7_A2]); T10304_TABLE7_HD.forEach((h,i)=>ws.addRow([`alpha3 h/d=${h}`,...T10304_TABLE7_A3[i]])); ws.addRow(['alpha4 d<=0.8',...T10304_TABLE7_A4[0]]); ws.addRow(['alpha4 d=4',...T10304_TABLE7_A4[1]]);
+  const b8start=18; ws.getCell(`A${b8start}`).value='BẢNG 8'; styleHeader(ws.getRow(b8start),'FF548235'); ws.getCell(`A${b8start+1}`).value='z / IL'; T10304_TABLE8_IL.forEach((v,i)=>ws.getCell(b8start+1,2+i).value=v); styleHeader(ws.getRow(b8start+1),'FF6B8E23'); T10304_TABLE8_DEPTH.forEach((d,i)=>ws.addRow([d,...T10304_TABLE8_QB[i].map(v=>v??'')]));
+  const b2start=b8start+13; ws.getCell(`A${b2start}`).value='BẢNG 2 CAP'; styleHeader(ws.getRow(b2start),'FF548235'); ws.getCell(`A${b2start+1}`).value='z'; ['gravelly','coarse','medium','fine','silty'].forEach((v,i)=>ws.getCell(b2start+1,2+i).value=v); styleHeader(ws.getRow(b2start+1),'FF6B8E23'); const qcols=[TCVN10304_QB.sand_gravelly,TCVN10304_QB.sand_coarse,TCVN10304_QB.sand_medium,TCVN10304_QB.sand_fine,TCVN10304_QB.sand_silty]; TCVN10304_QB_DEPTHS.forEach((d,i)=>ws.addRow([d,...qcols.map(c=>c[i])])); ws.columns.forEach(c=>c.width=15); styleSheet(ws); return {ws,b8start,b2start};
+}
+
+async function export10304BoredRawWorkbook(ExcelJS,input={},options={}){
+  const wb=new ExcelJS.Workbook(); wb.creator='HNL Pile Standards AI'; wb.created=new Date(); wb.calcProperties={fullCalcOnLoad:true,forceFullCalc:true,calcMode:'auto'}; const blue='FF17365D',yellow={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF2CC'}},green={type:'pattern',pattern:'solid',fgColor:{argb:'FFE2F0D9'}};
+  const guide=wb.addWorksheet('README'); guide.columns=[{width:28},{width:105}]; pass3Title(guide,'HNL · TCVN 10304:2025 · §7.2.3 CỌC CÓ MOI ĐẤT · P0 PASS 3',blue); guide.addRows([
+    ['Chuỗi tính','INPUT + địa tầng → xác định lớp mũi → kiểm ngàm ≥2m → Bảng 7/8 + cap Bảng 2 → Bảng 6 γR,f → chia thân theo ranh giới lớp và Δz≤2m → Bảng 3 fi → Qb/Qs → Rk/Rd/Nd,max.'],
+    ['Formula-Only','Không có q_b/fi/Qb/Qs/Rk số chết từ Engine. Thay input/địa tầng → Excel tự tính lại.'],
+    ['Boundary','Bảng 3 không ngoại suy ngoài 1–40m; Bảng 7/8 dùng policy đã khóa; Bảng 6 discrete.'],
+    ['Giới hạn sheet','Tối đa 40 lớp và 1000 phân đoạn thân. Nếu vượt, AUDIT hiển thị BLOCK thay vì cắt im lặng.']]); styleSheet(guide);
+  const inp=wb.addWorksheet('INPUT'); inp.columns=[{width:34},{width:24},{width:15},{width:78}]; inp.addRow(['Thông số','Giá trị','Đơn vị','Ghi chú']); styleHeader(inp.getRow(1),blue); const r={};
+  r.shape=pass3InputRow(inp,'Tiết diện',input.shape||((input.diameterM!=null)?'circle':'square'),'-','circle / square',yellow); r.side=pass3InputRow(inp,'Cạnh',input.sideM??'','m','square',yellow); r.dia=pass3InputRow(inp,'Đường kính D',input.diameterM??'','m','circle',yellow); r.area=pass3InputRow(inp,'A override',input.areaM2??'','m²','Để trống để tính hình học',yellow); r.per=pass3InputRow(inp,'u override',input.perimeterM??'','m','Để trống để tính hình học',yellow); r.tip=pass3InputRow(inp,'Độ sâu mũi',input.tipDepthM??input.lengthM??'','m','z tip',yellow); r.start=pass3InputRow(inp,'Độ sâu bắt đầu ma sát',input.shaftStartDepthM??0,'m','shaftStartDepthM',yellow); r.step=pass3InputRow(inp,'Δz tối đa',input.maxSegmentM??2,'m','0<Δz≤2',yellow); r.method=pass3InputRow(inp,'Bảng 6 caseId',input.methodCaseId||'bored-64a-64b','-','Phương pháp thi công',yellow); r.gc=pass3InputRow(inp,'γc override',Number.isFinite(Number(input.gammaC))?Number(input.gammaC):'','-','Để trống = auto',yellow); r.grr=pass3InputRow(inp,'γR,R override',Number.isFinite(Number(input.gammaRR))?Number(input.gammaRR):'','-','Để trống = auto theo tạo mũi',yellow); r.tipcon=pass3InputRow(inp,'Kiểu tạo mũi',input.tipConstruction||'general','-','general / blasted-enlarged / jet-grout-pdt / mechanical-enlarged-dry / mechanical-enlarged-underwater / dry-inspected / wash-inspected',yellow); r.qbo=pass3InputRow(inp,'q_b override',Number.isFinite(Number(input.qbOverride))?Number(input.qbOverride):'','kPa','MANUAL nếu nhập',yellow); r.phi=pass3InputRow(inp,'φ mũi override',Number.isFinite(Number(input.tipPhiDeg))?Number(input.tipPhiDeg):'','deg','Nếu mũi cát',yellow); r.gp=pass3InputRow(inp,"γ1' mũi override",Number.isFinite(Number(input.tipEffectiveGammaKnM3))?Number(input.tipEffectiveGammaKnM3):'','kN/m³','Nếu mũi cát',yellow); r.g1=pass3InputRow(inp,'γ1 TB override',Number.isFinite(Number(input.averageGammaAboveTipKnM3))?Number(input.averageGammaAboveTipKnM3):'','kN/m³','Để trống = weighted từ profile',yellow); r.bd=pass3InputRow(inp,'Đường kính đáy',input.baseDiameterM??input.diameterM??input.sideM??'','m','Bảng 7',yellow); r.core=pass3InputRow(inp,'Giữ lõi đất mũi?',input.tipCoreRetained===true?'YES':'NO','-','YES → hệ số CT14=1, khác=0.75',yellow); r.enl=pass3InputRow(inp,'D mở rộng',input.enlargedTipDiameterM??'','m','Nếu có mở rộng đáy',yellow); r.loess=pass3InputRow(inp,'Hoàng thổ?',input.loess===true?'YES':'NO','-','Auto γc',yellow); r.gk=pass3InputRow(inp,'γk',input.gammaK??'','-','Rd=Rk/γk',yellow); r.gn=pass3InputRow(inp,'γn',input.gammaN??'','-','Nd,max=Rd/γn',yellow);
+  inp.dataValidations.add(`B${r.shape}`,{type:'list',allowBlank:false,formulae:['"circle,square"']}); inp.dataValidations.add(`B${r.step}`,{type:'decimal',operator:'between',allowBlank:false,formulae:[0.000001,2]}); styleSheet(inp);
+  const soil=wb.addWorksheet('SOIL_PROFILE'); soil.columns=[{width:8},{width:11},{width:11},{width:13},{width:15},{width:14},{width:10},{width:10},{width:14},{width:14},{width:10},{width:14},{width:17},{width:18}]; soil.addRow(['Lớp','Top','Bottom','soilGroup','soilClass','sandType','IL','φ deg','γ kN/m³',"γ' kN/m³",'Sr','fi override','Overlap above tip','Ghi chú']); styleHeader(soil.getRow(1),blue); const layers=Array.isArray(input.layers)?input.layers:[];
+  for(let i=0;i<40;i++){const a=layers[i]||{},rr=i+2; soil.addRow([i+1,a.top??'',a.bottom??'',a.soilGroup||'',a.soilClass||(a.soilGroup==='sand'?'sand':'clay'),a.sandType||'',a.IL??'',a.phiDeg??'',a.gammaKnM3??'',a.gammaEffectiveKnM3??'',a.Sr??'',a.fiOverride??'',{formula:`IF(OR(B${rr}="",C${rr}=""),0,MAX(0,MIN(C${rr},'INPUT'!B${r.tip})-MAX(B${rr},0)))`},'']); ['B','C','D','E','F','G','H','I','J','K','L'].forEach(c=>soil.getCell(`${c}${rr}`).fill=yellow);} soil.dataValidations.add('D2:D41',{type:'list',allowBlank:true,formulae:['"sand,clay"']}); soil.dataValidations.add('E2:E41',{type:'list',allowBlank:true,formulae:['"sand,sandyClay,clayeySand,clay"']}); styleSheet(soil);
+  addPass3B3Sheet(wb,blue); const tipTables=addPass3TipTables(wb,blue);
+  const seg=wb.addWorksheet('SHAFT_SEGMENTS'); seg.columns=[{width:8},{width:12},{width:10},{width:12},{width:10},{width:11},{width:12},{width:14},{width:14},{width:12},{width:10},{width:14},{width:14},{width:16},{width:17},{width:14},{width:18}]; seg.addRow(['#','Start','Layer#','End','h','zTB','soilGroup','soilClass','sandType','IL','fi override','fi','γRf','u','Rfi kN','Status','Trace']); styleHeader(seg.getRow(1),blue);
+  const tops="'SOIL_PROFILE'!$B$2:$B$41", bottoms="'SOIL_PROFILE'!$C$2:$C$41"; const idxFor=z=>`IFERROR(LOOKUP(2,1/(${tops}<>\"\")/(${tops}<=${z}),ROW(${tops}))-ROW('SOIL_PROFILE'!$B$2)+1,\"\")`;
+  const fiXs="'LOOKUP_BANG3_6'!$A$3:$A$16", fiTb="'LOOKUP_BANG3_6'!$B$3:$M$16";
+  for(let i=0;i<1000;i++){const rr=i+2,prev=rr-1; seg.getCell(`A${rr}`).value=i+1; seg.getCell(`B${rr}`).value={formula:i===0?`IF('INPUT'!B${r.start}<'INPUT'!B${r.tip},'INPUT'!B${r.start},"")`:`IF(D${prev}="","",D${prev})`}; seg.getCell(`C${rr}`).value={formula:`IF(OR(B${rr}="",B${rr}>='INPUT'!B${r.tip}),"",${idxFor(`B${rr}`)})`}; seg.getCell(`D${rr}`).value={formula:`IF(OR(B${rr}="",C${rr}="",INDEX(${bottoms},C${rr})<=B${rr}),"",MIN(B${rr}+'INPUT'!B${r.step},'INPUT'!B${r.tip},INDEX(${bottoms},C${rr})))`}; seg.getCell(`E${rr}`).value={formula:`IF(OR(B${rr}="",D${rr}=""),0,D${rr}-B${rr})`}; seg.getCell(`F${rr}`).value={formula:`IF(E${rr}>0,(B${rr}+D${rr})/2,"")`}; ['D','E','F','G','L'].forEach((col,j)=>{const srcCol={D:'D',E:'E',F:'F',G:'G',L:'L'}[col]; seg.getCell(`${String.fromCharCode(71+j)}${rr}`);});
+    seg.getCell(`G${rr}`).value={formula:`IF(C${rr}="","",INDEX('SOIL_PROFILE'!$D$2:$D$41,C${rr}))`}; seg.getCell(`H${rr}`).value={formula:`IF(C${rr}="","",INDEX('SOIL_PROFILE'!$E$2:$E$41,C${rr}))`}; seg.getCell(`I${rr}`).value={formula:`IF(C${rr}="","",INDEX('SOIL_PROFILE'!$F$2:$F$41,C${rr}))`}; seg.getCell(`J${rr}`).value={formula:`IF(C${rr}="","",INDEX('SOIL_PROFILE'!$G$2:$G$41,C${rr}))`}; seg.getCell(`K${rr}`).value={formula:`IF(C${rr}="","",INDEX('SOIL_PROFILE'!$L$2:$L$41,C${rr}))`};
+    const fi=`IF(E${rr}=0,"",IF(ISNUMBER(K${rr}),K${rr},IF(OR(F${rr}<1,F${rr}>40),"NGOÀI BẢNG",LET(z,F${rr},xs,${fiXs},tb,${fiTb},r1,MATCH(z,xs,1),r2,MIN(r1+1,ROWS(xs)),x1,INDEX(xs,r1),x2,INDEX(xs,r2),val,LAMBDA(cc,LET(y1,INDEX(tb,r1,cc),y2,INDEX(tb,r2,cc),IF(x1=x2,y1,y1+(z-x1)*(y2-y1)/(x2-x1)))),IF(G${rr}="sand",val(IF(OR(I${rr}="gravelly",I${rr}="coarse",I${rr}="medium"),1,IF(I${rr}="fine",2,3))),IF(OR(J${rr}="",J${rr}>1),"NGOÀI BẢNG",IF(J${rr}<=0.2,val(4),LET(pos,(J${rr}-0.2)*10,c0,4+INT(pos),fr,pos-INT(pos),c1,MIN(c0+1,12),val(c0)+fr*(val(c1)-val(c0))))))))))`;
+    seg.getCell(`L${rr}`).value={formula:fi}; seg.getCell(`M${rr}`).value={formula:`IF(E${rr}=0,"",IFERROR(INDEX('LOOKUP_BANG3_6'!$Q$3:$T$12,MATCH('INPUT'!B${r.method},'LOOKUP_BANG3_6'!$P$3:$P$12,0),MATCH(H${rr},'LOOKUP_BANG3_6'!$Q$2:$T$2,0)),"SAI BẢNG 6"))`}; seg.getCell(`N${rr}`).value={formula:`IF(ISNUMBER('INPUT'!B${r.per}),'INPUT'!B${r.per},IF('INPUT'!B${r.shape}="circle",PI()*'INPUT'!B${r.dia},4*'INPUT'!B${r.side}))`}; seg.getCell(`O${rr}`).value={formula:`IF(OR(E${rr}=0,NOT(ISNUMBER(L${rr})),NOT(ISNUMBER(M${rr}))),0,IF(AND(ISNUMBER('INPUT'!B${r.enl}),G${rr}="sand",D${rr}>'INPUT'!B${r.tip}-1.5*'INPUT'!B${r.enl}),0,N${rr}*E${rr}*L${rr}*M${rr}))`}; seg.getCell(`P${rr}`).value={formula:`IF(B${rr}="","",IF(OR(D${rr}="",E${rr}<=0,NOT(ISNUMBER(L${rr})),NOT(ISNUMBER(M${rr}))),"BLOCK","OK"))`}; seg.getCell(`Q${rr}`).value={formula:`IF(B${rr}="","",IF(ISNUMBER(K${rr}),"fi MANUAL","B3 z/IL")&" · B6 discrete")`}; }
+  styleSheet(seg);
+  const calc=wb.addWorksheet('CALC_TIP_RK_RD'); calc.columns=[{width:36},{width:28},{width:15},{width:95}]; calc.addRow(['Bước','Giá trị','Đơn vị','Công thức / trace']); styleHeader(calc.getRow(1),blue); const x=k=>`'INPUT'!B${r[k]}`, cr={};
+  cr.A=calc.addRow(['A',{formula:`IF(ISNUMBER(${x('area')}),${x('area')},IF(${x('shape')}="circle",PI()*${x('dia')}^2/4,${x('side')}^2))`},'m²','Hình học']).number; cr.u=calc.addRow(['u',{formula:`IF(ISNUMBER(${x('per')}),${x('per')},IF(${x('shape')}="circle",PI()*${x('dia')},4*${x('side')}))`},'m','Hình học']).number; cr.tipidx=calc.addRow(['Lớp mũi',{formula:idxFor(x('tip'))},'-','Boundary policy: deeper layer tại đúng ranh giới']).number; cr.embed=calc.addRow(['Ngàm trong lớp mũi',{formula:`IF(ISNUMBER(B${cr.tipidx}),${x('tip')}-INDEX('SOIL_PROFILE'!$B$2:$B$41,B${cr.tipidx}),"")`},'m','Phải ≥2m']).number; cr.group=calc.addRow(['Nhóm đất mũi',{formula:`IF(ISNUMBER(B${cr.tipidx}),INDEX('SOIL_PROFILE'!$D$2:$D$41,B${cr.tipidx}),"")`},'-','']).number; cr.sand=calc.addRow(['Loại cát mũi',{formula:`IF(ISNUMBER(B${cr.tipidx}),INDEX('SOIL_PROFILE'!$F$2:$F$41,B${cr.tipidx}),"")`},'-','']).number; cr.il=calc.addRow(['IL mũi',{formula:`IF(ISNUMBER(B${cr.tipidx}),INDEX('SOIL_PROFILE'!$G$2:$G$41,B${cr.tipidx}),"")`},'-','']).number; cr.phi=calc.addRow(['φ mũi',{formula:`IF(ISNUMBER(${x('phi')}),${x('phi')},IF(ISNUMBER(B${cr.tipidx}),INDEX('SOIL_PROFILE'!$H$2:$H$41,B${cr.tipidx}),""))`},'deg','']).number; cr.gp=calc.addRow(["γ1' mũi",{formula:`IF(ISNUMBER(${x('gp')}),${x('gp')},IF(ISNUMBER(B${cr.tipidx}),IF(ISNUMBER(INDEX('SOIL_PROFILE'!$J$2:$J$41,B${cr.tipidx})),INDEX('SOIL_PROFILE'!$J$2:$J$41,B${cr.tipidx}),INDEX('SOIL_PROFILE'!$I$2:$I$41,B${cr.tipidx})),""))`},'kN/m³','']).number; cr.g1=calc.addRow(['γ1 TB',{formula:`IF(ISNUMBER(${x('g1')}),${x('g1')},IF(SUM('SOIL_PROFILE'!$M$2:$M$41)>0,SUMPRODUCT('SOIL_PROFILE'!$M$2:$M$41,'SOIL_PROFILE'!$I$2:$I$41)/SUM('SOIL_PROFILE'!$M$2:$M$41),""))`},'kN/m³','Weighted profile']).number;
+  const phiRef=`B${cr.phi}`,dRef=x('bd'),hRef=x('tip');
+  cr.a1=calc.addRow(['α1',{formula:`LET(p,${phiRef},xs,'LOOKUP_MUI'!$B$2:$J$2,ys,'LOOKUP_MUI'!$B$3:$J$3,i,MATCH(p,xs,1),j,MIN(i+1,COLUMNS(xs)),x1,INDEX(xs,i),x2,INDEX(xs,j),y1,INDEX(ys,i),y2,INDEX(ys,j),IF(OR(p<23,p>39),"NGOÀI BẢNG",IF(x1=x2,y1,y1+(p-x1)*(y2-y1)/(x2-x1))))`},'-','Bảng 7']).number; cr.a2=calc.addRow(['α2',{formula:`LET(p,${phiRef},xs,'LOOKUP_MUI'!$B$2:$J$2,ys,'LOOKUP_MUI'!$B$4:$J$4,i,MATCH(p,xs,1),j,MIN(i+1,COLUMNS(xs)),x1,INDEX(xs,i),x2,INDEX(xs,j),y1,INDEX(ys,i),y2,INDEX(ys,j),IF(OR(p<23,p>39),"NGOÀI BẢNG",IF(x1=x2,y1,y1+(p-x1)*(y2-y1)/(x2-x1))))`},'-','Bảng 7']).number;
+  cr.a3=calc.addRow(['α3',{formula:`LET(xx,${hRef}/${dRef},hh,MIN(xx,25),p,${phiRef},xs,{4,5,7.5,10,12.5,15,17.5,20,22.5,25},ys,'LOOKUP_MUI'!$B$2:$J$2,tb,'LOOKUP_MUI'!$B$5:$J$14,r1,MATCH(hh,xs,1),r2,MIN(r1+1,ROWS(xs)),c1,MATCH(p,ys,1),c2,MIN(c1+1,COLUMNS(ys)),x1,INDEX(xs,r1),x2,INDEX(xs,r2),y1,INDEX(ys,c1),y2,INDEX(ys,c2),q11,INDEX(tb,r1,c1),q12,INDEX(tb,r1,c2),q21,INDEX(tb,r2,c1),q22,INDEX(tb,r2,c2),IF(OR(xx<4,p<23,p>39),"NGOÀI BẢNG",LET(a,IF(y1=y2,q11,q11+(p-y1)*(q12-q11)/(y2-y1)),b,IF(y1=y2,q21,q21+(p-y1)*(q22-q21)/(y2-y1)),IF(x1=x2,a,a+(hh-x1)*(b-a)/(x2-x1))))))`},'-','Bảng 7']).number;
+  cr.a4=calc.addRow(['α4',{formula:`LET(xx,${dRef},dd,MAX(xx,0.8),p,${phiRef},xs,{0.8,4},ys,'LOOKUP_MUI'!$B$2:$J$2,tb,'LOOKUP_MUI'!$B$15:$J$16,r1,MATCH(dd,xs,1),r2,MIN(r1+1,2),c1,MATCH(p,ys,1),c2,MIN(c1+1,COLUMNS(ys)),x1,INDEX(xs,r1),x2,INDEX(xs,r2),y1,INDEX(ys,c1),y2,INDEX(ys,c2),q11,INDEX(tb,r1,c1),q12,INDEX(tb,r1,c2),q21,INDEX(tb,r2,c1),q22,INDEX(tb,r2,c2),IF(OR(xx>4,p<23,p>39),"NGOÀI BẢNG",LET(a,IF(y1=y2,q11,q11+(p-y1)*(q12-q11)/(y2-y1)),b,IF(y1=y2,q21,q21+(p-y1)*(q22-q21)/(y2-y1)),IF(x1=x2,a,a+(dd-x1)*(b-a)/(x2-x1))))))`},'-','Bảng 7']).number;
+  const b8=tipTables.b8start,b2=tipTables.b2start; const b8Formula=`LET(z,MIN(${hRef},40),il,B${cr.il},xs,'LOOKUP_MUI'!$A$${b8+2}:$A$${b8+11},ys,'LOOKUP_MUI'!$B$${b8+1}:$H$${b8+1},tb,'LOOKUP_MUI'!$B$${b8+2}:$H$${b8+11},r1,MATCH(z,xs,1),r2,MIN(r1+1,ROWS(xs)),c1,MATCH(il,ys,1),c2,MIN(c1+1,COLUMNS(ys)),x1,INDEX(xs,r1),x2,INDEX(xs,r2),y1,INDEX(ys,c1),y2,INDEX(ys,c2),q11,INDEX(tb,r1,c1),q12,INDEX(tb,r1,c2),q21,INDEX(tb,r2,c1),q22,INDEX(tb,r2,c2),IF(OR(${hRef}<3,il<0,il>0.6,q11="",q12="",q21="",q22=""),"NGOÀI BẢNG",LET(a,IF(y1=y2,q11,q11+(il-y1)*(q12-q11)/(y2-y1)),bb,IF(y1=y2,q21,q21+(il-y1)*(q22-q21)/(y2-y1)),IF(x1=x2,a,a+(z-x1)*(bb-a)/(x2-x1))))))`;
+  const b2Formula=`LET(z,MIN(${hRef},40),s,B${cr.sand},xs,'LOOKUP_MUI'!$A$${b2+2}:$A$${b2+12},tb,'LOOKUP_MUI'!$B$${b2+2}:$F$${b2+12},cc,IF(s="gravelly",1,IF(s="coarse",2,IF(s="medium",3,IF(s="fine",4,5)))),r1,MATCH(z,xs,1),r2,MIN(r1+1,ROWS(xs)),x1,INDEX(xs,r1),x2,INDEX(xs,r2),y1,INDEX(tb,r1,cc),y2,INDEX(tb,r2,cc),IF(${hRef}<3,"NGOÀI BẢNG",IF(x1=x2,y1,y1+(z-x1)*(y2-y1)/(x2-x1))))`;
+  cr.qbct=calc.addRow(['q_b CT14/15',{formula:`IF(B${cr.group}<>"sand","",IF(OR(NOT(ISNUMBER(B${cr.a1})),NOT(ISNUMBER(B${cr.a2})),NOT(ISNUMBER(B${cr.a3})),NOT(ISNUMBER(B${cr.a4}))),"NGOÀI BẢNG",IF(${x('core')}="YES",1,0.75)*B${cr.a4}*(B${cr.a1}*B${cr.gp}*${dRef}+B${cr.a2}*B${cr.a3}*B${cr.g1}*${hRef})))`},'kPa','CT14/15']).number; cr.qbcap=calc.addRow(['q_b cap Bảng 2',{formula:`IF(B${cr.group}="sand",${b2Formula},"")`},'kPa','Bảng 2']).number; cr.qb=calc.addRow(['q_b dùng tính',{formula:`IF(ISNUMBER(${x('qbo')}),${x('qbo')},IF(B${cr.embed}<2,"NGÀM <2m",IF(B${cr.group}="sand",IF(AND(ISNUMBER(B${cr.qbct}),ISNUMBER(B${cr.qbcap})),MIN(B${cr.qbct},B${cr.qbcap}),"BLOCK"),${b8Formula})))`},'kPa','Bảng 7/8 + cap B2']).number;
+  cr.grr=calc.addRow(['γR,R',{formula:`IF(ISNUMBER(${x('grr')}),${x('grr')},SWITCH(${x('tipcon')},"general",1,"blasted-enlarged",1.3,"jet-grout-pdt",1.3,"mechanical-enlarged-dry",0.5,"mechanical-enlarged-underwater",0.3,"dry-inspected",1,"wash-inspected",0.9,"BLOCK"))`},'-','§7.2.3.1 discrete']).number; cr.gc=calc.addRow(['γc',{formula:`IF(ISNUMBER(${x('gc')}),${x('gc')},IF(OR(${x('loess')}="YES",AND(B${cr.group}<>"sand",ISNUMBER(INDEX('SOIL_PROFILE'!$K$2:$K$41,B${cr.tipidx})),INDEX('SOIL_PROFILE'!$K$2:$K$41,B${cr.tipidx})<0.85)),0.8,1))`},'-','CT13 conditions']).number; cr.Qb=calc.addRow(['Qb',{formula:`IF(AND(ISNUMBER(B${cr.qb}),ISNUMBER(B${cr.grr})),B${cr.grr}*B${cr.qb}*B${cr.A},"")`},'kN','γR,R·qb·A']).number; cr.Qs=calc.addRow(['Qs',{formula:`SUM('SHAFT_SEGMENTS'!$O$2:$O$1001)`},'kN','uΣγR,f·fi·hi']).number; cr.count=calc.addRow(['Số phân đoạn dùng',{formula:`COUNTIF('SHAFT_SEGMENTS'!$P$2:$P$1001,"OK")`},'-','']).number; cr.cap=calc.addRow(['Capacity gate',{formula:`IF('INPUT'!B${r.start}>='INPUT'!B${r.tip},"PASS",IF(AND(MAX('SHAFT_SEGMENTS'!$D$2:$D$1001)>='INPUT'!B${r.tip},COUNTIF('SHAFT_SEGMENTS'!$P$2:$P$1001,"BLOCK")=0),"PASS","BLOCK"))`},'-','Không cắt profile im lặng']).number; cr.Rk=calc.addRow(['Rk',{formula:`IF(AND(B${cr.cap}="PASS",ISNUMBER(B${cr.gc}),ISNUMBER(B${cr.Qb})),B${cr.gc}*(B${cr.Qb}+B${cr.Qs}),"")`},'kN','CT13']).number; cr.Rd=calc.addRow(['Rd',{formula:`IF(AND(ISNUMBER(B${cr.Rk}),ISNUMBER(${x('gk')}),${x('gk')}>0),B${cr.Rk}/${x('gk')},"")`},'kN','Rk/γk']).number; cr.Nd=calc.addRow(['Nd,max',{formula:`IF(AND(ISNUMBER(B${cr.Rd}),ISNUMBER(${x('gn')}),${x('gn')}>0),B${cr.Rd}/${x('gn')},"")`},'kN','Rd/γn']).number; [cr.Rk,cr.Rd,cr.Nd].forEach(n=>calc.getCell(`B${n}`).fill=green); styleSheet(calc);
+  pass3SourceSheet(wb,[['§7.2.3','TCVN 10304:2025','CT (13)–(16)','37–42','37–42','LOCKED','Raw profile Formula-Only P0 Pass 3'],['Thân cọc','TCVN 10304:2025','Bảng 3 + Bảng 6','33–34;39','33–34;39','LOCKED','Bảng 6 discrete; Bảng 3 không ngoại suy'],['Mũi cọc','TCVN 10304:2025','Bảng 7/8 + cap Bảng 2','32–33;41–42','32–33;41–42','LOCKED','Theo loại đất mũi'],['DCE XLL','XLSM/DCE','Qb/flu_CocMaSatCMD','','','REFERENCE','Không phụ thuộc XLL.']],blue); addImageInputProvenance(wb,input.imageProvenance); const buf=await wb.xlsx.writeBuffer(); const fileName='HNL_TCVN10304_Bored_Raw_P0Pass3_v1.25.7.xlsx'; return options.returnBuffer?{buffer:buf,fileName}:saveBlob(buf,fileName);
+}
+
+async function export10304SptRawWorkbook(ExcelJS,input={},options={}){
+  const wb=new ExcelJS.Workbook(); wb.creator='HNL Pile Standards AI'; wb.created=new Date(); wb.calcProperties={fullCalcOnLoad:true,forceFullCalc:true,calcMode:'auto'}; const blue='FF17365D',yellow={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF2CC'}},green={type:'pattern',pattern:'solid',fgColor:{argb:'FFE2F0D9'}};
+  const guide=wb.addWorksheet('README'); guide.columns=[{width:27},{width:105}]; pass3Title(guide,'HNL · TCVN 10304:2025 · SPT PHỤ LỤC D · P0 PASS 3',blue); guide.addRows([
+    ['Nguyên tắc','SPT PDF Decision Pass: không clone _xll.NoiSuySPT. N mũi = trung bình số học các điểm SPT đo thực trong cửa sổ Phụ lục D, giới hạn N≤100; không có điểm → BLOCK.'],['Thân cọc','Ns/Nc lấy theo từng lớp địa chất: ưu tiên N đại diện có provenance; nếu thiếu thì lấy trung bình số học các điểm đo thực trong lớp. Khoảng [top,bottom), điểm đúng ranh giới thuộc lớp sâu hơn. Không nội suy N theo z.'],['Chuỗi tính','Hình học → lớp mũi → η → cửa sổ N mũi → Bảng D.1 qb → Qb → D.5/D.6 phân hoạch từng lớp thân → fs/fc → Qs → Rk/Rd/Nd,max.'],['Formula-Only','Thay điểm SPT, N lớp, c_u hoặc hình học → workbook tự tính lại.'],['Nguồn','TCVN 10304:2025 Phụ lục D · D.1–D.6 · Bảng D.1 · trang 110–111.']]); styleSheet(guide);
+  const inp=wb.addWorksheet('INPUT'); inp.columns=[{width:34},{width:24},{width:15},{width:80}]; inp.addRow(['Thông số','Giá trị','Đơn vị','Ghi chú']); styleHeader(inp.getRow(1),blue); const r={}; r.type=pass3InputRow(inp,'Loại cọc',input.pileType||'bored','-','bored / vibro-pipe / screw / driven',yellow); r.shape=pass3InputRow(inp,'Tiết diện',input.shape||((input.diameterM!=null)?'circle':'square'),'-','circle / square',yellow); r.side=pass3InputRow(inp,'Cạnh',input.sideM??'','m','',yellow); r.dia=pass3InputRow(inp,'D / d đặc trưng',input.diameterM??input.sideM??'','m','Cửa sổ SPT',yellow); r.area=pass3InputRow(inp,'A override',input.areaM2??'','m²','Để trống = hình học',yellow); r.per=pass3InputRow(inp,'u override',input.perimeterM??'','m','Để trống = hình học',yellow); r.L=pass3InputRow(inp,'L',input.lengthM??input.tipDepthM??'','m','Dùng η cọc hở mũi',yellow); r.tip=pass3InputRow(inp,'Độ sâu mũi',input.tipDepthM??input.lengthM??'','m','',yellow); r.start=pass3InputRow(inp,'Độ sâu bắt đầu ma sát',input.shaftStartDepthM??0,'m','',yellow); r.closed=pass3InputRow(inp,'Mũi kín?',input.closedTip===false?'NO':'YES','-','',yellow); r.di=pass3InputRow(inp,'D trong',input.innerDiameterM??'','m','Cọc driven hở mũi',yellow); r.eta=pass3InputRow(inp,'η override',Number.isFinite(Number(input.eta))?Number(input.eta):'','-','MANUAL nếu nhập',yellow); r.gk=pass3InputRow(inp,'γk',input.gammaK??'','-','',yellow); r.gn=pass3InputRow(inp,'γn',input.gammaN??'','-','',yellow); inp.dataValidations.add(`B${r.type}`,{type:'list',allowBlank:false,formulae:['"bored,vibro-pipe,screw,driven"']}); styleSheet(inp);
+  const soil=wb.addWorksheet('SOIL_PROFILE'); soil.columns=[{width:8},{width:12},{width:12},{width:14},{width:14},{width:14},{width:14},{width:18}]; soil.addRow(['Lớp','Top','Bottom','soilGroup','N lớp','c_u kPa','Ghi chú','Provenance']); styleHeader(soil.getRow(1),blue); const layers=Array.isArray(input.layers)?input.layers:[]; for(let i=0;i<40;i++){const a=layers[i]||{},rr=i+2; soil.addRow([i+1,a.top??'',a.bottom??'',a.soilGroup||'',a.sptN??'',a.cuKpa??'',a.sptN!=null?'N đại diện lớp từ báo cáo':'Nếu trống: mean điểm SPT đo trong [top,bottom)',a.sptN!=null?'REPORT-LAYER-REPRESENTATIVE':'DERIVED-MEASURED-LAYER-MEAN']); ['B','C','D','E','F'].forEach(c=>soil.getCell(`${c}${rr}`).fill=yellow);} soil.dataValidations.add('D2:D41',{type:'list',allowBlank:true,formulae:['"sand,clay"']}); styleSheet(soil);
+  const pts=wb.addWorksheet('SPT_POINTS'); pts.columns=[{width:10},{width:16},{width:14},{width:55}]; pts.addRow(['#','Depth m','N','Nguồn']); styleHeader(pts.getRow(1),blue); const points=Array.isArray(input.sptPoints)?input.sptPoints:[]; for(let i=0;i<200;i++){const p=points[i]||{},rr=i+2; pts.addRow([i+1,p.depthM??'',p.N??'','SPT đo thực tế']); pts.getCell(`B${rr}`).fill=yellow; pts.getCell(`C${rr}`).fill=yellow;} styleSheet(pts);
+  const d1=wb.addWorksheet('LOOKUP_D1'); d1.columns=[{width:15},{width:28},{width:15},{width:15},{width:15},{width:15},{width:15},{width:15},{width:15},{width:15},{width:15},{width:15},{width:15},{width:15}]; d1.addRow(['pileType','label','tipSandN','tipClayCu','tipClayN','tipCap','shaftSandN','shaftSandCap','shaftClayCu','shaftClayCap','aboveD','belowD','tipSandEta','tipCapEta']); styleHeader(d1.getRow(1),'FF548235'); const keys=[['bored',T10304_SPT_D1.bored],['vibro-pipe',T10304_SPT_D1.vibroPipe],['screw',T10304_SPT_D1.screw],['driven',T10304_SPT_D1.driven]]; keys.forEach(([k,a])=>d1.addRow([k,a.label,a.tipSandN??'',a.tipClayCu??'',a.tipClayN??'',a.tipCapKpa,a.shaftSandN,a.shaftSandCapKpa,a.shaftClayCu,a.shaftClayCapKpa,a.tipWindowAboveD,a.tipWindowBelowD,a.tipSandUsesEta?1:0,a.tipCapUsesEta?1:0])); styleSheet(d1);
+  const calc=wb.addWorksheet('CALC_TIP'); calc.columns=[{width:34},{width:28},{width:15},{width:95}]; calc.addRow(['Bước','Giá trị','Đơn vị','Trace']); styleHeader(calc.getRow(1),blue); const x=k=>`'INPUT'!B${r[k]}`,tops="'SOIL_PROFILE'!$B$2:$B$41",idx=`IFERROR(LOOKUP(2,1/(${tops}<>\"\")/(${tops}<=${x('tip')}),ROW(${tops}))-ROW('SOIL_PROFILE'!$B$2)+1,\"\")`,cr={}; cr.A=calc.addRow(['A',{formula:`IF(ISNUMBER(${x('area')}),${x('area')},IF(${x('shape')}="circle",PI()*${x('dia')}^2/4,${x('side')}^2))`},'m²','Hình học']).number; cr.u=calc.addRow(['u',{formula:`IF(ISNUMBER(${x('per')}),${x('per')},IF(${x('shape')}="circle",PI()*${x('dia')},4*${x('side')}))`},'m','Hình học']).number; cr.tipidx=calc.addRow(['Lớp mũi',{formula:idx},'-','Boundary deeper']).number; cr.group=calc.addRow(['Nhóm đất mũi',{formula:`IF(ISNUMBER(B${cr.tipidx}),INDEX('SOIL_PROFILE'!$D$2:$D$41,B${cr.tipidx}),"")`},'-','']).number; cr.eta=calc.addRow(['η',{formula:`IF(ISNUMBER(${x('eta')}),${x('eta')},SWITCH(${x('type')},"bored",1,"vibro-pipe",1,"screw",IF(${x('closed')}="YES",1,0.8),"driven",IF(${x('closed')}="YES",1,IF(OR(NOT(ISNUMBER(${x('L')})),NOT(ISNUMBER(${x('di')})),${x('L')}/${x('di')}<2),"BLOCK",IF(${x('L')}/${x('di')}<=5,0.16*${x('L')}/${x('di')},0.8))),"BLOCK"))`},'-','Bảng D.1']).number; cr.above=calc.addRow(['D phía trên',{formula:`XLOOKUP(${x('type')},'LOOKUP_D1'!$A$2:$A$5,'LOOKUP_D1'!$K$2:$K$5)`},'D','']).number; cr.below=calc.addRow(['D phía dưới',{formula:`XLOOKUP(${x('type')},'LOOKUP_D1'!$A$2:$A$5,'LOOKUP_D1'!$L$2:$L$5)`},'D','']).number; cr.ws=calc.addRow(['Window start',{formula:`MAX(0,${x('tip')}-B${cr.above}*${x('dia')})`},'m','']).number; cr.we=calc.addRow(['Window end',{formula:`${x('tip')}+B${cr.below}*${x('dia')}`},'m','']).number; cr.cnt=calc.addRow(['SPT count',{formula:`COUNTIFS('SPT_POINTS'!$B$2:$B$201,">="&B${cr.ws},'SPT_POINTS'!$B$2:$B$201,"<="&B${cr.we},'SPT_POINTS'!$C$2:$C$201,">=0")`},'-','Chỉ điểm đo thực']).number; cr.N=calc.addRow(['N mũi',{formula:`IF(OR(B${cr.group}="sand",${x('type')}="screw"),IF(B${cr.cnt}=0,"THIẾU SPT",MIN(AVERAGEIFS('SPT_POINTS'!$C$2:$C$201,'SPT_POINTS'!$B$2:$B$201,">="&B${cr.ws},'SPT_POINTS'!$B$2:$B$201,"<="&B${cr.we},'SPT_POINTS'!$C$2:$C$201,">=0"),100)),IF(ISNUMBER(INDEX('SOIL_PROFILE'!$E$2:$E$41,B${cr.tipidx})),INDEX('SOIL_PROFILE'!$E$2:$E$41,B${cr.tipidx}),""))`},'-','Không nội suy']).number; cr.cu=calc.addRow(['c_u mũi',{formula:`IF(B${cr.group}="clay",IF(ISNUMBER(INDEX('SOIL_PROFILE'!$F$2:$F$41,B${cr.tipidx})),INDEX('SOIL_PROFILE'!$F$2:$F$41,B${cr.tipidx}),IF(ISNUMBER(INDEX('SOIL_PROFILE'!$E$2:$E$41,B${cr.tipidx})),6.25*INDEX('SOIL_PROFILE'!$E$2:$E$41,B${cr.tipidx}),"")),"")`},'kPa','c_u=6.25N khi nhánh cho phép']).number;
+  cr.qb=calc.addRow(['q_b',{formula:`LET(pt,${x('type')},grp,B${cr.group},eta,B${cr.eta},N,B${cr.N},cu,B${cr.cu},ts,XLOOKUP(pt,'LOOKUP_D1'!$A$2:$A$5,'LOOKUP_D1'!$C$2:$C$5),tc,XLOOKUP(pt,'LOOKUP_D1'!$A$2:$A$5,'LOOKUP_D1'!$D$2:$D$5),tn,XLOOKUP(pt,'LOOKUP_D1'!$A$2:$A$5,'LOOKUP_D1'!$E$2:$E$5),cap,XLOOKUP(pt,'LOOKUP_D1'!$A$2:$A$5,'LOOKUP_D1'!$F$2:$F$5),useEta,XLOOKUP(pt,'LOOKUP_D1'!$A$2:$A$5,'LOOKUP_D1'!$M$2:$M$5),capEta,XLOOKUP(pt,'LOOKUP_D1'!$A$2:$A$5,'LOOKUP_D1'!$N$2:$N$5),IF(OR(NOT(ISNUMBER(eta)),AND(OR(grp="sand",pt="screw"),NOT(ISNUMBER(N)))),"BLOCK",IF(grp="sand",MIN(ts*N*IF(useEta=1,eta,1),cap*IF(capEta=1,eta,1)),IF(pt="screw",MIN(tn*N,cap*IF(capEta=1,eta,1)),IF(NOT(ISNUMBER(cu)),"BLOCK",MIN(tc*cu,cap))))))`},'kPa','Bảng D.1']).number; cr.Rub=calc.addRow(['Ru,b',{formula:`IF(ISNUMBER(B${cr.qb}),B${cr.qb}*B${cr.A},"")`},'kN','D.3']).number; styleSheet(calc);
+  const sh=wb.addWorksheet('CALC_SHAFT'); sh.columns=[{width:8},{width:12},{width:12},{width:10},{width:14},{width:14},{width:14},{width:14},{width:18},{width:18},{width:18}]; sh.addRow(['Lớp','Top clip','Bottom clip','h','soilGroup','N used','c_u used','f_s/f_c','u','Resistance','Trace']); styleHeader(sh.getRow(1),blue); for(let i=0;i<40;i++){const rr=i+2,src=i+2; sh.getCell(`A${rr}`).value=i+1; sh.getCell(`B${rr}`).value={formula:`IF(OR('SOIL_PROFILE'!B${src}="",'SOIL_PROFILE'!C${src}=""),"",MAX('SOIL_PROFILE'!B${src},${x('start')}))`}; sh.getCell(`C${rr}`).value={formula:`IF(B${rr}="","",MIN('SOIL_PROFILE'!C${src},${x('tip')}))`}; sh.getCell(`D${rr}`).value={formula:`IF(OR(B${rr}="",C${rr}<=B${rr}),0,C${rr}-B${rr})`}; sh.getCell(`E${rr}`).value={formula:`'SOIL_PROFILE'!D${src}`}; sh.getCell(`F${rr}`).value={formula:`IF(D${rr}=0,"",IF(ISNUMBER('SOIL_PROFILE'!E${src}),'SOIL_PROFILE'!E${src},IF(COUNTIFS('SPT_POINTS'!$B$2:$B$201,">="&B${rr},'SPT_POINTS'!$B$2:$B$201,"<"&C${rr},'SPT_POINTS'!$C$2:$C$201,">=0")=0,"",AVERAGEIFS('SPT_POINTS'!$C$2:$C$201,'SPT_POINTS'!$B$2:$B$201,">="&B${rr},'SPT_POINTS'!$B$2:$B$201,"<"&C${rr},'SPT_POINTS'!$C$2:$C$201,">=0")))`}; sh.getCell(`G${rr}`).value={formula:`IF(E${rr}="clay",IF(ISNUMBER('SOIL_PROFILE'!F${src}),'SOIL_PROFILE'!F${src},IF(ISNUMBER(F${rr}),6.25*F${rr},"")),"")`}; sh.getCell(`H${rr}`).value={formula:`LET(pt,${x('type')},grp,E${rr},N,F${rr},cu,G${rr},cs,XLOOKUP(pt,'LOOKUP_D1'!$A$2:$A$5,'LOOKUP_D1'!$G$2:$G$5),csc,XLOOKUP(pt,'LOOKUP_D1'!$A$2:$A$5,'LOOKUP_D1'!$H$2:$H$5),cc,XLOOKUP(pt,'LOOKUP_D1'!$A$2:$A$5,'LOOKUP_D1'!$I$2:$I$5),ccc,XLOOKUP(pt,'LOOKUP_D1'!$A$2:$A$5,'LOOKUP_D1'!$J$2:$J$5),IF(D${rr}=0,"",IF(grp="sand",IF(ISNUMBER(N),MIN(cs*N,csc),"BLOCK"),IF(ISNUMBER(cu),MIN(cc*cu,ccc),"BLOCK"))))`}; sh.getCell(`I${rr}`).value={formula:`'CALC_TIP'!B${cr.u}`}; sh.getCell(`J${rr}`).value={formula:`IF(AND(D${rr}>0,ISNUMBER(H${rr})),D${rr}*H${rr}*I${rr},0)`}; sh.getCell(`K${rr}`).value={formula:`IF(D${rr}=0,"",IF(ISNUMBER('SOIL_PROFILE'!E${src}),"D.5/D.6 · N đại diện lớp có provenance",IF(E${rr}="sand","D.5 · mean SPT đo trong [top,bottom), không nội suy","D.6 · c_u đo hoặc 6.25·mean Nc trong [top,bottom)")))`}; } styleSheet(sh);
+  const res=wb.addWorksheet('CALC_RK_RD'); res.columns=[{width:32},{width:26},{width:15},{width:80}]; res.addRow(['Kết quả','Giá trị','Đơn vị','Nguồn']); styleHeader(res.getRow(1),blue); const rr={}; rr.Rub=res.addRow(['Ru,b',{formula:`'CALC_TIP'!B${cr.Rub}`},'kN','D.3']).number; rr.Ruf=res.addRow(['Ru,f',{formula:`SUM('CALC_SHAFT'!$J$2:$J$41)`},'kN','D.5–D.6']).number; rr.block=res.addRow(['Input gate',{formula:`IF(OR(NOT(ISNUMBER('CALC_TIP'!B${cr.qb})),COUNTIF('CALC_SHAFT'!$H$2:$H$41,"BLOCK")>0),"BLOCK","PASS")`},'-','Không nội suy/extrapolate']).number; rr.Rk=res.addRow(['Rk',{formula:`IF(B${rr.block}="PASS",B${rr.Rub}+B${rr.Ruf},"")`},'kN','D.1–D.2']).number; rr.Rd=res.addRow(['Rd',{formula:`IF(AND(ISNUMBER(B${rr.Rk}),ISNUMBER(${x('gk')}),${x('gk')}>0),B${rr.Rk}/${x('gk')},"")`},'kN','Rk/γk']).number; rr.Nd=res.addRow(['Nd,max',{formula:`IF(AND(ISNUMBER(B${rr.Rd}),ISNUMBER(${x('gn')}),${x('gn')}>0),B${rr.Rd}/${x('gn')},"")`},'kN','Rd/γn']).number; [rr.Rk,rr.Rd,rr.Nd].forEach(n=>res.getCell(`B${n}`).fill=green); styleSheet(res);
+  pass3SourceSheet(wb,[['SPT','TCVN 10304:2025','Phụ lục D · D.1–D.6 · Bảng D.1','110–111','110–111','LOCKED','SPT PDF Decision: tip=measured-window mean, cap100; shaft=layer representative/measured-layer mean; [top,bottom); no continuous interpolation'],['_xll.NoiSuySPT','XLSM/DCE XLL','DCE reference','','','REFERENCE','DCE LINEAR-1D đã characterise nhưng PDF không quy định; không clone/không Production'],['_xll.qb_SPT2025 / flu_SPT2025','XLSM/DCE XLL','DCE reference','','','REFERENCE','Chỉ dùng benchmark hành vi; Production dùng Bảng D.1 trực tiếp.']],blue); addImageInputProvenance(wb,input.imageProvenance); const buf=await wb.xlsx.writeBuffer(); const fileName='HNL_TCVN10304_SPT_Raw_P0Pass3_v1.25.7.xlsx'; return options.returnBuffer?{buffer:buf,fileName}:saveBlob(buf,fileName);
 }
 
 // v1.24.0 - production workbooks for all VERIFIED TCVN 10304 chat workflows.
 // The formulas below mirror the deterministic engine; yellow cells are editable inputs.
-export async function export10304AdvancedWorkflowWorkbook(workflowId, input={}) {
-  const mod=await import('exceljs'); const ExcelJS=mod.default || mod; const wb=new ExcelJS.Workbook(); wb.creator='HNL Pile Standards AI'; wb.created=new Date();
+export async function export10304AdvancedWorkflowWorkbook(workflowId, input={}, options={}) {
+  const mod=await import('exceljs'); const ExcelJS=mod.default || mod;
+  // P0 Pass 3: raw-profile workflows use dedicated Formula-Only workbooks.
+  // Manual/legacy aggregate payloads intentionally remain on the old templates.
+  if(workflowId==='end-bearing' && (input.rockCompressiveStrengthKpa!=null || input.RcN!=null) && (input.rqdPercent!=null || input.rqd!=null)) return export10304RockRawWorkbook(ExcelJS,input,options);
+  if(workflowId==='bored' && Array.isArray(input.layers) && input.layers.length) return export10304BoredRawWorkbook(ExcelJS,input,options);
+  if(workflowId==='spt' && Array.isArray(input.layers) && input.layers.length) return export10304SptRawWorkbook(ExcelJS,input,options);
+  const wb=new ExcelJS.Workbook(); wb.creator='HNL Pile Standards AI'; wb.created=new Date();
   const blue='FF17365D', yellow={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF2CC'}}, green={type:'pattern',pattern:'solid',fgColor:{argb:'FFE2F0D9'}};
   const guide=wb.addWorksheet('00_HUONG_DAN'); guide.columns=[{width:28},{width:100}];
   guide.addRows([['HNL - TCVN 10304:2025',`Workflow ${workflowId}`],['Nguyên tắc','Ô vàng là input. Công thức Excel thật và provenance đi cùng workbook.'],['Cảnh báo','Không tự suy đoán tham số địa chất/thí nghiệm. Giá trị nhập ngoài bảng phải ghi NHẬP TAY.']]); styleHeader(guide.getRow(1),blue); styleSheet(guide);
@@ -674,6 +803,311 @@ export async function export5574WorkflowWorkbook(workflowId, input={}) {
 
 
 
+// P1 Pass 1 — Formula-Only workbook for pile material capacity and governing resistance.
+// Production branch is TCVN 5574:2018 8.1.2.4.3 CT (49)–(50), rectangular/square only.
+// XLSM SCT VatLieu is kept only as an audit/reference sheet and never feeds Production formulas.
+export async function exportPileMaterialWorkflowWorkbook(input={}) {
+  const mod=await import('exceljs'); const ExcelJS=mod.default||mod; const wb=new ExcelJS.Workbook();
+  wb.creator='HNL Pile Standards AI'; wb.created=new Date(); wb.calcProperties={fullCalcOnLoad:true,forceFullCalc:true,calcMode:'auto'};
+  const navy='FF17365D', green='FF548235', yellow='FFFFF2CC', pale='FFE2F0D9', result='FFC6E0B4', white='FFFFFFFF';
+  const border={top:{style:'thin',color:{argb:'FFD9E1F2'}},left:{style:'thin',color:{argb:'FFD9E1F2'}},bottom:{style:'thin',color:{argb:'FFD9E1F2'}},right:{style:'thin',color:{argb:'FFD9E1F2'}}};
+  const title=(ws,text,last='G')=>{ws.mergeCells(`A1:${last}1`); const c=ws.getCell('A1'); c.value=text; c.font={bold:true,size:15,color:{argb:white}}; c.fill={type:'pattern',pattern:'solid',fgColor:{argb:navy}};};
+  const head=row=>{row.font={bold:true,color:{argb:white}}; row.fill={type:'pattern',pattern:'solid',fgColor:{argb:green}};};
+  const style=(ws,widths=[])=>{widths.forEach((w,i)=>ws.getColumn(i+1).width=w); ws.views=[{state:'frozen',ySplit:3}]; ws.eachRow(r=>r.eachCell(c=>{c.alignment={vertical:'top',wrapText:true};c.border=border;}));};
+  const inputFill=c=>{c.fill={type:'pattern',pattern:'solid',fgColor:{argb:yellow}};}; const formulaFill=c=>{c.fill={type:'pattern',pattern:'solid',fgColor:{argb:pale}};};
+  const grade=String(input.grade||'B30').toUpperCase(), steel=String(input.steel||'CB400-V').toUpperCase();
+  const shape=String(input.shape||'rectangle').toLowerCase();
+  const side=Number(input.sideMm??400), width=Number(input.widthMm??side), height=Number(input.heightMm??side), As=Number(input.AsTotMm2??1600), L0=Number(input.L0Mm??height*10), e0=Number(input.e0Mm??height/30);
+  const e0IncludesRandom=(input.e0IncludesRandom===true||input.eccentricityIncludesRandom===true)?'yes':'no';
+  const reinforcementOppositeSides=(input.reinforcementOppositeSides===true||input.reinforcementSymmetricPerimeter===true)?'yes':'no';
+  const duration=String(input.loadDuration||'long').toLowerCase().startsWith('short')?'short':'long';
+  const soil=Number(input.soilRdKn??input.RsoilKn??input.soilDesignResistanceKn); const soilCell=Number.isFinite(soil)&&soil>0?soil:'';
+
+  const guide=wb.addWorksheet('00_HUONG_DAN'); title(guide,'HNL · PILE MATERIAL ENGINE · TCVN 5574:2018 · P1 PASS 1'); guide.addRow([]); guide.addRow(['Mục','Nội dung']); head(guide.getRow(3));
+  guide.addRows([
+    ['Production','CT (49)–(50) + Bảng 16 cho cọc vuông/chữ nhật, cốt dọc ở các phía đối diện trong mặt phẳng uốn, e0 đã kể ea, e0≤h/30, L0/h≤20.'],
+    ['Vật liệu','Rb từ Bảng 7; Rsc từ Bảng 13. CB400-V: Rsc=350 MPa.'],
+    ['Excel Formula-Only','Ô vàng là INPUT. Ô xanh là công thức; đổi INPUT → workbook tự tính lại.'],
+    ['Governing','Chỉ tính Rpile=min(Rsoil,Rmaterial) khi Rsoil là Rd thiết kế đã VERIFIED trên cùng basis.'],
+    ['Safety','e0 phải là giá trị cuối theo 8.1.2.2.4 đã kể ea=max(L/600,h/30,10 mm). Tải dài hạn: Bảng 16 chỉ 6≤L0/h≤20. Tải ngắn hạn: chỉ nội suy 10→0,90 và 20→0,85.'],
+    ['XLSM','Sheet SCT VatLieu chỉ nằm trong 07_XLSM_AUDIT; không cấp số cho Production.']
+  ]); style(guide,[24,105]);
+
+  const inp=wb.addWorksheet('01_INPUT'); title(inp,'01 · INPUT'); inp.addRow([]); inp.addRow(['Thông số','Giá trị','Đơn vị','Diễn giải','Nguồn']); head(inp.getRow(3));
+  const rows=[
+    ['Shape',shape,'-','square/rectangle; CT49–50 không áp dụng tròn','TCVN 5574 §8.1.2.4.3'],
+    ['Concrete grade',grade,'-','Cấp bê tông nặng','Bảng 7'],['Steel grade',steel,'-','Thép dọc','Bảng 13'],
+    ['Width b',width,'mm','Bề rộng tiết diện','Đề bài'],['Height h',height,'mm','Chiều cao tiết diện theo mặt phẳng uốn','Đề bài'],
+    ['As,tot',As,'mm²','Tổng diện tích cốt thép dọc','Đề bài'],['L0',L0,'mm','Chiều dài tính toán','§8.1.2.4.4/Đề bài'],
+    ['e0',e0,'mm','e0 cuối cùng, đã kể ea theo 8.1.2.2.4','Đề bài / 8.1.2.2.4'],
+    ['e0 includes random ea?',e0IncludesRandom,'yes/no','Phải là yes để mở Production','8.1.2.2.4'],
+    ['Rebar opposite sides?',reinforcementOppositeSides,'yes/no','Cốt dọc ở các phía đối diện trong mặt phẳng uốn','8.1.2.4.3'],
+    ['Load duration',duration,'long/short','Dài hạn hoặc ngắn hạn','Đề bài'],
+    ['Rsoil = Rd',soilCell,'kN','Sức chịu tải thiết kế đất nền; để trống nếu chưa có','TCVN 10304 Calculation Engine']
+  ]; rows.forEach(v=>{const r=inp.addRow(v); inputFill(r.getCell(2));}); style(inp,[27,20,14,68,38]);
+  inp.getCell('B4').dataValidation={type:'list',allowBlank:false,formulae:['"square,rectangle"']};
+  inp.getCell('B12').dataValidation={type:'list',allowBlank:false,formulae:['"yes,no"']};
+  inp.getCell('B13').dataValidation={type:'list',allowBlank:false,formulae:['"yes,no"']};
+  inp.getCell('B14').dataValidation={type:'list',allowBlank:false,formulae:['"long,short"']};
+
+  const mat=wb.addWorksheet('02_MATERIAL'); title(mat,'02 · MATERIAL LOOKUP VERIFIED','J'); mat.addRow([]); mat.addRow(['Concrete','Rb MPa','Rbt MPa','Eb MPa','Nguồn','','Steel','Rs MPa','Rsc MPa','Rsw MPa']); head(mat.getRow(3));
+  const n=Math.max(TCVN5574_CONCRETE_HEAVY.length,TCVN5574_STEEL.length); for(let i=0;i<n;i++){const c=TCVN5574_CONCRETE_HEAVY[i],s=TCVN5574_STEEL[i]; mat.addRow([c?.grade||'',c?.Rb??'',c?.Rbt??'',c?.Eb??'',c?'Bảng 7/10':'','',s?.grade||'',s?.Rs??'',s?.Rsc??'',s?.Rsw??'']);}
+  mat.getCell('K3').value='Ghi chú'; mat.getCell('K4').value='CB400-V Rsc=350 MPa theo Bảng 13; không dùng 365 của XLSM.'; style(mat,[14,12,12,14,25,3,16,12,12,12,54]);
+
+  const t16=wb.addWorksheet('03_TABLE16'); title(t16,'03 · BẢNG 16 · φ DÀI HẠN','G'); t16.addRow([]); t16.addRow(['Nhóm bê tông','Grade min','Grade max','φ@6','φ@10','φ@15','φ@20']); head(t16.getRow(3));
+  TCVN5574_TABLE16_LONG_TERM_PHI.forEach(r=>t16.addRow([r.label,r.gradeMin,r.gradeMax,...r.phi])); t16.addRow([]); t16.addRow(['Policy','Nội suy tuyến tính giữa mốc; không ngoại suy ngoài 6…20.','','','','','']); style(t16,[20,12,12,12,12,12,12]);
+
+  const calc=wb.addWorksheet('04_MATERIAL_CAPACITY'); title(calc,'04 · Rmaterial · CT (49)–(50)','G'); calc.addRow([]); calc.addRow(['Bước','Giá trị','Đơn vị','Công thức/logic','Kiểm tra','Nguồn','Trạng thái']); head(calc.getRow(3));
+  const add=(label,formula,unit,logic,check,src)=>{const r=calc.addRow([label,{formula},unit,logic,check,src,'FORMULA']); formulaFill(r.getCell(2)); return r.number;};
+  const rRb=add('Rb',`INDEX('02_MATERIAL'!B:B,MATCH('01_INPUT'!B5,'02_MATERIAL'!A:A,0))`,'MPa','Tra exact cấp bê tông','','Bảng 7');
+  const rRsc=add('Rsc',`INDEX('02_MATERIAL'!I:I,MATCH('01_INPUT'!B6,'02_MATERIAL'!G:G,0))`,'MPa','Tra exact cấp thép','','Bảng 13');
+  const rA=add('A',`'01_INPUT'!B7*'01_INPUT'!B8`,'mm²','b·h','','Hình học');
+  const rRatio=add('L0/h',`'01_INPUT'!B10/'01_INPUT'!B8`,'-','Độ mảnh','≤20','§8.1.2.4.3');
+  const rE=add('e0/h',`'01_INPUT'!B11/'01_INPUT'!B8`,'-','Độ lệch tâm tương đối','≤1/30','§8.1.2.4.3');
+  const rGroup=add('Table16 row',`IF(VALUE(SUBSTITUTE('01_INPUT'!B5,"B",""))<=55,4,IF(VALUE(SUBSTITUTE('01_INPUT'!B5,"B",""))<=70,5,IF(VALUE(SUBSTITUTE('01_INPUT'!B5,"B",""))<=90,6,IF(VALUE(SUBSTITUTE('01_INPUT'!B5,"B",""))=100,7,NA()))))`,'row','Nhóm cấp bê tông B20…B100','','Bảng 16');
+  const rP6=add('φ6',`INDEX('03_TABLE16'!D:D,B${rGroup})`,'-','Mốc 6','','Bảng 16'); const rP10=add('φ10',`INDEX('03_TABLE16'!E:E,B${rGroup})`,'-','Mốc 10','','Bảng 16'); const rP15=add('φ15',`INDEX('03_TABLE16'!F:F,B${rGroup})`,'-','Mốc 15','','Bảng 16'); const rP20=add('φ20',`INDEX('03_TABLE16'!G:G,B${rGroup})`,'-','Mốc 20','','Bảng 16');
+  const rPhiLong=add('φ long',`IF(OR(B${rRatio}<6,B${rRatio}>20),NA(),IF(B${rRatio}<=10,B${rP6}+(B${rRatio}-6)*(B${rP10}-B${rP6})/4,IF(B${rRatio}<=15,B${rP10}+(B${rRatio}-10)*(B${rP15}-B${rP10})/5,B${rP15}+(B${rRatio}-15)*(B${rP20}-B${rP15})/5)))`,'-','Linear 1D; block ngoài 6…20','','Bảng 16');
+  const rPhiShort=add('φ short',`IF(OR(B${rRatio}<10,B${rRatio}>20),NA(),0.95-0.005*B${rRatio})`,'-','Nội suy 10→0,90; 20→0,85; không ngoại suy','','§8.1.2.4.3');
+  const rPhi=add('φ',`IF('01_INPUT'!B14="short",B${rPhiShort},B${rPhiLong})`,'-','Chọn theo thời hạn tải','','§8.1.2.4.3/Bảng 16');
+  const rGate=add('Applicability gate',`IF(AND(OR('01_INPUT'!B4="square",'01_INPUT'!B4="rectangle"),'01_INPUT'!B12="yes",'01_INPUT'!B13="yes",B${rRatio}<=20,B${rE}<=1/30+0.001/'01_INPUT'!B8,'01_INPUT'!B11+0.001>=MAX('01_INPUT'!B8/30,10),ISNUMBER(B${rPhi})),1,0)`,'1/0','1 = đúng phạm vi CT49–50','1','§8.1.2.4.3');
+  const rNu=add('Nu = Rmaterial',`IF(B${rGate}=1,B${rPhi}*(B${rRb}*B${rA}+B${rRsc}*'01_INPUT'!B9)/1000,NA())`,'kN','φ(Rb·A+Rsc·As,tot)','', 'CT (50)'); calc.getCell(`B${rNu}`).fill={type:'pattern',pattern:'solid',fgColor:{argb:result}}; calc.getCell(`B${rNu}`).font={bold:true,size:12}; style(calc,[24,20,12,66,20,32,16]);
+
+  const gov=wb.addWorksheet('05_GOVERNING'); title(gov,'05 · Rsoil ↔ Rmaterial','G'); gov.addRow([]); gov.addRow(['Chỉ tiêu','Giá trị','Đơn vị','Logic','Kết luận','Nguồn','Trạng thái']); head(gov.getRow(3));
+  const gr1=gov.addRow(['Rsoil (Rd)',{formula:`IF(ISNUMBER('01_INPUT'!B15),'01_INPUT'!B15,NA())`},'kN','Đầu vào từ TCVN 10304 Calculation Engine','','TCVN 10304','INPUT/FORMULA']); formulaFill(gr1.getCell(2));
+  const gr2=gov.addRow(['Rmaterial',{formula:`='04_MATERIAL_CAPACITY'!B${rNu}`},'kN','CT50','','TCVN 5574','FORMULA']); formulaFill(gr2.getCell(2));
+  const gr3=gov.addRow(['Rpile',{formula:'IF(AND(ISNUMBER(B4),ISNUMBER(B5)),MIN(B4,B5),NA())'},'kN','min(Rsoil,Rmaterial)',{formula:'IF(NOT(ISNUMBER(B6)),"CHƯA ĐỦ BASIS",IF(B4<=B5,"ĐẤT NỀN KHỐNG CHẾ","VẬT LIỆU KHỐNG CHẾ"))'},'HNL governing gate','FORMULA']); gr3.getCell(2).fill={type:'pattern',pattern:'solid',fgColor:{argb:result}}; gr3.getCell(2).font={bold:true}; style(gov,[24,20,12,52,28,30,18]);
+
+  const src=wb.addWorksheet('06_SOURCE'); title(src,'06 · PROVENANCE','G'); src.addRow([]); src.addRow(['Nội dung','Điều/Bảng/CT','Trang chuẩn','Trang PDF','Trạng thái','Vai trò','Ghi chú']); head(src.getRow(3));
+  src.addRows([
+    ['CT49–50','8.1.2.4.3 · (49)–(50)','61–62','59–60','VERIFIED','Production','Chữ nhật/vuông; cốt dọc ở các phía đối diện; e0 đã kể ea; e0≤h/30; L0/h≤20.'],
+    ['φ dài hạn','Bảng 16','62','60','VERIFIED','Production','Linear-1D giữa mốc 6/10/15/20; không ngoại suy.'],
+    ['Rb','Bảng 7','35','33','VERIFIED','Production','B30=17 MPa benchmark.'],
+    ['Rsc','Bảng 13','47','45','VERIFIED','Production','CB400-V=350 MPa.'],
+    ['Rsoil','TCVN 10304 Calculation Engine','','','VERIFIED INPUT','Governing','So với Rd; không tự trộn γn/Nd,max.'],
+    ['SCT VatLieu','10.1 DCE_SctCoc_10304 2025.xlsm','','','REFERENCE/BUGGED','Benchmark only','Không cấp số cho Production.']
+  ]); style(src,[24,34,14,14,20,20,72]);
+
+  const audit=wb.addWorksheet('07_XLSM_AUDIT'); title(audit,'07 · XLSM SCT VatLieu · REFERENCE/BUGGED','G'); audit.addRow([]); audit.addRow(['Cell/logic','Workbook','HNL/PDF','Trạng thái','Ảnh hưởng','Production action','Ghi chú']); head(audit.getRow(3));
+  audit.addRows([
+    ['F23','Nhãn Rsc nhưng VLOOKUP(C23,BANGTRA!G12:H25,2,0) lấy cột H=Rs','Dùng Rsc từ Bảng 13','BUG','Có thể lấy sai loại cường độ','BLOCK XLSM FORMULA','CB400-V cached F23=350 chỉ trùng PDF do lỗi lookup.'],
+    ['BANGTRA!I21','Rsc CB400-V = 365 MPa','Rsc CB400-V = 350 MPa','CONFLICT','Nếu sửa VLOOKUP sang cột I sẽ ra 365 sai PDF','USE PDF','Bảng 13 là nguồn pháp lý.'],
+    ['φ workbook','Polynomial theo λ sau alphaE/L1','CT49–50 dùng φ theo §8.1.2.4.3/Bảng 16','NOT EQUIVALENT','Không được clone','BLOCK','XLSM dùng làm workflow reference only.'],
+    ['Sample cached','≈12012.4976 kN với lookup 350','Không phải Golden Production CT50 cho cọc tròn','REFERENCE','Không dùng làm Rmaterial Production','BLOCK','Cọc tròn phải kiểm Phụ lục F N–M.']
+  ]); style(audit,[24,54,54,18,28,24,58]);
+  addImageInputProvenance(wb,input.imageProvenance);
+  const buf=await wb.xlsx.writeBuffer(); return saveBlob(buf,'HNL_Pile_Material_CT49_50_v1.25.7.xlsx');
+}
+
+
+// P1 Material E2E — reuse the already-locked formula-only soil workbook and append
+// a formula-only TCVN 5574 material branch + governing sheet. No Engine result is
+// copied as a dead numeric value into Rsoil/Rmaterial/Rpile cells.
+export async function exportIntegratedPileCapacityWorkbook(input={}, options={}){
+  const mod=await import('exceljs'); const ExcelJS=mod.default||mod;
+  const soilWorkflowId=String(input.soilWorkflowId||''),soilInput=input.soilInput||{},materialInput=input.materialInput||{};
+  let base;
+  if(soilWorkflowId==='10304-driven') base=await exportDrivenPileWorkflowWorkbook(soilInput,{returnBuffer:true});
+  else if(soilWorkflowId==='10304-end-bearing') base=await export10304AdvancedWorkflowWorkbook('end-bearing',soilInput,{returnBuffer:true});
+  else if(soilWorkflowId==='10304-bored') base=await export10304AdvancedWorkflowWorkbook('bored',soilInput,{returnBuffer:true});
+  else if(soilWorkflowId==='10304-spt') base=await export10304AdvancedWorkflowWorkbook('spt',soilInput,{returnBuffer:true});
+  else throw new Error(`P1 Material E2E: soil workflow ${soilWorkflowId||'(trống)'} chưa LOCKED.`);
+  if(!base?.buffer) throw new Error('P1 Material E2E: không lấy được formula-only soil workbook buffer.');
+  const wb=new ExcelJS.Workbook(); await wb.xlsx.load(base.buffer); wb.creator='HNL Pile Standards AI'; wb.calcProperties={fullCalcOnLoad:true,forceFullCalc:true,calcMode:'auto'};
+  const blue='FF17365D',yellow={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF2CC'}},green={type:'pattern',pattern:'solid',fgColor:{argb:'FFE2F0D9'}},red={type:'pattern',pattern:'solid',fgColor:{argb:'FFF4CCCC'}};
+  for(const name of ['MATERIAL_INPUT','MATERIAL_LOOKUP','MATERIAL_CALC','PILE_GOVERNING','E2E_SOURCE']){const old=wb.getWorksheet(name);if(old)wb.removeWorksheet(old.id);}
+
+  const mi=wb.addWorksheet('MATERIAL_INPUT'); mi.columns=[{width:34},{width:22},{width:15},{width:80}]; mi.addRow(['Thông số','Giá trị','Đơn vị','Nguồn / điều kiện']); styleHeader(mi.getRow(1),blue);
+  const add=(label,value,unit,note)=>{const r=mi.addRow([label,value??'',unit,note]);r.getCell(2).fill=yellow;return r.number;}; const r={};
+  r.grade=add('Cấp bê tông',materialInput.grade||'B30','-','Bảng 7'); r.steel=add('Cấp thép',materialInput.steel||'CB400-V','-','Bảng 13'); r.shape=add('Tiết diện',materialInput.shape||'square','-','P1 integrated chỉ LOCKED cho square'); r.w=add('b',materialInput.widthMm??materialInput.sideMm??'','mm','Phải khớp hình học nhánh đất'); r.h=add('h',materialInput.heightMm??materialInput.sideMm??'','mm','Phải khớp hình học nhánh đất'); r.As=add('As,tot',materialInput.AsTotMm2??'','mm²','Tổng cốt dọc dùng CT50'); r.L0=add('L0',materialInput.L0Mm??'','mm','Chiều dài tính toán'); r.e0=add('e0 cuối',materialInput.e0Mm??'','mm','Đã kể ea theo 8.1.2.2.4'); r.eproof=add('e0 includes random ea?',materialInput.e0IncludesRandom===true?'yes':'no','yes/no','Bắt buộc yes'); r.rebar=add('Rebar opposite sides?',materialInput.reinforcementOppositeSides===true?'yes':'no','yes/no','Bắt buộc yes theo 8.1.2.4.3'); r.duration=add('Load duration',materialInput.loadDuration||'long','long/short','Bảng 16 / mốc ngắn hạn');
+  mi.dataValidations.add(`B${r.shape}`,{type:'list',allowBlank:false,formulae:['"square"']}); mi.dataValidations.add(`B${r.eproof}`,{type:'list',allowBlank:false,formulae:['"yes,no"']}); mi.dataValidations.add(`B${r.rebar}`,{type:'list',allowBlank:false,formulae:['"yes,no"']}); mi.dataValidations.add(`B${r.duration}`,{type:'list',allowBlank:false,formulae:['"long,short"']}); styleSheet(mi);
+
+  const ml=wb.addWorksheet('MATERIAL_LOOKUP'); ml.columns=[{width:14},{width:14},{width:14},{width:14},{width:5},{width:16},{width:14},{width:14},{width:14},{width:5},{width:20},{width:12},{width:12},{width:12},{width:12}]; ml.addRow(['Concrete','Rb','Rbt','Eb','','Steel','Rs','Rsc','Rsw','','B16 group','φ@6','φ@10','φ@15','φ@20']); styleHeader(ml.getRow(1),'FF548235');
+  const n=Math.max(TCVN5574_CONCRETE_HEAVY.length,TCVN5574_STEEL.length,TCVN5574_TABLE16_LONG_TERM_PHI.length); for(let i=0;i<n;i++){const c=TCVN5574_CONCRETE_HEAVY[i],st=TCVN5574_STEEL[i],t=TCVN5574_TABLE16_LONG_TERM_PHI[i];ml.addRow([c?.grade||'',c?.Rb??'',c?.Rbt??'',c?.Eb??'','',st?.grade||'',st?.Rs??'',st?.Rsc??'',st?.Rsw??'','',t?.label||'',...(t?.phi||['','','',''])]);} styleSheet(ml);
+
+  const mc=wb.addWorksheet('MATERIAL_CALC'); mc.columns=[{width:32},{width:26},{width:15},{width:90}]; mc.addRow(['Bước','Giá trị','Đơn vị','Công thức / trace']); styleHeader(mc.getRow(1),blue); const x=k=>`'MATERIAL_INPUT'!B${r[k]}`,cr={};
+  cr.Rb=mc.addRow(['Rb',{formula:`INDEX('MATERIAL_LOOKUP'!B:B,MATCH(${x('grade')},'MATERIAL_LOOKUP'!A:A,0))`},'MPa','Bảng 7 exact']).number; cr.Rsc=mc.addRow(['Rsc',{formula:`INDEX('MATERIAL_LOOKUP'!H:H,MATCH(${x('steel')},'MATERIAL_LOOKUP'!F:F,0))`},'MPa','Bảng 13 exact']).number; cr.A=mc.addRow(['A',{formula:`${x('w')}*${x('h')}`},'mm²','b·h']).number; cr.ratio=mc.addRow(['L0/h',{formula:`${x('L0')}/${x('h')}`},'-','8.1.2.4.3']).number; cr.er=mc.addRow(['e0/h',{formula:`${x('e0')}/${x('h')}`},'-','≤1/30']).number;
+  cr.group=mc.addRow(['B16 row',{formula:`IF(VALUE(SUBSTITUTE(${x('grade')},"B",""))<=55,2,IF(VALUE(SUBSTITUTE(${x('grade')},"B",""))<=70,3,IF(VALUE(SUBSTITUTE(${x('grade')},"B",""))<=90,4,IF(VALUE(SUBSTITUTE(${x('grade')},"B",""))=100,5,NA()))))`},'row','MATERIAL_LOOKUP B16 group']).number;
+  cr.p6=mc.addRow(['φ6',{formula:`INDEX('MATERIAL_LOOKUP'!L:L,B${cr.group})`},'-','B16']).number; cr.p10=mc.addRow(['φ10',{formula:`INDEX('MATERIAL_LOOKUP'!M:M,B${cr.group})`},'-','B16']).number; cr.p15=mc.addRow(['φ15',{formula:`INDEX('MATERIAL_LOOKUP'!N:N,B${cr.group})`},'-','B16']).number; cr.p20=mc.addRow(['φ20',{formula:`INDEX('MATERIAL_LOOKUP'!O:O,B${cr.group})`},'-','B16']).number;
+  cr.plong=mc.addRow(['φ long',{formula:`IF(OR(B${cr.ratio}<6,B${cr.ratio}>20),NA(),IF(B${cr.ratio}<=10,B${cr.p6}+(B${cr.ratio}-6)*(B${cr.p10}-B${cr.p6})/4,IF(B${cr.ratio}<=15,B${cr.p10}+(B${cr.ratio}-10)*(B${cr.p15}-B${cr.p10})/5,B${cr.p15}+(B${cr.ratio}-15)*(B${cr.p20}-B${cr.p15})/5)))`},'-','Bảng 16 LINEAR-1D; no extrapolation']).number; cr.pshort=mc.addRow(['φ short',{formula:`IF(OR(B${cr.ratio}<10,B${cr.ratio}>20),NA(),0.95-0.005*B${cr.ratio})`},'-','Mốc 10→0.90; 20→0.85']).number; cr.phi=mc.addRow(['φ',{formula:`IF(${x('duration')}="short",B${cr.pshort},B${cr.plong})`},'-','Theo thời hạn tải']).number;
+  cr.gate=mc.addRow(['Material gate',{formula:`IF(AND(${x('shape')}="square",${x('eproof')}="yes",${x('rebar')}="yes",B${cr.ratio}<=20,B${cr.er}<=1/30+0.001/${x('h')},${x('e0')}+0.001>=MAX(${x('h')}/30,10),ISNUMBER(B${cr.phi})),"PASS","BLOCK")`},'-','CT49–50 applicability']).number; cr.Nu=mc.addRow(['Nu = Rmaterial',{formula:`IF(B${cr.gate}="PASS",B${cr.phi}*(B${cr.Rb}*B${cr.A}+B${cr.Rsc}*${x('As')})/1000,NA())`},'kN','CT (50)']).number; mc.getCell(`B${cr.Nu}`).fill=green; styleSheet(mc);
+
+  const soilSheet=soilWorkflowId==='10304-driven'?'07_KET_QUA':soilWorkflowId==='10304-end-bearing'?'CALC_ROCK':soilWorkflowId==='10304-bored'?'CALC_TIP_RK_RD':'CALC_RK_RD';
+  const soilLabel=soilWorkflowId==='10304-driven'?'Rd':'Rd';
+  const soilRef=`XLOOKUP("${soilLabel}",'${soilSheet}'!A:A,'${soilSheet}'!B:B,NA())`;
+  const gammaNRef=soilWorkflowId==='10304-driven'?`XLOOKUP("gamma_n",'01_INPUT'!A:A,'01_INPUT'!B:B,"")`:`XLOOKUP("γn",'INPUT'!A:A,'INPUT'!B:B,"")`;
+  const pg=wb.addWorksheet('PILE_GOVERNING'); pg.columns=[{width:32},{width:26},{width:15},{width:74},{width:30}]; pg.addRow(['Chỉ tiêu','Giá trị','Đơn vị','Logic / basis','Kết luận']); styleHeader(pg.getRow(1),blue); const g1=pg.addRow(['Rsoil = Rd,10304',{formula:soilRef},'kN','Sức kháng thiết kế đất nền sau γk','']); const g2=pg.addRow(['Rmaterial = Nu,5574',{formula:`'MATERIAL_CALC'!B${cr.Nu}`},'kN','TTGH1 CT (50)','']); const g3=pg.addRow(['Rpile',{formula:'IF(AND(ISNUMBER(B2),ISNUMBER(B3)),MIN(B2,B3),NA())'},'kN','min(Rsoil,Rmaterial)',{formula:'IF(NOT(ISNUMBER(B4)),"BLOCK",IF(B2<=B3,"ĐẤT NỀN KHỐNG CHẾ","VẬT LIỆU KHỐNG CHẾ"))'}]); const g4=pg.addRow(['γn',{formula:gammaNRef},'-','Không tham gia phép min sức kháng','']); const g5=pg.addRow(['Nd,max(final)',{formula:'IF(AND(ISNUMBER(B4),ISNUMBER(B5),B5>0),B4/B5,"")'},'kN','Sau khi xác định Rpile: γn·Nd≤Rpile','']); [g1,g2].forEach(r=>r.getCell(2).fill=green); g3.getCell(2).fill=green; g3.getCell(5).fill=green; g5.getCell(2).fill=green; styleSheet(pg);
+  // Formula-level geometry gate: square side in soil workbook must match material b=h.
+  let soilSideFormula;
+  if(soilWorkflowId==='10304-driven') soilSideFormula=`'01_INPUT'!B3*1000`;
+  else soilSideFormula=`XLOOKUP("*Cạnh*",'INPUT'!A:A,'INPUT'!B:B,"",2)*1000`;
+  const gg=pg.addRow(['Geometry gate',{formula:`IF(AND(${x('w')}=${x('h')},ABS(${soilSideFormula}-${x('w')})<=0.000001),"PASS","BLOCK")`},'-','Cùng cọc vuông ở hai nhánh','']); gg.getCell(2).fill=red;
+  // Make final result block when geometry differs even if both capacities are numeric.
+  g3.getCell(2).value={formula:'IF(B7="PASS",IF(AND(ISNUMBER(B2),ISNUMBER(B3)),MIN(B2,B3),NA()),NA())'};
+
+  const es=wb.addWorksheet('E2E_SOURCE'); es.columns=[{width:28},{width:32},{width:30},{width:18},{width:90}]; es.addRow(['Nhánh','Nguồn','Điều/Bảng/CT','Trạng thái','Quy tắc']); styleHeader(es.getRow(1),blue); es.addRows([
+    ['Rsoil','TCVN 10304:2025',soilWorkflowId,'LOCKED','Formula-only child workbook; Rd sau γk.'],
+    ['Rmaterial','TCVN 5574:2018','8.1.2.4.3 · CT (49)–(50) · Bảng 16; Bảng 7/13','LOCKED','Cọc vuông; e0 đã kể ea; cốt dọc ở hai phía đối diện.'],
+    ['Governing','HNL deterministic composition','Rpile=min(Rsoil,Rmaterial)','LOCKED','Không coi XLSM là nguồn; không trộn γn/Nd,max vào phép min.'],
+    ['γn','TCVN 10304 / hệ số độ tin cậy công trình','γn·Nd≤Rpile','SEPARATE','Áp dụng sau phép min để tính giới hạn tác động nếu có.'],
+    ['XLSM SCT VatLieu','10.1 DCE_SctCoc_10304 2025.xlsm','REFERENCE/BUGGED','REFERENCE','F23 nhãn Rsc nhưng lookup Rs; CB400-V bảng XLSM Rsc=365 khác PDF 350.']
+  ]); styleSheet(es); addImageInputProvenance(wb,input.imageProvenance);
+  const buf=await wb.xlsx.writeBuffer(); const fileName='HNL_Pile_Capacity_Rsoil_Rmaterial_E2E_v1.25.7.xlsx';
+  return options.returnBuffer?{buffer:buf,fileName}:saveBlob(buf,fileName);
+}
+
+function cloneFormulaWorkbookSheet(source,target,sheetMap){
+  for(let i=1;i<=source.columnCount;i++){
+    const sc=source.getColumn(i),tc=target.getColumn(i);
+    if(sc.width!=null) tc.width=sc.width;
+    if(sc.hidden!=null) tc.hidden=sc.hidden;
+    if(sc.outlineLevel!=null) tc.outlineLevel=sc.outlineLevel;
+  }
+  const rewriteFormula=formula=>{
+    let f=String(formula||'');
+    for(const [oldName,newName] of [...sheetMap.entries()].sort((a,b)=>b[0].length-a[0].length)){
+      f=f.split(`'${oldName.replace(/'/g,"''")}'!`).join(`'${newName.replace(/'/g,"''")}'!`);
+      if(!/[^A-Za-z0-9_.]/.test(oldName)) f=f.split(`${oldName}!`).join(`'${newName.replace(/'/g,"''")}'!`);
+    }
+    return f;
+  };
+  source.eachRow({includeEmpty:true},(sr,rowNumber)=>{
+    const tr=target.getRow(rowNumber);
+    if(sr.height!=null) tr.height=sr.height; if(sr.hidden!=null) tr.hidden=sr.hidden; if(sr.outlineLevel!=null) tr.outlineLevel=sr.outlineLevel;
+    sr.eachCell({includeEmpty:true},(sc,colNumber)=>{
+      const tc=tr.getCell(colNumber),v=sc.value;
+      if(v&&typeof v==='object'&&Object.prototype.hasOwnProperty.call(v,'formula')) tc.value={...v,formula:rewriteFormula(v.formula)};
+      else if(v instanceof Date) tc.value=new Date(v.getTime());
+      else if(v&&typeof v==='object'){ try{tc.value=JSON.parse(JSON.stringify(v));}catch{tc.value=v;} }
+      else tc.value=v;
+      try{tc.style=JSON.parse(JSON.stringify(sc.style||{}));}catch{}
+      if(sc.numFmt) tc.numFmt=sc.numFmt;
+      if(sc.note) tc.note=sc.note;
+      if(sc.dataValidation&&Object.keys(sc.dataValidation).length){
+        try{const dv=JSON.parse(JSON.stringify(sc.dataValidation)); if(Array.isArray(dv.formulae))dv.formulae=dv.formulae.map(rewriteFormula); tc.dataValidation=dv;}catch{}
+      }
+    });
+    tr.commit?.();
+  });
+  for(const merge of source.model?.merges||[]){ try{target.mergeCells(merge);}catch{} }
+  try{target.views=JSON.parse(JSON.stringify(source.views||[]));}catch{}
+  try{target.properties=JSON.parse(JSON.stringify(source.properties||{}));}catch{}
+  try{target.pageSetup=JSON.parse(JSON.stringify(source.pageSetup||{}));}catch{}
+  try{target.headerFooter=JSON.parse(JSON.stringify(source.headerFooter||{}));}catch{}
+  return target;
+}
+function uniqueBatchSheetName(prefix,index,oldName){
+  const clean=String(oldName||'S').replace(/[^A-Za-z0-9_]+/g,'_');
+  const lead=`${prefix}_${String(index).padStart(2,'0')}_`;
+  return (lead+clean).slice(0,31);
+}
+function batchComponentFormula(methodId,sheetName,label){
+  return `XLOOKUP("${label}",'${sheetName.replace(/'/g,"''")}'!A:A,'${sheetName.replace(/'/g,"''")}'!B:B,NA())`;
+}
+
+// P1 Pass 2 — Formula-Only Multi-Borehole workbook. Each HK×method branch is
+// a cloned, self-contained LOCKED child workbook; the batch sheet only links
+// those formulas and selects minima. No Engine result is pasted as a dead value.
+export async function exportMultiBoreholePileCapacityWorkbook(input={}){
+  const mod=await import('exceljs'); const ExcelJS=mod.default||mod;
+  const mechanicalWorkflowId=String(input.mechanicalWorkflowId||'10304-driven');
+  if(!['10304-driven','10304-bored'].includes(mechanicalWorkflowId)) throw new Error('Multi-Borehole Excel chỉ LOCKED cho 10304-driven hoặc 10304-bored.');
+  const boreholes=Array.isArray(input.boreholes)?input.boreholes:[];
+  if(boreholes.length<2) throw new Error('Multi-Borehole Excel cần ít nhất 2 lỗ khoan.');
+  const wb=new ExcelJS.Workbook(); wb.creator='HNL Pile Standards AI'; wb.calcProperties={fullCalcOnLoad:true,forceFullCalc:true,calcMode:'auto'};
+  const navy='FF17365D',green={type:'pattern',pattern:'solid',fgColor:{argb:'FFE2F0D9'}},yellow={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF2CC'}},red={type:'pattern',pattern:'solid',fgColor:{argb:'FFF4CCCC'}};
+  const guide=wb.addWorksheet('README'); guide.columns=[{width:28},{width:110}]; guide.addRow(['P1 PASS 2 · MULTI-BOREHOLE','Một cọc · nhiều lỗ khoan · Cơ lý + SPT · Rmaterial chung']); styleHeader(guide.getRow(1),navy);
+  guide.addRows([
+    ['Cách tính','Mỗi HK chạy 2 nhánh độc lập: cơ lý (7.2.2 hoặc 7.2.3) và SPT Phụ lục D. Mỗi nhánh tính Rsoil=Rd rồi Rpile=min(Rsoil,Rmaterial).'],
+    ['Batch governing','Rpile,min = MIN toàn bộ HK×method. Đồng thời báo Rd,min, Qb,min, Qs,min.'],
+    ['Tie vật liệu','Nếu nhiều nhánh cùng Rpile,min vì Rmaterial chung khống chế, HNL không gán giả một HK bất lợi; xem Rd,min để biết HK/method bất lợi riêng về đất.'],
+    ['Formula-Only','Các sheet HK×method bên dưới là bản sao formula-only của child workflow LOCKED. BOREHOLE_BATCH chỉ liên kết công thức, không ghi số chết từ Engine.'],
+    ['Nguồn','Công thức đất: TCVN 10304:2025 theo child workflow. Vật liệu: TCVN 5574:2018 CT (49)–(50)/Bảng 16. Batch min là HNL deterministic composition.']
+  ]); styleSheet(guide);
+
+  const batchInput=wb.addWorksheet('BATCH_INPUT'); batchInput.columns=[{width:32},{width:24},{width:15},{width:82}]; batchInput.addRow(['Thông số dùng chung','Giá trị','Đơn vị','Phạm vi']); styleHeader(batchInput.getRow(1),navy);
+  const mi=input.materialInput||{};
+  [
+    ['Cấp bê tông',mi.grade||'B30','-','Dùng chung mọi HK×method'],['Cấp thép',mi.steel||'CB400-V','-','Dùng chung mọi HK×method'],['Tiết diện',mi.shape||'square','-','P1 Multi-Borehole LOCKED cho square'],
+    ['b',mi.widthMm??mi.sideMm??'','mm','Hình học vật liệu chung'],['h',mi.heightMm??mi.sideMm??'','mm','Hình học vật liệu chung'],['As,tot',mi.AsTotMm2??'','mm²','Cốt dọc chung'],['L0',mi.L0Mm??'','mm','Chiều dài tính toán vật liệu'],['e0 cuối',mi.e0Mm??'','mm','Đã kể ea'],
+    ['e0 includes random ea?',mi.e0IncludesRandom===true?'yes':'no','yes/no','Bắt buộc yes'],['Rebar opposite sides?',mi.reinforcementOppositeSides===true?'yes':'no','yes/no','Bắt buộc yes'],['Load duration',mi.loadDuration||'long','long/short','Bảng 16'],['γn',Number.isFinite(Number(input.gammaN))?Number(input.gammaN):'','-','Dùng chung sau phép min']
+  ].forEach(v=>{const r=batchInput.addRow(v);r.getCell(2).fill=yellow;});
+  batchInput.dataValidations.add('B4',{type:'list',allowBlank:false,formulae:['"square"']}); batchInput.dataValidations.add('B10',{type:'list',allowBlank:false,formulae:['"yes,no"']}); batchInput.dataValidations.add('B11',{type:'list',allowBlank:false,formulae:['"yes,no"']}); batchInput.dataValidations.add('B12',{type:'list',allowBlank:false,formulae:['"long,short"']}); styleSheet(batchInput);
+
+  // Create the two navigation/summary tabs before child sheets, so users land on
+  // a compact batch workspace instead of dozens of implementation tabs.
+  const batch=wb.addWorksheet('BOREHOLE_BATCH'); batch.columns=[{width:16},{width:25},{width:18},{width:18},{width:18},{width:18},{width:18},{width:18},{width:18},{width:24},{width:28}];
+  const source=wb.addWorksheet('BATCH_SOURCE'); source.columns=[{width:24},{width:34},{width:24},{width:20},{width:95}];
+
+  const branchRefs=[];
+  for(let bi=0;bi<boreholes.length;bi++){
+    const bh=boreholes[bi]||{},bhId=String(bh.id||bh.name||`HK${bi+1}`);
+    for(const [mi,methodId] of [[0,mechanicalWorkflowId],[1,'10304-spt']]){
+      const common={...(input.pileInput||{}),layers:bh.layers||[]};
+      const methodInput={...common,...(methodId==='10304-spt'?(input.sptInput||{}):(input.mechanicalInput||{})),...(methodId==='10304-spt'?(bh.sptInput||{}):(bh.mechanicalInput||{})),layers:bh.layers||[]};
+      if(methodId==='10304-spt'){methodInput.sptPoints=bh.sptPoints||[]; methodInput.pileType=methodInput.pileType||(mechanicalWorkflowId==='10304-driven'?'driven':'bored');}
+      if(input.gammaN!=null) methodInput.gammaN=input.gammaN;
+      const child=await exportIntegratedPileCapacityWorkbook({soilWorkflowId:methodId,soilInput:methodInput,materialInput:input.materialInput||{}},{returnBuffer:true});
+      if(!child?.buffer) throw new Error(`Không tạo được child workbook ${bhId}:${methodId}.`);
+      const cw=new ExcelJS.Workbook(); await cw.xlsx.load(child.buffer);
+      const prefix=`B${String(bi+1).padStart(2,'0')}${mi===0?'M':'S'}`;
+      const map=new Map(); cw.worksheets.forEach((ws,si)=>map.set(ws.name,uniqueBatchSheetName(prefix,si+1,ws.name)));
+      cw.worksheets.forEach(ws=>cloneFormulaWorkbookSheet(ws,wb.addWorksheet(map.get(ws.name)),map));
+      // Force one shared material branch across every borehole/method. Child sheets remain
+      // formula-only, but MATERIAL_INPUT values link to BATCH_INPUT instead of diverging copies.
+      const clonedMat=wb.getWorksheet(map.get('MATERIAL_INPUT'));
+      if(clonedMat){ for(let rr=2;rr<=12;rr++){clonedMat.getCell(`B${rr}`).value={formula:`'BATCH_INPUT'!B${rr}`};clonedMat.getCell(`B${rr}`).fill=green;} }
+      const clonedSoilInput=wb.getWorksheet(map.get(methodId==='10304-driven'?'01_INPUT':'INPUT'));
+      if(clonedSoilInput){ for(let rr=1;rr<=clonedSoilInput.rowCount;rr++){const label=String(clonedSoilInput.getCell(rr,1).value||'').trim(); if(label==='γn'||label==='gamma_n'){clonedSoilInput.getCell(rr,2).value={formula:`'BATCH_INPUT'!B13`};clonedSoilInput.getCell(rr,2).fill=green;break;} } }
+      const gov=map.get('PILE_GOVERNING');
+      const soilResultOriginal=methodId==='10304-driven'?'07_KET_QUA':methodId==='10304-bored'?'CALC_TIP_RK_RD':'CALC_RK_RD';
+      const soilResultSheet=map.get(soilResultOriginal);
+      const qbl=methodId==='10304-driven'?'R mũi':methodId==='10304-bored'?'Qb':'Ru,b';
+      const qsl=methodId==='10304-driven'?'R ma sát':methodId==='10304-bored'?'Qs':'Ru,f';
+      branchRefs.push({bhId,methodId,methodLabel:methodId==='10304-spt'?'SPT · Phụ lục D':methodId==='10304-driven'?'Cơ lý · §7.2.2':'Cơ lý · §7.2.3',gov,soilResultSheet,qbl,qsl});
+    }
+  }
+
+  batch.addRow(['Borehole','Phương pháp','Qb (kN)','Qs (kN)','Rk (kN)','Rd=Rsoil (kN)','Rmaterial (kN)','Rpile (kN)','Nd,max (kN)','Governing','Branch key']); styleHeader(batch.getRow(1),navy);
+  const firstData=2;
+  branchRefs.forEach(br=>{
+    const soil=br.soilResultSheet,gov=br.gov;
+    const r=batch.addRow([br.bhId,br.methodLabel,{formula:batchComponentFormula(br.methodId,soil,br.qbl)},{formula:batchComponentFormula(br.methodId,soil,br.qsl)},{formula:batchComponentFormula(br.methodId,soil,'Rk')},{formula:`'${gov}'!B2`},{formula:`'${gov}'!B3`},{formula:`'${gov}'!B4`},{formula:`'${gov}'!B6`},{formula:`'${gov}'!E4`},`${br.bhId}:${br.methodId}`]);
+    [3,4,5,6,7,8,9,10].forEach(c=>r.getCell(c).fill=green);
+  });
+  const lastData=1+branchRefs.length;
+  batch.addRow([]);
+  const sr=batch.addRow(['BATCH SUMMARY','','','','','','','','','','']); sr.font={bold:true}; sr.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFD9EAF7'}};
+  const sumStart=sr.number+1;
+  const addSum=(label,formula,unit,logic)=>{const r=batch.addRow([label,{formula},unit,logic]); r.getCell(2).fill=green; return r.number;};
+  const rpMin=addSum('Rpile,min',`MIN(H${firstData}:H${lastData})`,'kN','Minimum toàn bộ HK×method');
+  const rdMin=addSum('Rd,min riêng đất',`MIN(F${firstData}:F${lastData})`,'kN','Minimum Rsoil toàn batch');
+  const qbMin=addSum('Qb,min',`MIN(C${firstData}:C${lastData})`,'kN','Minimum thành phần mũi');
+  const qsMin=addSum('Qs,min',`MIN(D${firstData}:D${lastData})`,'kN','Minimum thành phần thân');
+  const tie=addSum('Số nhánh tại Rpile,min',`COUNTIF(H${firstData}:H${lastData},B${rpMin})`,'-','>1 có tie');
+  const matTie=addSum('Material tie?',`IF(AND(B${tie}>1,COUNTIFS(H${firstData}:H${lastData},B${rpMin},J${firstData}:J${lastData},"VẬT LIỆU KHỐNG CHẾ")=B${tie}),"YES","NO")`,'YES/NO','Không gán giả HK/method khi Rmaterial chung khống chế');
+  const critBh=addSum('HK bất lợi tổng hợp',`IF(B${matTie}="YES","MATERIAL TIE – XEM Rd,min",INDEX(A${firstData}:A${lastData},MATCH(B${rpMin},H${firstData}:H${lastData},0)))`,'-','Theo Rpile,min');
+  const critMethod=addSum('Phương pháp bất lợi tổng hợp',`IF(B${matTie}="YES","MATERIAL TIE",INDEX(B${firstData}:B${lastData},MATCH(B${rpMin},H${firstData}:H${lastData},0)))`,'-','Theo Rpile,min');
+  const soilBh=addSum('HK bất lợi riêng đất',`INDEX(A${firstData}:A${lastData},MATCH(B${rdMin},F${firstData}:F${lastData},0))`,'-','Theo Rd,min');
+  const soilMethod=addSum('Phương pháp bất lợi riêng đất',`INDEX(B${firstData}:B${lastData},MATCH(B${rdMin},F${firstData}:F${lastData},0))`,'-','Theo Rd,min');
+  const gn=Number(input.gammaN);
+  const gnRow=addSum('γn batch',Number.isFinite(gn)&&gn>0?String(gn):`'${branchRefs[0].gov}'!B5`,'-','Input chung; nếu không có thì lấy γn của child branch đầu tiên');
+  if(Number.isFinite(gn)&&gn>0) batch.getCell(`B${gnRow}`).value=gn;
+  const ndBatch=addSum('Nd,max batch',`IF(AND(ISNUMBER(B${rpMin}),ISNUMBER(B${gnRow}),B${gnRow}>0),B${rpMin}/B${gnRow},"")`,'kN','γn·Nd≤Rpile,min');
+  batch.getCell(`B${rpMin}`).font={bold:true}; batch.getCell(`B${rpMin}`).fill=yellow; batch.getCell(`B${critBh}`).fill=red; batch.getCell(`B${soilBh}`).fill=yellow; batch.getCell(`B${ndBatch}`).fill=yellow; styleSheet(batch);
+  batch.views=[{state:'frozen',ySplit:1,xSplit:2}]; batch.autoFilter={from:'A1',to:`K${lastData}`};
+
+  source.addRow(['Đối tượng','Nguồn','Điều/Bảng','Trạng thái','Quy tắc']); styleHeader(source.getRow(1),navy);
+  source.addRows([
+    ['Cơ lý', 'TCVN 10304:2025',mechanicalWorkflowId==='10304-driven'?'§7.2.2 · Bảng 2/3/4':'§7.2.3 · CT13–16 · Bảng 3/6/7/8','LOCKED','Mỗi lỗ khoan chạy child Formula-Only độc lập.'],
+    ['SPT','TCVN 10304:2025','Phụ lục D · D.1–D.6 · Bảng D.1','LOCKED','SPT PDF Decision policy; không dùng DCE NoiSuySPT làm Production.'],
+    ['Vật liệu','TCVN 5574:2018','CT49–50 · Bảng 7/13/16','LOCKED','Rmaterial chung cho cùng một cọc vuông.'],
+    ['Rpile từng nhánh','HNL deterministic composition','min(Rd,Rmaterial)','LOCKED','γn không tham gia phép min.'],
+    ['Batch governing','HNL deterministic composition','MIN toàn bộ HK×method','LOCKED','Tie do vật liệu được giữ là tie; không gán giả HK bất lợi.'],
+    ['XLSM/XLL DCE','Reference only','Workflow/behavior benchmark','REFERENCE','Không phải nguồn pháp lý và không cấp số Production.']
+  ]); styleSheet(source); addImageInputProvenance(wb,input.imageProvenance);
+  const buf=await wb.xlsx.writeBuffer(); return saveBlob(buf,'HNL_Multi_Borehole_CoLy_SPT_Rmaterial_v1.25.7.xlsx');
+}
+
 // v1.25.2 — Cổng xuất Excel Production duy nhất, dispatch sang generator formula-only đúng workflow.
 export async function exportUnifiedEngineeringWorkbook(payload={}, options={}){
   const workflowId=String(payload?.workflow?.id||'');
@@ -690,6 +1124,15 @@ export async function exportUnifiedEngineeringWorkbook(payload={}, options={}){
   }
   if(workflowId==='10304-driven'){
     return exportDrivenPileWorkflowWorkbook(input);
+  }
+  if(workflowId==='pile-capacity-multiborehole'){
+    return exportMultiBoreholePileCapacityWorkbook(input);
+  }
+  if(workflowId==='pile-capacity-integrated'){
+    return exportIntegratedPileCapacityWorkbook(input);
+  }
+  if(workflowId==='5574-pile-material'){
+    return exportPileMaterialWorkflowWorkbook(input);
   }
   const map10304={
     '10304-end-bearing':'end-bearing',

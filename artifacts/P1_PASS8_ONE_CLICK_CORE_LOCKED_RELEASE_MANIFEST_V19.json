@@ -1,0 +1,31 @@
+{
+  "schema": "HNL-P1-PASS8-ONE-CLICK-CORE-LOCKED-RELEASE",
+  "version": "1.25.7",
+  "release": "v19",
+  "status": "CORE_LOCKED_ROUTER_UI",
+  "scope": [
+    "Vietnamese One-Click Calculation UI",
+    "Pile/geology/material/structural input normalization",
+    "Locked workflow routing to Pass 7 only",
+    "8-step Vietnamese explanation",
+    "SVG icon sprite and workflow diagram",
+    "Vietnamese Excel export contract using Pass 7 v18 template"
+  ],
+  "runtimeBoundaries": {
+    "dynamicExcelExporter": "CONTRACT_READY_NOT_RUNTIME_CERTIFIED",
+    "fullAppIntegration": "NOT_RUN",
+    "liveEtabsSap": "DEFERRED"
+  },
+  "golden": {
+    "RsoilKn": 843.4285714285716,
+    "RmaterialKn": 2952,
+    "RpileKn": 843.4285714285716,
+    "gammaN": 1.15,
+    "NdMaxPerPileKn": 733.4161490683232,
+    "governingPileId": "168",
+    "governingCombinationId": "EULS",
+    "conclusion": "ĐẠT"
+  },
+  "tests": {"passed": 178, "failed": 0},
+  "searchJsTouched": false
+}

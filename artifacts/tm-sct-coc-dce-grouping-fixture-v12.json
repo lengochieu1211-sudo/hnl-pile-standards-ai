@@ -1,0 +1,175 @@
+{
+  "schema": "HNL-TM-SCT-COC-DCE-GROUPING-FIXTURE-V12",
+  "workbookSha256": "ec38b68f753b08e50d9d1f9df988be5084cab1aedf391ba1aaecf112e9d88bd1",
+  "sheet": "TM SCT Coc",
+  "kccocP1": 3.5,
+  "diameterMm": 250,
+  "thresholdMm": 875,
+  "piles": [
+    {
+      "row": 20,
+      "pointName": "136",
+      "xMm": 1850,
+      "yMm": 4960,
+      "expectedGroupCount": 1
+    },
+    {
+      "row": 21,
+      "pointName": "137",
+      "xMm": 1680,
+      "yMm": 4030,
+      "expectedGroupCount": 1
+    },
+    {
+      "row": 22,
+      "pointName": "144",
+      "xMm": 750,
+      "yMm": 4030,
+      "expectedGroupCount": 1
+    },
+    {
+      "row": 23,
+      "pointName": "145",
+      "xMm": 750,
+      "yMm": 4960,
+      "expectedGroupCount": 1
+    },
+    {
+      "row": 24,
+      "pointName": "146",
+      "xMm": 3330,
+      "yMm": 5390,
+      "expectedGroupCount": 3
+    },
+    {
+      "row": 25,
+      "pointName": "147",
+      "xMm": 4070,
+      "yMm": 5480,
+      "expectedGroupCount": 3
+    },
+    {
+      "row": 26,
+      "pointName": "148",
+      "xMm": 4810,
+      "yMm": 5570,
+      "expectedGroupCount": 3
+    },
+    {
+      "row": 27,
+      "pointName": "159",
+      "xMm": 7190,
+      "yMm": 5720,
+      "expectedGroupCount": 3
+    },
+    {
+      "row": 28,
+      "pointName": "160",
+      "xMm": 7930,
+      "yMm": 5810,
+      "expectedGroupCount": 3
+    },
+    {
+      "row": 29,
+      "pointName": "161",
+      "xMm": 8200,
+      "yMm": 5110,
+      "expectedGroupCount": 3
+    },
+    {
+      "row": 30,
+      "pointName": "167",
+      "xMm": 6900,
+      "yMm": 460,
+      "expectedGroupCount": 3
+    },
+    {
+      "row": 31,
+      "pointName": "168",
+      "xMm": 7650,
+      "yMm": 460,
+      "expectedGroupCount": 3
+    },
+    {
+      "row": 32,
+      "pointName": "169",
+      "xMm": 7650,
+      "yMm": 1100,
+      "expectedGroupCount": 3
+    },
+    {
+      "row": 33,
+      "pointName": "170",
+      "xMm": 4820,
+      "yMm": 490,
+      "expectedGroupCount": 3
+    },
+    {
+      "row": 34,
+      "pointName": "171",
+      "xMm": 4070,
+      "yMm": 490,
+      "expectedGroupCount": 3
+    },
+    {
+      "row": 35,
+      "pointName": "172",
+      "xMm": 3320,
+      "yMm": 490,
+      "expectedGroupCount": 3
+    },
+    {
+      "row": 36,
+      "pointName": "177",
+      "xMm": 1980,
+      "yMm": 460,
+      "expectedGroupCount": 3
+    },
+    {
+      "row": 37,
+      "pointName": "178",
+      "xMm": 1230,
+      "yMm": 460,
+      "expectedGroupCount": 3
+    },
+    {
+      "row": 38,
+      "pointName": "179",
+      "xMm": 480,
+      "yMm": 460,
+      "expectedGroupCount": 3
+    }
+  ],
+  "observedCachedMode": {
+    "A20_A38": "VLOOKUP(B,Q:U,5,0) => 1 for current C250 lookup",
+    "J20_J38": "NhomCoc(A,$A$1,$A$2) => 'Đài 1 cọc'",
+    "note": "DoTimSoLuongCocGanNhau macro was not reflected in the saved cached A/J values."
+  },
+  "macroModeExpected": {
+    "singleRows": [
+      20,
+      21,
+      22,
+      23
+    ],
+    "group3Rows": [
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38
+    ],
+    "labelSingle": "Đài 1 cọc",
+    "labelGroup3": "Đài 2 - 5 cọc"
+  }
+}

@@ -1,0 +1,68 @@
+[
+  {
+    "id": "MM-001",
+    "variable": "Ks/Kr at RQD=30%",
+    "pdfHnlEvidence": "TCVN10304_TABLE_1: RQD >25–50 gives Kr >0.22 and ≤0.32 (range, not unique value)",
+    "xlsm": "_xll.GetKsFromRQD(30) cached 0.24",
+    "hnlEngine": "No automatic unique RQD→Kr mapping",
+    "hnlExcel": "No unique mapping",
+    "difference": "XLSM chooses one value inside standard range; selection rule hidden",
+    "decision": "DO NOT COPY; require PDF/engineering rule or explicit user-selected Kr",
+    "status": "REVIEW"
+  },
+  {
+    "id": "MM-002",
+    "variable": "qb rock branch",
+    "pdfHnlEvidence": "HNL current CT5–8 provenance exists; current code supports Rm*(1+0.4Ld/df)",
+    "xlsm": "MIN(IF(Ld<0.5,Rm,Rm*(1+0.4Ld/df)),20000)",
+    "hnlEngine": "No Ld<0.5/cap-20000 branch in current implementation",
+    "hnlExcel": "Follows HNL branch",
+    "difference": "Workbook adds branch and cap not established by this audit source set",
+    "decision": "PDF GATE before code change",
+    "status": "REVIEW/BLOCKED_BY_PDF"
+  },
+  {
+    "id": "MM-003",
+    "variable": "Driven shaft active interval",
+    "pdfHnlEvidence": "HNL CT9/Bảng3 branch is VERIFIED; active pile shaft interval must be explicit in workflow",
+    "xlsm": "Qs = flu(tip)-flu(head)",
+    "hnlEngine": "P0 now integrates directly over [shaftStartDepthM, tipDepthM]",
+    "hnlExcel": "Formula-Only Excel dùng 01_INPUT shaftStartDepthM và phân đoạn từ MAX(layerTop, shaftStart).",
+    "difference": "No remaining parity gap in P0: Engine and Formula-Only Excel both use explicit shaftStartDepthM.",
+    "decision": "IMPLEMENTED: Engine ↔ Excel cùng active shaft interval.",
+    "status": "VERIFIED"
+  },
+  {
+    "id": "MM-004",
+    "variable": "Segment size",
+    "pdfHnlEvidence": "HNL verified policy requires each shaft segment ≤2 m",
+    "xlsm": "D17 configurable; sample=1 m",
+    "hnlEngine": "P0 maxSegmentM configurable in (0,2], default 2",
+    "hnlExcel": "Formula-Only Excel dùng editable maxSegmentM với validation 0<Δz≤2.",
+    "difference": "Benchmark can now match 1 m if input supplied",
+    "decision": "IMPLEMENTED: Engine ↔ Excel cùng maxSegmentM.",
+    "status": "VERIFIED"
+  },
+  {
+    "id": "MM-005",
+    "variable": "Rsc material lookup",
+    "pdfHnlEvidence": "HNL codepack TCVN5574_STEEL verified independently: CB400-V Rs=350,Rsc=350",
+    "xlsm": "D23 label Rsc; F23 VLOOKUP G:H returns workbook Rs=350 while workbook own I21 says Rsc=365",
+    "hnlEngine": "Uses HNL verified table, not workbook BANGTRA",
+    "hnlExcel": "Uses separate Rs/Rsc columns from HNL table",
+    "difference": "Workbook formula/range semantically wrong; workbook table values also not authoritative",
+    "decision": "Do not inherit workbook mapping",
+    "status": "WORKBOOK BUG"
+  },
+  {
+    "id": "MM-006",
+    "variable": "SPT qb/fi",
+    "pdfHnlEvidence": "HNL registry points to Appendix D, but current full profile logic is not implemented",
+    "xlsm": "qb_SPT2025/flu_SPT2025/NoiSuySPT hidden XLL",
+    "hnlEngine": "Requires precomputed qb/fs/fc/Ls/Lc",
+    "hnlExcel": "Cannot reproduce XLL profile from raw N yet",
+    "difference": "Major workflow gap",
+    "decision": "PDF 10304:2025 was located in File Library; keep REVIEW until Appendix D is extracted/mapped and hidden XLL behavior is independently benchmarked.",
+    "status": "BLACK_BOX/REVIEW"
+  }
+]

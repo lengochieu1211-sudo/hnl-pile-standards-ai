@@ -1,0 +1,1298 @@
+{
+  "sourceWorkbook": "/mnt/data/10.1 DCE_SctCoc_10304 2025.xlsm",
+  "sourceSha256": "ec38b68f753b08e50d9d1f9df988be5084cab1aedf391ba1aaecf112e9d88bd1",
+  "auditStats": {
+    "sheetCount": 21,
+    "formulaCount": 14947,
+    "dependencyEdgeCount": 59149,
+    "definedNameCount": 80,
+    "definedNameRefErrors": 53,
+    "udfCallCount": 6871,
+    "udfFunctionCount": 17
+  },
+  "sheets": [
+    {
+      "sheet": "LYTHUYET",
+      "visibility": "hidden",
+      "role": "Lý thuyết",
+      "formulaCount": 0,
+      "udfCount": 0,
+      "standard": "TCVN 10304:2014",
+      "status": "LEGACY",
+      "note": "Không dùng cho engine 2025.",
+      "inputs": "Không có input tính",
+      "intermediate": "Văn bản/công thức minh họa TCVN 10304:2014",
+      "outputs": "Không output Production",
+      "keyFormulaNotes": "Không formula Excel"
+    },
+    {
+      "sheet": "BANGTRA",
+      "visibility": "hidden",
+      "role": "Bảng tra",
+      "formulaCount": 0,
+      "udfCount": 0,
+      "standard": "TCVN 5574:2018 + TCVN 10304:2014",
+      "status": "MIXED/LEGACY",
+      "note": "Giữ dữ liệu 5574 để đối chiếu; cô lập hoàn toàn phần 10304:2014.",
+      "inputs": "Không input trực tiếp",
+      "intermediate": "Bảng vật liệu 5574 + bảng legacy 10304:2014",
+      "outputs": "Lookup ranges/named ranges",
+      "keyFormulaNotes": "Dữ liệu tĩnh"
+    },
+    {
+      "sheet": "PIERFORCES",
+      "visibility": "hidden",
+      "role": "Phản lực kết cấu",
+      "formulaCount": 0,
+      "udfCount": 0,
+      "standard": "ETABS/SAP",
+      "status": "REVIEW",
+      "note": "P1 importer.",
+      "inputs": "ETABS/SAP pier forces",
+      "intermediate": "Story/Pier/CaseCombo/Location",
+      "outputs": "P,V2,V3,T,M2,M3",
+      "keyFormulaNotes": "Raw data"
+    },
+    {
+      "sheet": "PIERSECTION",
+      "visibility": "hidden",
+      "role": "Tiết diện pier",
+      "formulaCount": 156,
+      "udfCount": 0,
+      "standard": "ETABS/SAP",
+      "status": "REVIEW",
+      "note": "P1 importer.",
+      "inputs": "ETABS/SAP pier sections",
+      "intermediate": "Ghép key + hình học/properties",
+      "outputs": "Section properties",
+      "keyFormulaNotes": "156 formulas"
+    },
+    {
+      "sheet": "HK1",
+      "visibility": "hidden",
+      "role": "Địa chất/lỗ khoan",
+      "formulaCount": 1118,
+      "udfCount": 0,
+      "standard": "Dữ liệu địa chất + legacy 2014",
+      "status": "MIXED",
+      "note": "Dùng schema địa tầng; không nhập logic 2014.",
+      "inputs": "Địa tầng, chỉ tiêu cơ lý, cao độ/độ sâu",
+      "intermediate": "Chuẩn hóa lớp + nhiều tính toán legacy",
+      "outputs": "Borehole profile và kết quả legacy",
+      "keyFormulaNotes": ">1000 formulas; vùng AA:AX là dữ liệu địa chất quan trọng"
+    },
+    {
+      "sheet": "OGAreas01",
+      "visibility": "hidden",
+      "role": "Phụ/ẩn",
+      "formulaCount": 0,
+      "udfCount": 0,
+      "standard": "Không xác định",
+      "status": "REVIEW",
+      "note": "Không có logic đáng kể.",
+      "inputs": "Không đáng kể",
+      "intermediate": "Không đáng kể",
+      "outputs": "Không đáng kể",
+      "keyFormulaNotes": "0 formulas"
+    },
+    {
+      "sheet": "Chon_SL_Coc",
+      "visibility": "visible",
+      "role": "Chọn số lượng cọc",
+      "formulaCount": 468,
+      "udfCount": 0,
+      "standard": "Workflow thiết kế",
+      "status": "REVIEW",
+      "note": "P1; cần provenance cho hệ số nhóm.",
+      "inputs": "N/M/V + SCT một cọc + hệ số nhóm",
+      "intermediate": "SoLuongCoc/HSAT/XacDinhSCT",
+      "outputs": "Số cọc/FS/capacity nhóm",
+      "keyFormulaNotes": "Excel + VBA UDF"
+    },
+    {
+      "sheet": "Point Coordinates",
+      "visibility": "hidden",
+      "role": "Tọa độ kết cấu",
+      "formulaCount": 0,
+      "udfCount": 0,
+      "standard": "ETABS/SAP",
+      "status": "REVIEW",
+      "note": "P1 importer.",
+      "inputs": "ETABS/SAP points",
+      "intermediate": "Global coordinates",
+      "outputs": "Point→XYZ",
+      "keyFormulaNotes": "Raw data"
+    },
+    {
+      "sheet": "Nodal Reactions",
+      "visibility": "hidden",
+      "role": "Phản lực nút",
+      "formulaCount": 0,
+      "udfCount": 0,
+      "standard": "ETABS/SAP",
+      "status": "REVIEW",
+      "note": "P1 importer.",
+      "inputs": "ETABS/SAP nodal reactions",
+      "intermediate": "Load case/combo + node",
+      "outputs": "Fx,Fy,Fz,Mx,My,Mz",
+      "keyFormulaNotes": "Raw data"
+    },
+    {
+      "sheet": "Point Spring Assignments",
+      "visibility": "hidden",
+      "role": "Spring assignment",
+      "formulaCount": 0,
+      "udfCount": 0,
+      "standard": "ETABS/SAP",
+      "status": "REVIEW",
+      "note": "P1 importer.",
+      "inputs": "Point/Spring",
+      "intermediate": "Mapping point→spring",
+      "outputs": "Pile/spring association",
+      "keyFormulaNotes": "Raw data"
+    },
+    {
+      "sheet": "TM SCT Coc",
+      "visibility": "visible",
+      "role": "Kiểm từng cọc",
+      "formulaCount": 6082,
+      "udfCount": 0,
+      "standard": "Workflow kết cấu→cọc",
+      "status": "REVIEW",
+      "note": "P1 pile reaction engine.",
+      "inputs": "Coordinates + reactions + spring + Rd",
+      "intermediate": "Match pile/point/load + utilization",
+      "outputs": "Per-pile check",
+      "keyFormulaNotes": "6082 formulas"
+    },
+    {
+      "sheet": "SPT 9386-2012",
+      "visibility": "hidden",
+      "role": "SPT legacy",
+      "formulaCount": 0,
+      "udfCount": 0,
+      "standard": "TCVN 9386:2012",
+      "status": "LEGACY",
+      "note": "Không dùng cho 10304:2025.",
+      "inputs": "Legacy",
+      "intermediate": "Legacy/empty",
+      "outputs": "Legacy",
+      "keyFormulaNotes": "0 formulas"
+    },
+    {
+      "sheet": "LT 10304-2025",
+      "visibility": "hidden",
+      "role": "Lookup phương pháp thi công",
+      "formulaCount": 0,
+      "udfCount": 0,
+      "standard": "TCVN 10304:2025",
+      "status": "REVIEW-MAPPING",
+      "note": "Enum hữu ích; trị số phải lấy từ HNL/PDF VERIFIED.",
+      "inputs": "Không input",
+      "intermediate": "Enum phương pháp thi công",
+      "outputs": "Code 1..7 và 1,2,3a..8",
+      "keyFormulaNotes": "Lookup static"
+    },
+    {
+      "sheet": "SPT 10304-2025",
+      "visibility": "visible",
+      "role": "SPT",
+      "formulaCount": 988,
+      "udfCount": 787,
+      "standard": "TCVN 10304:2025 Phụ lục D",
+      "status": "BLACK_BOX/REVIEW",
+      "note": "Phụ thuộc XLL; chưa Production.",
+      "inputs": "Pile geometry + borehole + SPT N profile",
+      "intermediate": "NoiSuySPT/qb_SPT2025/flu_SPT2025",
+      "outputs": "Qb/Qs/Rk/Rd",
+      "keyFormulaNotes": "988 formulas; 787 XLL calls"
+    },
+    {
+      "sheet": "SPT 10304-2025 EQ",
+      "visibility": "visible",
+      "role": "SPT động đất",
+      "formulaCount": 1101,
+      "udfCount": 927,
+      "standard": "TCVN 10304:2025 + EQ",
+      "status": "BLACK_BOX/REVIEW",
+      "note": "P2; phụ thuộc XLL.",
+      "inputs": "SPT + EQ params",
+      "intermediate": "SPT + gamma/qb/fi EQ XLL",
+      "outputs": "QbEQ/QsEQ/Rk/Rd",
+      "keyFormulaNotes": "1101 formulas; 927 XLL calls"
+    },
+    {
+      "sheet": "7.2.1-10304-Cọc Chống",
+      "visibility": "visible",
+      "role": "Cọc chống/đá",
+      "formulaCount": 22,
+      "udfCount": 3,
+      "standard": "TCVN 10304:2025 §7.2.1",
+      "status": "PARTIAL",
+      "note": "Hình học nhìn thấy VERIFIED; RQD→Ks XLL giữ REVIEW.",
+      "inputs": "D10:D16 geometry; rock/RQD/Rc,n; gamma",
+      "intermediate": "Ld/Ks/Rm/qb/Ab",
+      "outputs": "Rk/Rd/net capacity",
+      "keyFormulaNotes": "D18/F32/F40/F41 visible; Ld/Ks XLL"
+    },
+    {
+      "sheet": "7.2.2-10304-Không moi đất",
+      "visibility": "visible",
+      "role": "Cọc không moi đất",
+      "formulaCount": 928,
+      "udfCount": 703,
+      "standard": "TCVN 10304:2025 §7.2.2",
+      "status": "PARTIAL",
+      "note": "HNL đã VERIFIED Bảng 2/3/4; workbook XLL dùng làm benchmark.",
+      "inputs": "Geometry + head/tip + geology + method code",
+      "intermediate": "Qb XLL + cumulative shaft at head/tip",
+      "outputs": "Qb/Qs/Rk/Rd",
+      "keyFormulaNotes": "D24-D34 + diagnostic rows"
+    },
+    {
+      "sheet": "7.2.2-10304-Không moi đất EQ",
+      "visibility": "visible",
+      "role": "Không moi đất EQ",
+      "formulaCount": 1673,
+      "udfCount": 1981,
+      "standard": "TCVN 10304:2025 + EQ",
+      "status": "BLACK_BOX/REVIEW",
+      "note": "P2.",
+      "inputs": "7.2.2 + EQ parameters",
+      "intermediate": "gamma EQ + modified qb/fi",
+      "outputs": "RkEQ/RdEQ",
+      "keyFormulaNotes": "Heavy XLL"
+    },
+    {
+      "sheet": "7.2.3-10304-Có moi đất",
+      "visibility": "visible",
+      "role": "Cọc có moi đất",
+      "formulaCount": 858,
+      "udfCount": 633,
+      "standard": "TCVN 10304:2025 §7.2.3",
+      "status": "PARTIAL",
+      "note": "HNL đã VERIFIED Bảng 6/7/8; shaft layer workflow còn gap.",
+      "inputs": "Geometry + geology + construction code",
+      "intermediate": "Qb/shaft XLL + factors",
+      "outputs": "Qb/Qs/Rk/Rd",
+      "keyFormulaNotes": "D25-D34 + diagnostic rows"
+    },
+    {
+      "sheet": "7.2.3-10304-Có moi đất EQ",
+      "visibility": "visible",
+      "role": "Có moi đất EQ",
+      "formulaCount": 1535,
+      "udfCount": 1837,
+      "standard": "TCVN 10304:2025 + EQ",
+      "status": "BLACK_BOX/REVIEW",
+      "note": "P2.",
+      "inputs": "7.2.3 + EQ parameters",
+      "intermediate": "gamma EQ + modified qb/fi",
+      "outputs": "RkEQ/RdEQ",
+      "keyFormulaNotes": "Heavy XLL"
+    },
+    {
+      "sheet": "SCT VatLieu",
+      "visibility": "visible",
+      "role": "Sức chịu tải vật liệu",
+      "formulaCount": 18,
+      "udfCount": 0,
+      "standard": "TCVN 5574:2018 / 10304:2025",
+      "status": "BUGGED/REVIEW",
+      "note": "Có lỗi Rsc lookup; không sao chép workbook.",
+      "inputs": "Pile geometry + concrete/steel + reinforcement",
+      "intermediate": "Ab/I/slenderness/material lookup",
+      "outputs": "Material pile capacity Rm",
+      "keyFormulaNotes": "18 formulas; F23 has confirmed Rsc lookup bug"
+    }
+  ],
+  "udfs": [
+    {
+      "name": "_xll.qb_SPT2025",
+      "calls": 169,
+      "inferredInputs": "pileClass, geometry, z, tip, geology, SPT range",
+      "inferredOutput": "qb SPT",
+      "status": "BLACK_BOX/REVIEW",
+      "note": "Cần Phụ lục D PDF + probe benchmark."
+    },
+    {
+      "name": "_xll.flu_SPT2025",
+      "calls": 548,
+      "inferredInputs": "pile/geometry/head/tip/geology/SPT/mode",
+      "inferredOutput": "shaft SPT",
+      "status": "BLACK_BOX/REVIEW",
+      "note": "Cần Phụ lục D PDF."
+    },
+    {
+      "name": "_xll.TimTenLoaiDat",
+      "calls": 498,
+      "inferredInputs": "z, geology range",
+      "inferredOutput": "soil name at z",
+      "status": "INFERRED",
+      "note": "Replaced by generic BoreholeEngine, no XLL dependency."
+    },
+    {
+      "name": "_xll.TimTinhChatDat",
+      "calls": 498,
+      "inferredInputs": "z, geology range, property selector",
+      "inferredOutput": "property at z",
+      "status": "INFERRED",
+      "note": "Replaced by generic BoreholeEngine/profile data access."
+    },
+    {
+      "name": "_xll.NoiSuySPT",
+      "calls": 140,
+      "inferredInputs": "z, SPT range, tip, D, ...",
+      "inferredOutput": "N nội suy",
+      "status": "BLACK_BOX/REVIEW",
+      "note": "Không dùng cached result để xác minh."
+    },
+    {
+      "name": "_xll.qbEQ_SPT2025",
+      "calls": 239,
+      "inferredInputs": "SPT + EQ params",
+      "inferredOutput": "qbEQ",
+      "status": "BLACK_BOX/REVIEW",
+      "note": "P2."
+    },
+    {
+      "name": "_xll.fluEQ_SPT2025",
+      "calls": 338,
+      "inferredInputs": "SPT + EQ params",
+      "inferredOutput": "fiEQ",
+      "status": "BLACK_BOX/REVIEW",
+      "note": "P2."
+    },
+    {
+      "name": "_xll.LNgamTrongDat",
+      "calls": 1,
+      "inferredInputs": "tipDepth, geologyRange",
+      "inferredOutput": "chiều dài ngàm trong lớp mũi",
+      "status": "INFERRED",
+      "note": "Có cached benchmark; thuật toán hình học có thể viết độc lập, nhưng UDF không dùng Production."
+    },
+    {
+      "name": "_xll.TinhGammaqb",
+      "calls": 1,
+      "inferredInputs": "nhiều tham số cọc/đá",
+      "inferredOutput": "hệ số mũi",
+      "status": "BLACK_BOX",
+      "note": "Chưa có implementation XLL."
+    },
+    {
+      "name": "_xll.GetKsFromRQD",
+      "calls": 1,
+      "inferredInputs": "RQD",
+      "inferredOutput": "Ks/Kr",
+      "status": "BLACK_BOX",
+      "note": "Bảng 1 HNL cho khoảng Kr, không phải hàm đơn trị. Cached RQD=30→0.24 không đủ xác minh."
+    },
+    {
+      "name": "_xll.Qb_CocMaSatKMD",
+      "calls": 361,
+      "inferredInputs": "tipDepth, geology, A, gammaC, methodCode, geometry, flags[,mode]",
+      "inferredOutput": "Qb hoặc γRR/qb diagnostic",
+      "status": "INFERRED/REVIEW",
+      "note": "Đối chiếu bằng HNL Bảng 2/4; không sao chép XLL."
+    },
+    {
+      "name": "_xll.flu_CocMaSatKMD",
+      "calls": 863,
+      "inferredInputs": "u, head, tip, gammaC, geology, flags, dz, D, ..., methodCode, index, mode",
+      "inferredOutput": "f/segment/cumulative shaft",
+      "status": "INFERRED/REVIEW",
+      "note": "Workbook chứng minh pattern cumulative-at-head / cumulative-at-tip."
+    },
+    {
+      "name": "_xll.TinhGammaqbCMS",
+      "calls": 218,
+      "inferredInputs": "pile/EQ/soil params",
+      "inferredOutput": "γeq tip",
+      "status": "BLACK_BOX/REVIEW",
+      "note": "P2."
+    },
+    {
+      "name": "_xll.TimTinhChatDatCotTU",
+      "calls": 1744,
+      "inferredInputs": "z, geology range, property selector",
+      "inferredOutput": "property at z / EQ variants",
+      "status": "INFERRED",
+      "note": "Keep REVIEW for selector semantics."
+    },
+    {
+      "name": "_xll.TinhGammafiCMS",
+      "calls": 218,
+      "inferredInputs": "pile/EQ/soil params",
+      "inferredOutput": "γeq shaft",
+      "status": "BLACK_BOX/REVIEW",
+      "note": "P2."
+    },
+    {
+      "name": "_xll.Qb_CocMaSatCMD",
+      "calls": 179,
+      "inferredInputs": "tipDepth, geology, A, gammaC, constructionCode, D, ...",
+      "inferredOutput": "Qb bored",
+      "status": "INFERRED/REVIEW",
+      "note": "HNL Bảng 7/8 VERIFIED; XLL chỉ benchmark."
+    },
+    {
+      "name": "_xll.flu_CocMaSatCMD",
+      "calls": 855,
+      "inferredInputs": "u, head, tip, gammaC, geology, flags, dz, D, ..., constructionCode, ...",
+      "inferredOutput": "shaft bored",
+      "status": "BLACK_BOX/REVIEW",
+      "note": "Thiếu layer-by-layer implementation minh bạch."
+    }
+  ],
+  "bugs": [
+    {
+      "id": "XLSM-B01",
+      "severity": "BLOCKER",
+      "sheet": "ThisWorkbook/VBA",
+      "cell": "Workbook_Open / EnsureDceAddinLoaded",
+      "problem": "Workbook tự nạp proprietary DCE XLL từ C:\\Dce Pro\\V.2020\\DCE Excel-AddIn64.xll hoặc bản 32-bit.",
+      "impact": "Không tái tính độc lập; hàng nghìn formula thành black box khi thiếu add-in.",
+      "fix": "HNL không phụ thuộc XLL; reverse từng workflow và chỉ promote khi PDF+Golden PASS."
+    },
+    {
+      "id": "XLSM-B02",
+      "severity": "HIGH",
+      "sheet": "SCT VatLieu",
+      "cell": "D23/F23",
+      "problem": "Nhãn D23 là Rsc nhưng F23=VLOOKUP(C23,BANGTRA!G12:H25,2,0) trả cột H=Rs. Với CB400-V cached=350 trong khi BANGTRA!I21 (Rsc)=365.",
+      "impact": "Có thể dùng sai cường độ thép nén trong workbook.",
+      "fix": "Không kế thừa. HNL tiếp tục dùng bảng TCVN5574 VERIFIED riêng; workbook chỉ ghi bug benchmark."
+    },
+    {
+      "id": "XLSM-B03",
+      "severity": "HIGH",
+      "sheet": "Workbook Defined Names",
+      "cell": "53 names",
+      "problem": "53/80 Defined Names chứa #REF!, gồm B4.CHITIEUCOLY, ExternalData_1, AST/B/DDY/EC/ES/FC/FY/KX/KY/LUX/LUY và một số Print Area.",
+      "impact": "Rủi ro macro/name lookup/print/import hỏng âm thầm.",
+      "fix": "Không import named-range infrastructure; importer HNL dùng schema explicit."
+    },
+    {
+      "id": "XLSM-B04",
+      "severity": "HIGH",
+      "sheet": "LYTHUYET/BANGTRA/HK1",
+      "cell": "nhiều vùng",
+      "problem": "Logic/dữ liệu TCVN 10304:2014 cùng tồn tại với workflow 2025.",
+      "impact": "Nguy cơ dùng nhầm bảng/công thức legacy cho engine 2025.",
+      "fix": "Tag LEGACY và cô lập namespace/edition."
+    },
+    {
+      "id": "XLSM-B05",
+      "severity": "HIGH",
+      "sheet": "SPT/EQ/7.2.2/7.2.3",
+      "cell": "~6,871 XLL calls",
+      "problem": "Kết quả phụ thuộc cached values và implementation XLL không nằm trong XLSM.",
+      "impact": "Không thể audit trực tiếp công thức thật chỉ từ workbook.",
+      "fix": "Probe + PDF provenance + deterministic HNL implementation; không promote từ cached value."
+    },
+    {
+      "id": "XLSM-B06",
+      "severity": "MEDIUM",
+      "sheet": "A_Function VBA",
+      "cell": "NoiSuy2",
+      "problem": "Ngoài miền dữ liệu hàm trả 0 thay vì lỗi/cảnh báo.",
+      "impact": "Có thể biến outside-domain thành sức kháng/N bằng 0 âm thầm.",
+      "fix": "HNL dùng strict interpolation policy và explicit BLOCK/plateau chỉ khi tiêu chuẩn cho phép."
+    },
+    {
+      "id": "XLSM-B07",
+      "severity": "MEDIUM",
+      "sheet": "7.2.1/7.2.2/7.2.3/SPT",
+      "cell": "Rd cells",
+      "problem": "FLOOR(...,10) làm tròn xuống 10 kN trước khi trình bày.",
+      "impact": "Có sai khác benchmark final value so với engine giữ full precision.",
+      "fix": "HNL giữ precision nội bộ; rounding chỉ presentation, provenance rõ."
+    },
+    {
+      "id": "XLSM-B08",
+      "severity": "MEDIUM",
+      "sheet": "VBA",
+      "cell": "EnsureDceAddinLoaded",
+      "problem": "Đường dẫn add-in hard-code theo C: và Dce Pro V.2020.",
+      "impact": "Không portable và khó CI/build reproducible.",
+      "fix": "Loại bỏ phụ thuộc add-in trong HNL."
+    }
+  ],
+  "gaps": [
+    {
+      "id": "G-P0-01",
+      "workflow": "Pile geometry",
+      "xlsm": "Có circle/square, solid/hollow, Di_tip và Di_mass tách riêng, I, volume/self-weight.",
+      "hnlBefore": "Chỉ square/circle solid cho driven; geometry parser cơ bản.",
+      "gap": "Thiếu engine geometry dùng chung và hai đường kính trong độc lập.",
+      "action": "IMPLEMENTED",
+      "status": "VERIFIED",
+      "module": "src/pile-geometry-engine.js"
+    },
+    {
+      "id": "G-P0-02",
+      "workflow": "Borehole/profile",
+      "xlsm": "HK1 + UDF tìm tên/tính chất đất theo z; workflow head→tip.",
+      "hnlBefore": "Layers array + split riêng trong driven.",
+      "gap": "Thiếu engine địa tầng dùng chung/boundary policy/coverage audit.",
+      "action": "IMPLEMENTED",
+      "status": "VERIFIED",
+      "module": "src/borehole-engine.js"
+    },
+    {
+      "id": "G-P0-03",
+      "workflow": "§7.2.2 shaft active interval",
+      "xlsm": "flu tại head và tip rồi Qs=flu(tip)-flu(head).",
+      "hnlBefore": "Driven split từ z=0 đến tip.",
+      "gap": "Không biểu diễn shaftStartDepthM khi đầu cọc không ở z=0.",
+      "action": "IMPLEMENTED",
+      "status": "VERIFIED",
+      "module": "src/pile-workflows.js",
+      "note": "Engine và Formula-Only Excel cùng hỗ trợ shaftStartDepthM; vùng ma sát thân không còn mặc định bắt buộc từ 0 m."
+    },
+    {
+      "id": "G-P0-03B",
+      "workflow": "§7.2.2 segmentation benchmark",
+      "xlsm": "D17 là bước phân tố cấu hình được; mẫu workbook dùng 1 m.",
+      "hnlBefore": "calculateDrivenPile10304 hard-code max 2 m.",
+      "gap": "Khó tái tạo đúng benchmark XLSM khi workbook dùng bước <2 m dù cả hai nằm trong yêu cầu ≤2 m.",
+      "action": "IMPLEMENTED: maxSegmentM configurable, khóa 0<maxSegmentM≤2",
+      "status": "VERIFIED",
+      "module": "src/pile-workflows.js",
+      "note": "Engine và Formula-Only Excel cùng dùng maxSegmentM, validation 0 < Δz ≤ 2 m."
+    },
+    {
+      "id": "G-P0-03C",
+      "workflow": "Tip exactly at layer boundary",
+      "xlsm": "UDF soil-at-depth semantics hidden.",
+      "hnlBefore": "Legacy driven `find` can choose shallower layer at exact boundary.",
+      "gap": "Engineering boundary rule not provable from XLSM alone.",
+      "action": "BoreholeEngine exposes explicit deeper/shallower policy; driven production behavior not silently changed until PDF/domain decision.",
+      "status": "REVIEW-DECISION",
+      "module": "src/borehole-engine.js"
+    },
+    {
+      "id": "G-P0-04",
+      "workflow": "§7.2.1 rock",
+      "xlsm": "Rc,n→Ks(RQD)→Rm→qb; Ld/df; cap 20000; branch Ld<0.5.",
+      "hnlBefore": "Có CT5-8 khi người dùng cung cấp qb/Rm/Ld/df; Table1 metadata là range.",
+      "gap": "Chưa có rule duy nhất RQD→Ks và các workbook branches chưa đối chiếu PDF trong lần audit này.",
+      "action": "DO_NOT_IMPLEMENT_YET",
+      "status": "REVIEW/BLOCKED_BY_PDF",
+      "module": "engineering-router calcEndBearing10304"
+    },
+    {
+      "id": "G-P0-05",
+      "workflow": "§7.2.2 driven/non-excavated",
+      "xlsm": "Qb + cumulative shaft XLL + method code.",
+      "hnlBefore": "Bảng 2/3/4 + CT9 deterministic, segmentation ≤2m, Golden coverage.",
+      "gap": "XLL không cần thay engine; cần benchmark cell-by-cell sau khi có matching inputs.",
+      "action": "KEEP_HNL_VERIFIED",
+      "status": "VERIFIED-HNL / XLSM-REFERENCE",
+      "module": "src/pile-workflows.js"
+    },
+    {
+      "id": "G-P0-06",
+      "workflow": "§7.2.3 bored/excavated",
+      "xlsm": "Qb/shaft XLL theo code 1,2,3a..8.",
+      "hnlBefore": "Bảng6/7/8 + CT13-16, nhưng shaft nhận Σfi·hi aggregate.",
+      "gap": "Thiếu layer-by-layer bored shaft + construction factor trace.",
+      "action": "P0-NEXT_AFTER_PDF_TRACE",
+      "status": "REVIEW",
+      "module": "engineering-router calcBored10304"
+    },
+    {
+      "id": "G-P0-07",
+      "workflow": "SPT Appendix D",
+      "xlsm": "N(z), NoiSuySPT, qb_SPT2025, flu_SPT2025 theo borehole.",
+      "hnlBefore": "Chỉ tính từ qb/fs/fc/Ls/Lc đã cho.",
+      "gap": "Thiếu full SPT profile engine và lookup/nội suy N.",
+      "action": "BLOCK_PRODUCTION",
+      "status": "BLACK_BOX/REVIEW",
+      "module": "engineering-router calcSpt10304"
+    },
+    {
+      "id": "G-P0-08",
+      "workflow": "Interpolation",
+      "xlsm": "VBA NoiSuy/NoiSuy2 + XLL hidden logic.",
+      "hnlBefore": "Strict policies B2/3/4/6/7/8/12/15/16/17.",
+      "gap": "Không thay policy HNL bằng VBA; cần mismatch matrix per table.",
+      "action": "KEEP_HNL_POLICY",
+      "status": "VERIFIED-HNL",
+      "module": "src/tcvn10304-table-engine.js"
+    },
+    {
+      "id": "G-P1-01",
+      "workflow": "Material capacity",
+      "xlsm": "SCT VatLieu.",
+      "hnlBefore": "TCVN5574 material tables/calc present.",
+      "gap": "Cần full pile material capacity/gov min; workbook có Rsc bug.",
+      "action": "P1",
+      "status": "REVIEW",
+      "module": "future PileMaterialEngine"
+    },
+    {
+      "id": "G-P1-02",
+      "workflow": "Multi-borehole",
+      "xlsm": "VBA copy SPT theo k=0..27, tức 28 blocks.",
+      "hnlBefore": "Single profile workflows.",
+      "gap": "Thiếu boreholes[] batch/governing.",
+      "action": "P1",
+      "status": "REVIEW",
+      "module": "future BoreholeBatchEngine"
+    },
+    {
+      "id": "G-P1-03",
+      "workflow": "Pile quantity/reaction/import",
+      "xlsm": "Chon_SL_Coc, TM SCT Coc, PIERFORCES, coordinates, reactions, springs.",
+      "hnlBefore": "Chưa workflow end-to-end.",
+      "gap": "Thiếu StructuralImport/PileQuantity/PileReaction.",
+      "action": "P1",
+      "status": "REVIEW",
+      "module": "future"
+    },
+    {
+      "id": "G-P2-01",
+      "workflow": "EQ",
+      "xlsm": "4 XLL chính + gamma EQ, duplicated EQ sheets.",
+      "hnlBefore": "Không production black-box EQ.",
+      "gap": "Thiếu provenance Điều/Bảng/Trang và deterministic implementation.",
+      "action": "P2",
+      "status": "BLACK_BOX/REVIEW",
+      "module": "future PileSeismicEngine"
+    }
+  ],
+  "formulaMapping": [
+    {
+      "xlsm": "7.2.1-10304-Cọc Chống!D18",
+      "variable": "pileLength",
+      "formula": "ABS(D16-D15)",
+      "cached": 28.2,
+      "source": "geometry identity",
+      "hnl": "calculatePileGeometry",
+      "status": "VERIFIED"
+    },
+    {
+      "xlsm": "7.2.1-10304-Cọc Chống!F32",
+      "variable": "tipArea",
+      "formula": "IF(circle,PI()*(Do^2-Di_tip^2)/4,side^2)",
+      "cached": 0.7853981633974483,
+      "source": "geometry identity",
+      "hnl": "calculatePileGeometry.tipAreaM2",
+      "status": "VERIFIED"
+    },
+    {
+      "xlsm": "7.2.1-10304-Cọc Chống!D26",
+      "variable": "selfWeight",
+      "formula": "A_mass*L*2.5*10*factor",
+      "cached": 609.0762757147212,
+      "source": "workbook convention; unit-weight/factor needs provenance",
+      "hnl": "calculatePileGeometry.selfWeightKn only when unitWeightKnM3 explicitly supplied",
+      "status": "REVIEW-CONVENTION"
+    },
+    {
+      "xlsm": "7.2.1-10304-Cọc Chống!F33",
+      "variable": "embedmentLength",
+      "formula": "_xll.LNgamTrongDat(D16,H11:I24)",
+      "cached": 5,
+      "source": "hidden XLL",
+      "hnl": "BoreholeEngine can derive interval geometry, not promoted as standard formula",
+      "status": "INFERRED"
+    },
+    {
+      "xlsm": "7.2.1-10304-Cọc Chống!F38",
+      "variable": "Ks",
+      "formula": "_xll.GetKsFromRQD(F37)",
+      "cached": 0.24,
+      "source": "hidden XLL; HNL Bảng1 only range Kr",
+      "hnl": "NO PRODUCTION MAPPING",
+      "status": "BLACK_BOX/REVIEW"
+    },
+    {
+      "xlsm": "7.2.1-10304-Cọc Chống!F40",
+      "variable": "Rm",
+      "formula": "Rc,n*Ks/gamma_g",
+      "cached": 5365.714285714286,
+      "source": "workbook visible formula; PDF confirmation required for exact variable semantics",
+      "hnl": "calcEndBearing10304 accepts Rm",
+      "status": "REVIEW-MISMATCH"
+    },
+    {
+      "xlsm": "7.2.1-10304-Cọc Chống!F41",
+      "variable": "qb",
+      "formula": "MIN(IF(Ld<0.5,Rm,Rm*(1+0.4*Ld/df)),20000)",
+      "cached": 16097.142857142859,
+      "source": "workbook visible formula",
+      "hnl": "calcEndBearing10304 currently CT8 branch only",
+      "status": "REVIEW/PDF-GATE"
+    },
+    {
+      "xlsm": "7.2.2-10304-Không moi đất!D24",
+      "variable": "Qb",
+      "formula": "_xll.Qb_CocMaSatKMD(...)",
+      "cached": 13650.220079847652,
+      "source": "hidden XLL",
+      "hnl": "lookupQb10304 + Table4 factor + tip area",
+      "status": "HNL-VERIFIED / XLSM-BENCHMARK"
+    },
+    {
+      "xlsm": "7.2.2-10304-Không moi đất!D27",
+      "variable": "Rk",
+      "formula": "D24+D26-D25",
+      "cached": 21809.48912152738,
+      "source": "workbook workflow",
+      "hnl": "calculateDrivenPile10304 with shaftStartDepthM",
+      "status": "VERIFIED-WORKFLOW-IDENTITY"
+    },
+    {
+      "xlsm": "SCT VatLieu!F20",
+      "variable": "secondMoment",
+      "formula": "IF(circle,PI()*(Do^4-Di^4)/64,side^4/12)",
+      "cached": 0.04908738521234052,
+      "source": "geometry identity",
+      "hnl": "calculatePileGeometry.secondMomentM4",
+      "status": "VERIFIED"
+    },
+    {
+      "xlsm": "SCT VatLieu!F23",
+      "variable": "Rsc",
+      "formula": "VLOOKUP(C23,BANGTRA!G12:H25,2,0)",
+      "cached": 350,
+      "source": "workbook BUG: range returns Rs",
+      "hnl": "TCVN5574_STEEL lookup Rsc",
+      "status": "WORKBOOK-BUG"
+    },
+    {
+      "xlsm": "SPT 10304-2025!D21",
+      "variable": "Qb_SPT",
+      "formula": "_xll.qb_SPT2025(...)*D19",
+      "cached": 4712.38898038469,
+      "source": "hidden XLL",
+      "hnl": "calcSpt10304 currently requires qb as input",
+      "status": "BLACK_BOX/REVIEW"
+    }
+  ],
+  "verificationRule": "TCVN PDF > deterministic HNL logic > benchmark > XLSM reference. Cached XLSM/XLL output never upgrades a formula to VERIFIED.",
+  "variables": [
+    {
+      "symbol": "D",
+      "code": "outerDiameterM",
+      "meaning": "Đường kính ngoài cọc",
+      "unit": "m",
+      "xlsm": "7.2.1!D12 / SCT VatLieu!F13-W7",
+      "source": "INPUT",
+      "condition": "cọc tròn",
+      "type": "number",
+      "range": ">0",
+      "status": "VERIFIED-GEOMETRY"
+    },
+    {
+      "symbol": "a",
+      "code": "sideM",
+      "meaning": "Cạnh cọc vuông",
+      "unit": "m",
+      "xlsm": "D12/F13 tùy shape",
+      "source": "INPUT",
+      "condition": "cọc vuông",
+      "type": "number",
+      "range": ">0",
+      "status": "VERIFIED-GEOMETRY"
+    },
+    {
+      "symbol": "Di_tip",
+      "code": "tipInnerDiameterM",
+      "meaning": "Đường kính trong dùng tính diện tích mũi",
+      "unit": "m",
+      "xlsm": "7.2.1!D13 / 7.2.2!D13",
+      "source": "INPUT",
+      "condition": "cọc rỗng tròn",
+      "type": "number",
+      "range": "0≤Di_tip<D",
+      "status": "VERIFIED-GEOMETRY"
+    },
+    {
+      "symbol": "Di_mass",
+      "code": "massInnerDiameterM",
+      "meaning": "Đường kính trong dùng thể tích/tự trọng",
+      "unit": "m",
+      "xlsm": "7.2.1!D14 / 7.2.2!D14",
+      "source": "INPUT",
+      "condition": "cọc rỗng tròn",
+      "type": "number",
+      "range": "0≤Di_mass<D",
+      "status": "VERIFIED-GEOMETRY"
+    },
+    {
+      "symbol": "L",
+      "code": "lengthM",
+      "meaning": "Chiều dài cọc",
+      "unit": "m",
+      "xlsm": "7.2.1!D18=ABS(D16-D15)",
+      "source": "GEOMETRY",
+      "condition": "",
+      "type": "number",
+      "range": ">0",
+      "status": "VERIFIED"
+    },
+    {
+      "symbol": "Ab",
+      "code": "tipAreaM2",
+      "meaning": "Diện tích mũi",
+      "unit": "m²",
+      "xlsm": "7.2.1!F32; 7.2.2!D20",
+      "source": "GEOMETRY",
+      "condition": "shape/Di_tip",
+      "type": "number",
+      "range": ">0",
+      "status": "VERIFIED"
+    },
+    {
+      "symbol": "Ac",
+      "code": "concreteAreaM2",
+      "meaning": "Diện tích bê tông dùng thể tích/trọng lượng",
+      "unit": "m²",
+      "xlsm": "implicit in D26/D31/D32 self-weight",
+      "source": "GEOMETRY",
+      "condition": "shape/Di_mass",
+      "type": "number",
+      "range": ">0",
+      "status": "VERIFIED"
+    },
+    {
+      "symbol": "u",
+      "code": "perimeterM",
+      "meaning": "Chu vi thân ngoài",
+      "unit": "m",
+      "xlsm": "7.2.1!D20; 7.2.2!D21",
+      "source": "GEOMETRY",
+      "condition": "",
+      "type": "number",
+      "range": ">0",
+      "status": "VERIFIED"
+    },
+    {
+      "symbol": "I",
+      "code": "secondMomentM4",
+      "meaning": "Moment quán tính tiết diện",
+      "unit": "m⁴",
+      "xlsm": "SCT VatLieu!F20",
+      "source": "GEOMETRY",
+      "condition": "",
+      "type": "number",
+      "range": ">0",
+      "status": "VERIFIED"
+    },
+    {
+      "symbol": "Wself",
+      "code": "selfWeightKn",
+      "meaning": "Tự trọng cọc",
+      "unit": "kN",
+      "xlsm": "7.2.1!D26; 7.2.2!D31",
+      "source": "GEOMETRY+CONVENTION",
+      "condition": "cần unit weight/factors rõ",
+      "type": "number",
+      "range": "≥0",
+      "status": "REVIEW-CONVENTION"
+    },
+    {
+      "symbol": "z_tip",
+      "code": "tipDepthM",
+      "meaning": "Độ sâu/cao độ quy ước mũi",
+      "unit": "m",
+      "xlsm": "7.2.1!D16; 7.2.2!D16",
+      "source": "INPUT",
+      "condition": "hệ tọa độ phải nhất quán",
+      "type": "number",
+      "range": "",
+      "status": "VERIFIED-DATA"
+    },
+    {
+      "symbol": "z_head",
+      "code": "shaftStartDepthM",
+      "meaning": "Độ sâu bắt đầu vùng thân tham gia ma sát",
+      "unit": "m",
+      "xlsm": "7.2.2!D15; flu(head) subtraction",
+      "source": "INPUT/PROFILE",
+      "condition": "0≤z_head<z_tip",
+      "type": "number",
+      "range": "",
+      "status": "VERIFIED-WORKFLOW"
+    },
+    {
+      "symbol": "RQD",
+      "code": "rqdPercent",
+      "meaning": "Rock Quality Designation",
+      "unit": "%",
+      "xlsm": "7.2.1!F37",
+      "source": "INPUT",
+      "condition": "rock branch",
+      "type": "number",
+      "range": "0..100",
+      "status": "REVIEW-FOR-KS-MAPPING"
+    },
+    {
+      "symbol": "Ks/Kr",
+      "code": "rockReductionFactor",
+      "meaning": "Hệ số giảm cường độ đá",
+      "unit": "-",
+      "xlsm": "7.2.1!F38=_xll.GetKsFromRQD",
+      "source": "XLL / TCVN Table1 ranges",
+      "condition": "rock branch",
+      "type": "number/range",
+      "range": "Table 1",
+      "status": "BLACK_BOX/REVIEW"
+    },
+    {
+      "symbol": "Rc,n",
+      "code": "rockCompressiveStrengthKpa",
+      "meaning": "Cường độ nén mẫu đá",
+      "unit": "kPa",
+      "xlsm": "7.2.1!F35",
+      "source": "INPUT",
+      "condition": "rock branch",
+      "type": "number",
+      "range": ">0",
+      "status": "REVIEW-VARIABLE-MAPPING"
+    },
+    {
+      "symbol": "γg",
+      "code": "gammaG",
+      "meaning": "Hệ số đất/đá trong workbook",
+      "unit": "-",
+      "xlsm": "7.2.1!F34",
+      "source": "INPUT",
+      "condition": "rock branch",
+      "type": "number",
+      "range": ">0",
+      "status": "REVIEW"
+    },
+    {
+      "symbol": "Rm",
+      "code": "rockDesignResistanceKpa",
+      "meaning": "Sức kháng đá trung gian",
+      "unit": "kPa",
+      "xlsm": "7.2.1!F40",
+      "source": "VISIBLE FORMULA",
+      "condition": "rock branch",
+      "type": "number",
+      "range": ">0",
+      "status": "REVIEW/PDF-GATE"
+    },
+    {
+      "symbol": "qb",
+      "code": "tipResistanceKpa",
+      "meaning": "Sức kháng đơn vị mũi",
+      "unit": "kPa",
+      "xlsm": "F41 / XLL Qb functions",
+      "source": "TCVN lookup/formula",
+      "condition": "workflow-specific",
+      "type": "number",
+      "range": "table/formula domain",
+      "status": "VERIFIED only in existing HNL table branches"
+    },
+    {
+      "symbol": "fi",
+      "code": "shaftResistanceKpa",
+      "meaning": "Sức kháng đơn vị thân phân tố",
+      "unit": "kPa",
+      "xlsm": "diagnostic XLL rows",
+      "source": "TCVN lookup/formula",
+      "condition": "layer/ztb/soil",
+      "type": "number",
+      "range": "table domain",
+      "status": "VERIFIED for HNL Table3 branch"
+    },
+    {
+      "symbol": "γRR",
+      "code": "gammaRR",
+      "meaning": "Hệ số điều kiện làm việc mũi",
+      "unit": "-",
+      "xlsm": "XLL mode GanmaRR",
+      "source": "TCVN Bảng 4/other workflow table",
+      "condition": "construction method",
+      "type": "number",
+      "range": "discrete",
+      "status": "VERIFIED in HNL Table4 branch"
+    },
+    {
+      "symbol": "γRf",
+      "code": "gammaRf",
+      "meaning": "Hệ số điều kiện làm việc thân",
+      "unit": "-",
+      "xlsm": "XLL mode GanmaRf",
+      "source": "TCVN Bảng 4/6",
+      "condition": "method+soil",
+      "type": "number",
+      "range": "discrete",
+      "status": "VERIFIED in existing HNL branches"
+    },
+    {
+      "symbol": "Qb",
+      "code": "tipResistanceKn",
+      "meaning": "Sức kháng mũi tổng",
+      "unit": "kN",
+      "xlsm": "7.2.2!D24",
+      "source": "CT/workflow",
+      "condition": "",
+      "type": "number",
+      "range": "≥0",
+      "status": "VERIFIED formula identity when inputs VERIFIED"
+    },
+    {
+      "symbol": "Qsi",
+      "code": "segmentResistanceKn",
+      "meaning": "Sức kháng thân từng phân tố",
+      "unit": "kN",
+      "xlsm": "diagnostic fludon",
+      "source": "CT9 workflow",
+      "condition": "segment",
+      "type": "number",
+      "range": "≥0",
+      "status": "VERIFIED in HNL driven"
+    },
+    {
+      "symbol": "ΣQs",
+      "code": "sideResistanceKn",
+      "meaning": "Tổng sức kháng thân vùng hoạt động",
+      "unit": "kN",
+      "xlsm": "D26-D25 cumulative difference",
+      "source": "workflow identity",
+      "condition": "shaft interval",
+      "type": "number",
+      "range": "≥0",
+      "status": "VERIFIED"
+    },
+    {
+      "symbol": "Rk",
+      "code": "RkKn",
+      "meaning": "Sức chịu tải đặc trưng",
+      "unit": "kN",
+      "xlsm": "7.2.2!D27",
+      "source": "TCVN CT9 for driven",
+      "condition": "",
+      "type": "number",
+      "range": "≥0",
+      "status": "VERIFIED in HNL driven"
+    },
+    {
+      "symbol": "γk",
+      "code": "gammaK",
+      "meaning": "Hệ số tin cậy đất",
+      "unit": "-",
+      "xlsm": "7.2.2!D32",
+      "source": "INPUT/standard branch",
+      "condition": "",
+      "type": "number",
+      "range": ">0",
+      "status": "INPUT/WORKFLOW"
+    },
+    {
+      "symbol": "Rd",
+      "code": "RdKn",
+      "meaning": "Sức chịu tải tính toán trước γn theo HNL current semantics",
+      "unit": "kN",
+      "xlsm": "D33 with self-weight+FLOOR differences",
+      "source": "derived",
+      "condition": "rounding/self-weight convention must be explicit",
+      "type": "number",
+      "range": "",
+      "status": "VERIFIED core division; workbook presentation differs"
+    },
+    {
+      "symbol": "γn",
+      "code": "gammaN",
+      "meaning": "Hệ số tầm quan trọng/hậu quả theo workflow",
+      "unit": "-",
+      "xlsm": "7.2.2!D29",
+      "source": "INPUT",
+      "condition": "",
+      "type": "number",
+      "range": ">0",
+      "status": "INPUT"
+    },
+    {
+      "symbol": "Nd,max",
+      "code": "NdMaxKn",
+      "meaning": "Giới hạn sử dụng sau γn theo HNL workflow",
+      "unit": "kN",
+      "xlsm": "D34 analogous",
+      "source": "derived",
+      "condition": "",
+      "type": "number",
+      "range": "",
+      "status": "VERIFIED when branch inputs VERIFIED"
+    },
+    {
+      "symbol": "N_SPT",
+      "code": "sptN",
+      "meaning": "Chỉ số SPT theo độ sâu",
+      "unit": "blows",
+      "xlsm": "SPT profile + _xll.NoiSuySPT",
+      "source": "INPUT + XLL",
+      "condition": "Appendix D",
+      "type": "number/profile",
+      "range": "source dependent",
+      "status": "BLACK_BOX/REVIEW for interpolation implementation"
+    }
+  ],
+  "constructionMethodEnums": {
+    "nonExcavated": [
+      {
+        "code": "1",
+        "label": "Búa cơ khí/hơi/diesel; cọc đặc hoặc cọc rỗng mũi hở"
+      },
+      {
+        "code": "2",
+        "label": "Hố khoan dẫn, mũi sâu hơn đáy hố >1 m"
+      },
+      {
+        "code": "3",
+        "label": "Xói nước trong cát, giai đoạn cuối đóng vỗ ≥1 m"
+      },
+      {
+        "code": "4",
+        "label": "Rung/ép rung"
+      },
+      {
+        "code": "5",
+        "label": "Cọc BTCT rỗng mũi hở bằng búa"
+      },
+      {
+        "code": "6",
+        "label": "Cọc tròn rỗng mũi kín + mũi nổ mở rộng theo điều kiện"
+      },
+      {
+        "code": "7",
+        "label": "Ép"
+      }
+    ],
+    "excavated": [
+      {
+        "code": "1",
+        "label": "Cọc nhồi theo 6.4a/6.4b..."
+      },
+      {
+        "code": "2",
+        "label": "Cọc nhồi ép rung"
+      },
+      {
+        "code": "3a",
+        "label": "Khoan khô/CFA"
+      },
+      {
+        "code": "3b",
+        "label": "Khoan dưới nước/bentonite"
+      },
+      {
+        "code": "3c",
+        "label": "Bê tông cứng + đầm sâu, khô"
+      },
+      {
+        "code": "4",
+        "label": "Barrette 6.5c"
+      },
+      {
+        "code": "5",
+        "label": "Cọc-ống rung có moi đất"
+      },
+      {
+        "code": "6",
+        "label": "Cọc-trụ"
+      },
+      {
+        "code": "7",
+        "label": "Khoan phun có ống vách/bentonite áp lực 200–400 kPa"
+      },
+      {
+        "code": "8",
+        "label": "PDT xung điện"
+      }
+    ],
+    "source": "LT 10304-2025!AL:AO",
+    "status": "REVIEW-MAPPING; numerical factors continue to come from HNL VERIFIED tables, not workbook code alone."
+  },
+  "mismatchMatrix": [
+    {
+      "id": "MM-001",
+      "variable": "Ks/Kr at RQD=30%",
+      "pdfHnlEvidence": "TCVN10304_TABLE_1: RQD >25–50 gives Kr >0.22 and ≤0.32 (range, not unique value)",
+      "xlsm": "_xll.GetKsFromRQD(30) cached 0.24",
+      "hnlEngine": "No automatic unique RQD→Kr mapping",
+      "hnlExcel": "No unique mapping",
+      "difference": "XLSM chooses one value inside standard range; selection rule hidden",
+      "decision": "DO NOT COPY; require PDF/engineering rule or explicit user-selected Kr",
+      "status": "REVIEW"
+    },
+    {
+      "id": "MM-002",
+      "variable": "qb rock branch",
+      "pdfHnlEvidence": "HNL current CT5–8 provenance exists; current code supports Rm*(1+0.4Ld/df)",
+      "xlsm": "MIN(IF(Ld<0.5,Rm,Rm*(1+0.4Ld/df)),20000)",
+      "hnlEngine": "No Ld<0.5/cap-20000 branch in current implementation",
+      "hnlExcel": "Follows HNL branch",
+      "difference": "Workbook adds branch and cap not established by this audit source set",
+      "decision": "PDF GATE before code change",
+      "status": "REVIEW/BLOCKED_BY_PDF"
+    },
+    {
+      "id": "MM-003",
+      "variable": "Driven shaft active interval",
+      "pdfHnlEvidence": "HNL CT9/Bảng3 branch is VERIFIED; active pile shaft interval must be explicit in workflow",
+      "xlsm": "Qs = flu(tip)-flu(head)",
+      "hnlEngine": "P0 now integrates directly over [shaftStartDepthM, tipDepthM]",
+      "hnlExcel": "Formula-Only Excel dùng editable shaftStartDepthM; phân đoạn bắt đầu MAX(layerTop, shaftStart).",
+      "difference": "No remaining parity gap in P0: Engine and Formula-Only Excel both use explicit shaftStartDepthM.",
+      "decision": "IMPLEMENTED: Engine ↔ Excel cùng active shaft interval.",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "MM-004",
+      "variable": "Segment size",
+      "pdfHnlEvidence": "HNL verified policy requires each shaft segment ≤2 m",
+      "xlsm": "D17 configurable; sample=1 m",
+      "hnlEngine": "P0 maxSegmentM configurable in (0,2], default 2",
+      "hnlExcel": "Formula-Only Excel dùng editable maxSegmentM với validation 0<Δz≤2.",
+      "difference": "Đã khép Engine ↔ Excel; benchmark có thể dùng bước 1 m như workbook.",
+      "decision": "IMPLEMENTED: Engine ↔ Excel cùng maxSegmentM.",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "MM-005",
+      "variable": "Rsc material lookup",
+      "pdfHnlEvidence": "HNL codepack TCVN5574_STEEL verified independently: CB400-V Rs=350,Rsc=350",
+      "xlsm": "D23 label Rsc; F23 VLOOKUP G:H returns workbook Rs=350 while workbook own I21 says Rsc=365",
+      "hnlEngine": "Uses HNL verified table, not workbook BANGTRA",
+      "hnlExcel": "Uses separate Rs/Rsc columns from HNL table",
+      "difference": "Workbook formula/range semantically wrong; workbook table values also not authoritative",
+      "decision": "Do not inherit workbook mapping",
+      "status": "WORKBOOK BUG"
+    },
+    {
+      "id": "MM-006",
+      "variable": "SPT qb/fi",
+      "pdfHnlEvidence": "HNL registry points to Appendix D, but current full profile logic is not implemented",
+      "xlsm": "qb_SPT2025/flu_SPT2025/NoiSuySPT hidden XLL",
+      "hnlEngine": "Requires precomputed qb/fs/fc/Ls/Lc",
+      "hnlExcel": "Cannot reproduce XLL profile from raw N yet",
+      "difference": "Major workflow gap",
+      "decision": "PDF 10304:2025 was located in File Library; keep REVIEW until Appendix D is extracted/mapped and hidden XLL behavior is independently benchmarked.",
+      "status": "BLACK_BOX/REVIEW"
+    }
+  ],
+  "testReport": {
+    "npmTest": {
+      "total": 303,
+      "pass": 303,
+      "fail": 0
+    },
+    "fullTableGolden": {
+      "total": 1130,
+      "pass": 1130,
+      "fail": 0
+    },
+    "searchBrainHash": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2",
+    "npmCi": "BLOCKED: input ZIP has no package-lock.json",
+    "excelSmoke": "BLOCKED: exceljs unavailable because dependencies not installed",
+    "webBuild": "BLOCKED: vite unavailable because dependencies not installed"
+  }
+}

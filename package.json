@@ -31,7 +31,9 @@
     "golden:spt-decision": "node scripts/spt-pdf-decision-golden.mjs artifacts/spt-pdf-decision/spt-pdf-decision-v1.25.7.json",
     "golden:material-e2e": "node scripts/p1-material-e2e-golden.mjs artifacts/p1-material-e2e/material-e2e-golden-v1.25.7.json",
     "golden:multiborehole": "node scripts/p1-multiborehole-golden.mjs artifacts/p1-multiborehole/multiborehole-golden-v1.25.7.json",
-    "gate:pass82": "node tools/pass82-full-source-gate.mjs"
+    "gate:pass82": "node tools/pass82-full-source-gate.mjs",
+    "gate:pass83-source-sync": "node tools/pass83-source-sync-gate.mjs",
+    "gate:pass83-tests": "node tools/pass83-test-count-gate.mjs"
   },
   "dependencies": {
     "cors": "2.8.5",

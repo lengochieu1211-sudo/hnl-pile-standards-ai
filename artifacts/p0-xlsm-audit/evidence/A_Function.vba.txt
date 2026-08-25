@@ -1,0 +1,730 @@
+Attribute VB_Name = "A_Function"
+Option Explicit
+Public Function NoiSuyMeyerhof(CaoDo, Range As Range, MuiCoc, DKCoc)
+    Dim i As Double
+    Dim A1, a3, b1, b3 As Double
+    For i = 1 To UBound(Range.Value) * 2 - 3 Step 2
+        If Range(i) <= CaoDo And Range(i + 2) >= CaoDo Then
+            A1 = Range(i)
+            a3 = Range(i + 2)
+            b1 = Range(i + 1)
+            b3 = Range(i + 3)
+            NoiSuyMeyerhof = b1 + (b3 - b1) * (CaoDo - A1) / (a3 - A1)
+            If CaoDo = MuiCoc Then
+                NoiSuyMeyerhof = (NoiSuy2(CaoDo + 4 * DKCoc, Range) + NoiSuy2(CaoDo - DKCoc, Range)) / 2
+            End If
+            Exit Function
+        End If
+    Next
+    NoiSuyMeyerhof = 0
+End Function
+
+Public Function NoiSuy(CaoDo, Range As Range, MuiCoc, DKCoc)
+    Dim i As Double
+    Dim A1, a3, b1, b3 As Double
+    For i = 1 To UBound(Range.Value) * 2 - 3 Step 2
+        If Range(i) <= CaoDo And Range(i + 2) >= CaoDo Then
+            A1 = Range(i)
+            a3 = Range(i + 2)
+            b1 = Range(i + 1)
+            b3 = Range(i + 3)
+            NoiSuy = b1 + (b3 - b1) * (CaoDo - A1) / (a3 - A1)
+            If CaoDo = MuiCoc Then
+                NoiSuy = (NoiSuy2(CaoDo - 4 * DKCoc, Range) + NoiSuy2(CaoDo + DKCoc, Range)) / 2
+            End If
+            Exit Function
+        End If
+    Next
+    NoiSuy = 0
+End Function
+Public Function NoiSuy2(CaoDo, Range As Range)
+    Dim i As Double
+    Dim A1, a3, b1, b3 As Double
+    For i = 1 To UBound(Range.Value) * 2 - 3 Step 2
+        If Range(i) <= CaoDo And Range(i + 2) >= CaoDo Then
+            A1 = Range(i)
+            a3 = Range(i + 2)
+            b1 = Range(i + 1)
+            b3 = Range(i + 3)
+            NoiSuy2 = b1 + (b3 - b1) * (CaoDo - A1) / (a3 - A1)
+            Exit Function
+        End If
+    Next
+    NoiSuy2 = 0
+End Function
+
+Sub xlCalculationAutomatic1()
+    Application.ScreenUpdating = True ' cho man hinh updae
+End Sub
+Sub xlCalculationAutomatic2()
+    Application.Calculation = xlCalculationAutomatic 'cho excel update cong thuc
+End Sub
+Sub xlCalculationManual1()
+    Application.ScreenUpdating = False ' khong cho man hinh updae
+End Sub
+Sub xlCalculationManual2()
+    Application.Calculation = xlCalculationManual ' khong cho excel update cong thuc
+End Sub
+
+Public Function SoLuongCoc(FZ, HSAT, SCTC, SCT1Coc, SCT2_5Coc, SCT6_10Coc, SCT11_20Coc, SCT21Coc)
+    Dim i As Double
+    Dim SCT As Double
+    For i = 1 To 100
+        If i = 1 Then
+            SCT = SCTC
+        ElseIf i >= 2 And i <= 5 Then
+            SCT = 1.15 * SCTC * SCT1Coc / SCT2_5Coc
+        ElseIf i >= 6 And i <= 10 Then
+            SCT = 1.15 * SCTC * SCT1Coc / SCT6_10Coc
+        ElseIf i >= 11 And i <= 20 Then
+            SCT = 1.15 * SCTC * SCT1Coc / SCT11_20Coc
+        ElseIf i >= 21 Then
+            SCT = 1.15 * SCTC * SCT1Coc / SCT21Coc
+        End If
+        SCT = SCT * i
+        If SCT / Math.Abs(FZ) >= HSAT Then
+            SoLuongCoc = i
+            Exit Function
+        End If
+    Next
+End Function
+
+Public Function HSAT(SLC, SCTC, SCT1Coc, SCT2_5Coc, SCT6_10Coc, SCT11_20Coc, SCT21Coc)
+    Dim SCT As Double
+    If SLC = 1 Then
+        SCT = SCTC
+    ElseIf SLC >= 2 And SLC <= 5 Then
+        SCT = 1.15 * SCTC * SCT1Coc / SCT2_5Coc
+    ElseIf SLC >= 6 And SLC <= 10 Then
+        SCT = 1.15 * SCTC * SCT1Coc / SCT6_10Coc
+    ElseIf SLC >= 11 And SLC <= 20 Then
+        SCT = 1.15 * SCTC * SCT1Coc / SCT11_20Coc
+    ElseIf SLC >= 21 Then
+        SCT = 1.15 * SCTC * SCT1Coc / SCT21Coc
+    End If
+    SCT = SCT * SLC
+    HSAT = Math.Round(SCT, 0)
+End Function
+
+
+
+Public Function XacDinhSCT(LoaiSCT, A1, A2, a3, a4, a5, b1, b2, b3, b4, b5, ganma01, ganma02, Tai, SLCoc, Wind, CheckWind)
+    If LoaiSCT = 1 Then
+        If SLCoc = 1 Then XacDinhSCT = Tai
+        If SLCoc >= 2 And SLCoc <= 5 Then XacDinhSCT = Tai * ganma01
+        If SLCoc >= 6 And SLCoc <= 10 Then XacDinhSCT = Tai * ganma01 * A2 / a3
+        If SLCoc >= 11 And SLCoc <= 20 Then XacDinhSCT = Tai * ganma01 * A2 / a4
+        If SLCoc > 20 Then XacDinhSCT = Tai * ganma01 * A2 / a5
+    End If
+    If LoaiSCT = 0 Then
+        If SLCoc = 1 Then XacDinhSCT = Tai
+        If SLCoc >= 2 And SLCoc <= 5 Then XacDinhSCT = Tai * ganma01
+        If SLCoc >= 6 And SLCoc <= 10 Then XacDinhSCT = Tai * ganma01 * b2 / b3
+        If SLCoc >= 11 And SLCoc <= 20 Then XacDinhSCT = Tai * ganma01 * b2 / b4
+        If SLCoc > 20 Then XacDinhSCT = Tai * ganma01 * b2 / b5
+    End If
+    If Wind = CheckWind Then XacDinhSCT = XacDinhSCT * 120 / 100
+    XacDinhSCT = Round(XacDinhSCT - 0.499, 0)
+End Function
+Public Function NhomCoc(SLCoc, A1, A2)
+    If SLCoc = 1 Then NhomCoc = A1 & SLCoc & A2
+    If SLCoc >= 2 And SLCoc <= 5 Then NhomCoc = A1 & "2 - 5" & A2
+    If SLCoc >= 6 And SLCoc <= 10 Then NhomCoc = A1 & "6 - 10" & A2
+    If SLCoc >= 11 And SLCoc <= 20 Then NhomCoc = A1 & "11 - 20" & A2
+    If SLCoc > 20 Then NhomCoc = A1 & ">20" & A2
+End Function
+
+
+Public Sub DoTimSoLuongCocGanNhau()
+    Dim ws As Worksheet
+    Set ws = Sheets("TM SCT Coc")
+    
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.count, "H").End(xlUp).Row
+    
+    Dim kccoc As Double
+    kccoc = ws.Range("P1").Value
+    If kccoc = 0 Then kccoc = 3.1
+    
+    Dim i As Integer
+    i = 19
+    Do
+        i = i + 1
+        Dim TenCoc As Collection
+        Set TenCoc = New Collection
+    
+        ws.Range("A" & i).Value = CountPointsWithinDistance(ws.Range("N" & i).Value, _
+                                        ws.Range("O" & i).Value, ws.Range("N20:N" & lastRow), _
+                                        ws.Range("O20:O" & lastRow), kccoc * ws.Range("H" & i).Value, TenCoc, ws.Range("C20:C" & lastRow))
+        ws.Range("A" & i).Value = TenCoc.count
+    Loop Until ws.Range("C" & i + 1).Value = ""
+    
+End Sub
+
+Function CountPointsWithinDistance(X As Double, Y As Double, RangeX As Range, RangeY As Range, A As Double, ByRef TenCoc As Collection, RangeTenCoc As Range) As Integer
+    Dim i As Long
+    Dim count As Integer
+    Dim deltaX As Double, deltaY As Double, distance As Double
+    Dim TC As String
+    Dim alreadyExists As Boolean
+    
+    count = 0
+    
+    ' Ki?m tra s? lu?ng di?m trong RangeX và RangeY ph?i gi?ng nhau
+    If RangeX.Cells.count <> RangeY.Cells.count Then
+        CountPointsWithinDistance = -1 ' Tr? v? -1 n?u s? lu?ng không gi?ng nhau
+        Exit Function
+    End If
+    
+    ' Duy?t qua t?ng c?p t?a d? trong RangeX và RangeY
+    For i = 1 To RangeX.Cells.count
+        deltaX = RangeX.Cells(i, 1).Value - X
+        deltaY = RangeY.Cells(i, 1).Value - Y
+        distance = Sqr(deltaX * deltaX + deltaY * deltaY)
+        
+        TC = RangeTenCoc.Cells(i, 1).Value
+        
+        ' Ki?m tra n?u kho?ng cách <= A và TC chua có trong TenCoc
+        If distance <= A Then
+            alreadyExists = False
+            
+            ' Ki?m tra xem TC dã có trong TenCoc hay chua
+            Dim item As Variant
+            For Each item In TenCoc
+                If item = TC Then
+                    alreadyExists = True
+                    Exit For
+                End If
+            Next item
+            ' N?u TC chua có trong TenCoc, thì thêm vào
+            If Not alreadyExists Then
+                TenCoc.Add TC
+                count = count + 1
+                count = count + CountPointsWithinDistance(RangeX.Cells(i, 1).Value, RangeY.Cells(i, 1).Value, RangeX, RangeY, A, TenCoc, RangeTenCoc)
+            End If
+        End If
+    Next i
+    CountPointsWithinDistance = count
+End Function
+
+Sub DienLaiHamVlookupCotA()
+    Dim ws As Worksheet
+    Set ws = Sheets("TM SCT Coc")
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.count, "H").End(xlUp).Row
+    ws.Range("A20").FormulaR1C1 = "=VLOOKUP(RC[1],C[16]:C[20],5,0)"
+    ws.Range("A20").AutoFill Destination:=Range("A20:A" & lastRow)
+End Sub
+
+
+
+
+
+Sub LayDuLieuTheoCot()
+
+    Dim A As Variant
+    Dim Luui As Integer
+    Dim i As Integer
+
+    ' T?m ngung c?p nh?t công th?c và màn hình
+    Application.Calculation = xlCalculationManual
+    Application.ScreenUpdating = False
+    Application.EnableEvents = False
+
+    On Error GoTo ExitHandler ' N?u có l?i thì d?m b?o b?t l?i ch? d? tính
+
+    ' L?y giá tr? t? ô D9
+    A = Range("D9").Value
+
+    ' Tìm c?t ch?a giá tr? b?ng A t?i hàng 1
+    For i = 17 To 1000
+        If Cells(1, i).Value = A Then
+            Luui = i
+            Exit For
+        End If
+    Next i
+
+    ' N?u không tìm th?y thì thoát
+    If Luui = 0 Then
+        MsgBox "KHONG TIM THAY HO KHOAN: " & A, vbExclamation
+        GoTo ExitHandler
+    End If
+
+    ' Xoá ô L11:M27
+    Range("H11:I27").ClearContents
+
+    ' Gán d? li?u t? c?t Luui sang L và M
+    Range("D16").Value = Cells(1, Luui - 1).Value
+    
+    For i = 11 To 24
+        Range("F" & i).Value = Cells(i - 8, Luui - 2).Value
+        Range("G" & i).Value = Cells(i - 8, Luui - 1).Value
+        Range("H" & i).Value = Cells(i - 8, Luui).Value
+        Range("I" & i).Value = Cells(i - 8, Luui + 1).Value
+    Next i
+
+    ' Xoá ô O19:P108
+    Range("O19:P108").ClearContents
+
+    ' Gán d? li?u t? c?t Luui sang O và P
+    For i = 19 To 108
+        Range("O" & i).Value = Cells(i, Luui).Value
+        Range("P" & i).Value = Cells(i, Luui + 1).Value
+    Next i
+    
+    ' Xác d?nh dòng cu?i cùng có d? li?u d?a vào c?t B t? dòng 31
+    Dim iCuoi As Long
+    For i = 35 To 1000
+        If Range("B" & i).Value = "" Then
+            iCuoi = i
+            Exit For
+        End If
+    Next i
+
+    ' N?u không tìm th?y ô tr?ng thì iCuoi = 1000
+    If iCuoi = 0 Then iCuoi = 1000
+
+    ' Thi?t l?p vùng in t? A1 d?n M & iCuoi
+    ActiveSheet.PageSetup.PrintArea = "A1:M" & iCuoi - 1
+ExitHandler:
+    ' B?t l?i c?p nh?t công th?c và màn hình
+    Application.Calculation = xlCalculationAutomatic
+    Application.ScreenUpdating = True
+    Application.EnableEvents = True
+    'MsgBox ("Complete!")
+End Sub
+
+Sub LayDuLieuTheoCotEQ()
+
+    Dim A As Variant
+    Dim Luui As Integer
+    Dim i As Integer
+
+    ' T?m ngung c?p nh?t công th?c và màn hình
+    Application.Calculation = xlCalculationManual
+    Application.ScreenUpdating = False
+    Application.EnableEvents = False
+
+    On Error GoTo ExitHandler ' N?u có l?i thì d?m b?o b?t l?i ch? d? tính
+
+    ' L?y giá tr? t? ô D9
+    A = Range("D9").Value
+
+    ' Tìm c?t ch?a giá tr? b?ng A t?i hàng 1
+    For i = 23 To 1000
+        If Cells(1, i).Value = A Then
+            Luui = i
+            Exit For
+        End If
+    Next i
+
+    ' N?u không tìm th?y thì thoát
+    If Luui = 0 Then
+        MsgBox "KHONG TIM THAY HO KHOAN: " & A, vbExclamation
+        GoTo ExitHandler
+    End If
+
+    ' Xoá ô L11:M27
+    Range("I11:O24").ClearContents
+    Range("D17").Value = Cells(1, Luui - 1).Value
+    ' Gán d? li?u t? c?t Luui sang L và M
+    For i = 11 To 24
+        Range("G" & i).Value = Cells(i - 8, Luui - 2).Value
+        Range("H" & i).Value = Cells(i - 8, Luui - 1).Value
+        Range("I" & i).Value = Cells(i - 8, Luui).Value
+        Range("J" & i).Value = Cells(i - 8, Luui + 1).Value
+        Range("K" & i).Value = Cells(i - 8, Luui + 2).Value
+        Range("N" & i).Value = Cells(i - 8, Luui + 5).Value
+        Range("O" & i).Value = Cells(i - 8, Luui + 6).Value
+    Next i
+
+    ' Xoá ô O19:P108
+    Range("R19:S108").ClearContents
+
+    ' Gán d? li?u t? c?t Luui sang O và P
+    For i = 19 To 108
+        Range("R" & i).Value = Cells(i, Luui).Value
+        Range("S" & i).Value = Cells(i, Luui + 1).Value
+    Next i
+    
+    ' Xác d?nh dòng cu?i cùng có d? li?u d?a vào c?t B t? dòng 31
+    Dim iCuoi As Long
+    For i = 37 To 1000
+        If Range("B" & i).Value = "" Then
+            iCuoi = i
+            Exit For
+        End If
+    Next i
+
+    ' N?u không tìm th?y ô tr?ng thì iCuoi = 1000
+    If iCuoi = 0 Then iCuoi = 1000
+
+    ' Thi?t l?p vùng in t? A1 d?n M & iCuoi
+    ActiveSheet.PageSetup.PrintArea = "A1:O" & iCuoi - 1
+ExitHandler:
+    ' B?t l?i c?p nh?t công th?c và màn hình
+    Application.Calculation = xlCalculationAutomatic
+    Application.ScreenUpdating = True
+    Application.EnableEvents = True
+    'MsgBox ("Complete!")
+End Sub
+
+
+
+Sub InTMHoKhoanRaPDF()
+    Dim folderPath As String
+    Dim i As Long
+    Dim tenHK As String
+    Dim filePath As String
+
+    ' Bu?c 1: Ch?n thu m?c luu file PDF
+    With Application.FileDialog(msoFileDialogFolderPicker)
+        .Title = "Ch?n thu m?c luu file PDF"
+        If .Show <> -1 Then
+            MsgBox "B?n chua ch?n thu m?c!", vbExclamation
+            Exit Sub
+        End If
+        folderPath = .SelectedItems(1)
+    End With
+
+    ' Bu?c 2: L?p qua t?ng dòng t? 19 d?n 50
+    For i = 19 To 50
+        tenHK = Trim(Range("S" & i).Value)
+        
+        ' B? qua n?u ô tr?ng
+        If tenHK <> "" Then
+            ' Gán D9 và g?i Sub x? lý
+            Range("D9").Value = tenHK
+            Call LayDuLieuTheoCot
+
+            ' T?o du?ng d?n luu file
+            filePath = folderPath & "\" & tenHK & ".pdf"
+
+            ' Xu?t PDF
+            ActiveSheet.ExportAsFixedFormat Type:=xlTypePDF, Filename:=filePath, _
+                Quality:=xlQualityStandard, IncludeDocProperties:=True, IgnorePrintAreas:=False, OpenAfterPublish:=False
+        End If
+    Next i
+
+    MsgBox "Ðã in xong!", vbInformation
+End Sub
+Sub InTMHoKhoanRaPDFEQ()
+    Dim folderPath As String
+    Dim i As Long
+    Dim tenHK As String
+    Dim filePath As String
+
+    ' Bu?c 1: Ch?n thu m?c luu file PDF
+    With Application.FileDialog(msoFileDialogFolderPicker)
+        .Title = "Ch?n thu m?c luu file PDF"
+        If .Show <> -1 Then
+            MsgBox "B?n chua ch?n thu m?c!", vbExclamation
+            Exit Sub
+        End If
+        folderPath = .SelectedItems(1)
+    End With
+
+    ' Bu?c 2: L?p qua t?ng dòng t? 19 d?n 50
+    For i = 19 To 50
+        tenHK = Trim(Range("V" & i).Value)
+        
+        ' B? qua n?u ô tr?ng
+        If tenHK <> "" Then
+            ' Gán D9 và g?i Sub x? lý
+            Range("D9").Value = tenHK
+            Call LayDuLieuTheoCotEQ
+
+            ' T?o du?ng d?n luu file
+            filePath = folderPath & "\" & tenHK & ".pdf"
+
+            ' Xu?t PDF
+            ActiveSheet.ExportAsFixedFormat Type:=xlTypePDF, Filename:=filePath, _
+                Quality:=xlQualityStandard, IncludeDocProperties:=True, IgnorePrintAreas:=False, OpenAfterPublish:=False
+        End If
+    Next i
+
+    MsgBox "Ðã in xong!", vbInformation
+End Sub
+
+Public Sub EnsureDceAddinLoaded()
+    Dim is64Bit As Boolean
+    Dim addinPath As String
+    Dim fso As Object
+    Dim addin As addin
+    Dim addinLoaded As Boolean
+    Dim addinFound As Boolean
+    Dim addinFileName As String
+    
+    '--- Bu?c 1: Ki?m tra Excel 32bit hay 64bit ---
+    #If Win64 Then
+        is64Bit = True
+    #Else
+        is64Bit = False
+    #End If
+    
+    '--- Ch?n du?ng d?n Add-in ---
+    If is64Bit Then
+        addinPath = "C:\Dce Pro\V.2020\DCE Excel-AddIn64.xll"
+    Else
+        addinPath = "C:\Dce Pro\V.2020\DCE Excel-AddIn.xll"
+    End If
+    
+    '--- Ki?m tra file t?n t?i ---
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    If Not fso.FileExists(addinPath) Then
+        MsgBox "Không tìm th?y file add-in: " & vbCrLf & addinPath, vbCritical
+        Exit Sub
+    End If
+    
+    '--- L?y tên file ---
+    addinFileName = fso.GetFileName(addinPath)
+    
+    '--- Bu?c 2: Ki?m tra add-in dã du?c load chua ---
+    addinFound = False
+    addinLoaded = False
+    
+    For Each addin In Application.AddIns2
+        If LCase(fso.GetFileName(addin.FullName)) = LCase(addinFileName) Then
+            addinFound = True
+            If addin.Installed Then
+                addinLoaded = True
+            Else
+                addin.Installed = True ' Load add-in
+                addinLoaded = True
+            End If
+            Exit For
+        End If
+    Next addin
+    
+    '--- N?u chua có thì add ---
+    If Not addinFound Then
+        Set addin = Application.AddIns2.Add(Filename:=addinPath, CopyFile:=False)
+        addin.Installed = True
+        addinLoaded = True
+    End If
+    
+    '--- Thông báo ---
+    If addinLoaded Then
+        Debug.Print "Add-in dã du?c load: " & addinPath
+    Else
+        MsgBox "Không th? load add-in: " & addinPath, vbCritical
+    End If
+End Sub
+
+Sub LinkData_SPT()
+
+    Dim ws1 As Worksheet, ws2 As Worksheet
+    Dim k As Long
+    
+    Set ws1 = ThisWorkbook.Sheets("SPT 10304-2025")
+    Set ws2 = ThisWorkbook.Sheets("SPT 10304-2025 EQ")
+    
+    For k = 0 To 27
+        
+        Dim colSrc As Long
+        Dim colDes As Long
+        
+        colSrc = 23 + k * 5
+        colDes = 26 + k * 10
+        
+        ws2.Range(ws2.Cells(19, colDes), ws2.Cells(108, colDes + 1)).FormulaR1C1 = _
+        "=IF('" & ws1.Name & "'!R[0]C[" & (colSrc - colDes) & "]="""",""""," & _
+              "'" & ws1.Name & "'!R[0]C[" & (colSrc - colDes) & "])"
+        
+    Next k
+
+End Sub
+
+Sub LinkData_Block4()
+
+    Dim ws1 As Worksheet, ws2 As Worksheet
+    Dim k As Long
+    
+    Set ws1 = ThisWorkbook.Sheets("SPT 10304-2025")
+    Set ws2 = ThisWorkbook.Sheets("SPT 10304-2025 EQ")
+    
+    For k = 0 To 27
+        
+        Dim colSrc As Long
+        Dim colDes As Long
+        
+        colSrc = 21 + k * 5
+        colDes = 24 + k * 10
+        
+        ws2.Range(ws2.Cells(1, colDes), ws2.Cells(15, colDes + 3)).FormulaR1C1 = _
+        "=IF('" & ws1.Name & "'!R[0]C[" & (colSrc - colDes) & "]="""",""""," & _
+              "'" & ws1.Name & "'!R[0]C[" & (colSrc - colDes) & "])"
+        
+    Next k
+
+End Sub
+
+Sub CopyData_SPT_ValueOnly()
+
+    Dim ws1 As Worksheet, ws2 As Worksheet
+    Dim k As Long, r As Long
+    
+    Set ws1 = ThisWorkbook.Sheets("SPT 10304-2025")
+    Set ws2 = ThisWorkbook.Sheets("SPT 10304-2025 EQ")
+    
+    For k = 0 To 27
+        
+        Dim colSrc As Long
+        Dim colDes As Long
+        
+        colSrc = 23 + k * 5
+        colDes = 26 + k * 10
+        
+        For r = 19 To 108
+            
+            ' XÓA ÐÚNG Ô TRU?C KHI GHI
+            ws2.Cells(r, colDes).ClearContents
+            ws2.Cells(r, colDes + 1).ClearContents
+            
+            ' GHI n?u có d? li?u
+            If ws1.Cells(r, colSrc).Value <> "" Then
+                ws2.Cells(r, colDes).Value = ws1.Cells(r, colSrc).Value
+            End If
+            
+            If ws1.Cells(r, colSrc + 1).Value <> "" Then
+                ws2.Cells(r, colDes + 1).Value = ws1.Cells(r, colSrc + 1).Value
+            End If
+            
+        Next r
+        
+    Next k
+
+End Sub
+
+Sub CopyData_Block4_ValueOnly()
+
+    Dim ws1 As Worksheet, ws2 As Worksheet
+    Dim k As Long, r As Long, c As Long
+    
+    Set ws1 = ThisWorkbook.Sheets("SPT 10304-2025")
+    Set ws2 = ThisWorkbook.Sheets("SPT 10304-2025 EQ")
+    
+    For k = 0 To 27
+        
+        Dim colSrc As Long
+        Dim colDes As Long
+        
+        colSrc = 21 + k * 5
+        colDes = 24 + k * 10
+        
+        For r = 1 To 15
+            For c = 0 To 3
+                
+                ' XÓA ÐÚNG Ô
+                ws2.Cells(r, colDes + c).ClearContents
+                
+                ' GHI n?u có d? li?u
+                If ws1.Cells(r, colSrc + c).Value <> "" Then
+                    ws2.Cells(r, colDes + c).Value = ws1.Cells(r, colSrc + c).Value
+                End If
+                
+            Next c
+        Next r
+        
+    Next k
+
+End Sub
+
+Sub CopyData_All_InOne()
+
+    On Error GoTo ERR_HANDLE
+    
+    Dim ws1 As Worksheet, ws2 As Worksheet
+    Dim k As Long, r As Long, c As Long
+    
+    Set ws1 = ThisWorkbook.Sheets("SPT 10304-2025")
+    Set ws2 = ThisWorkbook.Sheets("SPT 10304-2025 EQ")
+    
+    ' =========================
+    ' T?T T?I UU HI?U NANG
+    ' =========================
+    With Application
+        .ScreenUpdating = False
+        .EnableEvents = False
+        .Calculation = xlCalculationManual
+    End With
+    
+    ' =========================================================
+    ' 1. BLOCK 2 C?T (19 ? 108)
+    ' =========================================================
+    For k = 0 To 27
+        
+        Dim colSrc2 As Long
+        Dim colDes2 As Long
+        
+        colSrc2 = 23 + k * 5
+        colDes2 = 26 + k * 10
+        
+        For r = 19 To 108
+            
+            ' XÓA
+            ws2.Cells(r, colDes2).ClearContents
+            ws2.Cells(r, colDes2 + 1).ClearContents
+            
+            ' GHI n?u có d? li?u
+            If ws1.Cells(r, colSrc2).Value <> "" Then
+                ws2.Cells(r, colDes2).Value = ws1.Cells(r, colSrc2).Value
+            End If
+            
+            If ws1.Cells(r, colSrc2 + 1).Value <> "" Then
+                ws2.Cells(r, colDes2 + 1).Value = ws1.Cells(r, colSrc2 + 1).Value
+            End If
+            
+        Next r
+        
+    Next k
+    
+    ' =========================================================
+    ' 2. BLOCK 4 C?T (1 ? 15)
+    ' =========================================================
+    For k = 0 To 27
+        
+        Dim colSrc4 As Long
+        Dim colDes4 As Long
+        
+        colSrc4 = 21 + k * 5
+        colDes4 = 24 + k * 10
+        
+        For r = 1 To 15
+            For c = 0 To 3
+                
+                ' XÓA
+               If r >= 3 Then ws2.Cells(r, colDes4 + c).ClearContents
+                
+                ' GHI n?u có d? li?u
+'                If ws1.Cells(r, colSrc4 + c).Value <> "" Then
+'                    ws2.Cells(r, colDes4 + c).Value = ws1.Cells(r, colSrc4 + c).Value
+'                End If
+                Dim srcVal As Variant
+                srcVal = ws1.Cells(r, colSrc4 + c).MergeArea.Cells(1, 1).Value
+                If srcVal <> "" Then
+                    ws2.Cells(r, colDes4 + c).MergeArea.Cells(1, 1).Value = srcVal
+                End If
+            Next c
+        Next r
+        
+    Next k
+
+CLEAN_EXIT:
+    ' =========================
+    ' B?T L?I EXCEL
+    ' =========================
+    With Application
+        .Calculation = xlCalculationAutomatic
+        .ScreenUpdating = True
+        .EnableEvents = True
+    End With
+    
+    Exit Sub
+
+ERR_HANDLE:
+    MsgBox "Có l?i x?y ra: " & Err.Description, vbCritical
+    Resume CLEAN_EXIT
+
+End Sub
+

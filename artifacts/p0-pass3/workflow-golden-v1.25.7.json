@@ -1,7 +1,7 @@
 {
   "schema": "HNL-P0-PASS3-WORKFLOW-GOLDEN",
   "version": "1.25.7",
-  "generatedAt": "2026-08-25T13:41:35.315Z",
+  "generatedAt": "2026-08-25T14:04:39.867Z",
   "sourcePolicy": [
     "TCVN PDF is normative source",
     "XLSM is workflow/benchmark reference only",

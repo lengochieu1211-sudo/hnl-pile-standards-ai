@@ -49,10 +49,11 @@ test('v1.25.6 geometry golden: 300x300 plus A=Ap=0.09 never asks for pile-tip ar
   assert.ok(Math.abs(Number(solved.result?.geometry?.areaM2)-0.09)<1e-12);
 });
 
-test('v1.25.6 Q&A and Chat-to-Calculation textareas normalize clipboard text',()=>{
+test('v1.25.6 Q&A and Chat-to-Calculation textareas preserve raw clipboard text and normalize internally',()=>{
   assert.match(main,/\['chatQuestion','chatCalcQuestionEdit'\]\.includes\(target\?\.id\)/);
   assert.match(main,/normalizeEngineeringPaste\(pasted\)/);
-  assert.match(main,/Đã chuẩn hóa ký hiệu\/công thức khi dán từ PDF, Word hoặc LaTeX/);
+  assert.match(main,/Đã giữ nguyên nội dung gốc; HNL sẽ chuẩn hóa ký hiệu\/công thức ở lớp tính toán/);
+  assert.match(main,/setRangeText\(pasted,start,end,'end'\)/);
   assert.match(main,/const normalizedQuestion=normalizeEngineeringText\(question\)/);
   assert.match(main,/meta\.normalizedQuestion\|\|meta\.question/);
 });

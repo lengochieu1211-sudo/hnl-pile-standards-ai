@@ -31,6 +31,10 @@ function recoverStrippedLatexCommands(value='') {
   s=s.replace(/\b(left|right)\b/g,'\\$1');
   // boxed is cosmetic; if braces were lost just drop the token instead of leaking it.
   s=s.replace(/\bboxed(?=[A-Za-z0-9])/g,'');
+  // Recover compact symbol names left by providers that dropped both the slash and
+  // subscript braces: sigmacu -> \sigma_{cu}, gammak -> \gamma_{k}.
+  s=s.replace(/(?<!\\)\bsigma[_\s]*(cu|ce|sp)\b/gi,'\\sigma_$1')
+     .replace(/(?<!\\)\bgamma[_\s]*(k|n)\b/gi,'\\gamma_$1');
   return s;
 }
 
@@ -44,6 +48,8 @@ export function latexReadableHtml(value = '') {
   let out = esc(normalizeLatexSlashes(recoverStrippedLatexCommands(String(value || '').trim())))
     .replace(/\\left\b/g, '')
     .replace(/\\right\b/g, '')
+    .replace(/\\boxed\b/g, '')
+    .replace(/\\(?=\s)/g, '')
     .replace(/\\,/g, ' ')
     .replace(/\\;/g, ' ')
     .replace(/\\!/g, '');
@@ -88,8 +94,20 @@ function normalizeLooseLatex(value='') {
     .replace(/\\(?:text|textrm|mathrm)\{([^{}]*)\}/g,'$1');
 }
 
+function likelyBareLatexLine(value='') {
+  const s=String(value||'').trim();
+  if(!s) return false;
+  const hasLatex=/\\(?:frac|sqrt|sum|sigma|gamma|alpha|beta|phi|nu|epsilon|xi|zeta|theta|delta|boxed|left|right|times|cdot|approx|leq?|geq?|text)(?=[_\s{(]|$)/i.test(s);
+  if(!hasLatex) return false;
+  // Auto-render only formula-looking standalone lines. Mixed prose stays prose so we do
+  // not unexpectedly style an entire Vietnamese sentence as mathematics.
+  return /^(?:\\(?:frac|sqrt|sum|sigma|gamma|boxed|left)(?=[_\s{(]|$)|[A-Za-z][A-Za-z0-9_,'{}\\]*\s*(?:=|≈|<=|>=|\\(?:leq?|geq?|approx)(?=[_\s{(]|$)))/i.test(s)
+    || (/^[\\A-Za-z0-9_,'{}().+\-*/=≤≥≈\s]+$/.test(s) && /[=≤≥≈]|\\(?:frac|sum)\b/.test(s));
+}
+
 export function inlineMarkup(value = '') {
-  let raw = recoverStrippedLatexCommands(String(value || ''));
+  let raw = normalizeLatexSlashes(recoverStrippedLatexCommands(String(value || '')));
+  if(likelyBareLatexLine(raw)) return `<span class="math-inline">${latexReadableHtml(raw)}</span>`;
   const inlineMath = [];
   raw = raw.replace(/\\\((.+?)\\\)/g, (_, tex) => `@@HNL_INLINE_MATH_${inlineMath.push(tex)-1}@@`);
   // By this stage display $$...$$ blocks have already been extracted by richTextHtml.

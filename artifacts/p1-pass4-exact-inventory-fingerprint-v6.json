@@ -1,0 +1,35 @@
+{
+  "version": "1.25.7",
+  "pass": "P1 Pass 4",
+  "subpass": "TM SCT Coc Exact Cell Inventory & Formula Fingerprinting",
+  "status": "REVIEW",
+  "extractor": {
+    "file": "tools/tm_sct_coc_formula_fingerprint.py",
+    "capabilities": [
+      "exact formula-cell inventory",
+      "cached value capture",
+      "relative normalized formula pattern",
+      "SHA-256 formula fingerprint",
+      "dependency sheet extraction",
+      "heuristic block classification JOIN/ACTION/CAPACITY/UTILIZATION/STATUS"
+    ],
+    "selfTest": "PASS"
+  },
+  "validationWorkbook": {
+    "file": "HNL_P1_Pass4_TM_SCT_Coc_Pattern_REVIEW_v5.xlsx",
+    "sheet": "IMPORTED_CHECK",
+    "purpose": "validate fingerprint pipeline only; not a substitute for original XLSM"
+  },
+  "originalXlsm": {
+    "sheet": "TM SCT Coc",
+    "expectedFormulaCells": 6082,
+    "exactInventoryRun": "PENDING_ORIGINAL_FILE_ACCESS",
+    "lockAllowed": false
+  },
+  "nodePass4Tests": {
+    "pass": 51,
+    "fail": 0
+  },
+  "searchJsTouched": false,
+  "nextGate": "Run extractor on original XLSM TM SCT Coc; require formulaCellCount=6082; map fingerprints; compare cached XLSM values to Engine trace and Excel v5."
+}

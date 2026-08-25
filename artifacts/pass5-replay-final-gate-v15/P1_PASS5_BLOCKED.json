@@ -1,0 +1,136 @@
+{
+  "schema": "HNL-P1-PASS5-FINAL-LOCK-GATE",
+  "version": "1.25.7",
+  "generatedAt": "2026-08-25T10:28:46.804Z",
+  "mode": "replay",
+  "checks": [
+    {
+      "name": "LIVE_GOLDEN_MODE",
+      "status": "FAIL",
+      "detail": {
+        "mode": "replay"
+      }
+    },
+    {
+      "name": "LIVE_GOLDEN_PASS",
+      "status": "PASS",
+      "detail": []
+    },
+    {
+      "name": "LIVE_EXACT_COVERAGE",
+      "status": "PASS",
+      "detail": {
+        "checked": {
+          "coordinates": 194,
+          "nodalEnvelopes": 19,
+          "pierForces": 234
+        },
+        "coverage": {
+          "coordinates": true,
+          "nodalEnvelopes": true,
+          "pierForces": true,
+          "pointSpringAssignments": true,
+          "pierSection": true
+        }
+      }
+    },
+    {
+      "name": "LIVE_DIRECT_TABLE_COORD",
+      "status": "PASS",
+      "detail": {
+        "status": "PASS",
+        "matches": true,
+        "checked": 194,
+        "mismatches": []
+      }
+    },
+    {
+      "name": "LIVE_DIRECT_TABLE_REACTION",
+      "status": "PASS",
+      "detail": {
+        "status": "PASS",
+        "matches": true,
+        "checkedGroups": 19,
+        "mismatches": []
+      }
+    },
+    {
+      "name": "LIVE_UNIT_PROFILE",
+      "status": "PASS",
+      "detail": {
+        "normalizedTo": "kN_m_C",
+        "verified": true,
+        "audit": {
+          "method": "REPLAY_GOLDEN"
+        }
+      }
+    },
+    {
+      "name": "LIVE_UNIT_RESTORE",
+      "status": "FAIL",
+      "detail": null
+    },
+    {
+      "name": "NODE_CURRENT_REGRESSION",
+      "status": "PASS",
+      "detail": {
+        "status": 0,
+        "tests": 132,
+        "pass": 132,
+        "fail": 0
+      }
+    },
+    {
+      "name": "PRIOR_REGRESSION_388",
+      "status": "PASS",
+      "detail": {
+        "status": "PASS",
+        "passed": 388,
+        "failed": 0
+      }
+    },
+    {
+      "name": "PRIOR_FULL_TABLE_1242",
+      "status": "PASS",
+      "detail": {
+        "status": "PASS",
+        "passed": 1242,
+        "failed": 0
+      }
+    },
+    {
+      "name": "PRIOR_PILE_QUANTITY",
+      "status": "PASS",
+      "detail": {
+        "status": "PASS",
+        "xlsmRows": "39/39",
+        "xlsmChecks": "273/273",
+        "engineExcel": "12/12",
+        "boundary": "9/9",
+        "benchmarks": "6/6"
+      }
+    },
+    {
+      "name": "PRIOR_SEARCH_GATE",
+      "status": "PASS",
+      "detail": {
+        "status": "PASS",
+        "sha256": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2"
+      }
+    },
+    {
+      "name": "ACTUAL_SEARCH_FILE_HASH",
+      "status": "PASS",
+      "detail": {
+        "actualSearchHash": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2",
+        "expected": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2"
+      }
+    }
+  ],
+  "pass": false,
+  "failed": [
+    "LIVE_GOLDEN_MODE",
+    "LIVE_UNIT_RESTORE"
+  ],
+  "lockStatus": "P1_PASS5_BLOCKED"
+}

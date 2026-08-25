@@ -1,7 +1,7 @@
 {
   "schema": "HNL-P1-MATERIAL-RSOIL-RMATERIAL-E2E-GOLDEN",
   "version": "1.25.7",
-  "generatedAt": "2026-08-25T13:41:36.022Z",
+  "generatedAt": "2026-08-25T14:04:40.544Z",
   "sourceHierarchy": [
     "TCVN PDF is normative",
     "Each soil child Calculation Engine is independently LOCKED",

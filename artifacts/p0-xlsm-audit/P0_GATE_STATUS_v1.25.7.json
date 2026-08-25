@@ -1,0 +1,54 @@
+{
+  "version": "1.25.7",
+  "regression": {
+    "total": 304,
+    "pass": 304,
+    "fail": 0,
+    "status": "PASS"
+  },
+  "fullTableGolden": {
+    "total": 1130,
+    "pass": 1130,
+    "fail": 0,
+    "status": "PASS"
+  },
+  "searchBrain": {
+    "status": "PASS",
+    "sha256": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2",
+    "changed": false
+  },
+  "npmCi": {
+    "status": "BLOCKED",
+    "reason": "Input source ZIP has no package-lock.json."
+  },
+  "excelSmoke": {
+    "status": "BLOCKED",
+    "reason": "exceljs unavailable because npm ci cannot install without lockfile."
+  },
+  "buildWeb": {
+    "status": "BLOCKED",
+    "reason": "vite unavailable because npm ci cannot install without lockfile."
+  },
+  "productionPromotions": [
+    "PileGeometryEngine deterministic geometry",
+    "BoreholeEngine profile geometry",
+    "Driven shaftStartDepthM",
+    "Driven maxSegmentM<=2",
+    "Driven Formula-Only Excel parity for shaftStart/maxSegment"
+  ],
+  "keptReview": [
+    "RQD→Ks/Kr XLL",
+    "SPT XLL",
+    "Bored-pile XLL hidden logic",
+    "EQ XLL",
+    "workbook material Rsc lookup"
+  ],
+  "pdfSourceDiscovery": {
+    "status": "LOCATED",
+    "sources": [
+      "TCVN 10304:2025 PDF in project File Library",
+      "TCVN 5574:2018 PDF in project File Library"
+    ],
+    "note": "Located after main P0 reverse-engineering pass. Hidden DCE XLL branches remain REVIEW until targeted clause/table extraction and independent boundary/probe benchmark are completed."
+  }
+}

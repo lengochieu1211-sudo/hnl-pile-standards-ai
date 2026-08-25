@@ -1,0 +1,38 @@
+{
+  "schema": "HNL-P1-PASS7-EXCEL-AUDIT",
+  "version": "1.25.7",
+  "workbook": "HNL_P1_Pass7_Bao_Cao_Tinh_Toan_Coc_San_Xuat_v18.xlsx",
+  "language": "vi-VN",
+  "formulaErrorScan": {
+    "status": "PASS",
+    "errorMatches": 0,
+    "patterns": ["#REF!", "#DIV/0!", "#VALUE!", "#NAME?", "#N/A"]
+  },
+  "engineParity": {
+    "Rsoil": "PASS",
+    "Rmaterial": "PASS",
+    "Rpile": "PASS",
+    "gammaN": "PASS",
+    "NdMax": "PASS",
+    "governingPile": "PASS",
+    "governingCombination": "PASS",
+    "governingUtilization": "PASS",
+    "conclusion": "PASS"
+  },
+  "sheets": [
+    "00_HƯỚNG_DẪN",
+    "01_TỔNG_HỢP",
+    "02_ĐẦU_VÀO",
+    "03_ĐỊA_CHẤT_SPT",
+    "04_TÍNH_ĐẤT",
+    "05_VẬT_LIỆU",
+    "06_SỨC_CHỊU_TẢI",
+    "07_DỮ_LIỆU_KẾT_CẤU",
+    "08_KIỂM_TRA_CỌC",
+    "09_CỌC_BẤT_LỢI",
+    "10_NGUỒN_ĐỐI_CHIẾU",
+    "11_BẢNG_TRA",
+    "12_KIỂM_TRA_GOLDEN"
+  ],
+  "note": "Soil q_b/f_i/tau lookup values are exported from the LOCKED HNL Calculation Engine; Excel formulas independently recompute Qb, Qs, Rk, Rd, Rpile, Nd,max and all per-pile utilization/status. Raw geology changes should be recalculated by HNL before exporting a refreshed workbook."
+}

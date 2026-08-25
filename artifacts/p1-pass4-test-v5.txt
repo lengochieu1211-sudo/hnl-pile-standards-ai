@@ -1,0 +1,317 @@
+TAP version 13
+# Subtest: imported mode joins point->spring->pile and normalizes compression-negative Fz
+ok 1 - imported mode joins point->spring->pile and normalizes compression-negative Fz
+  ---
+  duration_ms: 1.730375
+  type: 'test'
+  ...
+# Subtest: imported checker preserves coordinates and action metadata
+ok 2 - imported checker preserves coordinates and action metadata
+  ---
+  duration_ms: 0.26627
+  type: 'test'
+  ...
+# Subtest: governing pile is by utilization, not maximum compression demand
+ok 3 - governing pile is by utilization, not maximum compression demand
+  ---
+  duration_ms: 0.457318
+  type: 'test'
+  ...
+# Subtest: exact compression capacity boundary passes
+ok 4 - exact compression capacity boundary passes
+  ---
+  duration_ms: 0.147888
+  type: 'test'
+  ...
+# Subtest: epsilon over compression capacity fails
+ok 5 - epsilon over compression capacity fails
+  ---
+  duration_ms: 0.227314
+  type: 'test'
+  ...
+# Subtest: tension without verified tension capacity blocks
+ok 6 - tension without verified tension capacity blocks
+  ---
+  duration_ms: 0.149291
+  type: 'test'
+  ...
+# Subtest: verified tension capacity is checked separately
+ok 7 - verified tension capacity is checked separately
+  ---
+  duration_ms: 0.209272
+  type: 'test'
+  ...
+# Subtest: missing coordinate blocks strict join
+ok 8 - missing coordinate blocks strict join
+  ---
+  duration_ms: 0.347346
+  type: 'test'
+  ...
+# Subtest: missing reaction blocks strict join
+ok 9 - missing reaction blocks strict join
+  ---
+  duration_ms: 0.558203
+  type: 'test'
+  ...
+# Subtest: reaction point without spring assignment blocks strict join
+ok 10 - reaction point without spring assignment blocks strict join
+  ---
+  duration_ms: 0.509278
+  type: 'test'
+  ...
+# Subtest: duplicate nodal reaction for same point/combo blocks
+ok 11 - duplicate nodal reaction for same point/combo blocks
+  ---
+  duration_ms: 0.197403
+  type: 'test'
+  ...
+# Subtest: imported envelope identifies governing combination and pile
+ok 12 - imported envelope identifies governing combination and pile
+  ---
+  duration_ms: 0.327089
+  type: 'test'
+  ...
+# Subtest: Golden 4-pile combined N+Mx+My exact hand values
+ok 13 - Golden 4-pile combined N+Mx+My exact hand values
+  ---
+  duration_ms: 1.613011
+  type: 'test'
+  ...
+# Subtest: Golden exact capacity boundary utilization=1 passes
+ok 14 - Golden exact capacity boundary utilization=1 passes
+  ---
+  duration_ms: 0.571038
+  type: 'test'
+  ...
+# Subtest: Golden epsilon above capacity fails
+ok 15 - Golden epsilon above capacity fails
+  ---
+  duration_ms: 0.534051
+  type: 'test'
+  ...
+# Subtest: Golden zero axial with pure moment creates equal compression/tension pairs
+ok 16 - Golden zero axial with pure moment creates equal compression/tension pairs
+  ---
+  duration_ms: 1.268841
+  type: 'test'
+  ...
+# Subtest: Golden 3x3 centered grid pure N distributes equally
+ok 17 - Golden 3x3 centered grid pure N distributes equally
+  ---
+  duration_ms: 0.603806
+  type: 'test'
+  ...
+# Subtest: Golden 3x3 Mx gradient matches hand solution
+ok 18 - Golden 3x3 Mx gradient matches hand solution
+  ---
+  duration_ms: 0.407481
+  type: 'test'
+  ...
+# Subtest: Golden translation invariance when moments are about same global origin
+ok 19 - Golden translation invariance when moments are about same global origin
+  ---
+  duration_ms: 0.614889
+  type: 'test'
+  ...
+# Subtest: Golden envelope governing utilization can differ from max compression if capacities differ
+ok 20 - Golden envelope governing utilization can differ from max compression if capacities differ
+  ---
+  duration_ms: 1.852358
+  type: 'test'
+  ...
+# Subtest: Golden compression-negative carries moment signs unchanged after only N normalization
+ok 21 - Golden compression-negative carries moment signs unchanged after only N normalization
+  ---
+  duration_ms: 0.888018
+  type: 'test'
+  ...
+# Subtest: Golden missing/zero compression capacity blocks input
+ok 22 - Golden missing/zero compression capacity blocks input
+  ---
+  duration_ms: 0.906204
+  type: 'test'
+  ...
+# Subtest: Golden one pile is insufficient for moment distribution
+ok 23 - Golden one pile is insufficient for moment distribution
+  ---
+  duration_ms: 0.294121
+  type: 'test'
+  ...
+# Subtest: Golden invalid compression sign blocks
+ok 24 - Golden invalid compression sign blocks
+  ---
+  duration_ms: 0.241374
+  type: 'test'
+  ...
+# Subtest: pure N distributes equally
+ok 25 - pure N distributes equally
+  ---
+  duration_ms: 1.427247
+  type: 'test'
+  ...
+# Subtest: Mx produces linear y-gradient and exact equilibrium
+ok 26 - Mx produces linear y-gradient and exact equilibrium
+  ---
+  duration_ms: 0.731756
+  type: 'test'
+  ...
+# Subtest: general asymmetric layout satisfies coupled Σxy equilibrium
+ok 27 - general asymmetric layout satisfies coupled Σxy equilibrium
+  ---
+  duration_ms: 0.279287
+  type: 'test'
+  ...
+# Subtest: compression-negative sign is explicit
+ok 28 - compression-negative sign is explicit
+  ---
+  duration_ms: 0.143757
+  type: 'test'
+  ...
+# Subtest: compression utilization failure is detected
+ok 29 - compression utilization failure is detected
+  ---
+  duration_ms: 0.193839
+  type: 'test'
+  ...
+# Subtest: tension without verified capacity blocks
+ok 30 - tension without verified capacity blocks
+  ---
+  duration_ms: 0.127819
+  type: 'test'
+  ...
+# Subtest: tension capacity can be checked explicitly
+ok 31 - tension capacity can be checked explicitly
+  ---
+  duration_ms: 0.18098
+  type: 'test'
+  ...
+# Subtest: Vx/Vy/T are metadata only and trigger warning
+ok 32 - Vx/Vy/T are metadata only and trigger warning
+  ---
+  duration_ms: 0.108449
+  type: 'test'
+  ...
+# Subtest: duplicate pile IDs block
+ok 33 - duplicate pile IDs block
+  ---
+  duration_ms: 0.694558
+  type: 'test'
+  ...
+# Subtest: singular collinear layout blocks moment distribution
+ok 34 - singular collinear layout blocks moment distribution
+  ---
+  duration_ms: 0.381526
+  type: 'test'
+  ...
+# Subtest: envelope changes governing combination
+ok 35 - envelope changes governing combination
+  ---
+  duration_ms: 0.81754
+  type: 'test'
+  ...
+# Subtest: duplicate combination ID blocks
+ok 36 - duplicate combination ID blocks
+  ---
+  duration_ms: 0.154048
+  type: 'test'
+  ...
+# Subtest: five formula-pattern blocks are ordered join→action→capacity→utilization→status
+ok 37 - five formula-pattern blocks are ordered join→action→capacity→utilization→status
+  ---
+  duration_ms: 1.354437
+  type: 'test'
+  ...
+# Subtest: per-block formula counts are not fabricated
+ok 38 - per-block formula counts are not fabricated
+  ---
+  duration_ms: 0.388484
+  type: 'test'
+  ...
+# Subtest: JOIN resolves point, pile and coordinates
+ok 39 - JOIN resolves point, pile and coordinates
+  ---
+  duration_ms: 0.481343
+  type: 'test'
+  ...
+# Subtest: JOIN blocks missing coordinate
+ok 40 - JOIN blocks missing coordinate
+  ---
+  duration_ms: 0.116712
+  type: 'test'
+  ...
+# Subtest: JOIN blocks missing reaction
+ok 41 - JOIN blocks missing reaction
+  ---
+  duration_ms: 0.118196
+  type: 'test'
+  ...
+# Subtest: ACTION converts compression-negative Fz
+ok 42 - ACTION converts compression-negative Fz
+  ---
+  duration_ms: 0.167104
+  type: 'test'
+  ...
+# Subtest: ACTION supports compression-positive
+ok 43 - ACTION supports compression-positive
+  ---
+  duration_ms: 0.109009
+  type: 'test'
+  ...
+# Subtest: CAPACITY uses compression capacity for compression
+ok 44 - CAPACITY uses compression capacity for compression
+  ---
+  duration_ms: 0.087681
+  type: 'test'
+  ...
+# Subtest: CAPACITY blocks tension without verified tension capacity
+ok 45 - CAPACITY blocks tension without verified tension capacity
+  ---
+  duration_ms: 0.275503
+  type: 'test'
+  ...
+# Subtest: UTILIZATION computes demand/capacity
+ok 46 - UTILIZATION computes demand/capacity
+  ---
+  duration_ms: 0.319321
+  type: 'test'
+  ...
+# Subtest: STATUS exact capacity is PASS AT_CAPACITY
+ok 47 - STATUS exact capacity is PASS AT_CAPACITY
+  ---
+  duration_ms: 0.154939
+  type: 'test'
+  ...
+# Subtest: STATUS above capacity is FAIL
+ok 48 - STATUS above capacity is FAIL
+  ---
+  duration_ms: 0.160325
+  type: 'test'
+  ...
+# Subtest: tension with capacity is checked independently
+ok 49 - tension with capacity is checked independently
+  ---
+  duration_ms: 0.181686
+  type: 'test'
+  ...
+# Subtest: fixture generates 8 rows for 4 piles × 2 combinations
+ok 50 - fixture generates 8 rows for 4 piles × 2 combinations
+  ---
+  duration_ms: 0.35931
+  type: 'test'
+  ...
+# Subtest: fixture governing row is C1/P4 at utilization .875
+ok 51 - fixture governing row is C1/P4 at utilization .875
+  ---
+  duration_ms: 1.294187
+  type: 'test'
+  ...
+1..51
+# tests 51
+# suites 0
+# pass 51
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 124.28623
+

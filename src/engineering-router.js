@@ -3,13 +3,17 @@
 // run deterministic VERIFIED calculations when enough data exists, otherwise
 // return the exact workflow/source/status/missing inputs. AI never owns the math.
 
-import { calculateDrivenPile10304 } from './pile-workflows.js';
+import { calculateDrivenPile10304, calculateRockEndBearing10304, calculateBoredPile10304, calculateSptPile10304 } from './pile-workflows.js';
 import { lookupPileType7888, classesForPileType7888 } from './tcvn7888.js';
 import { annulusAreaMm2, axialResistance } from './calculators.js';
 import { lookup5574Concrete, lookup5574Steel, lookup5574ConcreteSls, lookup5574SteelSls } from './codepack-tables.js';
 import { calcDynamic10304, calcSingleSettlement10304, calcGroupSettlement10304, calcEquivalentBlock10304, verifyPiledRaft10304, calcConstructionEffect10304 } from './tcvn10304-advanced.js';
 import { lookupTable7Alphas10304, lookupTable8Qb10304, lookupTable15Beta1, lookupTable15SideBeta } from './tcvn10304-table-engine.js';
 import { normalizeEngineeringText, extractEngineeringNumber, inferPileGeometry } from './engineering-text-normalizer.js';
+import { productionStatusFor, isProductionNumericAllowed } from './production-status-registry.js';
+import { calculateNearCenteredRectPileCapacity5574, combineSoilAndMaterialResistance } from './pile-material-engine.js';
+import { combineLockedPileResistance } from './pile-capacity-engine.js';
+import { calculateMultiBoreholePileCapacity } from './multi-borehole-engine.js';
 import { calcBendingRect5574, calcBendingT5574, calcEccentricRect5574, calcShear5574, calcTorsion5574, calcLocalCompression5574, calcPunching5574, calcCrackFlexure5574, calcDeflectionSimple5574, calcDeflectionCracked5574, calcShearDeflectionUdl5574, calcPrestressLosses5574, calcPrestressFriction5574, calcPrestressCreep5574, calcAnchorage5574, calcLapSplice5574, calcConcreteShearKey5574, calcShortCorbel5574, calcAnnularColumn5574, calcCircularColumn5574, calcEmbeddedPlateAnchorsD5574, calcInclinedAnchorD75574, lookupAnnexLGamma5574, calcAnnexMVerticalLimit5574, calcAnnexMPsychophysicalDeflection5574, calcAnnexMGenericLimit5574, calcAnnexMCraneHorizontalLimit5574, calcAnnexMStructuralDrift5574 } from './tcvn5574-core.js';
 
 const n = (s='') => normalizeEngineeringText(s).toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
@@ -31,6 +35,9 @@ export const WORKFLOW_REGISTRY = [
   {id:'10304-equivalent-block',standard:'TCVN 10304:2025',title:'Móng khối quy ước',status:'VERIFIED',source:'7.4.4 · CT (41)–(46)',keywords:/khoi quy uoc|mong quy uoc/i},
   {id:'10304-piled-raft',standard:'TCVN 10304:2025',title:'Bè-cọc',status:'VERIFIED_METHOD',source:'7.4.5',keywords:/be.?coc|mong be coc/i},
   {id:'10304-construction-effect',standard:'TCVN 10304:2025',title:'Ảnh hưởng thi công',status:'VERIFIED',source:'7.6.5–7.6.7 · CT (47)–(48) · Bảng 18',keywords:/anh huong thi cong|dao dong|luc ep coc/i},
+  {id:'pile-capacity-multiborehole',standard:'TCVN 10304:2025 + TCVN 5574:2018',title:'Multi-Borehole – cùng một cọc trên nhiều lỗ khoan · Cơ lý + SPT + vật liệu',status:'VERIFIED',source:'P1 Pass 2 · child workflows LOCKED · batch governing composition',keywords:/multi[- ]?borehole|nhieu\s+lo\s+khoan|nhiều\s+lỗ\s+khoan|lo\s+khoan\s+bat\s+loi|lỗ\s+khoan\s+bất\s+lợi|\bhk1\b[\s\S]{0,600}\bhk2\b/i},
+  {id:'pile-capacity-integrated',standard:'TCVN 10304:2025 + TCVN 5574:2018',title:'Sức chịu tải cọc tổng hợp – đất nền ↔ vật liệu',status:'VERIFIED',source:'10304 Rd đã LOCKED + 5574 CT (49)–(50) đã LOCKED · HNL governing composition',keywords:/kiem.*(?:ca\s*)?dat.*vat\s*lieu|r_?soil.*r_?material|dat.*vat\s*lieu.*khong\s*che|suc\s*chiu\s*tai.*dat.*vat\s*lieu/i},
+  {id:'5574-pile-material',standard:'TCVN 5574:2018',title:'Sức chịu tải vật liệu cọc – nén gần đúng tâm',status:'VERIFIED',source:'8.1.2.4.3 · CT (49)–(50) · Bảng 16; Bảng 7/13',keywords:/suc chiu tai.*vat lieu.*coc|sct\s*vat\s*lieu|r_?material|pile material/i},
   {id:'5574-material',standard:'TCVN 5574:2018',title:'Vật liệu bê tông/cốt thép',status:'VERIFIED',source:'Điều 6 · Bảng 7, 10, 13, 14',keywords:/\brb\b|\brbt\b|\beb\b|\brs\b|\brsc\b|\brsw\b|\bb\d{2,3}\b|cb\d{3}/i},
   {id:'5574-bending-rect',standard:'TCVN 5574:2018',title:'Uốn tiết diện chữ nhật/T/I theo nội lực giới hạn',status:'VERIFIED',source:'8.1.2.2.3; 8.1.2.3 · CT (31)–(38) · trang chuẩn 56–58 / PDF 54–56',keywords:/dam|chiu uon|tiet dien chu nhat|tiet dien chu t|tiet dien chu i|mo men uon/i},
   {id:'5574-eccentric',standard:'TCVN 5574:2018',title:'Nén lệch tâm tiết diện chữ nhật',status:'VERIFIED',source:'8.1.2.2.4; 8.1.2.4 · CT (40)–(48)',keywords:/nen lech tam|cot.*nen|cot btct|luc doc.*mo men/i},
@@ -54,8 +61,16 @@ export const WORKFLOW_REGISTRY = [
 export function selectEngineeringWorkflow(question='') {
   const q=n(question);
   const matches=WORKFLOW_REGISTRY.filter(w=>w.keywords.test(q));
+  // Natural Vietnamese often describes the member first ("cọc vuông 400x400 ... đóng bằng búa")
+  // instead of the compact phrase "cọc đóng". Treat a pile + explicit driven/pressed
+  // construction verb as the same 10304-driven intent. More-specific workflows below
+  // (cọc chống, cọc khoan, CPT...) still win through the priority order.
+  if(/\bcoc\b/.test(q) && /\b(?:dong|ep)\b/.test(q) && !matches.some(w=>w.id==='10304-driven')) {
+    const driven=WORKFLOW_REGISTRY.find(w=>w.id==='10304-driven');
+    if(driven) matches.push(driven);
+  }
   // More specific workflow first.
-  const order=['7888-material','10304-end-bearing','10304-cpt','10304-spt','10304-static','10304-dynamic','10304-bored','10304-screw','10304-settlement-single','10304-settlement-group','10304-equivalent-block','10304-piled-raft','10304-construction-effect','10304-driven','5574-anchorage','5574-lap-splice','5574-annex-d','5574-annex-l','5574-annex-m','5574-circular','5574-corbel','5574-annex-g','5574-crack','5574-deformation','5574-prestress','5574-punch','5574-local','5574-torsion','5574-shear','5574-eccentric','5574-bending-rect','5574-material'];
+  const order=['pile-capacity-multiborehole','pile-capacity-integrated','7888-material','10304-end-bearing','10304-cpt','10304-spt','10304-static','10304-dynamic','10304-bored','10304-screw','10304-settlement-single','10304-settlement-group','10304-equivalent-block','10304-piled-raft','10304-construction-effect','5574-pile-material','10304-driven','5574-anchorage','5574-lap-splice','5574-annex-d','5574-annex-l','5574-annex-m','5574-circular','5574-corbel','5574-annex-g','5574-crack','5574-deformation','5574-prestress','5574-punch','5574-local','5574-torsion','5574-shear','5574-eccentric','5574-bending-rect','5574-material'];
   matches.sort((a,b)=>(order.indexOf(a.id)<0?999:order.indexOf(a.id))-(order.indexOf(b.id)<0?999:order.indexOf(b.id)));
   return matches[0] || null;
 }
@@ -124,28 +139,53 @@ function calc7888Material(question='') {
 }
 
 function parsePileLayers(text='') {
-  // v1.25.6: tolerate PDF/Word forms such as "Lớp 1 (0 - 6 m): ... f_1 = 20 kPa".
+  // Accept both compact ranges ("Lớp 1: 0-3 m") and prose copied from PDF/Word
+  // ("Lớp 1: Từ 0 m đến 3 m (dày 3 m), đất sét có I_L=0,7").
+  // Parse one whole layer block at a time so punctuation/semicolons inside a layer
+  // do not truncate IL or manual f_i before the next "Lớp N" heading.
   const source=normalizeEngineeringText(text);
   const rows=[];
-  const re=/(?:lop|lớp)\s*(\d+)\s*[:\-]?\s*\(?\s*(\d+(?:[.,]\d+)?)\s*[-]\s*(\d+(?:[.,]\d+)?)\s*m?\s*\)?([^;\n]*)(?:;|\n|$)/gi;
+  const blockRe=/(?:lop|lớp)\s*(\d+)\s*[:\-]?\s*([\s\S]*?)(?=(?:lop|lớp)\s*\d+\s*[:\-]?|$)/gi;
   let m;
-  while((m=re.exec(source))){
+  while((m=blockRe.exec(source))){
     const index=Number(m[1]);
-    const tail=String(m[4]||'').toLocaleLowerCase('vi');
-    const soil=/c[aá]t|sand/.test(tail)?'sand':'clay';
-    let sandType=''; if(/bụi|bui|silty/.test(tail)) sandType='silty'; else if(/mịn|min|fine/.test(tail)) sandType='fine'; else if(/thô|tho|coarse/.test(tail)) sandType='coarse'; else if(/vừa|vua|medium/.test(tail)) sandType='medium';
+    const body=String(m[2]||'').trim();
+    const range=body.match(/(?:(?:tu|từ)\s*)?(\d+(?:[.,]\d+)?)\s*m?\s*(?:-|(?:den|đến))\s*(\d+(?:[.,]\d+)?)\s*m?\b/i);
+    if(!range) continue;
+    const tail=body.toLocaleLowerCase('vi');
+    const sandyClay=/c[aá]t\s*pha|sandy\s*clay/.test(tail), clayeySand=/s[eé]t\s*pha|clayey\s*sand/.test(tail);
+    const soil=(sandyClay||clayeySand)?'clay':(/c[aá]t|sand/.test(tail)?'sand':'clay');
+    const soilClass=sandyClay?'sandyClay':(clayeySand?'clayeySand':(soil==='sand'?'sand':'clay'));
+    let sandType=''; if(/s[oỏ]i|gravel/.test(tail)) sandType='gravelly'; else if(/bụi|bui|silty/.test(tail)) sandType='silty'; else if(/mịn|min|fine/.test(tail)) sandType='fine'; else if(/thô|tho|coarse/.test(tail)) sandType='coarse'; else if(/vừa|vua|medium/.test(tail)) sandType='medium';
     const IL=extractEngineeringNumber(tail,['IL','I_L']);
     const fiOverride=extractEngineeringNumber(tail,[`f${index}`,`f_${index}`,'fi','f_i'],'(?:kPa|kN/m2)');
-    rows.push({index,top:number(m[2]),bottom:number(m[3]),soilGroup:soil,sandType,IL,fiOverride});
+    const phiDeg=extractEngineeringNumber(tail,['phi','φ'],'(?:deg|°)?');
+    const gammaKnM3=extractEngineeringNumber(tail,['gamma','γ','gamma1','γ1'],'(?:kN/m3|kN/m³)?');
+    const gammaEffectiveKnM3=extractEngineeringNumber(tail,["gamma'","γ'","gamma1'","γ1'"],'(?:kN/m3|kN/m³)?');
+    const sptN=extractEngineeringNumber(tail,['N-SPT','NSPT','N_spt','N']);
+    const cuKpa=extractEngineeringNumber(tail,['cu','c_u'],'(?:kPa)?');
+    const Sr=extractEngineeringNumber(tail,['Sr','S_r']);
+    rows.push({index,top:number(range[1]),bottom:number(range[2]),soilGroup:soil,soilClass,sandType,IL,fiOverride,phiDeg,gammaKnM3,gammaEffectiveKnM3,sptN,cuKpa,Sr});
   }
   return rows;
+}
+
+
+function parseSptPoints(text=''){
+  const src=normalizeEngineeringText(text); const out=[];
+  const re=/(?:z|depth|độ\s*sâu|do\s*sau)\s*[=:]?\s*(\d+(?:[.,]\d+)?)\s*m?\s*[,;:)\- ]+\s*(?:N(?:-?SPT)?|N_spt)\s*[=:]?\s*(\d+(?:[.,]\d+)?)/gi;
+  let m; while((m=re.exec(src))) out.push({depthM:number(m[1]),N:number(m[2])});
+  // Also accept compact tuples "(1,5m; N=4)".
+  const tuple=/\(?\s*(\d+(?:[.,]\d+)?)\s*m\s*[,;]\s*N\s*[=:]\s*(\d+(?:[.,]\d+)?)\s*\)?/gi;
+  while((m=tuple.exec(src))) if(!out.some(p=>Math.abs(p.depthM-number(m[1]))<1e-12&&Math.abs(p.N-number(m[2]))<1e-12)) out.push({depthM:number(m[1]),N:number(m[2])});
+  return out.sort((a,b)=>a.depthM-b.depthM);
 }
 
 function parseDrivenPile(question='') {
   const q=normalizeEngineeringText(question);
   const norm=n(q);
   const geometry=inferPileGeometry(q);
-  const L=grab(q,/(?:dài|dai|\bl\s*=?)\s*(\d+(?:[.,]\d+)?)\s*m\b/i);
+  const L=grab(q,/(?:\bL\s*=?\s*|(?:dài|dai)(?:\s+L)?\s*=?\s*)(\d+(?:[.,]\d+)?)\s*m\b/i);
   const method=/\bep\b|ép/.test(norm)?'press':(/\bdong\b|đóng/.test(norm)?'hammer':null);
   return {
     shape:geometry.shape || (geometry.diameterM?'circle':'square'),
@@ -158,6 +198,7 @@ function parseDrivenPile(question='') {
     gammaRR:extractEngineeringNumber(q,['gamma_RR','γRR','gamma_R,R','γR,R']),
     gammaRf:extractEngineeringNumber(q,['gamma_Rf','γRf','gamma_R,f','γR,f']),
     gammaK:extractEngineeringNumber(q,['gamma_k','γk']),
+    gammaN:extractEngineeringNumber(q,['gamma_n','γn']),
     layers:parsePileLayers(q),
     geometryAudit:geometry
   };
@@ -168,42 +209,55 @@ function explicit(q, names, unit='') { return extractEngineeringNumber(q,names,u
 
 function calcEndBearing10304(q='') {
   const Rkb=explicit(q,['Rkb','R_kb'],'(?:kN)?');
-  const gammaC=explicit(q,['gamma_c','γc']) ?? 1;
   const geometry=inferPileGeometry(q);
   const A=explicit(q,['Ap','A_p','A','diện tích mũi','dien tich mui','diện tích tiết diện mũi','dien tich tiet dien mui'],'(?:m2|mm2)?') ?? geometry.areaM2;
-  let qb=explicit(q,['qb','q_b'],'(?:kPa)?');
+  // Prefer an independent PDF/Table-1 calculation whenever Rc,n + RQD are present,
+  // even if the pasted text also contains a legacy/XLL "result for comparison".
+  let RcN=explicit(q,['Rc,n','R_c,n','RcN','Rcn','cường độ nén một trục mẫu','cuong do nen mot truc mau'],'(?:MPa|kPa)?');
+  if(RcN!=null && /(?:R[_\s]?c[, _]?n|RcN|cường độ nén một trục mẫu|cuong do nen mot truc mau)[\s\S]{0,40}\d+(?:[.,]\d+)?\s*MPa/i.test(q)) RcN*=1000;
+  const rqd=explicit(q,['RQD'],'(?:%)?');
+  if(RcN!=null&&rqd!=null){
+    const Ld=explicit(q,['Ld','L_d','chiều sâu ngàm','chieu sau ngam'],'m?') ?? 0;
+    const gammaG=explicit(q,['gamma_g','γg']) ?? 1.4;
+    const df=explicit(q,['df','d_f'],'m?') ?? geometry.diameterM ?? geometry.sideM;
+    const gammaK=explicit(q,['gamma_k','γk']),gammaN=explicit(q,['gamma_n','γn']);
+    const minimumQbKpa=explicit(q,['minimum_qb','qb_min','q_b,min'],'(?:kPa)?');
+    const rawExcelInput={shape:geometry.shape,diameterM:geometry.diameterM,sideM:geometry.sideM,areaM2:A,rockCompressiveStrengthKpa:RcN,rqdPercent:rqd,gammaG,embedmentLengthM:Ld,embeddedOuterDiameterM:df,minimumQbKpa,gammaK,gammaN,consequenceClass:(q.match(/\bC[123]\b/i)||[])[0]};
+    const result=calculateRockEndBearing10304(rawExcelInput);
+    if(result.ok){ result.inputs={...result.inputs,geometryAudit:geometry,legacyComparisonIgnored:/kết quả đối chiếu|ket qua doi chieu|phần mềm cũ|phan mem cu/i.test(q)}; result.excelInputs=rawExcelInput; }
+    return result;
+  }
+  let qb=explicit(q,['qb','q_b'],'(?:kPa)?'); const gammaC=explicit(q,['gamma_c','γc']) ?? 1;
   const Rm=explicit(q,['Rm','R_m'],'(?:kPa)?'); const Ld=explicit(q,['Ld','L_d'],'m?'); const df=explicit(q,['df','d_f'],'m?');
-  if(qb==null && Rm!=null){ qb=(Ld!=null&&df!=null)?Rm*(1+0.4*Ld/df):Rm; }
+  if(qb==null && Rm!=null){ qb=(Ld!=null&&df!=null)?Rm*Math.min(1+0.4*Ld/df,3):Rm; }
   if(Rkb!=null) return {ok:true,RkKn:Rkb,inputs:{Rkb},steps:[`CT (5): Rk=Rk,b=${Rkb.toFixed(3)} kN.`],provenance:['TCVN 10304:2025 · 7.2.1.1 · CT (5) · trang 28']};
-  const missing=[]; if(A==null) missing.push('A diện tích mũi (m²)'); if(qb==null) missing.push('q_b (kPa), hoặc R_m và L_d/d_f theo CT (7)/(8)');
+  const missing=[]; if(A==null) missing.push('A diện tích mũi (m²)'); if(qb==null) missing.push('q_b (kPa), hoặc Rc,n + RQD + Ld/df để tính độc lập Bảng 1/CT (7)/(8)');
   if(missing.length) return {ok:false,missing};
   if(geometry.areaConflict) return {ok:false,missing:[`Diện tích nhập và diện tích suy từ hình học không khớp; cần xác nhận trước khi tính.`],inputs:{gammaC,A,qb,Rm,Ld,df,geometryAudit:geometry}};
   const Rk=gammaC*qb*A;
-  return {ok:true,RkKn:Rk,inputs:{gammaC,A,qb,Rm,Ld,df,geometryAudit:geometry},steps:[`CT (6): Rk,b=γc·q_b·A=${gammaC}×${qb}×${A}=${Rk.toFixed(3)} kN.`],provenance:['TCVN 10304:2025 · 7.2.1.1 · CT (5)–(8) · trang 28-30','Bảng 1 · trang 29']};
+  return {ok:true,status:'MIXED/MANUAL',RkKn:Rk,inputs:{gammaC,A,qb,Rm,Ld,df,geometryAudit:geometry},steps:[`CT (6): Rk,b=γc·q_b·A=${gammaC}×${qb}×${A}=${Rk.toFixed(3)} kN.`],provenance:['TCVN 10304:2025 · 7.2.1.1 · CT (5)–(8) · trang 28-30','q_b nhập tay: giữ provenance MANUAL']};
 }
-
 function calcBored10304(q='') {
-  const geometry=inferPileGeometry(q);
+  const geometry=inferPileGeometry(q),layers=parsePileLayers(q),norm=n(q);
+  const L=explicit(q,['L','chiều dài','chieu dai'],'m?'); const tipDepth=explicit(q,['z_tip','tipDepth','độ sâu mũi','do sau mui'],'m?') ?? L;
+  const methodCaseId=/bentonite|dưới nước|duoi nuoc/.test(norm)?'drilled-water-bentonite':(/cfa|khoan khô|khoan kho/.test(norm)?'drilled-dry-cfa':(/barrette/.test(norm)?'barrette':'bored-64a-64b'));
+  if(layers.length&&tipDepth!=null){
+    const rawExcelInput={shape:geometry.shape,diameterM:geometry.diameterM,sideM:geometry.sideM,areaM2:geometry.areaM2,perimeterM:geometry.perimeterM,lengthM:L,tipDepthM:tipDepth,shaftStartDepthM:explicit(q,['shaftStart','z_head','độ sâu đầu cọc','do sau dau coc'],'m?')??0,maxSegmentM:explicit(q,['maxSegment','delta_z','Δz'],'m?')??2,layers,methodCaseId,gammaC:explicit(q,['gamma_c','γc']),gammaRR:explicit(q,['gamma_RR','γRR']),gammaK:explicit(q,['gamma_k','γk']),gammaN:explicit(q,['gamma_n','γn']),qbOverride:explicit(q,['qb','q_b'],'(?:kPa)?'),tipPhiDeg:explicit(q,['phi_tip','φ_tip','phi','φ'],'(?:deg|°)?'),tipEffectiveGammaKnM3:explicit(q,["gamma1'","γ1'"],'(?:kN/m3|kN/m³)?'),averageGammaAboveTipKnM3:explicit(q,['gamma1','γ1'],'(?:kN/m3|kN/m³)?'),baseDiameterM:explicit(q,['d','đường kính đáy','duong kinh day'],'m?'),tipCoreRetained:/lõi đất|loi dat|soil core/.test(norm),tipConstruction:/pdt/.test(norm)?'jet-grout-pdt':'general'};
+    const result=calculateBoredPile10304(rawExcelInput); if(result.ok) result.excelInputs=rawExcelInput;
+    if(result.ok||result.missing?.length) return result;
+  }
+  // Backward-compatible manual workflow when the question provides precomputed Σfi·hi.
   const A=explicit(q,['Ap','A_p','A','diện tích mũi','dien tich mui','diện tích tựa mũi','dien tich tua mui'],'(?:m2|mm2)?') ?? geometry.areaM2;
   const u=explicit(q,['u','chu vi'],'(?:m|mm)?') ?? geometry.perimeterM; let qb=explicit(q,['qb','q_b'],'(?:kPa|kN/m2)?');
-  const gammaC=explicit(q,['gamma_c','γc']) ?? 1; const gammaRR=explicit(q,['gamma_RR','γRR']) ?? 1;
-  const gammaRf=explicit(q,['gamma_Rf','γRf']) ?? 1;
-  const sumFh=explicit(q,['sum_fh','Σfihi','tong fihi','tổng fihi'],'(?:kPa\.?m)?');
-  let qbLookup=null; const norm=n(q); const depth=explicit(q,['depth','z','h','chiều sâu mũi','chieu sau mui'],'m?'); const IL=explicit(q,['IL','I_L']); let phi=null,gp=null,g1=null,d=null;
+  const gammaC=explicit(q,['gamma_c','γc']) ?? 1; const gammaRR=explicit(q,['gamma_RR','γRR']) ?? 1; const gammaRf=explicit(q,['gamma_Rf','γRf']) ?? 1; const sumFh=explicit(q,['sum_fh','Σfihi','tong fihi','tổng fihi'],'(?:kPa\.?m)?');
+  let qbLookup=null; const depth=explicit(q,['depth','z','h','chiều sâu mũi','chieu sau mui'],'m?'); const IL=explicit(q,['IL','I_L']); let phi=null,gp=null,g1=null,d=null;
   if(qb==null){
-    if(/s[eé]t|đất dính|dat dinh/.test(q) && depth!=null && IL!=null){
-      try{ qbLookup=lookupTable8Qb10304({depthM:depth,IL}); qb=qbLookup.value; }catch(e){ return {ok:false,missing:[e.message]}; }
-    } else if(/c[aá]t/.test(q)){
-      phi=explicit(q,['phi','φ'],'(?:deg|°)?'); gp=explicit(q,["gamma1'","γ1'",'gamma1p'],'(?:kN/m3|kN/m³)?'); g1=explicit(q,['gamma1','γ1'],'(?:kN/m3|kN/m³)?'); d=explicit(q,['d'],'m?'); const h=depth;
-      if(phi!=null&&gp!=null&&g1!=null&&d!=null&&h!=null){
-        try{ const a=lookupTable7Alphas10304({phi,hdRatio:h/d,dM:d}); qbLookup=a; qb=0.75*a.alpha4*(a.alpha1*gp*d+a.alpha2*a.alpha3*g1*h); }catch(e){ return {ok:false,missing:[e.message]}; }
-      }
-    }
+    if(/s[eé]t|đất dính|dat dinh/.test(q) && depth!=null && IL!=null){ try{ qbLookup=lookupTable8Qb10304({depthM:depth,IL}); qb=qbLookup.value; }catch(e){ return {ok:false,missing:[e.message]}; } }
+    else if(/c[aá]t/.test(q)){ phi=explicit(q,['phi','φ'],'(?:deg|°)?'); gp=explicit(q,["gamma1'","γ1'",'gamma1p'],'(?:kN/m3|kN/m³)?'); g1=explicit(q,['gamma1','γ1'],'(?:kN/m3|kN/m³)?'); d=explicit(q,['d'],'m?'); const h=depth; if(phi!=null&&gp!=null&&g1!=null&&d!=null&&h!=null){ try{ const a=lookupTable7Alphas10304({phi,hdRatio:h/d,dM:d}); qbLookup=a; qb=0.75*a.alpha4*(a.alpha1*gp*d+a.alpha2*a.alpha3*g1*h); }catch(e){ return {ok:false,missing:[e.message]}; } } }
   }
-  const missing=[]; if(A==null) missing.push('A diện tích tựa mũi (m²)'); if(u==null) missing.push('u chu vi thân cọc (m)'); if(qb==null) missing.push('qb (kPa): đất sét có thể tự tra Bảng 8 bằng depth + IL; đất cát dùng φ, γ1′, γ1, d, h theo Bảng 7 + CT (14)/(15)'); if(sumFh==null) missing.push('Σ(fi·hi), với fi theo Bảng 3 và hi từng phân đoạn ≤2 m');
-  if(missing.length) return {ok:false,missing};
-  const Rb=gammaRR*qb*A, Rf=gammaRf*u*sumFh, Rk=gammaC*(Rb+Rf);
-  return {ok:true,RkKn:Rk,inputs:{A,u,qb,gammaC,gammaRR,gammaRf,sumFh,depth,IL,phi,gamma1p:gp,gamma1:g1,d,qbLookupMode:qbLookup?.provenance?.includes?.('Bảng 8')?'table8':(qbLookup?'table7':'manual')},qbLookup,steps:[`CT (13): Rk=γc(γRR·qb·A+γRf·u·Σfi·hi).`,...(qbLookup?[`q_b tự tra/tính: ${qb.toFixed(3)} kPa (${qbLookup.mode||'Bảng 7/8'}).`]:[]),`Mũi: ${gammaRR}×${qb}×${A}=${Rb.toFixed(3)} kN.`,`Thân: ${gammaRf}×${u}×${sumFh}=${Rf.toFixed(3)} kN.`,`Rk=${Rk.toFixed(3)} kN.`],provenance:['TCVN 10304:2025 · 7.2.3.1 · CT (13) · tr.37-38','Bảng 6 · tr.39','CT (14),(15) + Bảng 7/8 · tr.40-42']};
+  const missing=[]; if(A==null) missing.push('A diện tích tựa mũi (m²)'); if(u==null) missing.push('u chu vi thân cọc (m)'); if(qb==null) missing.push('qb (kPa) hoặc địa tầng đủ để tự tính'); if(sumFh==null) missing.push('địa tầng từng lớp hoặc Σ(fi·hi) có provenance');
+  if(missing.length) return {ok:false,missing}; const Rb=gammaRR*qb*A, Rf=gammaRf*u*sumFh, Rk=gammaC*(Rb+Rf);
+  return {ok:true,status:'MIXED/MANUAL',RkKn:Rk,inputs:{A,u,qb,gammaC,gammaRR,gammaRf,sumFh,depth,IL,phi,gamma1p:gp,gamma1:g1,d},qbLookup,steps:[`CT (13): Rk=γc(γRR·qb·A+γRf·u·Σfi·hi).`,`Rk=${Rk.toFixed(3)} kN.`],provenance:['TCVN 10304:2025 · 7.2.3 · CT (13)–(15) · tr.37–42','Σfi·hi/qb nhập tay giữ MANUAL provenance']};
 }
 function calcScrew10304(q='') {
   const c1=explicit(q,['c1','c_1']); const gamma1=explicit(q,['gamma1','γ1']); const h1=explicit(q,['h1','h_1'],'m?'); const A=explicit(q,['A','dien tich canh','diện tích cánh'],'(?:m2|m²)?');
@@ -230,12 +284,17 @@ function calcCpt10304(q='') {
   return {ok:true,RkKn:Ru,inputs:{A,u,h,qs,fs,b1,b2,pile,load,soil,probe,b1Auto:!!b1Lookup,b2Auto:!!b2Lookup,saturatedSand:/bao hoa/.test(norm)},tableLookups:{b1:b1Lookup,b2:b2Lookup},steps:[`Bảng 15: β1=${b1}${b1Lookup?` (${b1Lookup.mode})`:''}; ${probe==='mechanical'?'β2':'βi'}=${b2}${b2Lookup?` (${b2Lookup.mode})`:''}.`,`CT (26): Rs=β1·qs=${Rs.toFixed(3)} kPa.`,`CT (27)/(28): f=β·fs=${f.toFixed(3)} kPa.`,`CT (25): Ru=Rs·A+f·h·u=${Ru.toFixed(3)} kN.`],provenance:['TCVN 10304:2025 · 7.3.4.2 · CT (25)-(28) · tr.55-56','Bảng 15 · tr.57 · không tự nội suy nếu không có chú thích cho phép']};
 }
 function calcSpt10304(q='') {
-  const qb=explicit(q,['qb','q_b'],'(?:kPa|kN/m2|kN/m²)?'); const geometry=inferPileGeometry(q); const A=explicit(q,['Ap','A_p','A'],'(?:m2|mm2)?') ?? geometry.areaM2; const fs=explicit(q,['fs','f_s'],'(?:kPa|kN/m2|kN/m²)?') ?? 0; const fc=explicit(q,['fc','f_c'],'(?:kPa|kN/m2|kN/m²)?') ?? 0; const Ls=explicit(q,['Ls','L_s'],'m?') ?? 0; const Lc=explicit(q,['Lc','L_c'],'m?') ?? 0; const u=explicit(q,['u','chu vi'],'(?:m|mm)?') ?? geometry.perimeterM;
-  const missing=[]; if(qb==null) missing.push('qb từ Bảng D.1'); if(A==null) missing.push('A (m²)'); if(u==null) missing.push('u (m)'); if(!Ls&&!Lc) missing.push('Ls và/hoặc Lc');
-  if(missing.length) return {ok:false,missing}; const Rub=qb*A, Ruf=fs*Ls*u+fc*Lc*u, Ru=Rub+Ruf;
-  return {ok:true,RkKn:Ru,inputs:{qb,A,fs,fc,Ls,Lc,u},steps:[`D.3: Ru,b=qb·A=${Rub.toFixed(3)} kN.`,`D.5-D.6: Ru,f=fs·Ls·u+fc·Lc·u=${Ruf.toFixed(3)} kN.`,`D.2/D.1: Rk=Ru=${Ru.toFixed(3)} kN (trước xử lý thống kê nếu có nhiều điểm/thí nghiệm).`],provenance:['TCVN 10304:2025 · Phụ lục D · D.1-D.6 · tr.110','Bảng D.1 · tr.111']};
+  const geometry=inferPileGeometry(q),layers=parsePileLayers(q),points=parseSptPoints(q),norm=n(q); const L=explicit(q,['L','chiều dài','chieu dai'],'m?'),tipDepth=explicit(q,['z_tip','tipDepth','độ sâu mũi','do sau mui'],'m?')??L;
+  const pileType=/coc vit/.test(norm)?'screw':(/rung.*moi dat|ống rung|ong rung/.test(norm)?'vibro-pipe':(/coc dong|coc ep|đóng|ép/.test(norm)?'driven':'bored'));
+  if(layers.length&&tipDepth!=null&&(points.length||layers.some(x=>x.sptN!=null||x.cuKpa!=null))){
+    const rawExcelInput={pileType,shape:geometry.shape,diameterM:geometry.diameterM,sideM:geometry.sideM,areaM2:geometry.areaM2,perimeterM:geometry.perimeterM,lengthM:L,tipDepthM:tipDepth,shaftStartDepthM:explicit(q,['shaftStart','z_head','độ sâu đầu cọc','do sau dau coc'],'m?')??0,layers,sptPoints:points,closedTip:!/hở mũi|ho mui|open tip/.test(norm),innerDiameterM:explicit(q,['d_in','dtrong','đường kính trong','duong kinh trong'],'m?'),gammaK:explicit(q,['gamma_k','γk']),gammaN:explicit(q,['gamma_n','γn'])};
+    const result=calculateSptPile10304(rawExcelInput); if(result.ok) result.excelInputs=rawExcelInput; return result;
+  }
+  // Legacy explicit-input compatibility: no hidden interpolation, values are MANUAL inputs.
+  const qb=explicit(q,['qb','q_b'],'(?:kPa|kN/m2|kN/m²)?'); const A=explicit(q,['Ap','A_p','A'],'(?:m2|mm2)?') ?? geometry.areaM2; const fs=explicit(q,['fs','f_s'],'(?:kPa|kN/m2|kN/m²)?') ?? 0; const fc=explicit(q,['fc','f_c'],'(?:kPa|kN/m2|kN/m²)?') ?? 0; const Ls=explicit(q,['Ls','L_s'],'m?') ?? 0; const Lc=explicit(q,['Lc','L_c'],'m?') ?? 0; const u=explicit(q,['u','chu vi'],'(?:m|mm)?') ?? geometry.perimeterM;
+  const missing=[]; if(qb==null) missing.push('N-SPT/c_u + địa tầng để tự tính Bảng D.1, hoặc qb nhập tay có provenance'); if(A==null) missing.push('A (m²)'); if(u==null) missing.push('u (m)'); if(!Ls&&!Lc) missing.push('Ls và/hoặc Lc'); if(missing.length) return {ok:false,missing}; const Rub=qb*A, Ruf=fs*Ls*u+fc*Lc*u, Ru=Rub+Ruf;
+  return {ok:true,status:'MIXED/MANUAL',RkKn:Ru,inputs:{qb,A,fs,fc,Ls,Lc,u},steps:[`D.3: Ru,b=qb·A=${Rub.toFixed(3)} kN.`,`D.5-D.6: Ru,f=${Ruf.toFixed(3)} kN.`,`D.1-D.2: Rk=Ru=${Ru.toFixed(3)} kN.`],provenance:['TCVN 10304:2025 · Phụ lục D · D.1-D.6 · tr.110','Bảng D.1 · tr.111','Giá trị qb/fs/fc nhập tay: không gắn là kết quả của XLL.']};
 }
-
 function calculate5574Material(question='') {
   const q=String(question).toUpperCase();
   const concrete=q.match(/\bB(?:3\.5|5|7\.5|10|12\.5|15|20|25|30|35|40|45|50|55|60|70|80|90|100)\b/)?.[0] || null;
@@ -248,6 +307,48 @@ function calculate5574Material(question='') {
   ],provenance:[...(c?c.sources:[]),...(s?s.sources:[])]};
 }
 
+function lengthMmFromQuestion(q='', aliases=[]){
+  const names=aliases.map(a=>String(a).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
+  if(!names) return null;
+  const re=new RegExp(`(?:^|[^A-Za-z0-9_])(?:${names})\\s*(?:=|:|≈|~)?\\s*(-?\\d+(?:[.,]\\d+)?)\\s*(mm|m)\\b`,'i');
+  const m=normalizeEngineeringText(q).match(re); if(!m) return null;
+  const v=Number(String(m[1]).replace(',','.')); return /mm/i.test(m[2])?v:v*1000;
+}
+
+function calculate5574PileMaterial(question='') {
+  const q=String(question), upper=q.toUpperCase();
+  const grade=(upper.match(/\bB(?:20|25|30|35|40|45|50|55|60|70|80|90|100)\b/)||[])[0]||null;
+  const steel=(upper.match(/\bCB(?:240-T|300-T|300-V|400-V|500-V)\b/)||[])[0]||null;
+  const pair=normalizeEngineeringText(q).match(/(\d+(?:[.,]\d+)?)\s*[x×]\s*(\d+(?:[.,]\d+)?)\s*(mm|m)\b/i);
+  const conv=(v,u)=>/mm/i.test(u)?Number(String(v).replace(',','.')):Number(String(v).replace(',','.'))*1000;
+  const geom=inferPileGeometry(q);
+  let shape=/tron|tròn|circle/i.test(q)?'circle':(/chu nhat|chữ nhật|rectangle/i.test(q)?'rectangle':(/vuong|vuông|square/i.test(q)?'square':geom.shape));
+  let widthMm=null,heightMm=null,sideMm=null;
+  if(pair){ widthMm=conv(pair[1],pair[3]); heightMm=conv(pair[2],pair[3]); if(Math.abs(widthMm-heightMm)<=1e-9) {shape='square';sideMm=(widthMm+heightMm)/2;} else shape=shape==='circle'?'circle':'rectangle'; }
+  if(sideMm==null && geom.sideM!=null) sideMm=geom.sideM*1000;
+  widthMm=widthMm??sideMm; heightMm=heightMm??sideMm;
+  const AsTotMm2=explicit(q,['As,tot','AsTot','A_s_tot','As'],'(?:mm2|mm²)?');
+  const L0Mm=lengthMmFromQuestion(q,['L0','L_0','chiều dài tính toán','chieu dai tinh toan']);
+  const e0Mm=lengthMmFromQuestion(q,['e0','e_0','độ lệch tâm','do lech tam']);
+  const loadDuration=/dai han|dài hạn|long.?term/i.test(q)?'long':(/ngan han|ngắn hạn|short.?term/i.test(q)?'short':null);
+  const soilRdKn=explicit(q,['Rsoil','R_soil','Rd_soil','Rd đất','Rd dat'],'(?:kN)?');
+  const e0IncludesRandom=/(?:e0|e_0|độ lệch tâm|do lech tam)[^;\n]{0,80}(?:đã|da|có|co|bao gồm|bao gom)[^;\n]{0,40}(?:lệch tâm ngẫu nhiên|lech tam ngau nhien|\bea\b)|(?:đã|da)\s*kể\s*\bea\b/i.test(q);
+  const reinforcementOppositeSides=/(?:cốt|cot)[^;\n]{0,80}(?:hai|2)[^.;\n]{0,20}(?:phía|phia)[^.;\n]{0,20}(?:đối diện|doi dien)|(?:cốt|cot)[^;\n]{0,80}(?:đối xứng|doi xung)[^;\n]{0,40}(?:hai|2)[^.;\n]{0,20}(?:phía|phia)|(?:cốt|cot)[^;\n]{0,80}(?:phân bố|phan bo)[^;\n]{0,40}(?:đối xứng|doi xung)[^;\n]{0,40}(?:chu vi|perimeter)/i.test(q);
+  const missing=[];
+  if(!grade) missing.push('Cấp bê tông B20…B100.'); if(!steel) missing.push('Cấp thép CB...');
+  if(!loadDuration) missing.push('Thời hạn tải: dài hạn hoặc ngắn hạn.');
+  if(shape==='circle') missing.push('Cọc tròn không dùng CT (49)–(50); phải kiểm N–M theo Phụ lục F, không tạo một Rmaterial dọc trục giả.');
+  if(!['square','rectangle'].includes(shape||'')) missing.push('Tiết diện vuông/chữ nhật và kích thước.');
+  if(!(widthMm>0&&heightMm>0)) missing.push('b×h hoặc cạnh cọc.'); if(!(AsTotMm2>=0)) missing.push('As,tot (mm²).');
+  if(!(L0Mm>=0)) missing.push('L0 có đơn vị m/mm.'); if(!(e0Mm>=0)) missing.push('e0 cuối cùng có đơn vị m/mm.');
+  if(!e0IncludesRandom) missing.push('Xác nhận e0 đã kể độ lệch tâm ngẫu nhiên ea theo 8.1.2.2.4.');
+  if(!reinforcementOppositeSides) missing.push('Xác nhận cốt thép dọc nằm ở các phía đối diện nhau trong mặt phẳng uốn.');
+  const parsed={grade,steel,shape,sideMm,widthMm,heightMm,AsTotMm2,L0Mm,e0Mm,e0IncludesRandom,reinforcementOppositeSides,loadDuration,soilRdKn};
+  if(missing.length) return {ok:false,status:'REVIEW',inputs:parsed,missing};
+  const result=calculateNearCenteredRectPileCapacity5574(parsed); result.excelInputs=parsed;
+  if(result.ok && soilRdKn>0) result.governing=combineSoilAndMaterialResistance({soilResult:{RdKn:soilRdKn},materialResult:result});
+  return result;
+}
 function parse5574Common(question='') {
   const q=String(question); const upper=q.toUpperCase();
   const grade=(upper.match(/\bB(?:15|20|25|30|35|40|45|50|55|60|70|80|90|100)\b/)||[])[0] || null;
@@ -378,12 +479,110 @@ function calculate5574Punch(question=''){
   const x=parse5574Common(question); return calcPunching5574({...x,F:explicit(x.q,['F'],'(?:kN)?'),u:explicit(x.q,['u'],'(?:mm)?'),h0:explicit(x.q,['h0','h_0'],'(?:mm)?'),Asw:explicit(x.q,['Asw','A_sw'],'(?:mm2|mm²)?')??0,sw:explicit(x.q,['sw','s_w'],'(?:mm)?')});
 }
 
+
+
+function parseBoreholeBlocks(question='') {
+  const src=normalizeEngineeringText(question); const out=[];
+  const re=/\b((?:HK|BH|LK)\s*[-_]?\s*\d+)\s*:\s*([\s\S]*?)(?=\b(?:HK|BH|LK)\s*[-_]?\s*\d+\s*:|$)/gi;
+  let m;
+  while((m=re.exec(src))){
+    const id=String(m[1]).replace(/\s+/g,'').replace(/[_-]/g,'').toUpperCase();
+    const body=String(m[2]||'').trim();
+    const layers=parsePileLayers(body),sptPoints=parseSptPoints(body);
+    out.push({id,name:id,layers,sptPoints,source:'QUESTION-BOREHOLE-BLOCK',raw:body});
+  }
+  return out;
+}
+
+function calculateMultiBoreholeFromQuestion(question='') {
+  const q=String(question),norm=n(q),boreholes=parseBoreholeBlocks(q);
+  if(boreholes.length<2) return {ok:false,status:'REVIEW',missing:['Cần ít nhất hai block lỗ khoan, ví dụ HK1: ... HK2: ...; mỗi block có địa tầng và dữ liệu SPT.']};
+  const geometry=inferPileGeometry(q);
+  const L=explicit(q,['L','chiều dài','chieu dai'],'m?');
+  const tipDepth=explicit(q,['z_tip','tipDepth','độ sâu mũi','do sau mui'],'m?')??L;
+  const shaftStart=explicit(q,['shaftStart','z_head','độ sâu đầu cọc','do sau dau coc'],'m?')??0;
+  const genericGk=explicit(q,['gamma_k','γk']);
+  const mechGk=explicit(q,['gamma_k_mech','gamma_k_co_ly','γk_cơ_lý','γk_co_ly'])??genericGk;
+  const sptGk=explicit(q,['gamma_k_spt','γk_spt'])??genericGk;
+  const gammaN=explicit(q,['gamma_n','γn']);
+  const mechanicalWorkflowId=/coc (?:nhoi|khoan)|barrette/.test(norm)?'10304-bored':(/\bcoc\b/.test(norm)&&/\b(?:dong|ep)\b|khong moi dat/.test(norm)?'10304-driven':null);
+  if(!mechanicalWorkflowId) return {ok:false,status:'REVIEW',missing:['Multi-Borehole cần nêu loại cọc cơ lý: đóng/ép (7.2.2) hoặc khoan/nhồi (7.2.3).']};
+  if(!(tipDepth>0)) return {ok:false,status:'REVIEW',missing:['Cần chiều dài/độ sâu mũi cọc.']};
+  const pileInput={shape:geometry.shape||'square',sideM:geometry.sideM,diameterM:geometry.diameterM,areaM2:geometry.areaM2,perimeterM:geometry.perimeterM,lengthM:L,tipDepthM:tipDepth,shaftStartDepthM:shaftStart,maxSegmentM:explicit(q,['maxSegment','delta_z','Δz'],'m?')??2,gammaN};
+  const mechanicalInput=mechanicalWorkflowId==='10304-driven'
+    ? {method:/\bep\b|ép/.test(norm)?'press':(/\bdong\b|đóng/.test(norm)?'hammer':null),gammaC:explicit(q,['gamma_c','γc']),gammaRR:explicit(q,['gamma_RR','γRR']),gammaRf:explicit(q,['gamma_Rf','γRf']),gammaK:mechGk}
+    : {methodCaseId:/bentonite|dưới nước|duoi nuoc/.test(norm)?'drilled-water-bentonite':(/cfa|khoan khô|khoan kho/.test(norm)?'drilled-dry-cfa':(/barrette/.test(norm)?'barrette':'bored-64a-64b')),gammaC:explicit(q,['gamma_c','γc']),gammaRR:explicit(q,['gamma_RR','γRR']),gammaK:mechGk,tipPhiDeg:explicit(q,['phi_tip','φ_tip','phi','φ'],'(?:deg|°)?'),tipEffectiveGammaKnM3:explicit(q,["gamma1'","γ1'"],'(?:kN/m3|kN/m³)?'),averageGammaAboveTipKnM3:explicit(q,['gamma1','γ1'],'(?:kN/m3|kN/m³)?'),baseDiameterM:explicit(q,['d','đường kính đáy','duong kinh day'],'m?'),tipCoreRetained:/lõi đất|loi dat|soil core/.test(norm),tipConstruction:/pdt/.test(norm)?'jet-grout-pdt':'general'};
+  if(mechanicalWorkflowId==='10304-driven'&&!mechanicalInput.method&&mechanicalInput.gammaRR==null&&mechanicalInput.gammaRf==null) return {ok:false,status:'REVIEW',missing:['Cần phương pháp đóng/ép hoặc γR,R/γR,f có nguồn cho nhánh cơ lý.']};
+  const sptInput={pileType:mechanicalWorkflowId==='10304-driven'?'driven':'bored',closedTip:!/hở mũi|ho mui|open tip/.test(norm),innerDiameterM:explicit(q,['d_in','dtrong','đường kính trong','duong kinh trong'],'m?'),gammaK:sptGk,gammaN};
+  const materialResult=calculate5574PileMaterial(q);
+  if(materialResult?.ok!==true) return {ok:false,status:'REVIEW',materialResult,missing:materialResult?.missing||['Thiếu dữ liệu vật liệu cọc.']};
+  const payload={mechanicalWorkflowId,pileInput,mechanicalInput,sptInput,boreholes,materialInput:materialResult.excelInputs||materialResult.inputs||{},gammaN};
+  const result=calculateMultiBoreholePileCapacity(payload);
+  result.excelInputs=payload;
+  result.materialResult=materialResult;
+  if(!result.ok) result.missing=result.issues||[];
+  return result;
+}
+
+function calculateIntegratedPileCapacity(question='') {
+  const q=String(question), norm=n(q);
+  let soilWorkflowId=null, soilResult=null, soilInput=null;
+  if(/coc chong|tua (?:tren )?da|mui coc (?:tua|dat) (?:tren |vao )?da/.test(norm)){
+    soilWorkflowId='10304-end-bearing'; soilResult=calcEndBearing10304(q); soilInput=soilResult?.excelInputs||soilResult?.inputs||{};
+  } else if(/\bspt\b|xuyen tieu chuan/.test(norm)){
+    soilWorkflowId='10304-spt'; soilResult=calcSpt10304(q); soilInput=soilResult?.excelInputs||soilResult?.inputs||{};
+  } else if(/coc (?:nhoi|khoan)|barrette/.test(norm)){
+    soilWorkflowId='10304-bored'; soilResult=calcBored10304(q); soilInput=soilResult?.excelInputs||soilResult?.inputs||{};
+  } else if(/\bcoc\b/.test(norm)&&/\b(?:dong|ep)\b|khong moi dat/.test(norm)){
+    soilWorkflowId='10304-driven'; soilInput=parseDrivenPile(q); soilResult=!soilInput.method&&soilInput.gammaRR==null&&soilInput.gammaRf==null?{ok:false,inputs:soilInput,missing:['Phương pháp thi công cọc (đóng hay ép), hoặc γR,R/γR,f có nguồn.']}:calculateDrivenPile10304(soilInput);
+  } else {
+    return {ok:false,status:'REVIEW',missing:['Cần nêu rõ workflow đất nền: cọc đóng/ép, cọc chống đá, cọc khoan/nhồi hoặc SPT.']};
+  }
+  const materialResult=calculate5574PileMaterial(q);
+  if(soilResult?.ok!==true || materialResult?.ok!==true){
+    return {ok:false,status:'REVIEW',soilWorkflowId,soilResult,materialResult,missing:[...(soilResult?.missing||[]),...(materialResult?.missing||[])]};
+  }
+  const governing=combineLockedPileResistance({soilWorkflowId,soilResult,soilInput,materialResult,gammaN:soilResult?.gammaN});
+  const excelInputs={soilWorkflowId,soilInput,materialInput:materialResult.excelInputs||materialResult.inputs||{},gammaN:soilResult?.gammaN};
+  return {ok:governing.ok,status:governing.ok?'VERIFIED':'REVIEW',productionNumeric:governing.ok===true,workflow:'pile-capacity-integrated',soilWorkflowId,soilResult,materialResult,governing,...governing,excelInputs,missing:governing.ok?[]:(governing.issues||[])};
+}
+
+function productionRegistryIdForResult(workflow={},result={}) {
+  if(workflow.id==='pile-capacity-multiborehole' && result?.workflow==='pile-capacity-multiborehole') return 'pile-capacity-multiborehole-square';
+  if(workflow.id==='pile-capacity-integrated' && result?.workflow==='pile-capacity-integrated') return 'pile-capacity-integrated-square';
+  if(workflow.id==='10304-driven') return '10304-driven';
+  if(workflow.id==='10304-end-bearing' && result?.Ks!=null) return '10304-end-bearing-rock';
+  if(workflow.id==='10304-bored' && Array.isArray(result?.segmentResults) && result?.tipLayer) return '10304-bored-raw';
+  if(workflow.id==='10304-spt' && result?.noInterpolationPolicy===true) return '10304-spt-raw';
+  if(workflow.id==='5574-pile-material' && result?.workflow==='pile-material-5574-near-centered-rect') return '5574-pile-material-near-centered-rect';
+  return null;
+}
+
+export function canExportEngineeringResult(payload={}) {
+  const workflow=payload?.workflow||{};
+  const result=payload?.result||{};
+  const verified=Boolean(workflow?.id) && String(workflow.status||'').startsWith('VERIFIED');
+  // methodOnly is descriptive only: an incomplete VERIFIED_METHOD result can still
+  // carry methodOnly=true. Export is allowed only after the deterministic engine
+  // itself confirms the required inputs with ok=true.
+  if(!verified || result?.ok!==true) return false;
+  // Rock CT (7)/(8) without the required normative lower-bound q_b is deliberately
+  // preliminary. It may be displayed/explained but must not leave HNL as a final
+  // production workbook.
+  if(result?.designFinal===false || result?.status==='VERIFIED_PRELIMINARY') return false;
+  const registryId=productionRegistryIdForResult(workflow,result);
+  if(registryId && !isProductionNumericAllowed(registryId)) return false;
+  return true;
+}
+
 export function solveEngineeringQuestion(question='') {
   const workflow=selectEngineeringWorkflow(question);
   if(!workflow) return {recognized:false};
   let result=null;
   try {
-    if(workflow.id==='10304-end-bearing') result=calcEndBearing10304(question);
+    if(workflow.id==='pile-capacity-multiborehole') result=calculateMultiBoreholeFromQuestion(question);
+    else if(workflow.id==='pile-capacity-integrated') result=calculateIntegratedPileCapacity(question);
+    else if(workflow.id==='10304-end-bearing') result=calcEndBearing10304(question);
     else if(workflow.id==='10304-driven') { const input=parseDrivenPile(question); result=!input.method && input.gammaRR==null && input.gammaRf==null ? {ok:false,inputs:input,missing:['Phương pháp thi công cọc (đóng hay ép), hoặc γR,R/γR,f có nguồn để chọn Bảng 4.']} : calculateDrivenPile10304(input); }
     else if(workflow.id==='10304-bored') result=calcBored10304(question);
     else if(workflow.id==='10304-screw') result=calcScrew10304(question);
@@ -396,6 +595,7 @@ export function solveEngineeringQuestion(question='') {
     else if(workflow.id==='10304-equivalent-block') result=calcEquivalentBlock10304(question);
     else if(workflow.id==='10304-piled-raft') result=verifyPiledRaft10304(question);
     else if(workflow.id==='10304-construction-effect') result=calcConstructionEffect10304(question);
+    else if(workflow.id==='5574-pile-material') result=calculate5574PileMaterial(question);
     else if(workflow.id==='5574-material') result=calculate5574Material(question);
     else if(workflow.id==='5574-bending-rect') result=calculate5574RectBending(question);
     else if(workflow.id==='5574-eccentric') result=calculate5574Eccentric(question);
@@ -417,19 +617,24 @@ export function solveEngineeringQuestion(question='') {
     else if(workflow.id==='7888-material') result=calc7888Material(question);
     else result={ok:false,review:true,missing:[`Workflow ${workflow.title} đang ${workflow.status}; chỉ được tra cứu/giải thích/mở nguồn, chưa tự tính số.`]};
   } catch(error){ result={ok:false,error:error.message,missing:[error.message]}; }
-  return {recognized:true,workflow,result,normalization:{raw:String(question||''),normalized:normalizeEngineeringText(question)}};
+  const registryId=productionRegistryIdForResult(workflow,result);
+  const solved={recognized:true,workflow,result,production:registryId?{id:registryId,...productionStatusFor(registryId)}:null,normalization:{raw:String(question||''),normalized:normalizeEngineeringText(question)}};
+  return {...solved,canExport:canExportEngineeringResult(solved)};
 }
 
 export function engineeringExcelPayload(question='') {
   const solved=solveEngineeringQuestion(question);
   if(!solved.recognized) return {recognized:false};
   const id=solved.workflow.id;
-  let input=solved.result?.inputs || {};
+  let input=solved.result?.excelInputs || solved.result?.inputs || {};
+  if(id==='pile-capacity-multiborehole') input={...(solved.result?.excelInputs||{}),question};
+  if(id==='pile-capacity-integrated') input={...(solved.result?.excelInputs||{}),question};
   if(id==='10304-driven') input=parseDrivenPile(question);
   if(id==='10304-settlement-single' || id==='10304-settlement-group' || id==='10304-equivalent-block' || id==='10304-dynamic') input={...(solved.result?.inputs||{}),question};
-  if(id.startsWith('5574-')) input={...(solved.result?.inputs||{}),question};
+  if(id.startsWith('5574-')) input={...input,question};
   if(id==='7888-material') input={...(solved.result?.inputs||{}),question};
-  return {...solved,input,question};
+  const payload={...solved,input,question};
+  return {...payload,canExport:canExportEngineeringResult(payload)};
 }
 
 export function deterministicEngineeringContext(question='') {
@@ -444,6 +649,14 @@ export function deterministicEngineeringContext(question='') {
     if(workflow.id==='7888-material'){
       lines.push(...(result.steps||[]).map(s=>`- ${s}`));
       lines.push(`- KẾT QUẢ ENGINE: Ra dài hạn=${result.longTermKn.toFixed(3)} kN; Ra ngắn hạn=${result.shortTermKn.toFixed(3)} kN; Pmax=${result.pmaxKn.toFixed(3)} kN.`);
+    } else if(workflow.id==='pile-capacity-multiborehole'){
+      lines.push(...(result.steps||[]).map(s=>`- ${s}`));
+      lines.push(`- KẾT QUẢ BATCH: Rpile,min=${result.pileResistanceMinKn.toFixed(3)} kN; ${result.materialTie?'tie do VẬT LIỆU chung':`HK bất lợi=${result.criticalBoreholeId}; method=${result.criticalMethodId}`}.`);
+      lines.push(`- BẤT LỢI RIÊNG ĐẤT: HK=${result.soilMinimum?.boreholeId||'-'}; method=${result.soilMinimum?.methodId||'-'}; Rd,min=${Number(result.soilMinimum?.valueKn||0).toFixed(3)} kN.`);
+    } else if(workflow.id==='pile-capacity-integrated'){
+      lines.push(...(result.steps||[]).map(s=>`- ${s}`));
+      lines.push(`- KẾT QUẢ ENGINE: Rsoil=${result.soilResistanceKn.toFixed(3)} kN; Rmaterial=${result.materialResistanceKn.toFixed(3)} kN; Rpile=${result.pileResistanceKn.toFixed(3)} kN; khống chế=${result.governing==='SOIL'?'ĐẤT NỀN':'VẬT LIỆU'}.`);
+      if(result.demandLimitKn!=null) lines.push(`- GIỚI HẠN TÁC ĐỘNG: γn=${result.gammaN}; Nd,max(final)=${result.demandLimitKn.toFixed(3)} kN. γn áp dụng sau phép min, không thay đổi Rsoil/Rmaterial.`);
     } else if(workflow.id==='10304-driven'){
       lines.push(...(result.steps||[]).map(s=>`- ${typeof s==='string'?s:JSON.stringify(s)}`));
       if(result.RkKn!=null) lines.push(`- KẾT QUẢ ENGINE: Rk=${result.RkKn.toFixed(3)} kN.`);

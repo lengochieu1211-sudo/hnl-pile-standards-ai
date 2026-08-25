@@ -1,7 +1,7 @@
 {
   "schema": "HNL_DCE_UDF_BEHAVIORAL_GOLDEN_V1",
   "hnlVersion": "1.25.7",
-  "generatedAt": "2026-08-25T13:41:35.735Z",
+  "generatedAt": "2026-08-25T14:04:40.251Z",
   "authority": {
     "normative": "TCVN 10304:2025 PDF",
     "reference": "DCE XLSM cached runtime behavior + DCE Excel.dll signatures",

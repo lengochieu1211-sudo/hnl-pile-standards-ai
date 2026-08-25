@@ -1,9 +1,9 @@
 {
-  "version": "1.25.4",
-  "generatedAt": "2026-08-24T14:36:09.417Z",
+  "version": "1.25.7",
+  "generatedAt": "2026-08-25T14:04:39.337Z",
   "summary": {
-    "total": 1130,
-    "pass": 1130,
+    "total": 1242,
+    "pass": 1242,
     "fail": 0,
     "byTable": {
       "Bảng 2": {
@@ -54,6 +54,16 @@
       "Bảng 17": {
         "cases": 69,
         "pass": 69,
+        "fail": 0
+      },
+      "Bảng 1": {
+        "cases": 13,
+        "pass": 13,
+        "fail": 0
+      },
+      "Bảng D.1": {
+        "cases": 99,
+        "pass": 99,
         "fail": 0
       }
     }
@@ -21386,6 +21396,1827 @@
       "status": "PASS",
       "source": "NO EXTRAPOLATION",
       "error": "CT (34): ν phải trong [0;0,5]."
+    },
+    {
+      "id": "G1131",
+      "table": "Bảng 1",
+      "branch": "RQD→Ks",
+      "category": "EXACT",
+      "input": {
+        "RQD": 0
+      },
+      "hnl": 0.22,
+      "kind": "EXACT",
+      "expected": 0.22,
+      "v1": 0.22,
+      "status": "PASS",
+      "source": "TCVN 10304:2025 Bảng 1 tr.29",
+      "error": ""
+    },
+    {
+      "id": "G1132",
+      "table": "Bảng 1",
+      "branch": "RQD→Ks",
+      "category": "EXACT",
+      "input": {
+        "RQD": 25
+      },
+      "hnl": 0.22,
+      "kind": "EXACT",
+      "expected": 0.22,
+      "v1": 0.22,
+      "status": "PASS",
+      "source": "TCVN 10304:2025 Bảng 1 tr.29",
+      "error": ""
+    },
+    {
+      "id": "G1133",
+      "table": "Bảng 1",
+      "branch": "RQD→Ks",
+      "category": "EXACT",
+      "input": {
+        "RQD": 50
+      },
+      "hnl": 0.32,
+      "kind": "EXACT",
+      "expected": 0.32,
+      "v1": 0.32,
+      "status": "PASS",
+      "source": "TCVN 10304:2025 Bảng 1 tr.29",
+      "error": ""
+    },
+    {
+      "id": "G1134",
+      "table": "Bảng 1",
+      "branch": "RQD→Ks",
+      "category": "EXACT",
+      "input": {
+        "RQD": 75
+      },
+      "hnl": 0.6,
+      "kind": "EXACT",
+      "expected": 0.6,
+      "v1": 0.6,
+      "status": "PASS",
+      "source": "TCVN 10304:2025 Bảng 1 tr.29",
+      "error": ""
+    },
+    {
+      "id": "G1135",
+      "table": "Bảng 1",
+      "branch": "RQD→Ks",
+      "category": "EXACT",
+      "input": {
+        "RQD": 90
+      },
+      "hnl": 1,
+      "kind": "EXACT",
+      "expected": 1,
+      "v1": 1,
+      "status": "PASS",
+      "source": "TCVN 10304:2025 Bảng 1 tr.29",
+      "error": ""
+    },
+    {
+      "id": "G1136",
+      "table": "Bảng 1",
+      "branch": "RQD→Ks",
+      "category": "EXACT",
+      "input": {
+        "RQD": 100
+      },
+      "hnl": 1,
+      "kind": "EXACT",
+      "expected": 1,
+      "v1": 1,
+      "status": "PASS",
+      "source": "TCVN 10304:2025 Bảng 1 tr.29",
+      "error": ""
+    },
+    {
+      "id": "G1137",
+      "table": "Bảng 1",
+      "branch": "RQD→Ks",
+      "category": "PLATEAU-MID",
+      "input": {
+        "RQD": 12.5
+      },
+      "hnl": 0.22,
+      "kind": "LINEAR-1D",
+      "x": 12.5,
+      "x1": 0,
+      "x2": 25,
+      "v1": 0.22,
+      "v2": 0.22,
+      "expected": 0.22,
+      "status": "PASS",
+      "source": "Bảng 1 Chú thích 1–2",
+      "error": ""
+    },
+    {
+      "id": "G1138",
+      "table": "Bảng 1",
+      "branch": "RQD→Ks",
+      "category": "MID",
+      "input": {
+        "RQD": 37.5
+      },
+      "hnl": 0.27,
+      "kind": "LINEAR-1D",
+      "x": 37.5,
+      "x1": 25,
+      "x2": 50,
+      "v1": 0.22,
+      "v2": 0.32,
+      "expected": 0.27,
+      "status": "PASS",
+      "source": "Bảng 1 Chú thích 1–2",
+      "error": ""
+    },
+    {
+      "id": "G1139",
+      "table": "Bảng 1",
+      "branch": "RQD→Ks",
+      "category": "MID",
+      "input": {
+        "RQD": 62.5
+      },
+      "hnl": 0.45999999999999996,
+      "kind": "LINEAR-1D",
+      "x": 62.5,
+      "x1": 50,
+      "x2": 75,
+      "v1": 0.32,
+      "v2": 0.6,
+      "expected": 0.45999999999999996,
+      "status": "PASS",
+      "source": "Bảng 1 Chú thích 1–2",
+      "error": ""
+    },
+    {
+      "id": "G1140",
+      "table": "Bảng 1",
+      "branch": "RQD→Ks",
+      "category": "MID",
+      "input": {
+        "RQD": 82.5
+      },
+      "hnl": 0.8,
+      "kind": "LINEAR-1D",
+      "x": 82.5,
+      "x1": 75,
+      "x2": 90,
+      "v1": 0.6,
+      "v2": 1,
+      "expected": 0.8,
+      "status": "PASS",
+      "source": "Bảng 1 Chú thích 1–2",
+      "error": ""
+    },
+    {
+      "id": "G1141",
+      "table": "Bảng 1",
+      "branch": "RQD→Ks",
+      "category": "PLATEAU-MID",
+      "input": {
+        "RQD": 95
+      },
+      "hnl": 1,
+      "kind": "LINEAR-1D",
+      "x": 95,
+      "x1": 90,
+      "x2": 100,
+      "v1": 1,
+      "v2": 1,
+      "expected": 1,
+      "status": "PASS",
+      "source": "Bảng 1 Chú thích 1–2",
+      "error": ""
+    },
+    {
+      "id": "G1142",
+      "table": "Bảng 1",
+      "branch": "RQD→Ks",
+      "category": "OUTSIDE",
+      "input": {
+        "RQD": -0.001
+      },
+      "hnl": "BLOCK",
+      "kind": "BLOCK",
+      "expected": "BLOCK",
+      "status": "PASS",
+      "source": "RQD 0–100",
+      "error": "Bảng 1: RQD phải trong miền 0–100%."
+    },
+    {
+      "id": "G1143",
+      "table": "Bảng 1",
+      "branch": "RQD→Ks",
+      "category": "OUTSIDE",
+      "input": {
+        "RQD": 100.001
+      },
+      "hnl": "BLOCK",
+      "kind": "BLOCK",
+      "expected": "BLOCK",
+      "status": "PASS",
+      "source": "RQD 0–100",
+      "error": "Bảng 1: RQD phải trong miền 0–100%."
+    },
+    {
+      "id": "G1144",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 0,
+        "eta": 1
+      },
+      "hnl": 0,
+      "kind": "EXACT",
+      "expected": 0,
+      "v1": 0,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1145",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 0
+      },
+      "hnl": 0,
+      "kind": "EXACT",
+      "expected": 0,
+      "v1": 0,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1146",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 1,
+        "eta": 1
+      },
+      "hnl": 120,
+      "kind": "EXACT",
+      "expected": 120,
+      "v1": 120,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1147",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 1
+      },
+      "hnl": 3.3,
+      "kind": "EXACT",
+      "expected": 3.3,
+      "v1": 3.3,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1148",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 10,
+        "eta": 1
+      },
+      "hnl": 1200,
+      "kind": "EXACT",
+      "expected": 1200,
+      "v1": 1200,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1149",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 10
+      },
+      "hnl": 33,
+      "kind": "EXACT",
+      "expected": 33,
+      "v1": 33,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1150",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 25,
+        "eta": 1
+      },
+      "hnl": 3000,
+      "kind": "EXACT",
+      "expected": 3000,
+      "v1": 3000,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1151",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 25
+      },
+      "hnl": 82.5,
+      "kind": "EXACT",
+      "expected": 82.5,
+      "v1": 82.5,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1152",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 50,
+        "eta": 1
+      },
+      "hnl": 6000,
+      "kind": "EXACT",
+      "expected": 6000,
+      "v1": 6000,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1153",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 50
+      },
+      "hnl": 165,
+      "kind": "EXACT",
+      "expected": 165,
+      "v1": 165,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1154",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 100,
+        "eta": 1
+      },
+      "hnl": 7500,
+      "kind": "EXACT",
+      "expected": 7500,
+      "v1": 7500,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1155",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 100
+      },
+      "hnl": 165,
+      "kind": "EXACT",
+      "expected": 165,
+      "v1": 165,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1156",
+      "table": "Bảng D.1",
+      "branch": "tip-clay:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 0
+      },
+      "hnl": 0,
+      "kind": "EXACT",
+      "expected": 0,
+      "v1": 0,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1157",
+      "table": "Bảng D.1",
+      "branch": "tip-clay:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 10
+      },
+      "hnl": 60,
+      "kind": "EXACT",
+      "expected": 60,
+      "v1": 60,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1158",
+      "table": "Bảng D.1",
+      "branch": "tip-clay:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 50
+      },
+      "hnl": 300,
+      "kind": "EXACT",
+      "expected": 300,
+      "v1": 300,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1159",
+      "table": "Bảng D.1",
+      "branch": "tip-clay:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 100
+      },
+      "hnl": 600,
+      "kind": "EXACT",
+      "expected": 600,
+      "v1": 600,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1160",
+      "table": "Bảng D.1",
+      "branch": "tip-clay:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 200
+      },
+      "hnl": 1200,
+      "kind": "EXACT",
+      "expected": 1200,
+      "v1": 1200,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1161",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 0
+      },
+      "hnl": 0,
+      "kind": "EXACT",
+      "expected": 0,
+      "v1": 0,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1162",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 10
+      },
+      "hnl": 10,
+      "kind": "EXACT",
+      "expected": 10,
+      "v1": 10,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1163",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 50
+      },
+      "hnl": 50,
+      "kind": "EXACT",
+      "expected": 50,
+      "v1": 50,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1164",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 100
+      },
+      "hnl": 100,
+      "kind": "EXACT",
+      "expected": 100,
+      "v1": 100,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1165",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:bored",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 200
+      },
+      "hnl": 100,
+      "kind": "EXACT",
+      "expected": 100,
+      "v1": 100,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1166",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 0,
+        "eta": 1
+      },
+      "hnl": 0,
+      "kind": "EXACT",
+      "expected": 0,
+      "v1": 0,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1167",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 0
+      },
+      "hnl": 0,
+      "kind": "EXACT",
+      "expected": 0,
+      "v1": 0,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1168",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 1,
+        "eta": 1
+      },
+      "hnl": 150,
+      "kind": "EXACT",
+      "expected": 150,
+      "v1": 150,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1169",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 1
+      },
+      "hnl": 1.5,
+      "kind": "EXACT",
+      "expected": 1.5,
+      "v1": 1.5,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1170",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 10,
+        "eta": 1
+      },
+      "hnl": 1500,
+      "kind": "EXACT",
+      "expected": 1500,
+      "v1": 1500,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1171",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 10
+      },
+      "hnl": 15,
+      "kind": "EXACT",
+      "expected": 15,
+      "v1": 15,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1172",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 25,
+        "eta": 1
+      },
+      "hnl": 3750,
+      "kind": "EXACT",
+      "expected": 3750,
+      "v1": 3750,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1173",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 25
+      },
+      "hnl": 37.5,
+      "kind": "EXACT",
+      "expected": 37.5,
+      "v1": 37.5,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1174",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 50,
+        "eta": 1
+      },
+      "hnl": 7500,
+      "kind": "EXACT",
+      "expected": 7500,
+      "v1": 7500,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1175",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 50
+      },
+      "hnl": 75,
+      "kind": "EXACT",
+      "expected": 75,
+      "v1": 75,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1176",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 100,
+        "eta": 1
+      },
+      "hnl": 9000,
+      "kind": "EXACT",
+      "expected": 9000,
+      "v1": 9000,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1177",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 100
+      },
+      "hnl": 75,
+      "kind": "EXACT",
+      "expected": 75,
+      "v1": 75,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1178",
+      "table": "Bảng D.1",
+      "branch": "tip-clay:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 0
+      },
+      "hnl": 0,
+      "kind": "EXACT",
+      "expected": 0,
+      "v1": 0,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1179",
+      "table": "Bảng D.1",
+      "branch": "tip-clay:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 10
+      },
+      "hnl": 60,
+      "kind": "EXACT",
+      "expected": 60,
+      "v1": 60,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1180",
+      "table": "Bảng D.1",
+      "branch": "tip-clay:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 50
+      },
+      "hnl": 300,
+      "kind": "EXACT",
+      "expected": 300,
+      "v1": 300,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1181",
+      "table": "Bảng D.1",
+      "branch": "tip-clay:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 100
+      },
+      "hnl": 600,
+      "kind": "EXACT",
+      "expected": 600,
+      "v1": 600,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1182",
+      "table": "Bảng D.1",
+      "branch": "tip-clay:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 200
+      },
+      "hnl": 1200,
+      "kind": "EXACT",
+      "expected": 1200,
+      "v1": 1200,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1183",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 0
+      },
+      "hnl": 0,
+      "kind": "EXACT",
+      "expected": 0,
+      "v1": 0,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1184",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 10
+      },
+      "hnl": 4,
+      "kind": "EXACT",
+      "expected": 4,
+      "v1": 4,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1185",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 50
+      },
+      "hnl": 20,
+      "kind": "EXACT",
+      "expected": 20,
+      "v1": 20,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1186",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 100
+      },
+      "hnl": 40,
+      "kind": "EXACT",
+      "expected": 40,
+      "v1": 40,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1187",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:vibro-pipe",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 200
+      },
+      "hnl": 50,
+      "kind": "EXACT",
+      "expected": 50,
+      "v1": 50,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1188",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 0,
+        "eta": 1
+      },
+      "hnl": 0,
+      "kind": "EXACT",
+      "expected": 0,
+      "v1": 0,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1189",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 0
+      },
+      "hnl": 0,
+      "kind": "EXACT",
+      "expected": 0,
+      "v1": 0,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1190",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 1,
+        "eta": 1
+      },
+      "hnl": 150,
+      "kind": "EXACT",
+      "expected": 150,
+      "v1": 150,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1191",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 1
+      },
+      "hnl": 2,
+      "kind": "EXACT",
+      "expected": 2,
+      "v1": 2,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1192",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 10,
+        "eta": 1
+      },
+      "hnl": 1500,
+      "kind": "EXACT",
+      "expected": 1500,
+      "v1": 1500,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1193",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 10
+      },
+      "hnl": 20,
+      "kind": "EXACT",
+      "expected": 20,
+      "v1": 20,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1194",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 25,
+        "eta": 1
+      },
+      "hnl": 3750,
+      "kind": "EXACT",
+      "expected": 3750,
+      "v1": 3750,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1195",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 25
+      },
+      "hnl": 50,
+      "kind": "EXACT",
+      "expected": 50,
+      "v1": 50,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1196",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 50,
+        "eta": 1
+      },
+      "hnl": 7500,
+      "kind": "EXACT",
+      "expected": 7500,
+      "v1": 7500,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1197",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 50
+      },
+      "hnl": 100,
+      "kind": "EXACT",
+      "expected": 100,
+      "v1": 100,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1198",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 100,
+        "eta": 1
+      },
+      "hnl": 9000,
+      "kind": "EXACT",
+      "expected": 9000,
+      "v1": 9000,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1199",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 100
+      },
+      "hnl": 100,
+      "kind": "EXACT",
+      "expected": 100,
+      "v1": 100,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1200",
+      "table": "Bảng D.1",
+      "branch": "tip-clay:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 0
+      },
+      "hnl": 0,
+      "kind": "EXACT",
+      "expected": 0,
+      "v1": 0,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1201",
+      "table": "Bảng D.1",
+      "branch": "tip-clay:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 1
+      },
+      "hnl": 150,
+      "kind": "EXACT",
+      "expected": 150,
+      "v1": 150,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1202",
+      "table": "Bảng D.1",
+      "branch": "tip-clay:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 10
+      },
+      "hnl": 1500,
+      "kind": "EXACT",
+      "expected": 1500,
+      "v1": 1500,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1203",
+      "table": "Bảng D.1",
+      "branch": "tip-clay:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 25
+      },
+      "hnl": 3750,
+      "kind": "EXACT",
+      "expected": 3750,
+      "v1": 3750,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1204",
+      "table": "Bảng D.1",
+      "branch": "tip-clay:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 50
+      },
+      "hnl": 7500,
+      "kind": "EXACT",
+      "expected": 7500,
+      "v1": 7500,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1205",
+      "table": "Bảng D.1",
+      "branch": "tip-clay:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 100
+      },
+      "hnl": 9000,
+      "kind": "EXACT",
+      "expected": 9000,
+      "v1": 9000,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1206",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 0
+      },
+      "hnl": 0,
+      "kind": "EXACT",
+      "expected": 0,
+      "v1": 0,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1207",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 10
+      },
+      "hnl": 5,
+      "kind": "EXACT",
+      "expected": 5,
+      "v1": 5,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1208",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 50
+      },
+      "hnl": 25,
+      "kind": "EXACT",
+      "expected": 25,
+      "v1": 25,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1209",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 100
+      },
+      "hnl": 50,
+      "kind": "EXACT",
+      "expected": 50,
+      "v1": 50,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1210",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:screw",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 200
+      },
+      "hnl": 62.5,
+      "kind": "EXACT",
+      "expected": 62.5,
+      "v1": 62.5,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1211",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 0,
+        "eta": 1
+      },
+      "hnl": 0,
+      "kind": "EXACT",
+      "expected": 0,
+      "v1": 0,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1212",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 0
+      },
+      "hnl": 0,
+      "kind": "EXACT",
+      "expected": 0,
+      "v1": 0,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1213",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 1,
+        "eta": 1
+      },
+      "hnl": 300,
+      "kind": "EXACT",
+      "expected": 300,
+      "v1": 300,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1214",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 1
+      },
+      "hnl": 2,
+      "kind": "EXACT",
+      "expected": 2,
+      "v1": 2,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1215",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 10,
+        "eta": 1
+      },
+      "hnl": 3000,
+      "kind": "EXACT",
+      "expected": 3000,
+      "v1": 3000,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1216",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 10
+      },
+      "hnl": 20,
+      "kind": "EXACT",
+      "expected": 20,
+      "v1": 20,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1217",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 25,
+        "eta": 1
+      },
+      "hnl": 7500,
+      "kind": "EXACT",
+      "expected": 7500,
+      "v1": 7500,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1218",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 25
+      },
+      "hnl": 50,
+      "kind": "EXACT",
+      "expected": 50,
+      "v1": 50,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1219",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 50,
+        "eta": 1
+      },
+      "hnl": 15000,
+      "kind": "EXACT",
+      "expected": 15000,
+      "v1": 15000,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1220",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 50
+      },
+      "hnl": 100,
+      "kind": "EXACT",
+      "expected": 100,
+      "v1": 100,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1221",
+      "table": "Bảng D.1",
+      "branch": "tip-sand:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 100,
+        "eta": 1
+      },
+      "hnl": 18000,
+      "kind": "EXACT",
+      "expected": 18000,
+      "v1": 18000,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1222",
+      "table": "Bảng D.1",
+      "branch": "shaft-sand:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "N": 100
+      },
+      "hnl": 100,
+      "kind": "EXACT",
+      "expected": 100,
+      "v1": 100,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1223",
+      "table": "Bảng D.1",
+      "branch": "tip-clay:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 0
+      },
+      "hnl": 0,
+      "kind": "EXACT",
+      "expected": 0,
+      "v1": 0,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1224",
+      "table": "Bảng D.1",
+      "branch": "tip-clay:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 10
+      },
+      "hnl": 60,
+      "kind": "EXACT",
+      "expected": 60,
+      "v1": 60,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1225",
+      "table": "Bảng D.1",
+      "branch": "tip-clay:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 50
+      },
+      "hnl": 300,
+      "kind": "EXACT",
+      "expected": 300,
+      "v1": 300,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1226",
+      "table": "Bảng D.1",
+      "branch": "tip-clay:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 100
+      },
+      "hnl": 600,
+      "kind": "EXACT",
+      "expected": 600,
+      "v1": 600,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1227",
+      "table": "Bảng D.1",
+      "branch": "tip-clay:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 200
+      },
+      "hnl": 1200,
+      "kind": "EXACT",
+      "expected": 1200,
+      "v1": 1200,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1228",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 0
+      },
+      "hnl": 0,
+      "kind": "EXACT",
+      "expected": 0,
+      "v1": 0,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1229",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 10
+      },
+      "hnl": 8,
+      "kind": "EXACT",
+      "expected": 8,
+      "v1": 8,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1230",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 50
+      },
+      "hnl": 40,
+      "kind": "EXACT",
+      "expected": 40,
+      "v1": 40,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1231",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 100
+      },
+      "hnl": 80,
+      "kind": "EXACT",
+      "expected": 80,
+      "v1": 80,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1232",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:driven",
+      "category": "FORMULA+CAP",
+      "input": {
+        "cu": 200
+      },
+      "hnl": 100,
+      "kind": "EXACT",
+      "expected": 100,
+      "v1": 100,
+      "status": "PASS",
+      "source": "Phụ lục D tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1233",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:bored:cu=6.25Nc",
+      "category": "DERIVED-CU",
+      "input": {
+        "N": 1
+      },
+      "hnl": 6.25,
+      "kind": "EXACT",
+      "expected": 6.25,
+      "v1": 6.25,
+      "status": "PASS",
+      "source": "Phụ lục D tr.110–111",
+      "error": ""
+    },
+    {
+      "id": "G1234",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:bored:cu=6.25Nc",
+      "category": "DERIVED-CU",
+      "input": {
+        "N": 4
+      },
+      "hnl": 25,
+      "kind": "EXACT",
+      "expected": 25,
+      "v1": 25,
+      "status": "PASS",
+      "source": "Phụ lục D tr.110–111",
+      "error": ""
+    },
+    {
+      "id": "G1235",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:bored:cu=6.25Nc",
+      "category": "DERIVED-CU",
+      "input": {
+        "N": 10
+      },
+      "hnl": 62.5,
+      "kind": "EXACT",
+      "expected": 62.5,
+      "v1": 62.5,
+      "status": "PASS",
+      "source": "Phụ lục D tr.110–111",
+      "error": ""
+    },
+    {
+      "id": "G1236",
+      "table": "Bảng D.1",
+      "branch": "shaft-clay:bored:cu=6.25Nc",
+      "category": "DERIVED-CU",
+      "input": {
+        "N": 20
+      },
+      "hnl": 100,
+      "kind": "EXACT",
+      "expected": 100,
+      "v1": 100,
+      "status": "PASS",
+      "source": "Phụ lục D tr.110–111",
+      "error": ""
+    },
+    {
+      "id": "G1237",
+      "table": "Bảng D.1",
+      "branch": "eta:screw-closed",
+      "category": "ETA",
+      "input": {},
+      "hnl": 1,
+      "kind": "EXACT",
+      "expected": 1,
+      "v1": 1,
+      "status": "PASS",
+      "source": "Bảng D.1 tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1238",
+      "table": "Bảng D.1",
+      "branch": "eta:screw-open",
+      "category": "ETA",
+      "input": {},
+      "hnl": 0.8,
+      "kind": "EXACT",
+      "expected": 0.8,
+      "v1": 0.8,
+      "status": "PASS",
+      "source": "Bảng D.1 tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1239",
+      "table": "Bảng D.1",
+      "branch": "eta:driven-closed",
+      "category": "ETA",
+      "input": {},
+      "hnl": 1,
+      "kind": "EXACT",
+      "expected": 1,
+      "v1": 1,
+      "status": "PASS",
+      "source": "Bảng D.1 tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1240",
+      "table": "Bảng D.1",
+      "branch": "eta:driven-open-r4",
+      "category": "ETA",
+      "input": {},
+      "hnl": 0.64,
+      "kind": "EXACT",
+      "expected": 0.64,
+      "v1": 0.64,
+      "status": "PASS",
+      "source": "Bảng D.1 tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1241",
+      "table": "Bảng D.1",
+      "branch": "eta:driven-open-r6",
+      "category": "ETA",
+      "input": {},
+      "hnl": 0.8,
+      "kind": "EXACT",
+      "expected": 0.8,
+      "v1": 0.8,
+      "status": "PASS",
+      "source": "Bảng D.1 tr.111",
+      "error": ""
+    },
+    {
+      "id": "G1242",
+      "table": "Bảng D.1",
+      "branch": "eta:driven-open-r<2",
+      "category": "OUTSIDE",
+      "input": {},
+      "hnl": "BLOCK",
+      "kind": "BLOCK",
+      "expected": "BLOCK",
+      "status": "PASS",
+      "source": "Không có nhánh VERIFIED",
+      "error": "Bảng D.1: L/d_trong <2 không có quy tắc η tự động trong nhánh VERIFIED."
     }
   ]
 }

@@ -1,0 +1,68 @@
+{
+  "schema": "HNL-P1-PASS6-E2E-CORE-LOCKED-RELEASE-MANIFEST",
+  "version": "1.25.7",
+  "release": "P1 Pass 6 E2E Structural Core Locked v17",
+  "status": "LOCKED",
+  "releaseType": "CORE_LOCKED_PATCH",
+  "tests": {
+    "tests": 148,
+    "pass": 148,
+    "fail": 0
+  },
+  "gateStatus": "CORE_LOCKED_PATCH",
+  "lockedScope": [
+    "DCE/CSV structural source to Pass5 Core canonical importer",
+    "Pass5 canonical handoff to Pass4 IMPORTED_NODAL_REACTION mode",
+    "LOCKED Rpile/gammaN capacity contract and consistency validation",
+    "Per-pile compression utilization/status and governing pile/combo orchestration",
+    "DCE vs CSV 19/19 E2E parity",
+    "Professional Excel/report model with live formulas and provenance"
+  ],
+  "deferredScope": [
+    "ANALYTICAL_RIGID_CAP mode",
+    "Live ETABS/SAP CSi certification",
+    "Windows Excel COM runtime certification",
+    "Full-source integration/merge release"
+  ],
+  "golden": {
+    "pileCount": 19,
+    "combinationIds": [
+      "EULS"
+    ],
+    "checkRows": 19,
+    "dceCsvParity": "19/19 PASS",
+    "governingPile": "168",
+    "governingCombination": "EULS",
+    "governingDemandKn": 365.2920507005818,
+    "governingCapacityKn": 733.4161490683232,
+    "governingUtilization": 0.4980692764464232,
+    "overall": "PASS",
+    "priorRegression": "388/388 PASS",
+    "priorFullTable": "1242/1242 PASS",
+    "priorPass3Xlsm": "39/39 + 273/273 PASS",
+    "searchBrainPriorSha256": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2"
+  },
+  "capacity": {
+    "status": "LOCKED_MULTI_BOREHOLE_INTEGRATED",
+    "RpileKn": 843.4285714285716,
+    "gammaN": 1.15,
+    "NdMaxPerPileKn": 733.4161490683232,
+    "sourceModule": "PileCapacityEngine / MultiBoreholePileEngine",
+    "sourceArtifact": "pile-quantity-golden-v1.25.7.json / LOCKED-RPILE-MIN",
+    "governingBasis": "Rpile=min(Rsoil,Rmaterial), then Nd,max=Rpile/gammaN"
+  },
+  "excel": {
+    "file": "HNL_P1_Pass6_E2E_Structural_Golden_v17.xlsx",
+    "formulaErrorScan": "PASS_0_MATCHES",
+    "sha256": "1c6448eb9093012fce581b882567719933565f072a528e2579c55b7a886e2207"
+  },
+  "keyFileSha256": {
+    "src/pass6-structural-workflow.js": "65fa36ff25a24387c95717679ffc018a33c504d5722e1aacece811bf7c33864a",
+    "src/etabs-sap-importer.js": "ce5ad7c1d2e14721f14467bfe19e7e29531629fc4f5a3682ed38dc01dff1bd3d",
+    "src/pile-reaction-engine.js": "69a5efe4b5e25d6a88b34817dc9e6ea77ad03932996eed05d2b006e75fec5ce8",
+    "artifacts/p1-pass6-e2e-golden-v17.json": "2661bd09619a639f3b6553b1eda0aca1d2fc27ed799f5dddbaa0f10d83ed2936",
+    "artifacts/P1_PASS6_E2E_LOCK_GATE_V17.json": "0b6671ba8b1d228c8351cd17083451f6a531c7fa44683b342b7935eeb4f17516"
+  },
+  "invariant": "Pass 6 orchestrates locked components only; it does not derive rigid-cap reactions, derive Rpile, select pile count, or silently guess sign/units.",
+  "fullSourceIntegration": "DEFERRED_SEPARATE_GATE"
+}

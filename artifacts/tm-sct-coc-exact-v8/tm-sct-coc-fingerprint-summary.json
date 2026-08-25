@@ -1,0 +1,25 @@
+{
+  "formulaCellCount": 6082,
+  "uniqueFingerprints": 22,
+  "sharedFormulaGroups": 104,
+  "sharedFormulaFollowers": 5918,
+  "blockCounts": {
+    "UNCLASSIFIED": 25,
+    "JOIN": 114,
+    "STATUS": 38,
+    "UTILIZATION": 5905
+  },
+  "functionCounts": {
+    "IF": 5907,
+    "TODAY": 1,
+    "MAX": 1,
+    "MIN": 1,
+    "VLOOKUP": 114,
+    "NHOMCOC": 19,
+    "IFERROR": 3943,
+    "AND": 2943
+  },
+  "sheet": "TM SCT Coc",
+  "workbook": "10.1 DCE_SctCoc_10304 2025.xlsm",
+  "workbookSha256": "ec38b68f753b08e50d9d1f9df988be5084cab1aedf391ba1aaecf112e9d88bd1"
+}

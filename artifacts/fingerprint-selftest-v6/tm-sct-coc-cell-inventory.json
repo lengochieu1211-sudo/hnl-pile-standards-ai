@@ -1,0 +1,3820 @@
+[
+  {
+    "cell": "Q4",
+    "formula": "MAX(F9:F28)",
+    "normalizedFormula": "MAX(R[+5]C[-11]:R[+24]C[-11])",
+    "fingerprint": "e63164201eb73dd0519a",
+    "cachedValue": "700",
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "Q5",
+    "formula": "MIN(F9:F28)",
+    "normalizedFormula": "MIN(R[+4]C[-11]:R[+23]C[-11])",
+    "fingerprint": "2c7bc14263014160d2a9",
+    "cachedValue": "400",
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "Q6",
+    "formula": "IFERROR(MAX(K9:K28),\"\")",
+    "normalizedFormula": "IFERROR(MAX(R[+3]C[-6]:R[+22]C[-6]),\"\")",
+    "fingerprint": "ccae039652fb9e880f57",
+    "cachedValue": "0.875",
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "Q7",
+    "formula": "IF(MIN(F9:F28)<0,\"YES\",\"NO\")",
+    "normalizedFormula": "IF(MIN(R[+2]C[-11]:R[+21]C[-11])<0,\"YES\",\"NO\")",
+    "fingerprint": "9b1aef56d0df6b8552bb",
+    "cachedValue": "NO",
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "Q8",
+    "formula": "IF(COUNTIF(L9:L28,\"BLOCK\")>0,\"YES\",\"NO\")",
+    "normalizedFormula": "IF(COUNTIF(R[+1]C[-5]:R[+20]C[-5],\"BLOCK\")>0,\"YES\",\"NO\")",
+    "fingerprint": "6c9d80ac6b06ca4fd62e",
+    "cachedValue": "NO",
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"BLOCK\"",
+      "COUNTIF("
+    ]
+  },
+  {
+    "cell": "A9",
+    "formula": "IF(SPRING_ASSIGNMENTS!B2=\"\",\"\",SPRING_ASSIGNMENTS!B2)",
+    "normalizedFormula": "IF('SPRING_ASSIGNMENTS'!R[-7]C[+1]=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[+1])",
+    "fingerprint": "3458cdb72f8aa89671ec",
+    "cachedValue": "P1",
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "B9",
+    "formula": "IF($A9=\"\",\"\",SPRING_ASSIGNMENTS!A2)",
+    "normalizedFormula": "IF(RC1=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[-1])",
+    "fingerprint": "ab00340190f9c2966476",
+    "cachedValue": "N1",
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "C9",
+    "formula": "IF($B9=\"\",\"\",INDEX(POINT_COORDINATES!$B$2:$B$100,MATCH($B9,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C2:R100C2,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "e811b46f854c157abcc9",
+    "cachedValue": "-1",
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "D9",
+    "formula": "IF($B9=\"\",\"\",INDEX(POINT_COORDINATES!$C$2:$C$100,MATCH($B9,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C3:R100C3,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "8fb2d508d5a330f9562f",
+    "cachedValue": "-1",
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "E9",
+    "formula": "IF($B9=\"\",\"\",SUMIFS(IMPORTED_NODAL!$E$2:$E$200,IMPORTED_NODAL!$A$2:$A$200,$B9,IMPORTED_NODAL!$B$2:$B$200,$B$3))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",SUMIFS('IMPORTED_NODAL'!R2C5:R200C5,'IMPORTED_NODAL'!R2C1:R200C1,RC2,'IMPORTED_NODAL'!R2C2:R200C2,R3C2))",
+    "fingerprint": "619756a00b92a04a3ed4",
+    "cachedValue": "-400",
+    "dependencySheets": [
+      "IMPORTED_NODAL"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "FS",
+      "SUMIFS"
+    ]
+  },
+  {
+    "cell": "F9",
+    "formula": "IF($A9=\"\",\"\",IF($B$4=\"compression-negative\",-E9,E9))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(R4C2=\"COMPRESSION-NEGATIVE\",-RC[-1],RC[-1]))",
+    "fingerprint": "936cac9a550fed60f943",
+    "cachedValue": "400",
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "G9",
+    "formula": "IF($A9=\"\",\"\",IF(F9>=0,\"COMPRESSION\",\"TENSION\"))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-1]>=0,\"COMPRESSION\",\"TENSION\"))",
+    "fingerprint": "78f81eaf9b5db2aed525",
+    "cachedValue": "COMPRESSION",
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "H9",
+    "formula": "IF($A9=\"\",\"\",INDEX(PILE_POINTS!$D$2:$D$100,MATCH($A9,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C4:R100C4,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "6990db21c36e8e4d3f5a",
+    "cachedValue": "800",
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "I9",
+    "formula": "IF($A9=\"\",\"\",INDEX(PILE_POINTS!$E$2:$E$100,MATCH($A9,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C5:R100C5,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "d3047106ad6537f6197c",
+    "cachedValue": "0",
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "J9",
+    "formula": "IF($A9=\"\",\"\",IF(G9=\"COMPRESSION\",H9,I9))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-3]=\"COMPRESSION\",RC[-2],RC[-1]))",
+    "fingerprint": "d62ca1d498d29761e5d7",
+    "cachedValue": "800",
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "K9",
+    "formula": "IF($A9=\"\",\"\",IF(G9=\"COMPRESSION\",F9/H9,IF(I9>0,ABS(F9)/I9,NA())))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-4]=\"COMPRESSION\",RC[-5]/RC[-3],IF(RC[-2]>0,ABS(RC[-5])/RC[-2],NA())))",
+    "fingerprint": "dc65032a1ccf15c13650",
+    "cachedValue": "0.5",
+    "dependencySheets": [],
+    "block": "ACTION",
+    "classificationReasons": [
+      "ABS"
+    ]
+  },
+  {
+    "cell": "L9",
+    "formula": "IF($A9=\"\",\"\",IF(G9=\"COMPRESSION\",IF(K9<=1,\"PASS\",\"FAIL\"),IF(I9<=0,\"BLOCK\",IF(K9<=1,\"PASS\",\"FAIL\"))))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-5]=\"COMPRESSION\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"),IF(RC[-3]<=0,\"BLOCK\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"))))",
+    "fingerprint": "140ce0b4c72278660359",
+    "cachedValue": "PASS",
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"BLOCK\"",
+      "\"FAIL\"",
+      "\"PASS\""
+    ]
+  },
+  {
+    "cell": "M9",
+    "formula": "IF($A9=\"\",\"\",INDEX(PILE_POINTS!$F$2:$F$100,MATCH($A9,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C6:R100C6,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "359df7197ac13ee55762",
+    "cachedValue": "HK1",
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "N9",
+    "formula": "IF($A9=\"\",\"\",INDEX(PILE_POINTS!$G$2:$G$100,MATCH($A9,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C7:R100C7,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "016a6c2b2e13027efaca",
+    "cachedValue": "SPT",
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "Q9",
+    "formula": "IF(COUNTIF(L9:L28,\"FAIL\")>0,\"YES\",\"NO\")",
+    "normalizedFormula": "IF(COUNTIF(RC[-5]:R[+19]C[-5],\"FAIL\")>0,\"YES\",\"NO\")",
+    "fingerprint": "fd3ef270f0dfc66a3e05",
+    "cachedValue": "NO",
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"FAIL\"",
+      "COUNTIF("
+    ]
+  },
+  {
+    "cell": "A10",
+    "formula": "IF(SPRING_ASSIGNMENTS!B3=\"\",\"\",SPRING_ASSIGNMENTS!B3)",
+    "normalizedFormula": "IF('SPRING_ASSIGNMENTS'!R[-7]C[+1]=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[+1])",
+    "fingerprint": "3458cdb72f8aa89671ec",
+    "cachedValue": "P2",
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "B10",
+    "formula": "IF($A10=\"\",\"\",SPRING_ASSIGNMENTS!A3)",
+    "normalizedFormula": "IF(RC1=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[-1])",
+    "fingerprint": "ab00340190f9c2966476",
+    "cachedValue": "N2",
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "C10",
+    "formula": "IF($B10=\"\",\"\",INDEX(POINT_COORDINATES!$B$2:$B$100,MATCH($B10,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C2:R100C2,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "e811b46f854c157abcc9",
+    "cachedValue": "1",
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "D10",
+    "formula": "IF($B10=\"\",\"\",INDEX(POINT_COORDINATES!$C$2:$C$100,MATCH($B10,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C3:R100C3,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "8fb2d508d5a330f9562f",
+    "cachedValue": "-1",
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "E10",
+    "formula": "IF($B10=\"\",\"\",SUMIFS(IMPORTED_NODAL!$E$2:$E$200,IMPORTED_NODAL!$A$2:$A$200,$B10,IMPORTED_NODAL!$B$2:$B$200,$B$3))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",SUMIFS('IMPORTED_NODAL'!R2C5:R200C5,'IMPORTED_NODAL'!R2C1:R200C1,RC2,'IMPORTED_NODAL'!R2C2:R200C2,R3C2))",
+    "fingerprint": "619756a00b92a04a3ed4",
+    "cachedValue": "-500",
+    "dependencySheets": [
+      "IMPORTED_NODAL"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "FS",
+      "SUMIFS"
+    ]
+  },
+  {
+    "cell": "F10",
+    "formula": "IF($A10=\"\",\"\",IF($B$4=\"compression-negative\",-E10,E10))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(R4C2=\"COMPRESSION-NEGATIVE\",-RC[-1],RC[-1]))",
+    "fingerprint": "936cac9a550fed60f943",
+    "cachedValue": "500",
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "G10",
+    "formula": "IF($A10=\"\",\"\",IF(F10>=0,\"COMPRESSION\",\"TENSION\"))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-1]>=0,\"COMPRESSION\",\"TENSION\"))",
+    "fingerprint": "78f81eaf9b5db2aed525",
+    "cachedValue": "COMPRESSION",
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "H10",
+    "formula": "IF($A10=\"\",\"\",INDEX(PILE_POINTS!$D$2:$D$100,MATCH($A10,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C4:R100C4,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "6990db21c36e8e4d3f5a",
+    "cachedValue": "800",
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "I10",
+    "formula": "IF($A10=\"\",\"\",INDEX(PILE_POINTS!$E$2:$E$100,MATCH($A10,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C5:R100C5,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "d3047106ad6537f6197c",
+    "cachedValue": "0",
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "J10",
+    "formula": "IF($A10=\"\",\"\",IF(G10=\"COMPRESSION\",H10,I10))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-3]=\"COMPRESSION\",RC[-2],RC[-1]))",
+    "fingerprint": "d62ca1d498d29761e5d7",
+    "cachedValue": "800",
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "K10",
+    "formula": "IF($A10=\"\",\"\",IF(G10=\"COMPRESSION\",F10/H10,IF(I10>0,ABS(F10)/I10,NA())))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-4]=\"COMPRESSION\",RC[-5]/RC[-3],IF(RC[-2]>0,ABS(RC[-5])/RC[-2],NA())))",
+    "fingerprint": "dc65032a1ccf15c13650",
+    "cachedValue": "0.625",
+    "dependencySheets": [],
+    "block": "ACTION",
+    "classificationReasons": [
+      "ABS"
+    ]
+  },
+  {
+    "cell": "L10",
+    "formula": "IF($A10=\"\",\"\",IF(G10=\"COMPRESSION\",IF(K10<=1,\"PASS\",\"FAIL\"),IF(I10<=0,\"BLOCK\",IF(K10<=1,\"PASS\",\"FAIL\"))))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-5]=\"COMPRESSION\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"),IF(RC[-3]<=0,\"BLOCK\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"))))",
+    "fingerprint": "140ce0b4c72278660359",
+    "cachedValue": "PASS",
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"BLOCK\"",
+      "\"FAIL\"",
+      "\"PASS\""
+    ]
+  },
+  {
+    "cell": "M10",
+    "formula": "IF($A10=\"\",\"\",INDEX(PILE_POINTS!$F$2:$F$100,MATCH($A10,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C6:R100C6,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "359df7197ac13ee55762",
+    "cachedValue": "HK1",
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "N10",
+    "formula": "IF($A10=\"\",\"\",INDEX(PILE_POINTS!$G$2:$G$100,MATCH($A10,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C7:R100C7,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "016a6c2b2e13027efaca",
+    "cachedValue": "SPT",
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "Q10",
+    "formula": "IF(AND(Q8=\"NO\",Q9=\"NO\"),\"PASS\",\"FAIL/BLOCK\")",
+    "normalizedFormula": "IF(AND(R[-2]C=\"NO\",R[-1]C=\"NO\"),\"PASS\",\"FAIL/BLOCK\")",
+    "fingerprint": "9e6f2b2330ec473b0f66",
+    "cachedValue": "PASS",
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"PASS\""
+    ]
+  },
+  {
+    "cell": "A11",
+    "formula": "IF(SPRING_ASSIGNMENTS!B4=\"\",\"\",SPRING_ASSIGNMENTS!B4)",
+    "normalizedFormula": "IF('SPRING_ASSIGNMENTS'!R[-7]C[+1]=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[+1])",
+    "fingerprint": "3458cdb72f8aa89671ec",
+    "cachedValue": "P3",
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "B11",
+    "formula": "IF($A11=\"\",\"\",SPRING_ASSIGNMENTS!A4)",
+    "normalizedFormula": "IF(RC1=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[-1])",
+    "fingerprint": "ab00340190f9c2966476",
+    "cachedValue": "N3",
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "C11",
+    "formula": "IF($B11=\"\",\"\",INDEX(POINT_COORDINATES!$B$2:$B$100,MATCH($B11,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C2:R100C2,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "e811b46f854c157abcc9",
+    "cachedValue": "-1",
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "D11",
+    "formula": "IF($B11=\"\",\"\",INDEX(POINT_COORDINATES!$C$2:$C$100,MATCH($B11,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C3:R100C3,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "8fb2d508d5a330f9562f",
+    "cachedValue": "1",
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "E11",
+    "formula": "IF($B11=\"\",\"\",SUMIFS(IMPORTED_NODAL!$E$2:$E$200,IMPORTED_NODAL!$A$2:$A$200,$B11,IMPORTED_NODAL!$B$2:$B$200,$B$3))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",SUMIFS('IMPORTED_NODAL'!R2C5:R200C5,'IMPORTED_NODAL'!R2C1:R200C1,RC2,'IMPORTED_NODAL'!R2C2:R200C2,R3C2))",
+    "fingerprint": "619756a00b92a04a3ed4",
+    "cachedValue": "-600",
+    "dependencySheets": [
+      "IMPORTED_NODAL"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "FS",
+      "SUMIFS"
+    ]
+  },
+  {
+    "cell": "F11",
+    "formula": "IF($A11=\"\",\"\",IF($B$4=\"compression-negative\",-E11,E11))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(R4C2=\"COMPRESSION-NEGATIVE\",-RC[-1],RC[-1]))",
+    "fingerprint": "936cac9a550fed60f943",
+    "cachedValue": "600",
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "G11",
+    "formula": "IF($A11=\"\",\"\",IF(F11>=0,\"COMPRESSION\",\"TENSION\"))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-1]>=0,\"COMPRESSION\",\"TENSION\"))",
+    "fingerprint": "78f81eaf9b5db2aed525",
+    "cachedValue": "COMPRESSION",
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "H11",
+    "formula": "IF($A11=\"\",\"\",INDEX(PILE_POINTS!$D$2:$D$100,MATCH($A11,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C4:R100C4,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "6990db21c36e8e4d3f5a",
+    "cachedValue": "800",
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "I11",
+    "formula": "IF($A11=\"\",\"\",INDEX(PILE_POINTS!$E$2:$E$100,MATCH($A11,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C5:R100C5,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "d3047106ad6537f6197c",
+    "cachedValue": "0",
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "J11",
+    "formula": "IF($A11=\"\",\"\",IF(G11=\"COMPRESSION\",H11,I11))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-3]=\"COMPRESSION\",RC[-2],RC[-1]))",
+    "fingerprint": "d62ca1d498d29761e5d7",
+    "cachedValue": "800",
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "K11",
+    "formula": "IF($A11=\"\",\"\",IF(G11=\"COMPRESSION\",F11/H11,IF(I11>0,ABS(F11)/I11,NA())))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-4]=\"COMPRESSION\",RC[-5]/RC[-3],IF(RC[-2]>0,ABS(RC[-5])/RC[-2],NA())))",
+    "fingerprint": "dc65032a1ccf15c13650",
+    "cachedValue": "0.75",
+    "dependencySheets": [],
+    "block": "ACTION",
+    "classificationReasons": [
+      "ABS"
+    ]
+  },
+  {
+    "cell": "L11",
+    "formula": "IF($A11=\"\",\"\",IF(G11=\"COMPRESSION\",IF(K11<=1,\"PASS\",\"FAIL\"),IF(I11<=0,\"BLOCK\",IF(K11<=1,\"PASS\",\"FAIL\"))))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-5]=\"COMPRESSION\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"),IF(RC[-3]<=0,\"BLOCK\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"))))",
+    "fingerprint": "140ce0b4c72278660359",
+    "cachedValue": "PASS",
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"BLOCK\"",
+      "\"FAIL\"",
+      "\"PASS\""
+    ]
+  },
+  {
+    "cell": "M11",
+    "formula": "IF($A11=\"\",\"\",INDEX(PILE_POINTS!$F$2:$F$100,MATCH($A11,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C6:R100C6,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "359df7197ac13ee55762",
+    "cachedValue": "HK2",
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "N11",
+    "formula": "IF($A11=\"\",\"\",INDEX(PILE_POINTS!$G$2:$G$100,MATCH($A11,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C7:R100C7,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "016a6c2b2e13027efaca",
+    "cachedValue": "MECH",
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "A12",
+    "formula": "IF(SPRING_ASSIGNMENTS!B5=\"\",\"\",SPRING_ASSIGNMENTS!B5)",
+    "normalizedFormula": "IF('SPRING_ASSIGNMENTS'!R[-7]C[+1]=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[+1])",
+    "fingerprint": "3458cdb72f8aa89671ec",
+    "cachedValue": "P4",
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "B12",
+    "formula": "IF($A12=\"\",\"\",SPRING_ASSIGNMENTS!A5)",
+    "normalizedFormula": "IF(RC1=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[-1])",
+    "fingerprint": "ab00340190f9c2966476",
+    "cachedValue": "N4",
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "C12",
+    "formula": "IF($B12=\"\",\"\",INDEX(POINT_COORDINATES!$B$2:$B$100,MATCH($B12,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C2:R100C2,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "e811b46f854c157abcc9",
+    "cachedValue": "1",
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "D12",
+    "formula": "IF($B12=\"\",\"\",INDEX(POINT_COORDINATES!$C$2:$C$100,MATCH($B12,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C3:R100C3,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "8fb2d508d5a330f9562f",
+    "cachedValue": "1",
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "E12",
+    "formula": "IF($B12=\"\",\"\",SUMIFS(IMPORTED_NODAL!$E$2:$E$200,IMPORTED_NODAL!$A$2:$A$200,$B12,IMPORTED_NODAL!$B$2:$B$200,$B$3))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",SUMIFS('IMPORTED_NODAL'!R2C5:R200C5,'IMPORTED_NODAL'!R2C1:R200C1,RC2,'IMPORTED_NODAL'!R2C2:R200C2,R3C2))",
+    "fingerprint": "619756a00b92a04a3ed4",
+    "cachedValue": "-700",
+    "dependencySheets": [
+      "IMPORTED_NODAL"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "FS",
+      "SUMIFS"
+    ]
+  },
+  {
+    "cell": "F12",
+    "formula": "IF($A12=\"\",\"\",IF($B$4=\"compression-negative\",-E12,E12))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(R4C2=\"COMPRESSION-NEGATIVE\",-RC[-1],RC[-1]))",
+    "fingerprint": "936cac9a550fed60f943",
+    "cachedValue": "700",
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "G12",
+    "formula": "IF($A12=\"\",\"\",IF(F12>=0,\"COMPRESSION\",\"TENSION\"))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-1]>=0,\"COMPRESSION\",\"TENSION\"))",
+    "fingerprint": "78f81eaf9b5db2aed525",
+    "cachedValue": "COMPRESSION",
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "H12",
+    "formula": "IF($A12=\"\",\"\",INDEX(PILE_POINTS!$D$2:$D$100,MATCH($A12,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C4:R100C4,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "6990db21c36e8e4d3f5a",
+    "cachedValue": "800",
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "I12",
+    "formula": "IF($A12=\"\",\"\",INDEX(PILE_POINTS!$E$2:$E$100,MATCH($A12,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C5:R100C5,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "d3047106ad6537f6197c",
+    "cachedValue": "0",
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "J12",
+    "formula": "IF($A12=\"\",\"\",IF(G12=\"COMPRESSION\",H12,I12))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-3]=\"COMPRESSION\",RC[-2],RC[-1]))",
+    "fingerprint": "d62ca1d498d29761e5d7",
+    "cachedValue": "800",
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "K12",
+    "formula": "IF($A12=\"\",\"\",IF(G12=\"COMPRESSION\",F12/H12,IF(I12>0,ABS(F12)/I12,NA())))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-4]=\"COMPRESSION\",RC[-5]/RC[-3],IF(RC[-2]>0,ABS(RC[-5])/RC[-2],NA())))",
+    "fingerprint": "dc65032a1ccf15c13650",
+    "cachedValue": "0.875",
+    "dependencySheets": [],
+    "block": "ACTION",
+    "classificationReasons": [
+      "ABS"
+    ]
+  },
+  {
+    "cell": "L12",
+    "formula": "IF($A12=\"\",\"\",IF(G12=\"COMPRESSION\",IF(K12<=1,\"PASS\",\"FAIL\"),IF(I12<=0,\"BLOCK\",IF(K12<=1,\"PASS\",\"FAIL\"))))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-5]=\"COMPRESSION\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"),IF(RC[-3]<=0,\"BLOCK\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"))))",
+    "fingerprint": "140ce0b4c72278660359",
+    "cachedValue": "PASS",
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"BLOCK\"",
+      "\"FAIL\"",
+      "\"PASS\""
+    ]
+  },
+  {
+    "cell": "M12",
+    "formula": "IF($A12=\"\",\"\",INDEX(PILE_POINTS!$F$2:$F$100,MATCH($A12,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C6:R100C6,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "359df7197ac13ee55762",
+    "cachedValue": "HK2",
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "N12",
+    "formula": "IF($A12=\"\",\"\",INDEX(PILE_POINTS!$G$2:$G$100,MATCH($A12,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C7:R100C7,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "016a6c2b2e13027efaca",
+    "cachedValue": "MECH",
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "A13",
+    "formula": "IF(SPRING_ASSIGNMENTS!B6=\"\",\"\",SPRING_ASSIGNMENTS!B6)",
+    "normalizedFormula": "IF('SPRING_ASSIGNMENTS'!R[-7]C[+1]=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[+1])",
+    "fingerprint": "3458cdb72f8aa89671ec",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "B13",
+    "formula": "IF($A13=\"\",\"\",SPRING_ASSIGNMENTS!A6)",
+    "normalizedFormula": "IF(RC1=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[-1])",
+    "fingerprint": "ab00340190f9c2966476",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "C13",
+    "formula": "IF($B13=\"\",\"\",INDEX(POINT_COORDINATES!$B$2:$B$100,MATCH($B13,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C2:R100C2,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "e811b46f854c157abcc9",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "D13",
+    "formula": "IF($B13=\"\",\"\",INDEX(POINT_COORDINATES!$C$2:$C$100,MATCH($B13,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C3:R100C3,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "8fb2d508d5a330f9562f",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "E13",
+    "formula": "IF($B13=\"\",\"\",SUMIFS(IMPORTED_NODAL!$E$2:$E$200,IMPORTED_NODAL!$A$2:$A$200,$B13,IMPORTED_NODAL!$B$2:$B$200,$B$3))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",SUMIFS('IMPORTED_NODAL'!R2C5:R200C5,'IMPORTED_NODAL'!R2C1:R200C1,RC2,'IMPORTED_NODAL'!R2C2:R200C2,R3C2))",
+    "fingerprint": "619756a00b92a04a3ed4",
+    "cachedValue": null,
+    "dependencySheets": [
+      "IMPORTED_NODAL"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "FS",
+      "SUMIFS"
+    ]
+  },
+  {
+    "cell": "F13",
+    "formula": "IF($A13=\"\",\"\",IF($B$4=\"compression-negative\",-E13,E13))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(R4C2=\"COMPRESSION-NEGATIVE\",-RC[-1],RC[-1]))",
+    "fingerprint": "936cac9a550fed60f943",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "G13",
+    "formula": "IF($A13=\"\",\"\",IF(F13>=0,\"COMPRESSION\",\"TENSION\"))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-1]>=0,\"COMPRESSION\",\"TENSION\"))",
+    "fingerprint": "78f81eaf9b5db2aed525",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "H13",
+    "formula": "IF($A13=\"\",\"\",INDEX(PILE_POINTS!$D$2:$D$100,MATCH($A13,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C4:R100C4,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "6990db21c36e8e4d3f5a",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "I13",
+    "formula": "IF($A13=\"\",\"\",INDEX(PILE_POINTS!$E$2:$E$100,MATCH($A13,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C5:R100C5,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "d3047106ad6537f6197c",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "J13",
+    "formula": "IF($A13=\"\",\"\",IF(G13=\"COMPRESSION\",H13,I13))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-3]=\"COMPRESSION\",RC[-2],RC[-1]))",
+    "fingerprint": "d62ca1d498d29761e5d7",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "K13",
+    "formula": "IF($A13=\"\",\"\",IF(G13=\"COMPRESSION\",F13/H13,IF(I13>0,ABS(F13)/I13,NA())))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-4]=\"COMPRESSION\",RC[-5]/RC[-3],IF(RC[-2]>0,ABS(RC[-5])/RC[-2],NA())))",
+    "fingerprint": "dc65032a1ccf15c13650",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "ACTION",
+    "classificationReasons": [
+      "ABS"
+    ]
+  },
+  {
+    "cell": "L13",
+    "formula": "IF($A13=\"\",\"\",IF(G13=\"COMPRESSION\",IF(K13<=1,\"PASS\",\"FAIL\"),IF(I13<=0,\"BLOCK\",IF(K13<=1,\"PASS\",\"FAIL\"))))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-5]=\"COMPRESSION\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"),IF(RC[-3]<=0,\"BLOCK\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"))))",
+    "fingerprint": "140ce0b4c72278660359",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"BLOCK\"",
+      "\"FAIL\"",
+      "\"PASS\""
+    ]
+  },
+  {
+    "cell": "M13",
+    "formula": "IF($A13=\"\",\"\",INDEX(PILE_POINTS!$F$2:$F$100,MATCH($A13,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C6:R100C6,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "359df7197ac13ee55762",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "N13",
+    "formula": "IF($A13=\"\",\"\",INDEX(PILE_POINTS!$G$2:$G$100,MATCH($A13,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C7:R100C7,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "016a6c2b2e13027efaca",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "A14",
+    "formula": "IF(SPRING_ASSIGNMENTS!B7=\"\",\"\",SPRING_ASSIGNMENTS!B7)",
+    "normalizedFormula": "IF('SPRING_ASSIGNMENTS'!R[-7]C[+1]=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[+1])",
+    "fingerprint": "3458cdb72f8aa89671ec",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "B14",
+    "formula": "IF($A14=\"\",\"\",SPRING_ASSIGNMENTS!A7)",
+    "normalizedFormula": "IF(RC1=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[-1])",
+    "fingerprint": "ab00340190f9c2966476",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "C14",
+    "formula": "IF($B14=\"\",\"\",INDEX(POINT_COORDINATES!$B$2:$B$100,MATCH($B14,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C2:R100C2,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "e811b46f854c157abcc9",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "D14",
+    "formula": "IF($B14=\"\",\"\",INDEX(POINT_COORDINATES!$C$2:$C$100,MATCH($B14,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C3:R100C3,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "8fb2d508d5a330f9562f",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "E14",
+    "formula": "IF($B14=\"\",\"\",SUMIFS(IMPORTED_NODAL!$E$2:$E$200,IMPORTED_NODAL!$A$2:$A$200,$B14,IMPORTED_NODAL!$B$2:$B$200,$B$3))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",SUMIFS('IMPORTED_NODAL'!R2C5:R200C5,'IMPORTED_NODAL'!R2C1:R200C1,RC2,'IMPORTED_NODAL'!R2C2:R200C2,R3C2))",
+    "fingerprint": "619756a00b92a04a3ed4",
+    "cachedValue": null,
+    "dependencySheets": [
+      "IMPORTED_NODAL"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "FS",
+      "SUMIFS"
+    ]
+  },
+  {
+    "cell": "F14",
+    "formula": "IF($A14=\"\",\"\",IF($B$4=\"compression-negative\",-E14,E14))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(R4C2=\"COMPRESSION-NEGATIVE\",-RC[-1],RC[-1]))",
+    "fingerprint": "936cac9a550fed60f943",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "G14",
+    "formula": "IF($A14=\"\",\"\",IF(F14>=0,\"COMPRESSION\",\"TENSION\"))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-1]>=0,\"COMPRESSION\",\"TENSION\"))",
+    "fingerprint": "78f81eaf9b5db2aed525",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "H14",
+    "formula": "IF($A14=\"\",\"\",INDEX(PILE_POINTS!$D$2:$D$100,MATCH($A14,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C4:R100C4,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "6990db21c36e8e4d3f5a",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "I14",
+    "formula": "IF($A14=\"\",\"\",INDEX(PILE_POINTS!$E$2:$E$100,MATCH($A14,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C5:R100C5,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "d3047106ad6537f6197c",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "J14",
+    "formula": "IF($A14=\"\",\"\",IF(G14=\"COMPRESSION\",H14,I14))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-3]=\"COMPRESSION\",RC[-2],RC[-1]))",
+    "fingerprint": "d62ca1d498d29761e5d7",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "K14",
+    "formula": "IF($A14=\"\",\"\",IF(G14=\"COMPRESSION\",F14/H14,IF(I14>0,ABS(F14)/I14,NA())))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-4]=\"COMPRESSION\",RC[-5]/RC[-3],IF(RC[-2]>0,ABS(RC[-5])/RC[-2],NA())))",
+    "fingerprint": "dc65032a1ccf15c13650",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "ACTION",
+    "classificationReasons": [
+      "ABS"
+    ]
+  },
+  {
+    "cell": "L14",
+    "formula": "IF($A14=\"\",\"\",IF(G14=\"COMPRESSION\",IF(K14<=1,\"PASS\",\"FAIL\"),IF(I14<=0,\"BLOCK\",IF(K14<=1,\"PASS\",\"FAIL\"))))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-5]=\"COMPRESSION\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"),IF(RC[-3]<=0,\"BLOCK\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"))))",
+    "fingerprint": "140ce0b4c72278660359",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"BLOCK\"",
+      "\"FAIL\"",
+      "\"PASS\""
+    ]
+  },
+  {
+    "cell": "M14",
+    "formula": "IF($A14=\"\",\"\",INDEX(PILE_POINTS!$F$2:$F$100,MATCH($A14,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C6:R100C6,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "359df7197ac13ee55762",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "N14",
+    "formula": "IF($A14=\"\",\"\",INDEX(PILE_POINTS!$G$2:$G$100,MATCH($A14,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C7:R100C7,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "016a6c2b2e13027efaca",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "A15",
+    "formula": "IF(SPRING_ASSIGNMENTS!B8=\"\",\"\",SPRING_ASSIGNMENTS!B8)",
+    "normalizedFormula": "IF('SPRING_ASSIGNMENTS'!R[-7]C[+1]=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[+1])",
+    "fingerprint": "3458cdb72f8aa89671ec",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "B15",
+    "formula": "IF($A15=\"\",\"\",SPRING_ASSIGNMENTS!A8)",
+    "normalizedFormula": "IF(RC1=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[-1])",
+    "fingerprint": "ab00340190f9c2966476",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "C15",
+    "formula": "IF($B15=\"\",\"\",INDEX(POINT_COORDINATES!$B$2:$B$100,MATCH($B15,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C2:R100C2,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "e811b46f854c157abcc9",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "D15",
+    "formula": "IF($B15=\"\",\"\",INDEX(POINT_COORDINATES!$C$2:$C$100,MATCH($B15,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C3:R100C3,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "8fb2d508d5a330f9562f",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "E15",
+    "formula": "IF($B15=\"\",\"\",SUMIFS(IMPORTED_NODAL!$E$2:$E$200,IMPORTED_NODAL!$A$2:$A$200,$B15,IMPORTED_NODAL!$B$2:$B$200,$B$3))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",SUMIFS('IMPORTED_NODAL'!R2C5:R200C5,'IMPORTED_NODAL'!R2C1:R200C1,RC2,'IMPORTED_NODAL'!R2C2:R200C2,R3C2))",
+    "fingerprint": "619756a00b92a04a3ed4",
+    "cachedValue": null,
+    "dependencySheets": [
+      "IMPORTED_NODAL"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "FS",
+      "SUMIFS"
+    ]
+  },
+  {
+    "cell": "F15",
+    "formula": "IF($A15=\"\",\"\",IF($B$4=\"compression-negative\",-E15,E15))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(R4C2=\"COMPRESSION-NEGATIVE\",-RC[-1],RC[-1]))",
+    "fingerprint": "936cac9a550fed60f943",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "G15",
+    "formula": "IF($A15=\"\",\"\",IF(F15>=0,\"COMPRESSION\",\"TENSION\"))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-1]>=0,\"COMPRESSION\",\"TENSION\"))",
+    "fingerprint": "78f81eaf9b5db2aed525",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "H15",
+    "formula": "IF($A15=\"\",\"\",INDEX(PILE_POINTS!$D$2:$D$100,MATCH($A15,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C4:R100C4,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "6990db21c36e8e4d3f5a",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "I15",
+    "formula": "IF($A15=\"\",\"\",INDEX(PILE_POINTS!$E$2:$E$100,MATCH($A15,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C5:R100C5,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "d3047106ad6537f6197c",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "J15",
+    "formula": "IF($A15=\"\",\"\",IF(G15=\"COMPRESSION\",H15,I15))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-3]=\"COMPRESSION\",RC[-2],RC[-1]))",
+    "fingerprint": "d62ca1d498d29761e5d7",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "K15",
+    "formula": "IF($A15=\"\",\"\",IF(G15=\"COMPRESSION\",F15/H15,IF(I15>0,ABS(F15)/I15,NA())))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-4]=\"COMPRESSION\",RC[-5]/RC[-3],IF(RC[-2]>0,ABS(RC[-5])/RC[-2],NA())))",
+    "fingerprint": "dc65032a1ccf15c13650",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "ACTION",
+    "classificationReasons": [
+      "ABS"
+    ]
+  },
+  {
+    "cell": "L15",
+    "formula": "IF($A15=\"\",\"\",IF(G15=\"COMPRESSION\",IF(K15<=1,\"PASS\",\"FAIL\"),IF(I15<=0,\"BLOCK\",IF(K15<=1,\"PASS\",\"FAIL\"))))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-5]=\"COMPRESSION\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"),IF(RC[-3]<=0,\"BLOCK\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"))))",
+    "fingerprint": "140ce0b4c72278660359",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"BLOCK\"",
+      "\"FAIL\"",
+      "\"PASS\""
+    ]
+  },
+  {
+    "cell": "M15",
+    "formula": "IF($A15=\"\",\"\",INDEX(PILE_POINTS!$F$2:$F$100,MATCH($A15,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C6:R100C6,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "359df7197ac13ee55762",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "N15",
+    "formula": "IF($A15=\"\",\"\",INDEX(PILE_POINTS!$G$2:$G$100,MATCH($A15,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C7:R100C7,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "016a6c2b2e13027efaca",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "A16",
+    "formula": "IF(SPRING_ASSIGNMENTS!B9=\"\",\"\",SPRING_ASSIGNMENTS!B9)",
+    "normalizedFormula": "IF('SPRING_ASSIGNMENTS'!R[-7]C[+1]=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[+1])",
+    "fingerprint": "3458cdb72f8aa89671ec",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "B16",
+    "formula": "IF($A16=\"\",\"\",SPRING_ASSIGNMENTS!A9)",
+    "normalizedFormula": "IF(RC1=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[-1])",
+    "fingerprint": "ab00340190f9c2966476",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "C16",
+    "formula": "IF($B16=\"\",\"\",INDEX(POINT_COORDINATES!$B$2:$B$100,MATCH($B16,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C2:R100C2,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "e811b46f854c157abcc9",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "D16",
+    "formula": "IF($B16=\"\",\"\",INDEX(POINT_COORDINATES!$C$2:$C$100,MATCH($B16,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C3:R100C3,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "8fb2d508d5a330f9562f",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "E16",
+    "formula": "IF($B16=\"\",\"\",SUMIFS(IMPORTED_NODAL!$E$2:$E$200,IMPORTED_NODAL!$A$2:$A$200,$B16,IMPORTED_NODAL!$B$2:$B$200,$B$3))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",SUMIFS('IMPORTED_NODAL'!R2C5:R200C5,'IMPORTED_NODAL'!R2C1:R200C1,RC2,'IMPORTED_NODAL'!R2C2:R200C2,R3C2))",
+    "fingerprint": "619756a00b92a04a3ed4",
+    "cachedValue": null,
+    "dependencySheets": [
+      "IMPORTED_NODAL"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "FS",
+      "SUMIFS"
+    ]
+  },
+  {
+    "cell": "F16",
+    "formula": "IF($A16=\"\",\"\",IF($B$4=\"compression-negative\",-E16,E16))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(R4C2=\"COMPRESSION-NEGATIVE\",-RC[-1],RC[-1]))",
+    "fingerprint": "936cac9a550fed60f943",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "G16",
+    "formula": "IF($A16=\"\",\"\",IF(F16>=0,\"COMPRESSION\",\"TENSION\"))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-1]>=0,\"COMPRESSION\",\"TENSION\"))",
+    "fingerprint": "78f81eaf9b5db2aed525",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "H16",
+    "formula": "IF($A16=\"\",\"\",INDEX(PILE_POINTS!$D$2:$D$100,MATCH($A16,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C4:R100C4,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "6990db21c36e8e4d3f5a",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "I16",
+    "formula": "IF($A16=\"\",\"\",INDEX(PILE_POINTS!$E$2:$E$100,MATCH($A16,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C5:R100C5,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "d3047106ad6537f6197c",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "J16",
+    "formula": "IF($A16=\"\",\"\",IF(G16=\"COMPRESSION\",H16,I16))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-3]=\"COMPRESSION\",RC[-2],RC[-1]))",
+    "fingerprint": "d62ca1d498d29761e5d7",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "K16",
+    "formula": "IF($A16=\"\",\"\",IF(G16=\"COMPRESSION\",F16/H16,IF(I16>0,ABS(F16)/I16,NA())))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-4]=\"COMPRESSION\",RC[-5]/RC[-3],IF(RC[-2]>0,ABS(RC[-5])/RC[-2],NA())))",
+    "fingerprint": "dc65032a1ccf15c13650",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "ACTION",
+    "classificationReasons": [
+      "ABS"
+    ]
+  },
+  {
+    "cell": "L16",
+    "formula": "IF($A16=\"\",\"\",IF(G16=\"COMPRESSION\",IF(K16<=1,\"PASS\",\"FAIL\"),IF(I16<=0,\"BLOCK\",IF(K16<=1,\"PASS\",\"FAIL\"))))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-5]=\"COMPRESSION\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"),IF(RC[-3]<=0,\"BLOCK\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"))))",
+    "fingerprint": "140ce0b4c72278660359",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"BLOCK\"",
+      "\"FAIL\"",
+      "\"PASS\""
+    ]
+  },
+  {
+    "cell": "M16",
+    "formula": "IF($A16=\"\",\"\",INDEX(PILE_POINTS!$F$2:$F$100,MATCH($A16,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C6:R100C6,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "359df7197ac13ee55762",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "N16",
+    "formula": "IF($A16=\"\",\"\",INDEX(PILE_POINTS!$G$2:$G$100,MATCH($A16,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C7:R100C7,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "016a6c2b2e13027efaca",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "A17",
+    "formula": "IF(SPRING_ASSIGNMENTS!B10=\"\",\"\",SPRING_ASSIGNMENTS!B10)",
+    "normalizedFormula": "IF('SPRING_ASSIGNMENTS'!R[-7]C[+1]=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[+1])",
+    "fingerprint": "3458cdb72f8aa89671ec",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "B17",
+    "formula": "IF($A17=\"\",\"\",SPRING_ASSIGNMENTS!A10)",
+    "normalizedFormula": "IF(RC1=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[-1])",
+    "fingerprint": "ab00340190f9c2966476",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "C17",
+    "formula": "IF($B17=\"\",\"\",INDEX(POINT_COORDINATES!$B$2:$B$100,MATCH($B17,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C2:R100C2,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "e811b46f854c157abcc9",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "D17",
+    "formula": "IF($B17=\"\",\"\",INDEX(POINT_COORDINATES!$C$2:$C$100,MATCH($B17,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C3:R100C3,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "8fb2d508d5a330f9562f",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "E17",
+    "formula": "IF($B17=\"\",\"\",SUMIFS(IMPORTED_NODAL!$E$2:$E$200,IMPORTED_NODAL!$A$2:$A$200,$B17,IMPORTED_NODAL!$B$2:$B$200,$B$3))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",SUMIFS('IMPORTED_NODAL'!R2C5:R200C5,'IMPORTED_NODAL'!R2C1:R200C1,RC2,'IMPORTED_NODAL'!R2C2:R200C2,R3C2))",
+    "fingerprint": "619756a00b92a04a3ed4",
+    "cachedValue": null,
+    "dependencySheets": [
+      "IMPORTED_NODAL"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "FS",
+      "SUMIFS"
+    ]
+  },
+  {
+    "cell": "F17",
+    "formula": "IF($A17=\"\",\"\",IF($B$4=\"compression-negative\",-E17,E17))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(R4C2=\"COMPRESSION-NEGATIVE\",-RC[-1],RC[-1]))",
+    "fingerprint": "936cac9a550fed60f943",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "G17",
+    "formula": "IF($A17=\"\",\"\",IF(F17>=0,\"COMPRESSION\",\"TENSION\"))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-1]>=0,\"COMPRESSION\",\"TENSION\"))",
+    "fingerprint": "78f81eaf9b5db2aed525",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "H17",
+    "formula": "IF($A17=\"\",\"\",INDEX(PILE_POINTS!$D$2:$D$100,MATCH($A17,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C4:R100C4,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "6990db21c36e8e4d3f5a",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "I17",
+    "formula": "IF($A17=\"\",\"\",INDEX(PILE_POINTS!$E$2:$E$100,MATCH($A17,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C5:R100C5,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "d3047106ad6537f6197c",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "J17",
+    "formula": "IF($A17=\"\",\"\",IF(G17=\"COMPRESSION\",H17,I17))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-3]=\"COMPRESSION\",RC[-2],RC[-1]))",
+    "fingerprint": "d62ca1d498d29761e5d7",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "K17",
+    "formula": "IF($A17=\"\",\"\",IF(G17=\"COMPRESSION\",F17/H17,IF(I17>0,ABS(F17)/I17,NA())))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-4]=\"COMPRESSION\",RC[-5]/RC[-3],IF(RC[-2]>0,ABS(RC[-5])/RC[-2],NA())))",
+    "fingerprint": "dc65032a1ccf15c13650",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "ACTION",
+    "classificationReasons": [
+      "ABS"
+    ]
+  },
+  {
+    "cell": "L17",
+    "formula": "IF($A17=\"\",\"\",IF(G17=\"COMPRESSION\",IF(K17<=1,\"PASS\",\"FAIL\"),IF(I17<=0,\"BLOCK\",IF(K17<=1,\"PASS\",\"FAIL\"))))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-5]=\"COMPRESSION\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"),IF(RC[-3]<=0,\"BLOCK\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"))))",
+    "fingerprint": "140ce0b4c72278660359",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"BLOCK\"",
+      "\"FAIL\"",
+      "\"PASS\""
+    ]
+  },
+  {
+    "cell": "M17",
+    "formula": "IF($A17=\"\",\"\",INDEX(PILE_POINTS!$F$2:$F$100,MATCH($A17,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C6:R100C6,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "359df7197ac13ee55762",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "N17",
+    "formula": "IF($A17=\"\",\"\",INDEX(PILE_POINTS!$G$2:$G$100,MATCH($A17,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C7:R100C7,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "016a6c2b2e13027efaca",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "A18",
+    "formula": "IF(SPRING_ASSIGNMENTS!B11=\"\",\"\",SPRING_ASSIGNMENTS!B11)",
+    "normalizedFormula": "IF('SPRING_ASSIGNMENTS'!R[-7]C[+1]=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[+1])",
+    "fingerprint": "3458cdb72f8aa89671ec",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "B18",
+    "formula": "IF($A18=\"\",\"\",SPRING_ASSIGNMENTS!A11)",
+    "normalizedFormula": "IF(RC1=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[-1])",
+    "fingerprint": "ab00340190f9c2966476",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "C18",
+    "formula": "IF($B18=\"\",\"\",INDEX(POINT_COORDINATES!$B$2:$B$100,MATCH($B18,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C2:R100C2,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "e811b46f854c157abcc9",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "D18",
+    "formula": "IF($B18=\"\",\"\",INDEX(POINT_COORDINATES!$C$2:$C$100,MATCH($B18,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C3:R100C3,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "8fb2d508d5a330f9562f",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "E18",
+    "formula": "IF($B18=\"\",\"\",SUMIFS(IMPORTED_NODAL!$E$2:$E$200,IMPORTED_NODAL!$A$2:$A$200,$B18,IMPORTED_NODAL!$B$2:$B$200,$B$3))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",SUMIFS('IMPORTED_NODAL'!R2C5:R200C5,'IMPORTED_NODAL'!R2C1:R200C1,RC2,'IMPORTED_NODAL'!R2C2:R200C2,R3C2))",
+    "fingerprint": "619756a00b92a04a3ed4",
+    "cachedValue": null,
+    "dependencySheets": [
+      "IMPORTED_NODAL"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "FS",
+      "SUMIFS"
+    ]
+  },
+  {
+    "cell": "F18",
+    "formula": "IF($A18=\"\",\"\",IF($B$4=\"compression-negative\",-E18,E18))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(R4C2=\"COMPRESSION-NEGATIVE\",-RC[-1],RC[-1]))",
+    "fingerprint": "936cac9a550fed60f943",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "G18",
+    "formula": "IF($A18=\"\",\"\",IF(F18>=0,\"COMPRESSION\",\"TENSION\"))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-1]>=0,\"COMPRESSION\",\"TENSION\"))",
+    "fingerprint": "78f81eaf9b5db2aed525",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "H18",
+    "formula": "IF($A18=\"\",\"\",INDEX(PILE_POINTS!$D$2:$D$100,MATCH($A18,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C4:R100C4,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "6990db21c36e8e4d3f5a",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "I18",
+    "formula": "IF($A18=\"\",\"\",INDEX(PILE_POINTS!$E$2:$E$100,MATCH($A18,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C5:R100C5,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "d3047106ad6537f6197c",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "J18",
+    "formula": "IF($A18=\"\",\"\",IF(G18=\"COMPRESSION\",H18,I18))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-3]=\"COMPRESSION\",RC[-2],RC[-1]))",
+    "fingerprint": "d62ca1d498d29761e5d7",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "K18",
+    "formula": "IF($A18=\"\",\"\",IF(G18=\"COMPRESSION\",F18/H18,IF(I18>0,ABS(F18)/I18,NA())))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-4]=\"COMPRESSION\",RC[-5]/RC[-3],IF(RC[-2]>0,ABS(RC[-5])/RC[-2],NA())))",
+    "fingerprint": "dc65032a1ccf15c13650",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "ACTION",
+    "classificationReasons": [
+      "ABS"
+    ]
+  },
+  {
+    "cell": "L18",
+    "formula": "IF($A18=\"\",\"\",IF(G18=\"COMPRESSION\",IF(K18<=1,\"PASS\",\"FAIL\"),IF(I18<=0,\"BLOCK\",IF(K18<=1,\"PASS\",\"FAIL\"))))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-5]=\"COMPRESSION\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"),IF(RC[-3]<=0,\"BLOCK\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"))))",
+    "fingerprint": "140ce0b4c72278660359",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"BLOCK\"",
+      "\"FAIL\"",
+      "\"PASS\""
+    ]
+  },
+  {
+    "cell": "M18",
+    "formula": "IF($A18=\"\",\"\",INDEX(PILE_POINTS!$F$2:$F$100,MATCH($A18,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C6:R100C6,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "359df7197ac13ee55762",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "N18",
+    "formula": "IF($A18=\"\",\"\",INDEX(PILE_POINTS!$G$2:$G$100,MATCH($A18,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C7:R100C7,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "016a6c2b2e13027efaca",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "A19",
+    "formula": "IF(SPRING_ASSIGNMENTS!B12=\"\",\"\",SPRING_ASSIGNMENTS!B12)",
+    "normalizedFormula": "IF('SPRING_ASSIGNMENTS'!R[-7]C[+1]=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[+1])",
+    "fingerprint": "3458cdb72f8aa89671ec",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "B19",
+    "formula": "IF($A19=\"\",\"\",SPRING_ASSIGNMENTS!A12)",
+    "normalizedFormula": "IF(RC1=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[-1])",
+    "fingerprint": "ab00340190f9c2966476",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "C19",
+    "formula": "IF($B19=\"\",\"\",INDEX(POINT_COORDINATES!$B$2:$B$100,MATCH($B19,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C2:R100C2,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "e811b46f854c157abcc9",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "D19",
+    "formula": "IF($B19=\"\",\"\",INDEX(POINT_COORDINATES!$C$2:$C$100,MATCH($B19,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C3:R100C3,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "8fb2d508d5a330f9562f",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "E19",
+    "formula": "IF($B19=\"\",\"\",SUMIFS(IMPORTED_NODAL!$E$2:$E$200,IMPORTED_NODAL!$A$2:$A$200,$B19,IMPORTED_NODAL!$B$2:$B$200,$B$3))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",SUMIFS('IMPORTED_NODAL'!R2C5:R200C5,'IMPORTED_NODAL'!R2C1:R200C1,RC2,'IMPORTED_NODAL'!R2C2:R200C2,R3C2))",
+    "fingerprint": "619756a00b92a04a3ed4",
+    "cachedValue": null,
+    "dependencySheets": [
+      "IMPORTED_NODAL"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "FS",
+      "SUMIFS"
+    ]
+  },
+  {
+    "cell": "F19",
+    "formula": "IF($A19=\"\",\"\",IF($B$4=\"compression-negative\",-E19,E19))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(R4C2=\"COMPRESSION-NEGATIVE\",-RC[-1],RC[-1]))",
+    "fingerprint": "936cac9a550fed60f943",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "G19",
+    "formula": "IF($A19=\"\",\"\",IF(F19>=0,\"COMPRESSION\",\"TENSION\"))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-1]>=0,\"COMPRESSION\",\"TENSION\"))",
+    "fingerprint": "78f81eaf9b5db2aed525",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "H19",
+    "formula": "IF($A19=\"\",\"\",INDEX(PILE_POINTS!$D$2:$D$100,MATCH($A19,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C4:R100C4,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "6990db21c36e8e4d3f5a",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "I19",
+    "formula": "IF($A19=\"\",\"\",INDEX(PILE_POINTS!$E$2:$E$100,MATCH($A19,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C5:R100C5,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "d3047106ad6537f6197c",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "J19",
+    "formula": "IF($A19=\"\",\"\",IF(G19=\"COMPRESSION\",H19,I19))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-3]=\"COMPRESSION\",RC[-2],RC[-1]))",
+    "fingerprint": "d62ca1d498d29761e5d7",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "K19",
+    "formula": "IF($A19=\"\",\"\",IF(G19=\"COMPRESSION\",F19/H19,IF(I19>0,ABS(F19)/I19,NA())))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-4]=\"COMPRESSION\",RC[-5]/RC[-3],IF(RC[-2]>0,ABS(RC[-5])/RC[-2],NA())))",
+    "fingerprint": "dc65032a1ccf15c13650",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "ACTION",
+    "classificationReasons": [
+      "ABS"
+    ]
+  },
+  {
+    "cell": "L19",
+    "formula": "IF($A19=\"\",\"\",IF(G19=\"COMPRESSION\",IF(K19<=1,\"PASS\",\"FAIL\"),IF(I19<=0,\"BLOCK\",IF(K19<=1,\"PASS\",\"FAIL\"))))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-5]=\"COMPRESSION\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"),IF(RC[-3]<=0,\"BLOCK\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"))))",
+    "fingerprint": "140ce0b4c72278660359",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"BLOCK\"",
+      "\"FAIL\"",
+      "\"PASS\""
+    ]
+  },
+  {
+    "cell": "M19",
+    "formula": "IF($A19=\"\",\"\",INDEX(PILE_POINTS!$F$2:$F$100,MATCH($A19,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C6:R100C6,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "359df7197ac13ee55762",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "N19",
+    "formula": "IF($A19=\"\",\"\",INDEX(PILE_POINTS!$G$2:$G$100,MATCH($A19,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C7:R100C7,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "016a6c2b2e13027efaca",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "A20",
+    "formula": "IF(SPRING_ASSIGNMENTS!B13=\"\",\"\",SPRING_ASSIGNMENTS!B13)",
+    "normalizedFormula": "IF('SPRING_ASSIGNMENTS'!R[-7]C[+1]=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[+1])",
+    "fingerprint": "3458cdb72f8aa89671ec",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "B20",
+    "formula": "IF($A20=\"\",\"\",SPRING_ASSIGNMENTS!A13)",
+    "normalizedFormula": "IF(RC1=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[-1])",
+    "fingerprint": "ab00340190f9c2966476",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "C20",
+    "formula": "IF($B20=\"\",\"\",INDEX(POINT_COORDINATES!$B$2:$B$100,MATCH($B20,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C2:R100C2,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "e811b46f854c157abcc9",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "D20",
+    "formula": "IF($B20=\"\",\"\",INDEX(POINT_COORDINATES!$C$2:$C$100,MATCH($B20,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C3:R100C3,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "8fb2d508d5a330f9562f",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "E20",
+    "formula": "IF($B20=\"\",\"\",SUMIFS(IMPORTED_NODAL!$E$2:$E$200,IMPORTED_NODAL!$A$2:$A$200,$B20,IMPORTED_NODAL!$B$2:$B$200,$B$3))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",SUMIFS('IMPORTED_NODAL'!R2C5:R200C5,'IMPORTED_NODAL'!R2C1:R200C1,RC2,'IMPORTED_NODAL'!R2C2:R200C2,R3C2))",
+    "fingerprint": "619756a00b92a04a3ed4",
+    "cachedValue": null,
+    "dependencySheets": [
+      "IMPORTED_NODAL"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "FS",
+      "SUMIFS"
+    ]
+  },
+  {
+    "cell": "F20",
+    "formula": "IF($A20=\"\",\"\",IF($B$4=\"compression-negative\",-E20,E20))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(R4C2=\"COMPRESSION-NEGATIVE\",-RC[-1],RC[-1]))",
+    "fingerprint": "936cac9a550fed60f943",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "G20",
+    "formula": "IF($A20=\"\",\"\",IF(F20>=0,\"COMPRESSION\",\"TENSION\"))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-1]>=0,\"COMPRESSION\",\"TENSION\"))",
+    "fingerprint": "78f81eaf9b5db2aed525",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "H20",
+    "formula": "IF($A20=\"\",\"\",INDEX(PILE_POINTS!$D$2:$D$100,MATCH($A20,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C4:R100C4,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "6990db21c36e8e4d3f5a",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "I20",
+    "formula": "IF($A20=\"\",\"\",INDEX(PILE_POINTS!$E$2:$E$100,MATCH($A20,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C5:R100C5,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "d3047106ad6537f6197c",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "J20",
+    "formula": "IF($A20=\"\",\"\",IF(G20=\"COMPRESSION\",H20,I20))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-3]=\"COMPRESSION\",RC[-2],RC[-1]))",
+    "fingerprint": "d62ca1d498d29761e5d7",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "K20",
+    "formula": "IF($A20=\"\",\"\",IF(G20=\"COMPRESSION\",F20/H20,IF(I20>0,ABS(F20)/I20,NA())))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-4]=\"COMPRESSION\",RC[-5]/RC[-3],IF(RC[-2]>0,ABS(RC[-5])/RC[-2],NA())))",
+    "fingerprint": "dc65032a1ccf15c13650",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "ACTION",
+    "classificationReasons": [
+      "ABS"
+    ]
+  },
+  {
+    "cell": "L20",
+    "formula": "IF($A20=\"\",\"\",IF(G20=\"COMPRESSION\",IF(K20<=1,\"PASS\",\"FAIL\"),IF(I20<=0,\"BLOCK\",IF(K20<=1,\"PASS\",\"FAIL\"))))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-5]=\"COMPRESSION\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"),IF(RC[-3]<=0,\"BLOCK\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"))))",
+    "fingerprint": "140ce0b4c72278660359",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"BLOCK\"",
+      "\"FAIL\"",
+      "\"PASS\""
+    ]
+  },
+  {
+    "cell": "M20",
+    "formula": "IF($A20=\"\",\"\",INDEX(PILE_POINTS!$F$2:$F$100,MATCH($A20,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C6:R100C6,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "359df7197ac13ee55762",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "N20",
+    "formula": "IF($A20=\"\",\"\",INDEX(PILE_POINTS!$G$2:$G$100,MATCH($A20,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C7:R100C7,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "016a6c2b2e13027efaca",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "A21",
+    "formula": "IF(SPRING_ASSIGNMENTS!B14=\"\",\"\",SPRING_ASSIGNMENTS!B14)",
+    "normalizedFormula": "IF('SPRING_ASSIGNMENTS'!R[-7]C[+1]=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[+1])",
+    "fingerprint": "3458cdb72f8aa89671ec",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "B21",
+    "formula": "IF($A21=\"\",\"\",SPRING_ASSIGNMENTS!A14)",
+    "normalizedFormula": "IF(RC1=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[-1])",
+    "fingerprint": "ab00340190f9c2966476",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "C21",
+    "formula": "IF($B21=\"\",\"\",INDEX(POINT_COORDINATES!$B$2:$B$100,MATCH($B21,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C2:R100C2,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "e811b46f854c157abcc9",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "D21",
+    "formula": "IF($B21=\"\",\"\",INDEX(POINT_COORDINATES!$C$2:$C$100,MATCH($B21,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C3:R100C3,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "8fb2d508d5a330f9562f",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "E21",
+    "formula": "IF($B21=\"\",\"\",SUMIFS(IMPORTED_NODAL!$E$2:$E$200,IMPORTED_NODAL!$A$2:$A$200,$B21,IMPORTED_NODAL!$B$2:$B$200,$B$3))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",SUMIFS('IMPORTED_NODAL'!R2C5:R200C5,'IMPORTED_NODAL'!R2C1:R200C1,RC2,'IMPORTED_NODAL'!R2C2:R200C2,R3C2))",
+    "fingerprint": "619756a00b92a04a3ed4",
+    "cachedValue": null,
+    "dependencySheets": [
+      "IMPORTED_NODAL"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "FS",
+      "SUMIFS"
+    ]
+  },
+  {
+    "cell": "F21",
+    "formula": "IF($A21=\"\",\"\",IF($B$4=\"compression-negative\",-E21,E21))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(R4C2=\"COMPRESSION-NEGATIVE\",-RC[-1],RC[-1]))",
+    "fingerprint": "936cac9a550fed60f943",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "G21",
+    "formula": "IF($A21=\"\",\"\",IF(F21>=0,\"COMPRESSION\",\"TENSION\"))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-1]>=0,\"COMPRESSION\",\"TENSION\"))",
+    "fingerprint": "78f81eaf9b5db2aed525",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "H21",
+    "formula": "IF($A21=\"\",\"\",INDEX(PILE_POINTS!$D$2:$D$100,MATCH($A21,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C4:R100C4,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "6990db21c36e8e4d3f5a",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "I21",
+    "formula": "IF($A21=\"\",\"\",INDEX(PILE_POINTS!$E$2:$E$100,MATCH($A21,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C5:R100C5,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "d3047106ad6537f6197c",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "J21",
+    "formula": "IF($A21=\"\",\"\",IF(G21=\"COMPRESSION\",H21,I21))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-3]=\"COMPRESSION\",RC[-2],RC[-1]))",
+    "fingerprint": "d62ca1d498d29761e5d7",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "K21",
+    "formula": "IF($A21=\"\",\"\",IF(G21=\"COMPRESSION\",F21/H21,IF(I21>0,ABS(F21)/I21,NA())))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-4]=\"COMPRESSION\",RC[-5]/RC[-3],IF(RC[-2]>0,ABS(RC[-5])/RC[-2],NA())))",
+    "fingerprint": "dc65032a1ccf15c13650",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "ACTION",
+    "classificationReasons": [
+      "ABS"
+    ]
+  },
+  {
+    "cell": "L21",
+    "formula": "IF($A21=\"\",\"\",IF(G21=\"COMPRESSION\",IF(K21<=1,\"PASS\",\"FAIL\"),IF(I21<=0,\"BLOCK\",IF(K21<=1,\"PASS\",\"FAIL\"))))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-5]=\"COMPRESSION\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"),IF(RC[-3]<=0,\"BLOCK\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"))))",
+    "fingerprint": "140ce0b4c72278660359",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"BLOCK\"",
+      "\"FAIL\"",
+      "\"PASS\""
+    ]
+  },
+  {
+    "cell": "M21",
+    "formula": "IF($A21=\"\",\"\",INDEX(PILE_POINTS!$F$2:$F$100,MATCH($A21,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C6:R100C6,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "359df7197ac13ee55762",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "N21",
+    "formula": "IF($A21=\"\",\"\",INDEX(PILE_POINTS!$G$2:$G$100,MATCH($A21,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C7:R100C7,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "016a6c2b2e13027efaca",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "A22",
+    "formula": "IF(SPRING_ASSIGNMENTS!B15=\"\",\"\",SPRING_ASSIGNMENTS!B15)",
+    "normalizedFormula": "IF('SPRING_ASSIGNMENTS'!R[-7]C[+1]=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[+1])",
+    "fingerprint": "3458cdb72f8aa89671ec",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "B22",
+    "formula": "IF($A22=\"\",\"\",SPRING_ASSIGNMENTS!A15)",
+    "normalizedFormula": "IF(RC1=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[-1])",
+    "fingerprint": "ab00340190f9c2966476",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "C22",
+    "formula": "IF($B22=\"\",\"\",INDEX(POINT_COORDINATES!$B$2:$B$100,MATCH($B22,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C2:R100C2,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "e811b46f854c157abcc9",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "D22",
+    "formula": "IF($B22=\"\",\"\",INDEX(POINT_COORDINATES!$C$2:$C$100,MATCH($B22,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C3:R100C3,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "8fb2d508d5a330f9562f",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "E22",
+    "formula": "IF($B22=\"\",\"\",SUMIFS(IMPORTED_NODAL!$E$2:$E$200,IMPORTED_NODAL!$A$2:$A$200,$B22,IMPORTED_NODAL!$B$2:$B$200,$B$3))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",SUMIFS('IMPORTED_NODAL'!R2C5:R200C5,'IMPORTED_NODAL'!R2C1:R200C1,RC2,'IMPORTED_NODAL'!R2C2:R200C2,R3C2))",
+    "fingerprint": "619756a00b92a04a3ed4",
+    "cachedValue": null,
+    "dependencySheets": [
+      "IMPORTED_NODAL"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "FS",
+      "SUMIFS"
+    ]
+  },
+  {
+    "cell": "F22",
+    "formula": "IF($A22=\"\",\"\",IF($B$4=\"compression-negative\",-E22,E22))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(R4C2=\"COMPRESSION-NEGATIVE\",-RC[-1],RC[-1]))",
+    "fingerprint": "936cac9a550fed60f943",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "G22",
+    "formula": "IF($A22=\"\",\"\",IF(F22>=0,\"COMPRESSION\",\"TENSION\"))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-1]>=0,\"COMPRESSION\",\"TENSION\"))",
+    "fingerprint": "78f81eaf9b5db2aed525",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "H22",
+    "formula": "IF($A22=\"\",\"\",INDEX(PILE_POINTS!$D$2:$D$100,MATCH($A22,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C4:R100C4,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "6990db21c36e8e4d3f5a",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "I22",
+    "formula": "IF($A22=\"\",\"\",INDEX(PILE_POINTS!$E$2:$E$100,MATCH($A22,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C5:R100C5,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "d3047106ad6537f6197c",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "J22",
+    "formula": "IF($A22=\"\",\"\",IF(G22=\"COMPRESSION\",H22,I22))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-3]=\"COMPRESSION\",RC[-2],RC[-1]))",
+    "fingerprint": "d62ca1d498d29761e5d7",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "K22",
+    "formula": "IF($A22=\"\",\"\",IF(G22=\"COMPRESSION\",F22/H22,IF(I22>0,ABS(F22)/I22,NA())))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-4]=\"COMPRESSION\",RC[-5]/RC[-3],IF(RC[-2]>0,ABS(RC[-5])/RC[-2],NA())))",
+    "fingerprint": "dc65032a1ccf15c13650",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "ACTION",
+    "classificationReasons": [
+      "ABS"
+    ]
+  },
+  {
+    "cell": "L22",
+    "formula": "IF($A22=\"\",\"\",IF(G22=\"COMPRESSION\",IF(K22<=1,\"PASS\",\"FAIL\"),IF(I22<=0,\"BLOCK\",IF(K22<=1,\"PASS\",\"FAIL\"))))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-5]=\"COMPRESSION\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"),IF(RC[-3]<=0,\"BLOCK\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"))))",
+    "fingerprint": "140ce0b4c72278660359",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"BLOCK\"",
+      "\"FAIL\"",
+      "\"PASS\""
+    ]
+  },
+  {
+    "cell": "M22",
+    "formula": "IF($A22=\"\",\"\",INDEX(PILE_POINTS!$F$2:$F$100,MATCH($A22,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C6:R100C6,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "359df7197ac13ee55762",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "N22",
+    "formula": "IF($A22=\"\",\"\",INDEX(PILE_POINTS!$G$2:$G$100,MATCH($A22,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C7:R100C7,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "016a6c2b2e13027efaca",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "A23",
+    "formula": "IF(SPRING_ASSIGNMENTS!B16=\"\",\"\",SPRING_ASSIGNMENTS!B16)",
+    "normalizedFormula": "IF('SPRING_ASSIGNMENTS'!R[-7]C[+1]=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[+1])",
+    "fingerprint": "3458cdb72f8aa89671ec",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "B23",
+    "formula": "IF($A23=\"\",\"\",SPRING_ASSIGNMENTS!A16)",
+    "normalizedFormula": "IF(RC1=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[-1])",
+    "fingerprint": "ab00340190f9c2966476",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "C23",
+    "formula": "IF($B23=\"\",\"\",INDEX(POINT_COORDINATES!$B$2:$B$100,MATCH($B23,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C2:R100C2,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "e811b46f854c157abcc9",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "D23",
+    "formula": "IF($B23=\"\",\"\",INDEX(POINT_COORDINATES!$C$2:$C$100,MATCH($B23,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C3:R100C3,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "8fb2d508d5a330f9562f",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "E23",
+    "formula": "IF($B23=\"\",\"\",SUMIFS(IMPORTED_NODAL!$E$2:$E$200,IMPORTED_NODAL!$A$2:$A$200,$B23,IMPORTED_NODAL!$B$2:$B$200,$B$3))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",SUMIFS('IMPORTED_NODAL'!R2C5:R200C5,'IMPORTED_NODAL'!R2C1:R200C1,RC2,'IMPORTED_NODAL'!R2C2:R200C2,R3C2))",
+    "fingerprint": "619756a00b92a04a3ed4",
+    "cachedValue": null,
+    "dependencySheets": [
+      "IMPORTED_NODAL"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "FS",
+      "SUMIFS"
+    ]
+  },
+  {
+    "cell": "F23",
+    "formula": "IF($A23=\"\",\"\",IF($B$4=\"compression-negative\",-E23,E23))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(R4C2=\"COMPRESSION-NEGATIVE\",-RC[-1],RC[-1]))",
+    "fingerprint": "936cac9a550fed60f943",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "G23",
+    "formula": "IF($A23=\"\",\"\",IF(F23>=0,\"COMPRESSION\",\"TENSION\"))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-1]>=0,\"COMPRESSION\",\"TENSION\"))",
+    "fingerprint": "78f81eaf9b5db2aed525",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "H23",
+    "formula": "IF($A23=\"\",\"\",INDEX(PILE_POINTS!$D$2:$D$100,MATCH($A23,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C4:R100C4,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "6990db21c36e8e4d3f5a",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "I23",
+    "formula": "IF($A23=\"\",\"\",INDEX(PILE_POINTS!$E$2:$E$100,MATCH($A23,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C5:R100C5,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "d3047106ad6537f6197c",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "J23",
+    "formula": "IF($A23=\"\",\"\",IF(G23=\"COMPRESSION\",H23,I23))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-3]=\"COMPRESSION\",RC[-2],RC[-1]))",
+    "fingerprint": "d62ca1d498d29761e5d7",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "K23",
+    "formula": "IF($A23=\"\",\"\",IF(G23=\"COMPRESSION\",F23/H23,IF(I23>0,ABS(F23)/I23,NA())))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-4]=\"COMPRESSION\",RC[-5]/RC[-3],IF(RC[-2]>0,ABS(RC[-5])/RC[-2],NA())))",
+    "fingerprint": "dc65032a1ccf15c13650",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "ACTION",
+    "classificationReasons": [
+      "ABS"
+    ]
+  },
+  {
+    "cell": "L23",
+    "formula": "IF($A23=\"\",\"\",IF(G23=\"COMPRESSION\",IF(K23<=1,\"PASS\",\"FAIL\"),IF(I23<=0,\"BLOCK\",IF(K23<=1,\"PASS\",\"FAIL\"))))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-5]=\"COMPRESSION\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"),IF(RC[-3]<=0,\"BLOCK\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"))))",
+    "fingerprint": "140ce0b4c72278660359",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"BLOCK\"",
+      "\"FAIL\"",
+      "\"PASS\""
+    ]
+  },
+  {
+    "cell": "M23",
+    "formula": "IF($A23=\"\",\"\",INDEX(PILE_POINTS!$F$2:$F$100,MATCH($A23,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C6:R100C6,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "359df7197ac13ee55762",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "N23",
+    "formula": "IF($A23=\"\",\"\",INDEX(PILE_POINTS!$G$2:$G$100,MATCH($A23,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C7:R100C7,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "016a6c2b2e13027efaca",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "A24",
+    "formula": "IF(SPRING_ASSIGNMENTS!B17=\"\",\"\",SPRING_ASSIGNMENTS!B17)",
+    "normalizedFormula": "IF('SPRING_ASSIGNMENTS'!R[-7]C[+1]=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[+1])",
+    "fingerprint": "3458cdb72f8aa89671ec",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "B24",
+    "formula": "IF($A24=\"\",\"\",SPRING_ASSIGNMENTS!A17)",
+    "normalizedFormula": "IF(RC1=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[-1])",
+    "fingerprint": "ab00340190f9c2966476",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "C24",
+    "formula": "IF($B24=\"\",\"\",INDEX(POINT_COORDINATES!$B$2:$B$100,MATCH($B24,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C2:R100C2,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "e811b46f854c157abcc9",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "D24",
+    "formula": "IF($B24=\"\",\"\",INDEX(POINT_COORDINATES!$C$2:$C$100,MATCH($B24,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C3:R100C3,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "8fb2d508d5a330f9562f",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "E24",
+    "formula": "IF($B24=\"\",\"\",SUMIFS(IMPORTED_NODAL!$E$2:$E$200,IMPORTED_NODAL!$A$2:$A$200,$B24,IMPORTED_NODAL!$B$2:$B$200,$B$3))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",SUMIFS('IMPORTED_NODAL'!R2C5:R200C5,'IMPORTED_NODAL'!R2C1:R200C1,RC2,'IMPORTED_NODAL'!R2C2:R200C2,R3C2))",
+    "fingerprint": "619756a00b92a04a3ed4",
+    "cachedValue": null,
+    "dependencySheets": [
+      "IMPORTED_NODAL"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "FS",
+      "SUMIFS"
+    ]
+  },
+  {
+    "cell": "F24",
+    "formula": "IF($A24=\"\",\"\",IF($B$4=\"compression-negative\",-E24,E24))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(R4C2=\"COMPRESSION-NEGATIVE\",-RC[-1],RC[-1]))",
+    "fingerprint": "936cac9a550fed60f943",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "G24",
+    "formula": "IF($A24=\"\",\"\",IF(F24>=0,\"COMPRESSION\",\"TENSION\"))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-1]>=0,\"COMPRESSION\",\"TENSION\"))",
+    "fingerprint": "78f81eaf9b5db2aed525",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "H24",
+    "formula": "IF($A24=\"\",\"\",INDEX(PILE_POINTS!$D$2:$D$100,MATCH($A24,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C4:R100C4,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "6990db21c36e8e4d3f5a",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "I24",
+    "formula": "IF($A24=\"\",\"\",INDEX(PILE_POINTS!$E$2:$E$100,MATCH($A24,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C5:R100C5,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "d3047106ad6537f6197c",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "J24",
+    "formula": "IF($A24=\"\",\"\",IF(G24=\"COMPRESSION\",H24,I24))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-3]=\"COMPRESSION\",RC[-2],RC[-1]))",
+    "fingerprint": "d62ca1d498d29761e5d7",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "K24",
+    "formula": "IF($A24=\"\",\"\",IF(G24=\"COMPRESSION\",F24/H24,IF(I24>0,ABS(F24)/I24,NA())))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-4]=\"COMPRESSION\",RC[-5]/RC[-3],IF(RC[-2]>0,ABS(RC[-5])/RC[-2],NA())))",
+    "fingerprint": "dc65032a1ccf15c13650",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "ACTION",
+    "classificationReasons": [
+      "ABS"
+    ]
+  },
+  {
+    "cell": "L24",
+    "formula": "IF($A24=\"\",\"\",IF(G24=\"COMPRESSION\",IF(K24<=1,\"PASS\",\"FAIL\"),IF(I24<=0,\"BLOCK\",IF(K24<=1,\"PASS\",\"FAIL\"))))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-5]=\"COMPRESSION\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"),IF(RC[-3]<=0,\"BLOCK\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"))))",
+    "fingerprint": "140ce0b4c72278660359",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"BLOCK\"",
+      "\"FAIL\"",
+      "\"PASS\""
+    ]
+  },
+  {
+    "cell": "M24",
+    "formula": "IF($A24=\"\",\"\",INDEX(PILE_POINTS!$F$2:$F$100,MATCH($A24,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C6:R100C6,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "359df7197ac13ee55762",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "N24",
+    "formula": "IF($A24=\"\",\"\",INDEX(PILE_POINTS!$G$2:$G$100,MATCH($A24,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C7:R100C7,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "016a6c2b2e13027efaca",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "A25",
+    "formula": "IF(SPRING_ASSIGNMENTS!B18=\"\",\"\",SPRING_ASSIGNMENTS!B18)",
+    "normalizedFormula": "IF('SPRING_ASSIGNMENTS'!R[-7]C[+1]=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[+1])",
+    "fingerprint": "3458cdb72f8aa89671ec",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "B25",
+    "formula": "IF($A25=\"\",\"\",SPRING_ASSIGNMENTS!A18)",
+    "normalizedFormula": "IF(RC1=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[-1])",
+    "fingerprint": "ab00340190f9c2966476",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "C25",
+    "formula": "IF($B25=\"\",\"\",INDEX(POINT_COORDINATES!$B$2:$B$100,MATCH($B25,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C2:R100C2,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "e811b46f854c157abcc9",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "D25",
+    "formula": "IF($B25=\"\",\"\",INDEX(POINT_COORDINATES!$C$2:$C$100,MATCH($B25,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C3:R100C3,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "8fb2d508d5a330f9562f",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "E25",
+    "formula": "IF($B25=\"\",\"\",SUMIFS(IMPORTED_NODAL!$E$2:$E$200,IMPORTED_NODAL!$A$2:$A$200,$B25,IMPORTED_NODAL!$B$2:$B$200,$B$3))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",SUMIFS('IMPORTED_NODAL'!R2C5:R200C5,'IMPORTED_NODAL'!R2C1:R200C1,RC2,'IMPORTED_NODAL'!R2C2:R200C2,R3C2))",
+    "fingerprint": "619756a00b92a04a3ed4",
+    "cachedValue": null,
+    "dependencySheets": [
+      "IMPORTED_NODAL"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "FS",
+      "SUMIFS"
+    ]
+  },
+  {
+    "cell": "F25",
+    "formula": "IF($A25=\"\",\"\",IF($B$4=\"compression-negative\",-E25,E25))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(R4C2=\"COMPRESSION-NEGATIVE\",-RC[-1],RC[-1]))",
+    "fingerprint": "936cac9a550fed60f943",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "G25",
+    "formula": "IF($A25=\"\",\"\",IF(F25>=0,\"COMPRESSION\",\"TENSION\"))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-1]>=0,\"COMPRESSION\",\"TENSION\"))",
+    "fingerprint": "78f81eaf9b5db2aed525",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "H25",
+    "formula": "IF($A25=\"\",\"\",INDEX(PILE_POINTS!$D$2:$D$100,MATCH($A25,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C4:R100C4,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "6990db21c36e8e4d3f5a",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "I25",
+    "formula": "IF($A25=\"\",\"\",INDEX(PILE_POINTS!$E$2:$E$100,MATCH($A25,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C5:R100C5,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "d3047106ad6537f6197c",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "J25",
+    "formula": "IF($A25=\"\",\"\",IF(G25=\"COMPRESSION\",H25,I25))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-3]=\"COMPRESSION\",RC[-2],RC[-1]))",
+    "fingerprint": "d62ca1d498d29761e5d7",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "K25",
+    "formula": "IF($A25=\"\",\"\",IF(G25=\"COMPRESSION\",F25/H25,IF(I25>0,ABS(F25)/I25,NA())))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-4]=\"COMPRESSION\",RC[-5]/RC[-3],IF(RC[-2]>0,ABS(RC[-5])/RC[-2],NA())))",
+    "fingerprint": "dc65032a1ccf15c13650",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "ACTION",
+    "classificationReasons": [
+      "ABS"
+    ]
+  },
+  {
+    "cell": "L25",
+    "formula": "IF($A25=\"\",\"\",IF(G25=\"COMPRESSION\",IF(K25<=1,\"PASS\",\"FAIL\"),IF(I25<=0,\"BLOCK\",IF(K25<=1,\"PASS\",\"FAIL\"))))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-5]=\"COMPRESSION\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"),IF(RC[-3]<=0,\"BLOCK\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"))))",
+    "fingerprint": "140ce0b4c72278660359",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"BLOCK\"",
+      "\"FAIL\"",
+      "\"PASS\""
+    ]
+  },
+  {
+    "cell": "M25",
+    "formula": "IF($A25=\"\",\"\",INDEX(PILE_POINTS!$F$2:$F$100,MATCH($A25,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C6:R100C6,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "359df7197ac13ee55762",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "N25",
+    "formula": "IF($A25=\"\",\"\",INDEX(PILE_POINTS!$G$2:$G$100,MATCH($A25,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C7:R100C7,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "016a6c2b2e13027efaca",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "A26",
+    "formula": "IF(SPRING_ASSIGNMENTS!B19=\"\",\"\",SPRING_ASSIGNMENTS!B19)",
+    "normalizedFormula": "IF('SPRING_ASSIGNMENTS'!R[-7]C[+1]=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[+1])",
+    "fingerprint": "3458cdb72f8aa89671ec",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "B26",
+    "formula": "IF($A26=\"\",\"\",SPRING_ASSIGNMENTS!A19)",
+    "normalizedFormula": "IF(RC1=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[-1])",
+    "fingerprint": "ab00340190f9c2966476",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "C26",
+    "formula": "IF($B26=\"\",\"\",INDEX(POINT_COORDINATES!$B$2:$B$100,MATCH($B26,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C2:R100C2,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "e811b46f854c157abcc9",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "D26",
+    "formula": "IF($B26=\"\",\"\",INDEX(POINT_COORDINATES!$C$2:$C$100,MATCH($B26,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C3:R100C3,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "8fb2d508d5a330f9562f",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "E26",
+    "formula": "IF($B26=\"\",\"\",SUMIFS(IMPORTED_NODAL!$E$2:$E$200,IMPORTED_NODAL!$A$2:$A$200,$B26,IMPORTED_NODAL!$B$2:$B$200,$B$3))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",SUMIFS('IMPORTED_NODAL'!R2C5:R200C5,'IMPORTED_NODAL'!R2C1:R200C1,RC2,'IMPORTED_NODAL'!R2C2:R200C2,R3C2))",
+    "fingerprint": "619756a00b92a04a3ed4",
+    "cachedValue": null,
+    "dependencySheets": [
+      "IMPORTED_NODAL"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "FS",
+      "SUMIFS"
+    ]
+  },
+  {
+    "cell": "F26",
+    "formula": "IF($A26=\"\",\"\",IF($B$4=\"compression-negative\",-E26,E26))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(R4C2=\"COMPRESSION-NEGATIVE\",-RC[-1],RC[-1]))",
+    "fingerprint": "936cac9a550fed60f943",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "G26",
+    "formula": "IF($A26=\"\",\"\",IF(F26>=0,\"COMPRESSION\",\"TENSION\"))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-1]>=0,\"COMPRESSION\",\"TENSION\"))",
+    "fingerprint": "78f81eaf9b5db2aed525",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "H26",
+    "formula": "IF($A26=\"\",\"\",INDEX(PILE_POINTS!$D$2:$D$100,MATCH($A26,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C4:R100C4,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "6990db21c36e8e4d3f5a",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "I26",
+    "formula": "IF($A26=\"\",\"\",INDEX(PILE_POINTS!$E$2:$E$100,MATCH($A26,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C5:R100C5,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "d3047106ad6537f6197c",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "J26",
+    "formula": "IF($A26=\"\",\"\",IF(G26=\"COMPRESSION\",H26,I26))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-3]=\"COMPRESSION\",RC[-2],RC[-1]))",
+    "fingerprint": "d62ca1d498d29761e5d7",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "K26",
+    "formula": "IF($A26=\"\",\"\",IF(G26=\"COMPRESSION\",F26/H26,IF(I26>0,ABS(F26)/I26,NA())))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-4]=\"COMPRESSION\",RC[-5]/RC[-3],IF(RC[-2]>0,ABS(RC[-5])/RC[-2],NA())))",
+    "fingerprint": "dc65032a1ccf15c13650",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "ACTION",
+    "classificationReasons": [
+      "ABS"
+    ]
+  },
+  {
+    "cell": "L26",
+    "formula": "IF($A26=\"\",\"\",IF(G26=\"COMPRESSION\",IF(K26<=1,\"PASS\",\"FAIL\"),IF(I26<=0,\"BLOCK\",IF(K26<=1,\"PASS\",\"FAIL\"))))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-5]=\"COMPRESSION\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"),IF(RC[-3]<=0,\"BLOCK\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"))))",
+    "fingerprint": "140ce0b4c72278660359",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"BLOCK\"",
+      "\"FAIL\"",
+      "\"PASS\""
+    ]
+  },
+  {
+    "cell": "M26",
+    "formula": "IF($A26=\"\",\"\",INDEX(PILE_POINTS!$F$2:$F$100,MATCH($A26,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C6:R100C6,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "359df7197ac13ee55762",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "N26",
+    "formula": "IF($A26=\"\",\"\",INDEX(PILE_POINTS!$G$2:$G$100,MATCH($A26,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C7:R100C7,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "016a6c2b2e13027efaca",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "A27",
+    "formula": "IF(SPRING_ASSIGNMENTS!B20=\"\",\"\",SPRING_ASSIGNMENTS!B20)",
+    "normalizedFormula": "IF('SPRING_ASSIGNMENTS'!R[-7]C[+1]=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[+1])",
+    "fingerprint": "3458cdb72f8aa89671ec",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "B27",
+    "formula": "IF($A27=\"\",\"\",SPRING_ASSIGNMENTS!A20)",
+    "normalizedFormula": "IF(RC1=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[-1])",
+    "fingerprint": "ab00340190f9c2966476",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "C27",
+    "formula": "IF($B27=\"\",\"\",INDEX(POINT_COORDINATES!$B$2:$B$100,MATCH($B27,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C2:R100C2,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "e811b46f854c157abcc9",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "D27",
+    "formula": "IF($B27=\"\",\"\",INDEX(POINT_COORDINATES!$C$2:$C$100,MATCH($B27,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C3:R100C3,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "8fb2d508d5a330f9562f",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "E27",
+    "formula": "IF($B27=\"\",\"\",SUMIFS(IMPORTED_NODAL!$E$2:$E$200,IMPORTED_NODAL!$A$2:$A$200,$B27,IMPORTED_NODAL!$B$2:$B$200,$B$3))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",SUMIFS('IMPORTED_NODAL'!R2C5:R200C5,'IMPORTED_NODAL'!R2C1:R200C1,RC2,'IMPORTED_NODAL'!R2C2:R200C2,R3C2))",
+    "fingerprint": "619756a00b92a04a3ed4",
+    "cachedValue": null,
+    "dependencySheets": [
+      "IMPORTED_NODAL"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "FS",
+      "SUMIFS"
+    ]
+  },
+  {
+    "cell": "F27",
+    "formula": "IF($A27=\"\",\"\",IF($B$4=\"compression-negative\",-E27,E27))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(R4C2=\"COMPRESSION-NEGATIVE\",-RC[-1],RC[-1]))",
+    "fingerprint": "936cac9a550fed60f943",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "G27",
+    "formula": "IF($A27=\"\",\"\",IF(F27>=0,\"COMPRESSION\",\"TENSION\"))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-1]>=0,\"COMPRESSION\",\"TENSION\"))",
+    "fingerprint": "78f81eaf9b5db2aed525",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "H27",
+    "formula": "IF($A27=\"\",\"\",INDEX(PILE_POINTS!$D$2:$D$100,MATCH($A27,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C4:R100C4,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "6990db21c36e8e4d3f5a",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "I27",
+    "formula": "IF($A27=\"\",\"\",INDEX(PILE_POINTS!$E$2:$E$100,MATCH($A27,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C5:R100C5,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "d3047106ad6537f6197c",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "J27",
+    "formula": "IF($A27=\"\",\"\",IF(G27=\"COMPRESSION\",H27,I27))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-3]=\"COMPRESSION\",RC[-2],RC[-1]))",
+    "fingerprint": "d62ca1d498d29761e5d7",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "K27",
+    "formula": "IF($A27=\"\",\"\",IF(G27=\"COMPRESSION\",F27/H27,IF(I27>0,ABS(F27)/I27,NA())))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-4]=\"COMPRESSION\",RC[-5]/RC[-3],IF(RC[-2]>0,ABS(RC[-5])/RC[-2],NA())))",
+    "fingerprint": "dc65032a1ccf15c13650",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "ACTION",
+    "classificationReasons": [
+      "ABS"
+    ]
+  },
+  {
+    "cell": "L27",
+    "formula": "IF($A27=\"\",\"\",IF(G27=\"COMPRESSION\",IF(K27<=1,\"PASS\",\"FAIL\"),IF(I27<=0,\"BLOCK\",IF(K27<=1,\"PASS\",\"FAIL\"))))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-5]=\"COMPRESSION\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"),IF(RC[-3]<=0,\"BLOCK\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"))))",
+    "fingerprint": "140ce0b4c72278660359",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"BLOCK\"",
+      "\"FAIL\"",
+      "\"PASS\""
+    ]
+  },
+  {
+    "cell": "M27",
+    "formula": "IF($A27=\"\",\"\",INDEX(PILE_POINTS!$F$2:$F$100,MATCH($A27,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C6:R100C6,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "359df7197ac13ee55762",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "N27",
+    "formula": "IF($A27=\"\",\"\",INDEX(PILE_POINTS!$G$2:$G$100,MATCH($A27,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C7:R100C7,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "016a6c2b2e13027efaca",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "A28",
+    "formula": "IF(SPRING_ASSIGNMENTS!B21=\"\",\"\",SPRING_ASSIGNMENTS!B21)",
+    "normalizedFormula": "IF('SPRING_ASSIGNMENTS'!R[-7]C[+1]=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[+1])",
+    "fingerprint": "3458cdb72f8aa89671ec",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "B28",
+    "formula": "IF($A28=\"\",\"\",SPRING_ASSIGNMENTS!A21)",
+    "normalizedFormula": "IF(RC1=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[-1])",
+    "fingerprint": "ab00340190f9c2966476",
+    "cachedValue": null,
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "C28",
+    "formula": "IF($B28=\"\",\"\",INDEX(POINT_COORDINATES!$B$2:$B$100,MATCH($B28,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C2:R100C2,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "e811b46f854c157abcc9",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "D28",
+    "formula": "IF($B28=\"\",\"\",INDEX(POINT_COORDINATES!$C$2:$C$100,MATCH($B28,POINT_COORDINATES!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C3:R100C3,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "fingerprint": "8fb2d508d5a330f9562f",
+    "cachedValue": null,
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH",
+      "RD"
+    ]
+  },
+  {
+    "cell": "E28",
+    "formula": "IF($B28=\"\",\"\",SUMIFS(IMPORTED_NODAL!$E$2:$E$200,IMPORTED_NODAL!$A$2:$A$200,$B28,IMPORTED_NODAL!$B$2:$B$200,$B$3))",
+    "normalizedFormula": "IF(RC2=\"\",\"\",SUMIFS('IMPORTED_NODAL'!R2C5:R200C5,'IMPORTED_NODAL'!R2C1:R200C1,RC2,'IMPORTED_NODAL'!R2C2:R200C2,R3C2))",
+    "fingerprint": "619756a00b92a04a3ed4",
+    "cachedValue": null,
+    "dependencySheets": [
+      "IMPORTED_NODAL"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "FS",
+      "SUMIFS"
+    ]
+  },
+  {
+    "cell": "F28",
+    "formula": "IF($A28=\"\",\"\",IF($B$4=\"compression-negative\",-E28,E28))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(R4C2=\"COMPRESSION-NEGATIVE\",-RC[-1],RC[-1]))",
+    "fingerprint": "936cac9a550fed60f943",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "G28",
+    "formula": "IF($A28=\"\",\"\",IF(F28>=0,\"COMPRESSION\",\"TENSION\"))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-1]>=0,\"COMPRESSION\",\"TENSION\"))",
+    "fingerprint": "78f81eaf9b5db2aed525",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "H28",
+    "formula": "IF($A28=\"\",\"\",INDEX(PILE_POINTS!$D$2:$D$100,MATCH($A28,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C4:R100C4,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "6990db21c36e8e4d3f5a",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "I28",
+    "formula": "IF($A28=\"\",\"\",INDEX(PILE_POINTS!$E$2:$E$100,MATCH($A28,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C5:R100C5,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "d3047106ad6537f6197c",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "J28",
+    "formula": "IF($A28=\"\",\"\",IF(G28=\"COMPRESSION\",H28,I28))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-3]=\"COMPRESSION\",RC[-2],RC[-1]))",
+    "fingerprint": "d62ca1d498d29761e5d7",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "UNCLASSIFIED",
+    "classificationReasons": []
+  },
+  {
+    "cell": "K28",
+    "formula": "IF($A28=\"\",\"\",IF(G28=\"COMPRESSION\",F28/H28,IF(I28>0,ABS(F28)/I28,NA())))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-4]=\"COMPRESSION\",RC[-5]/RC[-3],IF(RC[-2]>0,ABS(RC[-5])/RC[-2],NA())))",
+    "fingerprint": "dc65032a1ccf15c13650",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "ACTION",
+    "classificationReasons": [
+      "ABS"
+    ]
+  },
+  {
+    "cell": "L28",
+    "formula": "IF($A28=\"\",\"\",IF(G28=\"COMPRESSION\",IF(K28<=1,\"PASS\",\"FAIL\"),IF(I28<=0,\"BLOCK\",IF(K28<=1,\"PASS\",\"FAIL\"))))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-5]=\"COMPRESSION\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"),IF(RC[-3]<=0,\"BLOCK\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"))))",
+    "fingerprint": "140ce0b4c72278660359",
+    "cachedValue": null,
+    "dependencySheets": [],
+    "block": "STATUS",
+    "classificationReasons": [
+      "\"BLOCK\"",
+      "\"FAIL\"",
+      "\"PASS\""
+    ]
+  },
+  {
+    "cell": "M28",
+    "formula": "IF($A28=\"\",\"\",INDEX(PILE_POINTS!$F$2:$F$100,MATCH($A28,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C6:R100C6,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "359df7197ac13ee55762",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  },
+  {
+    "cell": "N28",
+    "formula": "IF($A28=\"\",\"\",INDEX(PILE_POINTS!$G$2:$G$100,MATCH($A28,PILE_POINTS!$A$2:$A$100,0)))",
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C7:R100C7,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "fingerprint": "016a6c2b2e13027efaca",
+    "cachedValue": null,
+    "dependencySheets": [
+      "PILE_POINTS"
+    ],
+    "block": "JOIN",
+    "classificationReasons": [
+      "INDEX",
+      "MATCH"
+    ]
+  }
+]

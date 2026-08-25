@@ -1,0 +1,419 @@
+[
+  {
+    "fingerprint": "016a6c2b2e13027efaca",
+    "count": 20,
+    "blockMajority": "JOIN",
+    "blockCounts": {
+      "JOIN": 20
+    },
+    "sampleCells": [
+      "N9",
+      "N10",
+      "N11",
+      "N12",
+      "N13",
+      "N14",
+      "N15",
+      "N16",
+      "N17",
+      "N18"
+    ],
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C7:R100C7,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "dependencySheets": [
+      "PILE_POINTS"
+    ]
+  },
+  {
+    "fingerprint": "140ce0b4c72278660359",
+    "count": 20,
+    "blockMajority": "STATUS",
+    "blockCounts": {
+      "STATUS": 20
+    },
+    "sampleCells": [
+      "L9",
+      "L10",
+      "L11",
+      "L12",
+      "L13",
+      "L14",
+      "L15",
+      "L16",
+      "L17",
+      "L18"
+    ],
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-5]=\"COMPRESSION\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"),IF(RC[-3]<=0,\"BLOCK\",IF(RC[-1]<=1,\"PASS\",\"FAIL\"))))",
+    "dependencySheets": []
+  },
+  {
+    "fingerprint": "3458cdb72f8aa89671ec",
+    "count": 20,
+    "blockMajority": "UNCLASSIFIED",
+    "blockCounts": {
+      "UNCLASSIFIED": 20
+    },
+    "sampleCells": [
+      "A9",
+      "A10",
+      "A11",
+      "A12",
+      "A13",
+      "A14",
+      "A15",
+      "A16",
+      "A17",
+      "A18"
+    ],
+    "normalizedFormula": "IF('SPRING_ASSIGNMENTS'!R[-7]C[+1]=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[+1])",
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ]
+  },
+  {
+    "fingerprint": "359df7197ac13ee55762",
+    "count": 20,
+    "blockMajority": "JOIN",
+    "blockCounts": {
+      "JOIN": 20
+    },
+    "sampleCells": [
+      "M9",
+      "M10",
+      "M11",
+      "M12",
+      "M13",
+      "M14",
+      "M15",
+      "M16",
+      "M17",
+      "M18"
+    ],
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C6:R100C6,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "dependencySheets": [
+      "PILE_POINTS"
+    ]
+  },
+  {
+    "fingerprint": "619756a00b92a04a3ed4",
+    "count": 20,
+    "blockMajority": "JOIN",
+    "blockCounts": {
+      "JOIN": 20
+    },
+    "sampleCells": [
+      "E9",
+      "E10",
+      "E11",
+      "E12",
+      "E13",
+      "E14",
+      "E15",
+      "E16",
+      "E17",
+      "E18"
+    ],
+    "normalizedFormula": "IF(RC2=\"\",\"\",SUMIFS('IMPORTED_NODAL'!R2C5:R200C5,'IMPORTED_NODAL'!R2C1:R200C1,RC2,'IMPORTED_NODAL'!R2C2:R200C2,R3C2))",
+    "dependencySheets": [
+      "IMPORTED_NODAL"
+    ]
+  },
+  {
+    "fingerprint": "6990db21c36e8e4d3f5a",
+    "count": 20,
+    "blockMajority": "JOIN",
+    "blockCounts": {
+      "JOIN": 20
+    },
+    "sampleCells": [
+      "H9",
+      "H10",
+      "H11",
+      "H12",
+      "H13",
+      "H14",
+      "H15",
+      "H16",
+      "H17",
+      "H18"
+    ],
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C4:R100C4,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "dependencySheets": [
+      "PILE_POINTS"
+    ]
+  },
+  {
+    "fingerprint": "78f81eaf9b5db2aed525",
+    "count": 20,
+    "blockMajority": "UNCLASSIFIED",
+    "blockCounts": {
+      "UNCLASSIFIED": 20
+    },
+    "sampleCells": [
+      "G9",
+      "G10",
+      "G11",
+      "G12",
+      "G13",
+      "G14",
+      "G15",
+      "G16",
+      "G17",
+      "G18"
+    ],
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-1]>=0,\"COMPRESSION\",\"TENSION\"))",
+    "dependencySheets": []
+  },
+  {
+    "fingerprint": "8fb2d508d5a330f9562f",
+    "count": 20,
+    "blockMajority": "JOIN",
+    "blockCounts": {
+      "JOIN": 20
+    },
+    "sampleCells": [
+      "D9",
+      "D10",
+      "D11",
+      "D12",
+      "D13",
+      "D14",
+      "D15",
+      "D16",
+      "D17",
+      "D18"
+    ],
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C3:R100C3,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ]
+  },
+  {
+    "fingerprint": "936cac9a550fed60f943",
+    "count": 20,
+    "blockMajority": "UNCLASSIFIED",
+    "blockCounts": {
+      "UNCLASSIFIED": 20
+    },
+    "sampleCells": [
+      "F9",
+      "F10",
+      "F11",
+      "F12",
+      "F13",
+      "F14",
+      "F15",
+      "F16",
+      "F17",
+      "F18"
+    ],
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(R4C2=\"COMPRESSION-NEGATIVE\",-RC[-1],RC[-1]))",
+    "dependencySheets": []
+  },
+  {
+    "fingerprint": "ab00340190f9c2966476",
+    "count": 20,
+    "blockMajority": "UNCLASSIFIED",
+    "blockCounts": {
+      "UNCLASSIFIED": 20
+    },
+    "sampleCells": [
+      "B9",
+      "B10",
+      "B11",
+      "B12",
+      "B13",
+      "B14",
+      "B15",
+      "B16",
+      "B17",
+      "B18"
+    ],
+    "normalizedFormula": "IF(RC1=\"\",\"\",'SPRING_ASSIGNMENTS'!R[-7]C[-1])",
+    "dependencySheets": [
+      "SPRING_ASSIGNMENTS"
+    ]
+  },
+  {
+    "fingerprint": "d3047106ad6537f6197c",
+    "count": 20,
+    "blockMajority": "JOIN",
+    "blockCounts": {
+      "JOIN": 20
+    },
+    "sampleCells": [
+      "I9",
+      "I10",
+      "I11",
+      "I12",
+      "I13",
+      "I14",
+      "I15",
+      "I16",
+      "I17",
+      "I18"
+    ],
+    "normalizedFormula": "IF(RC1=\"\",\"\",INDEX('PILE_POINTS'!R2C5:R100C5,MATCH(RC1,'PILE_POINTS'!R2C1:R100C1,0)))",
+    "dependencySheets": [
+      "PILE_POINTS"
+    ]
+  },
+  {
+    "fingerprint": "d62ca1d498d29761e5d7",
+    "count": 20,
+    "blockMajority": "UNCLASSIFIED",
+    "blockCounts": {
+      "UNCLASSIFIED": 20
+    },
+    "sampleCells": [
+      "J9",
+      "J10",
+      "J11",
+      "J12",
+      "J13",
+      "J14",
+      "J15",
+      "J16",
+      "J17",
+      "J18"
+    ],
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-3]=\"COMPRESSION\",RC[-2],RC[-1]))",
+    "dependencySheets": []
+  },
+  {
+    "fingerprint": "dc65032a1ccf15c13650",
+    "count": 20,
+    "blockMajority": "ACTION",
+    "blockCounts": {
+      "ACTION": 20
+    },
+    "sampleCells": [
+      "K9",
+      "K10",
+      "K11",
+      "K12",
+      "K13",
+      "K14",
+      "K15",
+      "K16",
+      "K17",
+      "K18"
+    ],
+    "normalizedFormula": "IF(RC1=\"\",\"\",IF(RC[-4]=\"COMPRESSION\",RC[-5]/RC[-3],IF(RC[-2]>0,ABS(RC[-5])/RC[-2],NA())))",
+    "dependencySheets": []
+  },
+  {
+    "fingerprint": "e811b46f854c157abcc9",
+    "count": 20,
+    "blockMajority": "JOIN",
+    "blockCounts": {
+      "JOIN": 20
+    },
+    "sampleCells": [
+      "C9",
+      "C10",
+      "C11",
+      "C12",
+      "C13",
+      "C14",
+      "C15",
+      "C16",
+      "C17",
+      "C18"
+    ],
+    "normalizedFormula": "IF(RC2=\"\",\"\",INDEX('POINT_COORDINATES'!R2C2:R100C2,MATCH(RC2,'POINT_COORDINATES'!R2C1:R100C1,0)))",
+    "dependencySheets": [
+      "POINT_COORDINATES"
+    ]
+  },
+  {
+    "fingerprint": "2c7bc14263014160d2a9",
+    "count": 1,
+    "blockMajority": "UNCLASSIFIED",
+    "blockCounts": {
+      "UNCLASSIFIED": 1
+    },
+    "sampleCells": [
+      "Q5"
+    ],
+    "normalizedFormula": "MIN(R[+4]C[-11]:R[+23]C[-11])",
+    "dependencySheets": []
+  },
+  {
+    "fingerprint": "6c9d80ac6b06ca4fd62e",
+    "count": 1,
+    "blockMajority": "STATUS",
+    "blockCounts": {
+      "STATUS": 1
+    },
+    "sampleCells": [
+      "Q8"
+    ],
+    "normalizedFormula": "IF(COUNTIF(R[+1]C[-5]:R[+20]C[-5],\"BLOCK\")>0,\"YES\",\"NO\")",
+    "dependencySheets": []
+  },
+  {
+    "fingerprint": "9b1aef56d0df6b8552bb",
+    "count": 1,
+    "blockMajority": "UNCLASSIFIED",
+    "blockCounts": {
+      "UNCLASSIFIED": 1
+    },
+    "sampleCells": [
+      "Q7"
+    ],
+    "normalizedFormula": "IF(MIN(R[+2]C[-11]:R[+21]C[-11])<0,\"YES\",\"NO\")",
+    "dependencySheets": []
+  },
+  {
+    "fingerprint": "9e6f2b2330ec473b0f66",
+    "count": 1,
+    "blockMajority": "STATUS",
+    "blockCounts": {
+      "STATUS": 1
+    },
+    "sampleCells": [
+      "Q10"
+    ],
+    "normalizedFormula": "IF(AND(R[-2]C=\"NO\",R[-1]C=\"NO\"),\"PASS\",\"FAIL/BLOCK\")",
+    "dependencySheets": []
+  },
+  {
+    "fingerprint": "ccae039652fb9e880f57",
+    "count": 1,
+    "blockMajority": "UNCLASSIFIED",
+    "blockCounts": {
+      "UNCLASSIFIED": 1
+    },
+    "sampleCells": [
+      "Q6"
+    ],
+    "normalizedFormula": "IFERROR(MAX(R[+3]C[-6]:R[+22]C[-6]),\"\")",
+    "dependencySheets": []
+  },
+  {
+    "fingerprint": "e63164201eb73dd0519a",
+    "count": 1,
+    "blockMajority": "UNCLASSIFIED",
+    "blockCounts": {
+      "UNCLASSIFIED": 1
+    },
+    "sampleCells": [
+      "Q4"
+    ],
+    "normalizedFormula": "MAX(R[+5]C[-11]:R[+24]C[-11])",
+    "dependencySheets": []
+  },
+  {
+    "fingerprint": "fd3ef270f0dfc66a3e05",
+    "count": 1,
+    "blockMajority": "STATUS",
+    "blockCounts": {
+      "STATUS": 1
+    },
+    "sampleCells": [
+      "Q9"
+    ],
+    "normalizedFormula": "IF(COUNTIF(RC[-5]:R[+19]C[-5],\"FAIL\")>0,\"YES\",\"NO\")",
+    "dependencySheets": []
+  }
+]

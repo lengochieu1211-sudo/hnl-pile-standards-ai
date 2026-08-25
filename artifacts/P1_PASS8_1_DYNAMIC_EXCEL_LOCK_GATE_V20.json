@@ -1,0 +1,154 @@
+{
+  "schema": "HNL-P1-PASS8.1-DYNAMIC-EXCEL-LOCK-GATE",
+  "version": "1.25.7",
+  "pass": true,
+  "status": "CORE_LOCKED_DYNAMIC_EXCEL_EXPORTER",
+  "generatedAt": "2026-08-25T12:56:27.058Z",
+  "checks": [
+    {
+      "name": "CURRENT_NODE_REGRESSION",
+      "status": "PASS",
+      "detail": {
+        "tests": 188,
+        "pass": 188,
+        "fail": 0,
+        "status": 0
+      }
+    },
+    {
+      "name": "TEMPLATE_V18_SHA256",
+      "status": "PASS",
+      "detail": {
+        "actual": "582e897788d3aa96895f7ff63e604899ad489cbe2d5fb59238bb186a4b62b9d1",
+        "expected": "582e897788d3aa96895f7ff63e604899ad489cbe2d5fb59238bb186a4b62b9d1"
+      }
+    },
+    {
+      "name": "DYNAMIC_GOLDEN_XLSX_SERVER_VERIFIED",
+      "status": "PASS",
+      "detail": {
+        "summary": {
+          "RsoilKn": 843.4285714285716,
+          "RmaterialKn": 2952,
+          "RpileKn": 843.4285714285716,
+          "gammaN": 1.15,
+          "NdMaxPerPileKn": 733.4161490683232,
+          "boreholeBranches": 6,
+          "pileChecks": 19,
+          "governingPileId": "168",
+          "governingCombinationId": "EULS",
+          "governingUtilization": 0.4980692764464232,
+          "overallPass": true
+        },
+        "exportId": "8d4871d5-b3f8-4dad-a22d-1b24c8a241ba",
+        "sha256": "502e897e32553cbbf98a1add5f2eb5e9b7fb5688e38ada5d813950197bc028ea",
+        "bytes": 146517
+      }
+    },
+    {
+      "name": "TRUE_DYNAMIC_VARIANT_GAMMAN_1_20",
+      "status": "PASS",
+      "detail": {
+        "base": {
+          "gammaN": 1.15,
+          "NdMaxPerPileKn": 733.4161490683232,
+          "governingUtilization": 0.4980692764464232,
+          "sha256": "502e897e32553cbbf98a1add5f2eb5e9b7fb5688e38ada5d813950197bc028ea"
+        },
+        "variant": {
+          "gammaN": 1.2,
+          "NdMaxPerPileKn": 702.857142857143,
+          "governingUtilization": 0.5197244623788765,
+          "sha256": "b1bfc8fddfcc5272110c5a04273fa60c14b860db6bd565a530e18cea3fc91aa9"
+        }
+      }
+    },
+    {
+      "name": "HTTP_ENDPOINT_REAL_XLSX",
+      "status": "PASS",
+      "detail": {
+        "status": 200,
+        "serverVerified": "true",
+        "exportId": "2dfd87e4-3b59-4a52-9571-a6c8dcda1d2f",
+        "templateSha256": "582e897788d3aa96895f7ff63e604899ad489cbe2d5fb59238bb186a4b62b9d1",
+        "bytes": 146517,
+        "health": {
+          "ok": true,
+          "status": "PASS8.1_DYNAMIC_EXCEL_LOCKED_PATCH",
+          "route": {
+            "status": "CORE_LOCKED_DYNAMIC_EXPORTER_PATCH",
+            "endpoint": "/api/hnl/pile/export-excel",
+            "method": "POST",
+            "serverRecalculation": "Pass 8 router server-side",
+            "clientServerSummaryCheck": "MANDATORY",
+            "exporter": "p1-pass8.1-v18-dynamic-excel-exporter",
+            "templatePath": "/mnt/data/HNL-P1-Pass8.1-DynamicExcel-v20/artifacts/HNL_P1_Pass7_Bao_Cao_Tinh_Toan_Coc_San_Xuat_v18.xlsx"
+          }
+        }
+      }
+    },
+    {
+      "name": "HTTP_TAMPERED_RESULT_BLOCKED",
+      "status": "PASS",
+      "detail": {
+        "status": 422,
+        "response": "{\"ok\":false,\"error\":\"Kết quả client/server không khớp; không xuất Excel. RpileKn: client=999999 server=843.4285714285716\",\"code\":\"PASS81_EXPORT_BLOCKED\"}"
+      }
+    },
+    {
+      "name": "EXPORTER_NO_ENGINE_DUPLICATION",
+      "status": "PASS",
+      "detail": {
+        "forbidden": [
+          "calculateMultiBoreholePileCapacity",
+          "calculateDrivenPile10304",
+          "calculateSptPile10304",
+          "checkImportedNodalPileReactionEnvelope"
+        ]
+      }
+    },
+    {
+      "name": "UI_CALLS_REAL_EXPORT_ENDPOINT",
+      "status": "PASS",
+      "detail": {
+        "endpoint": "/api/hnl/pile/export-excel"
+      }
+    },
+    {
+      "name": "NO_EXTERNAL_RUNTIME_DEPENDENCIES",
+      "status": "PASS",
+      "detail": {
+        "nodeBuiltinsOnly": true
+      }
+    },
+    {
+      "name": "PRIOR_REGRESSION_388",
+      "status": "PASS",
+      "detail": {
+        "status": "PASS",
+        "passed": 388,
+        "failed": 0
+      }
+    },
+    {
+      "name": "PRIOR_FULL_TABLE_1242",
+      "status": "PASS",
+      "detail": {
+        "status": "PASS",
+        "passed": 1242,
+        "failed": 0
+      }
+    },
+    {
+      "name": "PRIOR_SEARCH_BRAIN",
+      "status": "PASS",
+      "detail": {
+        "status": "PASS",
+        "sha256": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2"
+      }
+    }
+  ],
+  "failed": [],
+  "scope": "Scoped patch runtime: Pass8 UI + local HTTP endpoint + server-side router rerun + v18 dynamic OOXML exporter.",
+  "fullSourceMerge": "NOT_CLAIMED_SEPARATE_GATE"
+}

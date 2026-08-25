@@ -1,0 +1,12 @@
+HNL P0 XLSM Reverse Engineering — Final Manifest
+Version: 1.25.7
+XLSM SHA-256: ec38b68f753b08e50d9d1f9df988be5084cab1aedf391ba1aaecf112e9d88bd1
+Search Brain SHA-256: f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2
+Regression: 304/304 PASS
+P0 focused: 7/7 PASS
+Full Table Golden: 1130/1130 PASS
+npm ci: BLOCKED (input ZIP has no package-lock.json)
+excel:smoke: BLOCKED (exceljs unavailable)
+build:web: BLOCKED (vite unavailable)
+GitHub package-lock v1.25.7 blob SHA observed read-only: c948babe0e82afa9a5b8fdf3b3e7fceea26728da
+Search Brain changed: NO

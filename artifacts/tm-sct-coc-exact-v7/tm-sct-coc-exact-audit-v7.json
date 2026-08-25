@@ -1,0 +1,418 @@
+{
+  "workbook": "10.1 DCE_SctCoc_10304 2025.xlsm",
+  "workbookSha256": "ec38b68f753b08e50d9d1f9df988be5084cab1aedf391ba1aaecf112e9d88bd1",
+  "sheet": "TM SCT Coc",
+  "formulaCellCount": 6082,
+  "uniqueFingerprints": 23,
+  "blockCounts": {
+    "UNCLASSIFIED": 5926,
+    "JOIN": 46,
+    "UTILIZATION": 108,
+    "STATUS": 2
+  },
+  "cachedValues": {
+    "present": 2234,
+    "missing": 3848
+  },
+  "topDependencies": [
+    [
+      "Point Coordinates",
+      38
+    ]
+  ],
+  "topFingerprints": [
+    {
+      "fingerprint": "e3b0c44298fc1c149afb",
+      "count": 5918,
+      "blockMajority": "UNCLASSIFIED",
+      "blockCounts": {
+        "UNCLASSIFIED": 5918
+      },
+      "sampleCells": [
+        "A22",
+        "D22",
+        "H22",
+        "I22",
+        "J22",
+        "L22",
+        "M22",
+        "V22",
+        "W22",
+        "X22"
+      ],
+      "normalizedFormula": "",
+      "dependencySheets": []
+    },
+    {
+      "fingerprint": "49309262070579ea9998",
+      "count": 19,
+      "blockMajority": "JOIN",
+      "blockCounts": {
+        "JOIN": 19
+      },
+      "sampleCells": [
+        "O20",
+        "O21",
+        "O22",
+        "O23",
+        "O24",
+        "O25",
+        "O26",
+        "O27",
+        "O28",
+        "O29"
+      ],
+      "normalizedFormula": "VLOOKUP(RC[-12],'POINTCOORDINATES'!$A:$D,3,0)*1000",
+      "dependencySheets": [
+        "Point Coordinates"
+      ]
+    },
+    {
+      "fingerprint": "df342480cfd1e9f94067",
+      "count": 19,
+      "blockMajority": "JOIN",
+      "blockCounts": {
+        "JOIN": 19
+      },
+      "sampleCells": [
+        "N20",
+        "N21",
+        "N22",
+        "N23",
+        "N24",
+        "N25",
+        "N26",
+        "N27",
+        "N28",
+        "N29"
+      ],
+      "normalizedFormula": "VLOOKUP(RC[-11],'POINTCOORDINATES'!$A:$D,2,0)*1000",
+      "dependencySheets": [
+        "Point Coordinates"
+      ]
+    },
+    {
+      "fingerprint": "28ac2bdd4846fc6e2a7f",
+      "count": 18,
+      "blockMajority": "UTILIZATION",
+      "blockCounts": {
+        "UTILIZATION": 18
+      },
+      "sampleCells": [
+        "Z20",
+        "Z21",
+        "Z37",
+        "Z85",
+        "Z149",
+        "Z213",
+        "Z277",
+        "Z341",
+        "Z405",
+        "Z469"
+      ],
+      "normalizedFormula": "IF(RC[-12]<>\"\",(RC[-12]-R17C14)/1000,1/0)",
+      "dependencySheets": []
+    },
+    {
+      "fingerprint": "102bfd8013f27758e7c0",
+      "count": 17,
+      "blockMajority": "UTILIZATION",
+      "blockCounts": {
+        "UTILIZATION": 17
+      },
+      "sampleCells": [
+        "X20",
+        "X21",
+        "X85",
+        "X149",
+        "X213",
+        "X277",
+        "X341",
+        "X405",
+        "X469",
+        "X533"
+      ],
+      "normalizedFormula": "IFERROR(IF(AND(1/RC[-12]>R19C24,1/RC[-12]<=R19C25),1/RC[-12],0),\"\")",
+      "dependencySheets": []
+    },
+    {
+      "fingerprint": "1aafe524f4bc30e7637c",
+      "count": 17,
+      "blockMajority": "UTILIZATION",
+      "blockCounts": {
+        "UTILIZATION": 17
+      },
+      "sampleCells": [
+        "AA20",
+        "AA21",
+        "AA85",
+        "AA149",
+        "AA213",
+        "AA277",
+        "AA341",
+        "AA405",
+        "AA469",
+        "AA533"
+      ],
+      "normalizedFormula": "IF(RC[-12]<>\"\",(RC[-12]-R17C15)/1000,1/0)",
+      "dependencySheets": []
+    },
+    {
+      "fingerprint": "2d4c8f3ea18940579bdf",
+      "count": 17,
+      "blockMajority": "UTILIZATION",
+      "blockCounts": {
+        "UTILIZATION": 17
+      },
+      "sampleCells": [
+        "Y20",
+        "Y21",
+        "Y85",
+        "Y149",
+        "Y213",
+        "Y277",
+        "Y341",
+        "Y405",
+        "Y469",
+        "Y533"
+      ],
+      "normalizedFormula": "IFERROR(IF(1/RC[-13]>R19C25,1/RC[-13],0),\"\")",
+      "dependencySheets": []
+    },
+    {
+      "fingerprint": "b070dbb90878a1f60ba9",
+      "count": 17,
+      "blockMajority": "UTILIZATION",
+      "blockCounts": {
+        "UTILIZATION": 17
+      },
+      "sampleCells": [
+        "V20",
+        "V21",
+        "V85",
+        "V149",
+        "V213",
+        "V277",
+        "V341",
+        "V405",
+        "V469",
+        "V533"
+      ],
+      "normalizedFormula": "IFERROR(IF(AND(1/RC[-10]>R19C22,1/RC[-10]<=R19C23),1/RC[-10],0),\"\")",
+      "dependencySheets": []
+    },
+    {
+      "fingerprint": "de0a5dbfc5cc172602ba",
+      "count": 17,
+      "blockMajority": "UTILIZATION",
+      "blockCounts": {
+        "UTILIZATION": 17
+      },
+      "sampleCells": [
+        "W20",
+        "W21",
+        "W85",
+        "W149",
+        "W213",
+        "W277",
+        "W341",
+        "W405",
+        "W469",
+        "W533"
+      ],
+      "normalizedFormula": "IFERROR(IF(AND(1/RC[-11]>R19C23,1/RC[-11]<=R19C24),1/RC[-11],0),\"\")",
+      "dependencySheets": []
+    },
+    {
+      "fingerprint": "8c7575893a40f2d6662a",
+      "count": 3,
+      "blockMajority": "UTILIZATION",
+      "blockCounts": {
+        "UTILIZATION": 3
+      },
+      "sampleCells": [
+        "K20",
+        "K21",
+        "K22"
+      ],
+      "normalizedFormula": "RC[-2]/R10C8",
+      "dependencySheets": []
+    },
+    {
+      "fingerprint": "316a886ee18efca0c3ce",
+      "count": 2,
+      "blockMajority": "JOIN",
+      "blockCounts": {
+        "JOIN": 2
+      },
+      "sampleCells": [
+        "I20",
+        "I21"
+      ],
+      "normalizedFormula": "VLOOKUP(RC[-7],Q:U,4,0)",
+      "dependencySheets": []
+    },
+    {
+      "fingerprint": "34eab90c394d3c1042b9",
+      "count": 2,
+      "blockMajority": "JOIN",
+      "blockCounts": {
+        "JOIN": 2
+      },
+      "sampleCells": [
+        "H20",
+        "H21"
+      ],
+      "normalizedFormula": "VLOOKUP(RC[-6],Q:U,3,0)",
+      "dependencySheets": []
+    },
+    {
+      "fingerprint": "5ea8e873f07aa89e502e",
+      "count": 2,
+      "blockMajority": "JOIN",
+      "blockCounts": {
+        "JOIN": 2
+      },
+      "sampleCells": [
+        "A20",
+        "A21"
+      ],
+      "normalizedFormula": "VLOOKUP(RC[+1],Q:U,5,0)",
+      "dependencySheets": []
+    },
+    {
+      "fingerprint": "668b1c1dbfcf6df7c7f2",
+      "count": 2,
+      "blockMajority": "UTILIZATION",
+      "blockCounts": {
+        "UTILIZATION": 2
+      },
+      "sampleCells": [
+        "L20",
+        "L21"
+      ],
+      "normalizedFormula": "IFERROR(RC[-1]/RC[-6],\"\")",
+      "dependencySheets": []
+    },
+    {
+      "fingerprint": "cc605bcd1178ce4c0905",
+      "count": 2,
+      "blockMajority": "STATUS",
+      "blockCounts": {
+        "STATUS": 2
+      },
+      "sampleCells": [
+        "M20",
+        "M21"
+      ],
+      "normalizedFormula": "IF(RC[-1]<1,\"NOTOK\",\"OK\")",
+      "dependencySheets": []
+    },
+    {
+      "fingerprint": "f5205744725a2f66161f",
+      "count": 2,
+      "blockMajority": "JOIN",
+      "blockCounts": {
+        "JOIN": 2
+      },
+      "sampleCells": [
+        "D20",
+        "D21"
+      ],
+      "normalizedFormula": "VLOOKUP(RC[-2],Q:U,2,0)",
+      "dependencySheets": []
+    },
+    {
+      "fingerprint": "f7cb8b3574809d50071f",
+      "count": 2,
+      "blockMajority": "UNCLASSIFIED",
+      "blockCounts": {
+        "UNCLASSIFIED": 2
+      },
+      "sampleCells": [
+        "J20",
+        "J21"
+      ],
+      "normalizedFormula": "NHOMCOC(RC[-9],R1C1,R2C1)",
+      "dependencySheets": []
+    },
+    {
+      "fingerprint": "1e4d06da3c596bca9296",
+      "count": 1,
+      "blockMajority": "UNCLASSIFIED",
+      "blockCounts": {
+        "UNCLASSIFIED": 1
+      },
+      "sampleCells": [
+        "B1"
+      ],
+      "normalizedFormula": "IF(R[+9]C[+11]=\"THỬTĨNH\",1,0)",
+      "dependencySheets": []
+    },
+    {
+      "fingerprint": "301b19d4646b2bdc23a9",
+      "count": 1,
+      "blockMajority": "UNCLASSIFIED",
+      "blockCounts": {
+        "UNCLASSIFIED": 1
+      },
+      "sampleCells": [
+        "O17"
+      ],
+      "normalizedFormula": "RC[-1]",
+      "dependencySheets": []
+    },
+    {
+      "fingerprint": "32e35811abc1235c0ac2",
+      "count": 1,
+      "blockMajority": "UNCLASSIFIED",
+      "blockCounts": {
+        "UNCLASSIFIED": 1
+      },
+      "sampleCells": [
+        "C9"
+      ],
+      "normalizedFormula": "\"CẤPHẬUQUẢCỦACÔNGTRÌNH:\"",
+      "dependencySheets": []
+    },
+    {
+      "fingerprint": "60f21ab69bd9cd6b1f8c",
+      "count": 1,
+      "blockMajority": "UNCLASSIFIED",
+      "blockCounts": {
+        "UNCLASSIFIED": 1
+      },
+      "sampleCells": [
+        "H10"
+      ],
+      "normalizedFormula": "IF(R[-1]C=\"R[-9]C[-5]\",1,IF(R[-1]C=\"R[-8]C[-5]\",1.15,1.2))",
+      "dependencySheets": []
+    },
+    {
+      "fingerprint": "7fabb2fc4423b971bca3",
+      "count": 1,
+      "blockMajority": "UNCLASSIFIED",
+      "blockCounts": {
+        "UNCLASSIFIED": 1
+      },
+      "sampleCells": [
+        "L3"
+      ],
+      "normalizedFormula": "TODAY()",
+      "dependencySheets": []
+    },
+    {
+      "fingerprint": "dcd034cac898a63d885c",
+      "count": 1,
+      "blockMajority": "UNCLASSIFIED",
+      "blockCounts": {
+        "UNCLASSIFIED": 1
+      },
+      "sampleCells": [
+        "N17"
+      ],
+      "normalizedFormula": "MAX(MIN(R[+3]C[+1]:R[+983]C[+1]),MIN(R[+3]C:R[+983]C))",
+      "dependencySheets": []
+    }
+  ]
+}

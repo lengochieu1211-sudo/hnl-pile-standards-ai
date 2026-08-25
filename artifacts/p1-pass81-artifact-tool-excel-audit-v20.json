@@ -1,0 +1,11 @@
+{
+  "schema": "HNL-P1-PASS8.1-ARTIFACT-TOOL-EXCEL-AUDIT",
+  "version": "1.25.7",
+  "workbook": "HNL_P1_Pass8_1_Dynamic_Excel_Golden_v20.xlsx",
+  "formulaErrors": 0,
+  "verifiedRanges": [
+    "01_TỔNG_HỢP!A3:B12",
+    "00_HƯỚNG_DẪN!A19:B23"
+  ],
+  "status": "PASS"
+}

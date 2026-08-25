@@ -1,0 +1,25 @@
+{
+  "schema": "HNL-P1-PASS5-FINAL-WINDOWS-LOCK-GATE-V15",
+  "version": "1.25.7",
+  "status": "REVIEW_PENDING_WINDOWS_LIVE_EXECUTION",
+  "nodeTests": {
+    "tests": 132,
+    "pass": 132,
+    "fail": 0
+  },
+  "replayGolden": "PASS",
+  "replayFinalLock": "INTENTIONALLY_BLOCKED",
+  "reasonReplayBlocked": "Final LOCK requires mode=live and successful unit restore from a real CSi session.",
+  "finalRunner": "windows/csi-bridge/RUN_PASS5_FINAL_LOCK.cmd",
+  "lockedManifestWriter": "tools/p1-pass5-final-lock-gate.mjs",
+  "requiredLiveCoverage": {
+    "coordinates": 194,
+    "nodalEnvelopes": 19,
+    "pierForces": 234,
+    "pointSpringAssignments": 19,
+    "pierSection": 39
+  },
+  "searchBrainSha256": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2",
+  "liveWindowsRun": "NOT_RUN_IN_LINUX",
+  "searchJsTouched": false
+}

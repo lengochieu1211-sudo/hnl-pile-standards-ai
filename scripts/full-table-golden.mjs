@@ -13,7 +13,8 @@ import {
   lookupTable6GammaRf10304, lookupTable7Alphas10304, lookupTable8Qb10304,
   lookupTable12M10304, lookupTable15Beta1, lookupTable15SideBeta,
   lookupTable16Cpt10304, lookupTable17Mv10304, kvTable17Formula10304,
-  zeta0Table17Formula10304
+  zeta0Table17Formula10304, lookupRockKs10304, lookupSptTipResistance10304,
+  lookupSptShaftResistance10304, sptEta10304
 } from '../src/tcvn10304-table-engine.js';
 
 const EPS=1e-9;
@@ -139,6 +140,42 @@ export function buildFullTableGoldenCases(){
   for(let i=0;i<T10304_TABLE17_V.length-1;i++){const v=mid(T10304_TABLE17_V[i],T10304_TABLE17_V[i+1]);record(cases,{table:'Bảng 17',branch:'m_v',category:'MID',input:{nu:v},calc:()=>lookupTable17Mv10304(v).value,expected:lineExpected(v,T10304_TABLE17_V[i],T10304_TABLE17_V[i+1],T10304_TABLE17_MV[i],T10304_TABLE17_MV[i+1]),source:'local linear'});record(cases,{table:'Bảng 17',branch:'k_v',category:'FORMULA-MID',input:{nu:v},calc:()=>kvTable17Formula10304(v),expected:{kind:'FORMULA-KV',x:v,expected:2.82-3.78*v+2.18*v*v},source:'CT (33)'});record(cases,{table:'Bảng 17',branch:'zeta0',category:'FORMULA-MID',input:{nu:v},calc:()=>zeta0Table17Formula10304(v),expected:{kind:'FORMULA-ZETA',x:v,expected:(1-2*v)/(2*Math.log(3-4*v))},source:'CT (34)'});}
   for(const v of [-.001,.501]) for(const [branch,calc] of [['m_v',()=>lookupTable17Mv10304(v).value],['k_v',()=>kvTable17Formula10304(v)],['zeta0',()=>zeta0Table17Formula10304(v)]]) record(cases,{table:'Bảng 17',branch,category:'OUTSIDE',input:{nu:v},calc,expected:blockExpected(),source:'NO EXTRAPOLATION'});
 
+
+  // BẢNG 1 — RQD -> Ks. Exact anchors, local-linear midpoints, plateaus, outside block.
+  const rqdX=[0,25,50,75,90,100],ksY=[.22,.22,.32,.60,1,1];
+  rqdX.forEach((x,i)=>record(cases,{table:'Bảng 1',branch:'RQD→Ks',category:'EXACT',input:{RQD:x},calc:()=>lookupRockKs10304(x).value,expected:exactExpected(ksY[i]),source:'TCVN 10304:2025 Bảng 1 tr.29'}));
+  for(let i=0;i<rqdX.length-1;i++){const x=mid(rqdX[i],rqdX[i+1]);record(cases,{table:'Bảng 1',branch:'RQD→Ks',category:ksY[i]===ksY[i+1]?'PLATEAU-MID':'MID',input:{RQD:x},calc:()=>lookupRockKs10304(x).value,expected:lineExpected(x,rqdX[i],rqdX[i+1],ksY[i],ksY[i+1]),source:'Bảng 1 Chú thích 1–2'});}
+  for(const x of [-.001,100.001]) record(cases,{table:'Bảng 1',branch:'RQD→Ks',category:'OUTSIDE',input:{RQD:x},calc:()=>lookupRockKs10304(x).value,expected:blockExpected(),source:'RQD 0–100'});
+
+  // PHỤ LỤC D — Bảng D.1. Golden duplicates the published coefficients here
+  // so the production lookup cannot silently self-validate against itself.
+  const d1={
+    bored:{tipSand:120,tipCap:7500,tipClayCu:6,shaftSand:3.3,shaftSandCap:165,shaftClayCu:1,shaftClayCap:100},
+    'vibro-pipe':{tipSand:150,tipCap:9000,tipClayCu:6,shaftSand:1.5,shaftSandCap:75,shaftClayCu:.4,shaftClayCap:50},
+    screw:{tipSand:150,tipCap:9000,tipClayN:150,shaftSand:2,shaftSandCap:100,shaftClayCu:.5,shaftClayCap:62.5},
+    driven:{tipSand:300,tipCap:18000,tipClayCu:6,shaftSand:2,shaftSandCap:100,shaftClayCu:.8,shaftClayCap:100}
+  };
+  const nCases=[0,1,10,25,50,100];
+  for(const [pile,row] of Object.entries(d1)){
+    for(const N of nCases){
+      record(cases,{table:'Bảng D.1',branch:`tip-sand:${pile}`,category:'FORMULA+CAP',input:{N,eta:1},calc:()=>lookupSptTipResistance10304({pileType:pile,soilGroup:'sand',N,eta:1}).value,expected:exactExpected(Math.min(row.tipSand*N,row.tipCap)),source:'Phụ lục D tr.111'});
+      record(cases,{table:'Bảng D.1',branch:`shaft-sand:${pile}`,category:'FORMULA+CAP',input:{N},calc:()=>lookupSptShaftResistance10304({pileType:pile,soilGroup:'sand',N}).value,expected:exactExpected(Math.min(row.shaftSand*N,row.shaftSandCap)),source:'Phụ lục D tr.111'});
+    }
+    if(row.tipClayN!=null){for(const N of nCases) record(cases,{table:'Bảng D.1',branch:`tip-clay:${pile}`,category:'FORMULA+CAP',input:{N},calc:()=>lookupSptTipResistance10304({pileType:pile,soilGroup:'clay',N,eta:1}).value,expected:exactExpected(Math.min(row.tipClayN*N,row.tipCap)),source:'Phụ lục D tr.111'});}
+    else {for(const cu of [0,10,50,100,200]) record(cases,{table:'Bảng D.1',branch:`tip-clay:${pile}`,category:'FORMULA+CAP',input:{cu},calc:()=>lookupSptTipResistance10304({pileType:pile,soilGroup:'clay',cuKpa:cu,eta:1}).value,expected:exactExpected(Math.min(row.tipClayCu*cu,row.tipCap)),source:'Phụ lục D tr.111'});}
+    for(const cu of [0,10,50,100,200]) record(cases,{table:'Bảng D.1',branch:`shaft-clay:${pile}`,category:'FORMULA+CAP',input:{cu},calc:()=>lookupSptShaftResistance10304({pileType:pile,soilGroup:'clay',cuKpa:cu}).value,expected:exactExpected(Math.min(row.shaftClayCu*cu,row.shaftClayCap)),source:'Phụ lục D tr.111'});
+  }
+  for(const N of [1,4,10,20]) record(cases,{table:'Bảng D.1',branch:'shaft-clay:bored:cu=6.25Nc',category:'DERIVED-CU',input:{N},calc:()=>lookupSptShaftResistance10304({pileType:'bored',soilGroup:'clay',N}).value,expected:exactExpected(Math.min(6.25*N,100)),source:'Phụ lục D tr.110–111'});
+  const etaCases=[
+    ['screw-closed',()=>sptEta10304({pileType:'screw',closedTip:true}).value,1],
+    ['screw-open',()=>sptEta10304({pileType:'screw',closedTip:false}).value,.8],
+    ['driven-closed',()=>sptEta10304({pileType:'driven',closedTip:true}).value,1],
+    ['driven-open-r4',()=>sptEta10304({pileType:'driven',closedTip:false,lengthM:12,innerDiameterM:3}).value,.64],
+    ['driven-open-r6',()=>sptEta10304({pileType:'driven',closedTip:false,lengthM:12,innerDiameterM:2}).value,.8]
+  ];
+  for(const [branch,calc,e] of etaCases) record(cases,{table:'Bảng D.1',branch:`eta:${branch}`,category:'ETA',input:{},calc,expected:exactExpected(e),source:'Bảng D.1 tr.111'});
+  record(cases,{table:'Bảng D.1',branch:'eta:driven-open-r<2',category:'OUTSIDE',input:{},calc:()=>sptEta10304({pileType:'driven',closedTip:false,lengthM:1.5,innerDiameterM:1}).value,expected:blockExpected(),source:'Không có nhánh VERIFIED'});
+
   return cases;
 }
 
@@ -150,7 +187,7 @@ export function summarizeFullTableGolden(cases){
 const self=fileURLToPath(import.meta.url);
 if(process.argv[1] && path.resolve(process.argv[1])===path.resolve(self)){
   const cases=buildFullTableGoldenCases(), summary=summarizeFullTableGolden(cases);
-  const out=process.argv[2]||path.resolve(path.dirname(self),'../artifacts/full-table-golden-v1.25.5.json');
-  fs.mkdirSync(path.dirname(out),{recursive:true}); fs.writeFileSync(out,JSON.stringify({version:'1.25.4',generatedAt:new Date().toISOString(),summary,cases},null,2));
+  const out=process.argv[2]||path.resolve(path.dirname(self),'../artifacts/full-table-golden-v1.25.7.json');
+  fs.mkdirSync(path.dirname(out),{recursive:true}); fs.writeFileSync(out,JSON.stringify({version:'1.25.7',generatedAt:new Date().toISOString(),summary,cases},null,2));
   console.log(JSON.stringify(summary,null,2)); if(summary.fail) process.exitCode=1;
 }

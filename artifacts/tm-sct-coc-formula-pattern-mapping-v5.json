@@ -1,0 +1,66 @@
+{
+  "schema": "HNL-TM-SCT-COC-FORMULA-PATTERN-RECONSTRUCTION-V5",
+  "version": "1.25.7",
+  "status": "REVIEW",
+  "workbookEvidence": {
+    "workbookSha256": "ec38b68f753b08e50d9d1f9df988be5084cab1aedf391ba1aaecf112e9d88bd1",
+    "sheet": "TM SCT Coc",
+    "totalFormulaCells": 6082,
+    "udfXllCalls": 0,
+    "inputs": [
+      "Point Coordinates",
+      "Nodal Reactions",
+      "Point Spring Assignments",
+      "Rd/capacity"
+    ],
+    "intermediate": [
+      "match pile/point/load",
+      "utilization"
+    ],
+    "output": "per-pile check"
+  },
+  "blocks": [
+    {
+      "order": 1,
+      "id": "JOIN",
+      "dependency": "pointId -> coordinate; pointId -> spring -> pileId; pointId+combination -> nodal reaction",
+      "xlsmCellRange": "PENDING_CELL_INVENTORY",
+      "formulaCount": "PENDING_CELL_INVENTORY",
+      "confidence": "HIGH_WORKFLOW"
+    },
+    {
+      "order": 2,
+      "id": "ACTION",
+      "dependency": "raw Fz + explicit sign convention -> axial demand; Fx/Fy/Mx/My/Mz metadata",
+      "xlsmCellRange": "PENDING_CELL_INVENTORY",
+      "formulaCount": "PENDING_CELL_INVENTORY",
+      "confidence": "HIGH_SCHEMA"
+    },
+    {
+      "order": 3,
+      "id": "CAPACITY",
+      "dependency": "pileId -> verified compression capacity; separate tension capacity",
+      "xlsmCellRange": "PENDING_CELL_INVENTORY",
+      "formulaCount": "PENDING_CELL_INVENTORY",
+      "confidence": "MEDIUM_XLSM_HIGH_HNL_POLICY"
+    },
+    {
+      "order": 4,
+      "id": "UTILIZATION",
+      "dependency": "abs/positive demand / applicable capacity",
+      "xlsmCellRange": "PENDING_CELL_INVENTORY",
+      "formulaCount": "PENDING_CELL_INVENTORY",
+      "confidence": "HIGH_WORKFLOW"
+    },
+    {
+      "order": 5,
+      "id": "STATUS",
+      "dependency": "utilization + missing capacity/data -> PASS/FAIL/BLOCK + governing",
+      "xlsmCellRange": "PENDING_CELL_INVENTORY",
+      "formulaCount": "PENDING_CELL_INVENTORY",
+      "confidence": "HIGH_OUTPUT"
+    }
+  ],
+  "claimBoundary": "Logical formula-pattern reconstruction only. No fabricated cell addresses or per-block formula counts.",
+  "productionNumeric": false
+}

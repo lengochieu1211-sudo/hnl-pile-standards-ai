@@ -1,0 +1,13 @@
+{
+  "formulaCellCount": 287,
+  "uniqueFingerprints": 21,
+  "blockCounts": {
+    "UNCLASSIFIED": 104,
+    "STATUS": 23,
+    "JOIN": 140,
+    "ACTION": 20
+  },
+  "sheet": "IMPORTED_CHECK",
+  "workbook": "HNL_P1_Pass4_TM_SCT_Coc_Pattern_REVIEW_v5.xlsx",
+  "workbookSha256": "5fb3c90baee8cfb6dffbfdd16d8389b901f417ab20507f6c7cb2b8d511c2b14b"
+}

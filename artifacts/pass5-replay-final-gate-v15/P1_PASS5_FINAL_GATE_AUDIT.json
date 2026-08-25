@@ -1,0 +1,138 @@
+{
+  "schema": "HNL-P1-PASS5-FINAL-LOCK-GATE",
+  "version": "1.25.7",
+  "generatedAt": "2026-08-25T10:28:46.804Z",
+  "mode": "replay",
+  "checks": [
+    {
+      "name": "LIVE_GOLDEN_MODE",
+      "status": "FAIL",
+      "detail": {
+        "mode": "replay"
+      }
+    },
+    {
+      "name": "LIVE_GOLDEN_PASS",
+      "status": "PASS",
+      "detail": []
+    },
+    {
+      "name": "LIVE_EXACT_COVERAGE",
+      "status": "PASS",
+      "detail": {
+        "checked": {
+          "coordinates": 194,
+          "nodalEnvelopes": 19,
+          "pierForces": 234
+        },
+        "coverage": {
+          "coordinates": true,
+          "nodalEnvelopes": true,
+          "pierForces": true,
+          "pointSpringAssignments": true,
+          "pierSection": true
+        }
+      }
+    },
+    {
+      "name": "LIVE_DIRECT_TABLE_COORD",
+      "status": "PASS",
+      "detail": {
+        "status": "PASS",
+        "matches": true,
+        "checked": 194,
+        "mismatches": []
+      }
+    },
+    {
+      "name": "LIVE_DIRECT_TABLE_REACTION",
+      "status": "PASS",
+      "detail": {
+        "status": "PASS",
+        "matches": true,
+        "checkedGroups": 19,
+        "mismatches": []
+      }
+    },
+    {
+      "name": "LIVE_UNIT_PROFILE",
+      "status": "PASS",
+      "detail": {
+        "normalizedTo": "kN_m_C",
+        "verified": true,
+        "audit": {
+          "method": "REPLAY_GOLDEN"
+        }
+      }
+    },
+    {
+      "name": "LIVE_UNIT_RESTORE",
+      "status": "FAIL",
+      "detail": null
+    },
+    {
+      "name": "NODE_CURRENT_REGRESSION",
+      "status": "PASS",
+      "detail": {
+        "status": 0,
+        "tests": 132,
+        "pass": 132,
+        "fail": 0
+      }
+    },
+    {
+      "name": "PRIOR_REGRESSION_388",
+      "status": "PASS",
+      "detail": {
+        "status": "PASS",
+        "passed": 388,
+        "failed": 0
+      }
+    },
+    {
+      "name": "PRIOR_FULL_TABLE_1242",
+      "status": "PASS",
+      "detail": {
+        "status": "PASS",
+        "passed": 1242,
+        "failed": 0
+      }
+    },
+    {
+      "name": "PRIOR_PILE_QUANTITY",
+      "status": "PASS",
+      "detail": {
+        "status": "PASS",
+        "xlsmRows": "39/39",
+        "xlsmChecks": "273/273",
+        "engineExcel": "12/12",
+        "boundary": "9/9",
+        "benchmarks": "6/6"
+      }
+    },
+    {
+      "name": "PRIOR_SEARCH_GATE",
+      "status": "PASS",
+      "detail": {
+        "status": "PASS",
+        "sha256": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2"
+      }
+    },
+    {
+      "name": "ACTUAL_SEARCH_FILE_HASH",
+      "status": "PASS",
+      "detail": {
+        "actualSearchHash": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2",
+        "expected": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2"
+      }
+    }
+  ],
+  "pass": false,
+  "failed": [
+    "LIVE_GOLDEN_MODE",
+    "LIVE_UNIT_RESTORE"
+  ],
+  "lockStatus": "P1_PASS5_BLOCKED",
+  "nodeTestStdout": "TAP version 13\n# Subtest: imported mode joins point->spring->pile and normalizes compression-negative Fz\nok 1 - imported mode joins point->spring->pile and normalizes compression-negative Fz\n  ---\n  duration_ms: 1.71367\n  type: 'test'\n  ...\n# Subtest: imported checker preserves coordinates and action metadata\nok 2 - imported checker preserves coordinates and action metadata\n  ---\n  duration_ms: 0.22049\n  type: 'test'\n  ...\n# Subtest: governing pile is by utilization, not maximum compression demand\nok 3 - governing pile is by utilization, not maximum compression demand\n  ---\n  duration_ms: 0.416595\n  type: 'test'\n  ...\n# Subtest: exact compression capacity boundary passes\nok 4 - exact compression capacity boundary passes\n  ---\n  duration_ms: 0.162293\n  type: 'test'\n  ...\n# Subtest: epsilon over compression capacity fails\nok 5 - epsilon over compression capacity fails\n  ---\n  duration_ms: 0.249313\n  type: 'test'\n  ...\n# Subtest: tension without verified tension capacity blocks\nok 6 - tension without verified tension capacity blocks\n  ---\n  duration_ms: 0.167461\n  type: 'test'\n  ...\n# Subtest: verified tension capacity is checked separately\nok 7 - verified tension capacity is checked separately\n  ---\n  duration_ms: 0.273089\n  type: 'test'\n  ...\n# Subtest: missing coordinate blocks strict join\nok 8 - missing coordinate blocks strict join\n  ---\n  duration_ms: 0.364076\n  type: 'test'\n  ...\n# Subtest: missing reaction blocks strict join\nok 9 - missing reaction blocks strict join\n  ---\n  duration_ms: 0.614812\n  type: 'test'\n  ...\n# Subtest: reaction point without spring assignment blocks strict join\nok 10 - reaction point without spring assignment blocks strict join\n  ---\n  duration_ms: 0.723064\n  type: 'test'\n  ...\n# Subtest: duplicate nodal reaction for same point/combo blocks\nok 11 - duplicate nodal reaction for same point/combo blocks\n  ---\n  duration_ms: 0.20005\n  type: 'test'\n  ...\n# Subtest: imported envelope identifies governing combination and pile\nok 12 - imported envelope identifies governing combination and pile\n  ---\n  duration_ms: 1.138327\n  type: 'test'\n  ...\n# Subtest: Golden 4-pile combined N+Mx+My exact hand values\nok 13 - Golden 4-pile combined N+Mx+My exact hand values\n  ---\n  duration_ms: 1.445688\n  type: 'test'\n  ...\n# Subtest: Golden exact capacity boundary utilization=1 passes\nok 14 - Golden exact capacity boundary utilization=1 passes\n  ---\n  duration_ms: 0.38049\n  type: 'test'\n  ...\n# Subtest: Golden epsilon above capacity fails\nok 15 - Golden epsilon above capacity fails\n  ---\n  duration_ms: 0.268373\n  type: 'test'\n  ...\n# Subtest: Golden zero axial with pure moment creates equal compression/tension pairs\nok 16 - Golden zero axial with pure moment creates equal compression/tension pairs\n  ---\n  duration_ms: 0.68034\n  type: 'test'\n  ...\n# Subtest: Golden 3x3 centered grid pure N distributes equally\nok 17 - Golden 3x3 centered grid pure N distributes equally\n  ---\n  duration_ms: 0.343515\n  type: 'test'\n  ...\n# Subtest: Golden 3x3 Mx gradient matches hand solution\nok 18 - Golden 3x3 Mx gradient matches hand solution\n  ---\n  duration_ms: 0.23363\n  type: 'test'\n  ...\n# Subtest: Golden translation invariance when moments are about same global origin\nok 19 - Golden translation invariance when moments are about same global origin\n  ---\n  duration_ms: 0.357626\n  type: 'test'\n  ...\n# Subtest: Golden envelope governing utilization can differ from max compression if capacities differ\nok 20 - Golden envelope governing utilization can differ from max compression if capacities differ\n  ---\n  duration_ms: 0.488663\n  type: 'test'\n  ...\n# Subtest: Golden compression-negative carries moment signs unchanged after only N normalization\nok 21 - Golden compression-negative carries moment signs unchanged after only N normalization\n  ---\n  duration_ms: 0.404387\n  type: 'test'\n  ...\n# Subtest: Golden missing/zero compression capacity blocks input\nok 22 - Golden missing/zero compression capacity blocks input\n  ---\n  duration_ms: 0.560461\n  type: 'test'\n  ...\n# Subtest: Golden one pile is insufficient for moment distribution\nok 23 - Golden one pile is insufficient for moment distribution\n  ---\n  duration_ms: 0.183385\n  type: 'test'\n  ...\n# Subtest: Golden invalid compression sign blocks\nok 24 - Golden invalid compression sign blocks\n  ---\n  duration_ms: 0.132368\n  type: 'test'\n  ...\n# Subtest: pure N distributes equally\nok 25 - pure N distributes equally\n  ---\n  duration_ms: 1.299579\n  type: 'test'\n  ...\n# Subtest: Mx produces linear y-gradient and exact equilibrium\nok 26 - Mx produces linear y-gradient and exact equilibrium\n  ---\n  duration_ms: 0.818527\n  type: 'test'\n  ...\n# Subtest: general asymmetric layout satisfies coupled Σxy equilibrium\nok 27 - general asymmetric layout satisfies coupled Σxy equilibrium\n  ---\n  duration_ms: 0.378558\n  type: 'test'\n  ...\n# Subtest: compression-negative sign is explicit\nok 28 - compression-negative sign is explicit\n  ---\n  duration_ms: 0.167691\n  type: 'test'\n  ...\n# Subtest: compression utilization failure is detected\nok 29 - compression utilization failure is detected\n  ---\n  duration_ms: 0.220761\n  type: 'test'\n  ...\n# Subtest: tension without verified capacity blocks\nok 30 - tension without verified capacity blocks\n  ---\n  duration_ms: 0.206329\n  type: 'test'\n  ...\n# Subtest: tension capacity can be checked explicitly\nok 31 - tension capacity can be checked explicitly\n  ---\n  duration_ms: 0.214201\n  type: 'test'\n  ...\n# Subtest: Vx/Vy/T are metadata only and trigger warning\nok 32 - Vx/Vy/T are metadata only and trigger warning\n  ---\n  duration_ms: 0.139129\n  type: 'test'\n  ...\n# Subtest: duplicate pile IDs block\nok 33 - duplicate pile IDs block\n  ---\n  duration_ms: 0.496835\n  type: 'test'\n  ...\n# Subtest: singular collinear layout blocks moment distribution\nok 34 - singular collinear layout blocks moment distribution\n  ---\n  duration_ms: 0.363726\n  type: 'test'\n  ...\n# Subtest: envelope changes governing combination\nok 35 - envelope changes governing combination\n  ---\n  duration_ms: 0.512078\n  type: 'test'\n  ...\n# Subtest: duplicate combination ID blocks\nok 36 - duplicate combination ID blocks\n  ---\n  duration_ms: 0.223295\n  type: 'test'\n  ...\n# Subtest: TM SCT Coc exact cached row 20\nok 37 - TM SCT Coc exact cached row 20\n  ---\n  duration_ms: 1.248622\n  type: 'test'\n  ...\n# Subtest: TM SCT Coc exact cached row 21\nok 38 - TM SCT Coc exact cached row 21\n  ---\n  duration_ms: 0.20692\n  type: 'test'\n  ...\n# Subtest: TM SCT Coc exact cached row 22\nok 39 - TM SCT Coc exact cached row 22\n  ---\n  duration_ms: 0.094852\n  type: 'test'\n  ...\n# Subtest: TM SCT Coc exact cached row 23\nok 40 - TM SCT Coc exact cached row 23\n  ---\n  duration_ms: 0.122724\n  type: 'test'\n  ...\n# Subtest: TM SCT Coc exact cached row 24\nok 41 - TM SCT Coc exact cached row 24\n  ---\n  duration_ms: 0.093881\n  type: 'test'\n  ...\n# Subtest: TM SCT Coc exact cached row 25\nok 42 - TM SCT Coc exact cached row 25\n  ---\n  duration_ms: 0.083075\n  type: 'test'\n  ...\n# Subtest: TM SCT Coc exact cached row 26\nok 43 - TM SCT Coc exact cached row 26\n  ---\n  duration_ms: 0.141181\n  type: 'test'\n  ...\n# Subtest: TM SCT Coc exact cached row 27\nok 44 - TM SCT Coc exact cached row 27\n  ---\n  duration_ms: 0.083926\n  type: 'test'\n  ...\n# Subtest: TM SCT Coc exact cached row 28\nok 45 - TM SCT Coc exact cached row 28\n  ---\n  duration_ms: 0.46676\n  type: 'test'\n  ...\n# Subtest: TM SCT Coc exact cached row 29\nok 46 - TM SCT Coc exact cached row 29\n  ---\n  duration_ms: 0.329343\n  type: 'test'\n  ...\n# Subtest: TM SCT Coc exact cached row 30\nok 47 - TM SCT Coc exact cached row 30\n  ---\n  duration_ms: 0.169244\n  type: 'test'\n  ...\n# Subtest: TM SCT Coc exact cached row 31\nok 48 - TM SCT Coc exact cached row 31\n  ---\n  duration_ms: 0.07333\n  type: 'test'\n  ...\n# Subtest: TM SCT Coc exact cached row 32\nok 49 - TM SCT Coc exact cached row 32\n  ---\n  duration_ms: 0.052169\n  type: 'test'\n  ...\n# Subtest: TM SCT Coc exact cached row 33\nok 50 - TM SCT Coc exact cached row 33\n  ---\n  duration_ms: 0.044977\n  type: 'test'\n  ...\n# Subtest: TM SCT Coc exact cached row 34\nok 51 - TM SCT Coc exact cached row 34\n  ---\n  duration_ms: 0.043856\n  type: 'test'\n  ...\n# Subtest: TM SCT Coc exact cached row 35\nok 52 - TM SCT Coc exact cached row 35\n  ---\n  duration_ms: 1.06723\n  type: 'test'\n  ...\n# Subtest: TM SCT Coc exact cached row 36\nok 53 - TM SCT Coc exact cached row 36\n  ---\n  duration_ms: 0.059609\n  type: 'test'\n  ...\n# Subtest: TM SCT Coc exact cached row 37\nok 54 - TM SCT Coc exact cached row 37\n  ---\n  duration_ms: 0.038528\n  type: 'test'\n  ...\n# Subtest: TM SCT Coc exact cached row 38\nok 55 - TM SCT Coc exact cached row 38\n  ---\n  duration_ms: 0.032509\n  type: 'test'\n  ...\n# Subtest: five formula-pattern blocks are ordered join→action→capacity→utilization→status\nok 56 - five formula-pattern blocks are ordered join→action→capacity→utilization→status\n  ---\n  duration_ms: 1.976674\n  type: 'test'\n  ...\n# Subtest: per-block formula counts are not fabricated\nok 57 - per-block formula counts are not fabricated\n  ---\n  duration_ms: 0.404376\n  type: 'test'\n  ...\n# Subtest: JOIN resolves point, pile and coordinates\nok 58 - JOIN resolves point, pile and coordinates\n  ---\n  duration_ms: 3.233148\n  type: 'test'\n  ...\n# Subtest: JOIN blocks missing coordinate\nok 59 - JOIN blocks missing coordinate\n  ---\n  duration_ms: 0.137085\n  type: 'test'\n  ...\n# Subtest: JOIN blocks missing reaction\nok 60 - JOIN blocks missing reaction\n  ---\n  duration_ms: 0.13323\n  type: 'test'\n  ...\n# Subtest: ACTION converts compression-negative Fz\nok 61 - ACTION converts compression-negative Fz\n  ---\n  duration_ms: 0.177927\n  type: 'test'\n  ...\n# Subtest: ACTION supports compression-positive\nok 62 - ACTION supports compression-positive\n  ---\n  duration_ms: 0.130476\n  type: 'test'\n  ...\n# Subtest: CAPACITY uses compression capacity for compression\nok 63 - CAPACITY uses compression capacity for compression\n  ---\n  duration_ms: 0.107341\n  type: 'test'\n  ...\n# Subtest: CAPACITY blocks tension without verified tension capacity\nok 64 - CAPACITY blocks tension without verified tension capacity\n  ---\n  duration_ms: 0.300401\n  type: 'test'\n  ...\n# Subtest: UTILIZATION computes demand/capacity\nok 65 - UTILIZATION computes demand/capacity\n  ---\n  duration_ms: 0.341822\n  type: 'test'\n  ...\n# Subtest: STATUS exact capacity is PASS AT_CAPACITY\nok 66 - STATUS exact capacity is PASS AT_CAPACITY\n  ---\n  duration_ms: 0.265898\n  type: 'test'\n  ...\n# Subtest: STATUS above capacity is FAIL\nok 67 - STATUS above capacity is FAIL\n  ---\n  duration_ms: 0.219509\n  type: 'test'\n  ...\n# Subtest: tension with capacity is checked independently\nok 68 - tension with capacity is checked independently\n  ---\n  duration_ms: 0.135162\n  type: 'test'\n  ...\n# Subtest: fixture generates 8 rows for 4 piles × 2 combinations\nok 69 - fixture generates 8 rows for 4 piles × 2 combinations\n  ---\n  duration_ms: 0.420791\n  type: 'test'\n  ...\n# Subtest: fixture governing row is C1/P4 at utilization .875\nok 70 - fixture governing row is C1/P4 at utilization .875\n  ---\n  duration_ms: 0.174542\n  type: 'test'\n  ...\n# Subtest: NhomCoc exact bin labels\nok 71 - NhomCoc exact bin labels\n  ---\n  duration_ms: 1.656394\n  type: 'test'\n  ...\n# Subtest: NhomCoc preserves VBA empty behavior for zero/negative/gap 1<n<2\nok 72 - NhomCoc preserves VBA empty behavior for zero/negative/gap 1<n<2\n  ---\n  duration_ms: 0.190295\n  type: 'test'\n  ...\n# Subtest: NhomCoc supports custom prefix/suffix exactly\nok 73 - NhomCoc supports custom prefix/suffix exactly\n  ---\n  duration_ms: 0.083506\n  type: 'test'\n  ...\n# Subtest: current workbook P1=3.5 gives 875 mm threshold\nok 74 - current workbook P1=3.5 gives 875 mm threshold\n  ---\n  duration_ms: 0.494651\n  type: 'test'\n  ...\n# Subtest: current workbook all 19 macro group counts match reverse-engineered VBA\nok 75 - current workbook all 19 macro group counts match reverse-engineered VBA\n  ---\n  duration_ms: 0.498948\n  type: 'test'\n  ...\n# Subtest: current workbook has 4 singles and 15 rows in 3-pile groups\nok 76 - current workbook has 4 singles and 15 rows in 3-pile groups\n  ---\n  duration_ms: 0.328523\n  type: 'test'\n  ...\n# Subtest: macro group label changes 3-pile rows to 2-5 band\nok 77 - macro group label changes 3-pile rows to 2-5 band\n  ---\n  duration_ms: 1.181632\n  type: 'test'\n  ...\n# Subtest: kccoc=0 reproduces VBA default 3.1\nok 78 - kccoc=0 reproduces VBA default 3.1\n  ---\n  duration_ms: 0.123275\n  type: 'test'\n  ...\n# Subtest: transitive neighbors are recursively connected\nok 79 - transitive neighbors are recursively connected\n  ---\n  duration_ms: 0.291276\n  type: 'test'\n  ...\n# Subtest: duplicate point names count once like VBA Collection\nok 80 - duplicate point names count once like VBA Collection\n  ---\n  duration_ms: 0.374141\n  type: 'test'\n  ...\n# Subtest: unequal diameters expose DCE starting-pile asymmetry\nok 81 - unequal diameters expose DCE starting-pile asymmetry\n  ---\n  duration_ms: 0.161532\n  type: 'test'\n  ...\n# Subtest: Pass 5 importer responsibility is parse/map only\nok 82 - Pass 5 importer responsibility is parse/map only\n  ---\n  duration_ms: 0.921541\n  type: 'test'\n  ...\n# Subtest: CSI flat table adapter reconstructs rows exactly\nok 83 - CSI flat table adapter reconstructs rows exactly\n  ---\n  duration_ms: 0.605668\n  type: 'test'\n  ...\n# Subtest: CSI flat table adapter blocks malformed field/data length\nok 84 - CSI flat table adapter blocks malformed field/data length\n  ---\n  duration_ms: 0.349874\n  type: 'test'\n  ...\n# Subtest: exact workbook point coordinates import 194 unique points\nok 85 - exact workbook point coordinates import 194 unique points\n  ---\n  duration_ms: 1.862673\n  type: 'test'\n  ...\n# Subtest: point spring assignment uses physical point as pileId, not C250 property\nok 86 - point spring assignment uses physical point as pileId, not C250 property\n  ---\n  duration_ms: 0.244066\n  type: 'test'\n  ...\n# Subtest: exact workbook preserves 38 raw nodal-reaction rows\nok 87 - exact workbook preserves 38 raw nodal-reaction rows\n  ---\n  duration_ms: 0.680351\n  type: 'test'\n  ...\n# Subtest: raw reactions become 19 point/combo envelopes without dropping provenance\nok 88 - raw reactions become 19 point/combo envelopes without dropping provenance\n  ---\n  duration_ms: 0.601762\n  type: 'test'\n  ...\n# Subtest: compression handoff selects FzMax for DCE compression-positive nodal reactions\nok 89 - compression handoff selects FzMax for DCE compression-positive nodal reactions\n  ---\n  duration_ms: 0.370666\n  type: 'test'\n  ...\n# Subtest: compression handoff selects FzMin for compression-negative sources\nok 90 - compression handoff selects FzMin for compression-negative sources\n  ---\n  duration_ms: 0.364997\n  type: 'test'\n  ...\n# Subtest: PIERFORCES imports all 234 rows and does not select Location=0 inside importer\nok 91 - PIERFORCES imports all 234 rows and does not select Location=0 inside importer\n  ---\n  duration_ms: 3.858095\n  type: 'test'\n  ...\n# Subtest: bundle exact counts match source workbook\nok 92 - bundle exact counts match source workbook\n  ---\n  duration_ms: 3.497524\n  type: 'test'\n  ...\n# Subtest: bundle carries table-specific sign conventions instead of one global sign\nok 93 - bundle carries table-specific sign conventions instead of one global sign\n  ---\n  duration_ms: 1.625206\n  type: 'test'\n  ...\n# Subtest: bundle creates Pass 4 and Pass 3 handoffs without engineering calculations\nok 94 - bundle creates Pass 4 and Pass 3 handoffs without engineering calculations\n  ---\n  duration_ms: 5.710482\n  type: 'test'\n  ...\n# Subtest: duplicate spring assignment blocks before engine handoff\nok 95 - duplicate spring assignment blocks before engine handoff\n  ---\n  duration_ms: 0.30699\n  type: 'test'\n  ...\n# Subtest: missing coordinate blocks before engine handoff\nok 96 - missing coordinate blocks before engine handoff\n  ---\n  duration_ms: 0.527431\n  type: 'test'\n  ...\n# Subtest: orphan reaction point blocks before engine handoff\nok 97 - orphan reaction point blocks before engine handoff\n  ---\n  duration_ms: 0.408893\n  type: 'test'\n  ...\n# Subtest: Pass 5 handoff reproduces exact TM SCT Coc compression decisions when capacity is supplied by Pass 4 upstream\nok 98 - Pass 5 handoff reproduces exact TM SCT Coc compression decisions when capacity is supplied by Pass 4 upstream\n  ---\n  duration_ms: 1.971706\n  type: 'test'\n  ...\n# Subtest: importer never invents capacity from C250/Rd workbook lookup\nok 99 - importer never invents capacity from C250/Rd workbook lookup\n  ---\n  duration_ms: 0.659829\n  type: 'test'\n  ...\n# Subtest: Nodal reaction envelope reproduces TM SCT Coc F=Nd Max and G=Nd Min for all 19 piles\nok 100 - Nodal reaction envelope reproduces TM SCT Coc F=Nd Max and G=Nd Min for all 19 piles\n  ---\n  duration_ms: 1.104476\n  type: 'test'\n  ...\n# Subtest: PIERFORCES handoff preserves all 39 Pass 3 XLSM governing source rows exactly\nok 101 - PIERFORCES handoff preserves all 39 Pass 3 XLSM governing source rows exactly\n  ---\n  duration_ms: 1.4408\n  type: 'test'\n  ...\n# Subtest: final lock evaluator passes all exact live gates\nok 102 - final lock evaluator passes all exact live gates\n  ---\n  duration_ms: 1.350024\n  type: 'test'\n  ...\n# Subtest: replay mode can never satisfy final live lock\nok 103 - replay mode can never satisfy final live lock\n  ---\n  duration_ms: 0.239429\n  type: 'test'\n  ...\n# Subtest: wrong Search Brain hash blocks\nok 104 - wrong Search Brain hash blocks\n  ---\n  duration_ms: 0.162273\n  type: 'test'\n  ...\n# Subtest: unit restore failure blocks\nok 105 - unit restore failure blocks\n  ---\n  duration_ms: 0.26007\n  type: 'test'\n  ...\n# Subtest: partial coverage blocks\nok 106 - partial coverage blocks\n  ---\n  duration_ms: 0.210966\n  type: 'test'\n  ...\n# Subtest: prior regression failure blocks\nok 107 - prior regression failure blocks\n  ---\n  duration_ms: 0.204306\n  type: 'test'\n  ...\n# Subtest: Pass 5.2 live bridge contract is read-only/non-numeric\nok 108 - Pass 5.2 live bridge contract is read-only/non-numeric\n  ---\n  duration_ms: 1.110374\n  type: 'test'\n  ...\n# Subtest: CSI table alias resolver maps modern joint/pier names\nok 109 - CSI table alias resolver maps modern joint/pier names\n  ---\n  duration_ms: 0.399509\n  type: 'test'\n  ...\n# Subtest: bridge flat-table payload expands exact record count\nok 110 - bridge flat-table payload expands exact record count\n  ---\n  duration_ms: 0.402434\n  type: 'test'\n  ...\n# Subtest: live replay uses GetCoordCartesian/JointReact direct arrays as primary\nok 111 - live replay uses GetCoordCartesian/JointReact direct arrays as primary\n  ---\n  duration_ms: 15.122312\n  type: 'test'\n  ...\n# Subtest: live replay canonical counts equal exact DCE canonical counts\nok 112 - live replay canonical counts equal exact DCE canonical counts\n  ---\n  duration_ms: 8.904501\n  type: 'test'\n  ...\n# Subtest: live replay all 19 Fz envelopes equal DCE raw-table path\nok 113 - live replay all 19 Fz envelopes equal DCE raw-table path\n  ---\n  duration_ms: 10.810228\n  type: 'test'\n  ...\n# Subtest: live replay preserves all 234 PIERFORCES rows\nok 114 - live replay preserves all 234 PIERFORCES rows\n  ---\n  duration_ms: 5.044443\n  type: 'test'\n  ...\n# Subtest: live bridge blocks unverified units\nok 115 - live bridge blocks unverified units\n  ---\n  duration_ms: 0.745979\n  type: 'test'\n  ...\n# Subtest: live bridge requires explicit source-specific sign convention\nok 116 - live bridge requires explicit source-specific sign convention\n  ---\n  duration_ms: 0.862083\n  type: 'test'\n  ...\n# Subtest: live bridge result contains no capacity/utilization engineering output\nok 117 - live bridge result contains no capacity/utilization engineering output\n  ---\n  duration_ms: 8.249448\n  type: 'test'\n  ...\n# Subtest: live replay handoff reproduces Pass 4 numeric decision once locked capacity is supplied\nok 118 - live replay handoff reproduces Pass 4 numeric decision once locked capacity is supplied\n  ---\n  duration_ms: 7.154296\n  type: 'test'\n  ...\n# Subtest: CSV parser handles quotes, commas and embedded newlines\nok 119 - CSV parser handles quotes, commas and embedded newlines\n  ---\n  duration_ms: 0.326881\n  type: 'test'\n  ...\n# Subtest: CSV fallback exact bundle equals DCE canonical counts\nok 120 - CSV fallback exact bundle equals DCE canonical counts\n  ---\n  duration_ms: 3.334921\n  type: 'test'\n  ...\n# Subtest: CSV fallback refuses silent unit assumption\nok 121 - CSV fallback refuses silent unit assumption\n  ---\n  duration_ms: 0.175382\n  type: 'test'\n  ...\n# Subtest: Windows bridge runner accepts valid JSON from mocked process\nok 122 - Windows bridge runner accepts valid JSON from mocked process\n  ---\n  duration_ms: 0.190616\n  type: 'test'\n  ...\n# Subtest: Windows bridge runner surfaces bridge errors\nok 123 - Windows bridge runner surfaces bridge errors\n  ---\n  duration_ms: 0.212068\n  type: 'test'\n  ...\n# Subtest: Excel fallback payload requires explicit unit profile and reproduces canonical counts\nok 124 - Excel fallback payload requires explicit unit profile and reproduces canonical counts\n  ---\n  duration_ms: 4.326947\n  type: 'test'\n  ...\n# Subtest: direct-vs-table reaction audit catches live API mismatch\nok 125 - direct-vs-table reaction audit catches live API mismatch\n  ---\n  duration_ms: 0.143686\n  type: 'test'\n  ...\n# Subtest: live import blocks when JointReact and DatabaseTables disagree\nok 126 - live import blocks when JointReact and DatabaseTables disagree\n  ---\n  duration_ms: 0.71993\n  type: 'test'\n  ...\n# Subtest: Windows bridge uses DatabaseTables.GetTableForDisplayArray 7-parameter contract\nok 127 - Windows bridge uses DatabaseTables.GetTableForDisplayArray 7-parameter contract\n  ---\n  duration_ms: 0.661812\n  type: 'test'\n  ...\n# Subtest: Windows bridge uses Results.JointReact 14-parameter contract\nok 128 - Windows bridge uses Results.JointReact 14-parameter contract\n  ---\n  duration_ms: 0.937276\n  type: 'test'\n  ...\n# Subtest: Windows bridge uses PointObj.GetCoordCartesian 5-parameter contract\nok 129 - Windows bridge uses PointObj.GetCoordCartesian 5-parameter contract\n  ---\n  duration_ms: 0.095984\n  type: 'test'\n  ...\n# Subtest: Windows bridge enforces canonical kN_m_C units\nok 130 - Windows bridge enforces canonical kN_m_C units\n  ---\n  duration_ms: 0.09304\n  type: 'test'\n  ...\n# Subtest: Windows bridge captures and restores original present units\nok 131 - Windows bridge captures and restores original present units\n  ---\n  duration_ms: 0.110576\n  type: 'test'\n  ...\n# Subtest: Windows bridge attaches through CSiAPIv1 Helper.GetObject\nok 132 - Windows bridge attaches through CSiAPIv1 Helper.GetObject\n  ---\n  duration_ms: 0.178067\n  type: 'test'\n  ...\n1..132\n# tests 132\n# suites 0\n# pass 132\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 258.661443\n",
+  "nodeTestStderr": ""
+}

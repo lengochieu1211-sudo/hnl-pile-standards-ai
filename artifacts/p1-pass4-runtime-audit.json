@@ -1,0 +1,17 @@
+{
+  "version": "1.25.7",
+  "pass": "P1 Pass 4",
+  "status": "REVIEW",
+  "engineTests": {
+    "pass": 12,
+    "fail": 0
+  },
+  "formulaOnlyExcel": {
+    "created": true,
+    "formulaErrorScan": "PASS",
+    "tensionCapacityConvention": "0 = no verified tension capacity; tension demand => BLOCK"
+  },
+  "xlsmBenchmark": "BLOCKED_SOURCE_BYTES_NOT_MOUNTED",
+  "productionNumeric": false,
+  "next": "TM SCT Coc cell-by-cell Golden benchmark"
+}

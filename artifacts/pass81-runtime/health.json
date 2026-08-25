@@ -1,0 +1,1 @@
+{"ok":true,"status":"PASS8.1_DYNAMIC_EXCEL_READY","route":{"endpoint":"/api/hnl/pile/export-excel","method":"POST","serverRecalculation":"Pass 8 router server-side","clientServerSummaryCheck":"MANDATORY","exporter":"p1-pass8.1-v18-dynamic-excel-exporter","templatePath":"/mnt/data/HNL-P1-Pass8.1-DynamicExcel-v20/artifacts/HNL_P1_Pass7_Bao_Cao_Tinh_Toan_Coc_San_Xuat_v18.xlsx"}}

@@ -1,0 +1,13 @@
+HTTP/1.1 200 OK
+content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+content-length: 146519
+content-disposition: attachment; filename="HNL_Tinh_Toan_Coc_168_v1.25.7.xlsx"; filename*=UTF-8''HNL_Tinh_Toan_Coc_168_v1.25.7.xlsx
+cache-control: no-store
+x-hnl-export-id: 6d301867-f198-4b6c-99cd-02224efe2981
+x-hnl-template-sha256: 582e897788d3aa96895f7ff63e604899ad489cbe2d5fb59238bb186a4b62b9d1
+x-hnl-server-verified: true
+x-hnl-exporter-version: Pass8.1-v20
+Date: Tue, 25 Aug 2026 12:51:48 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+

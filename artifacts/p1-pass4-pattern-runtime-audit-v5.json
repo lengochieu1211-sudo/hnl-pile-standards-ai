@@ -1,0 +1,27 @@
+{
+  "version": "1.25.7",
+  "pass": "P1 Pass 4",
+  "subpass": "TM SCT Coc Formula Pattern Reconstruction",
+  "status": "REVIEW",
+  "workbookEvidence": {
+    "formulaCount": 6082,
+    "udfXll": 0
+  },
+  "blocks": [
+    "JOIN",
+    "ACTION",
+    "CAPACITY",
+    "UTILIZATION",
+    "STATUS"
+  ],
+  "tests": {
+    "pass": 51,
+    "fail": 0,
+    "patternPass": 15
+  },
+  "goldenFixture": "TM-SCT-COC-GOLDEN-SEED-IMPORT-001",
+  "exactCellInventory": false,
+  "productionNumeric": false,
+  "searchJsTouched": false,
+  "nextGate": "Assign exact XLSM cells/formulas to five blocks and run XLSM ↔ Engine ↔ Excel benchmark"
+}

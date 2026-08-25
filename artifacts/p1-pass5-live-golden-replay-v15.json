@@ -1,0 +1,54 @@
+{
+  "schema": "HNL-P1-PASS5-LIVE-GOLDEN-RESULT",
+  "version": "1.25.7",
+  "mode": "replay",
+  "generatedAt": "2026-08-25T10:28:46.471Z",
+  "live": {
+    "product": "ETABS",
+    "apiVersion": "CSiAPIv1-replay",
+    "modelFile": "DCE_REFERENCE_REPLAY",
+    "sourceMode": "LIVE_API_REPLAY_FROM_EXACT_DCE",
+    "units": {
+      "normalizedTo": "kN_m_C",
+      "verified": true,
+      "audit": {
+        "method": "REPLAY_GOLDEN"
+      }
+    },
+    "unitRestore": null,
+    "directVsTableCoordinates": {
+      "status": "PASS",
+      "matches": true,
+      "checked": 194,
+      "mismatches": []
+    },
+    "directVsTableReactions": {
+      "status": "PASS",
+      "matches": true,
+      "checkedGroups": 19,
+      "mismatches": []
+    }
+  },
+  "checked": {
+    "coordinates": 194,
+    "nodalEnvelopes": 19,
+    "pierForces": 234
+  },
+  "expectedReference": {
+    "coordinates": 194,
+    "nodalEnvelopes": 19,
+    "pierForces": 234,
+    "pointSpringAssignments": 19,
+    "pierSection": 39
+  },
+  "coverage": {
+    "coordinates": true,
+    "nodalEnvelopes": true,
+    "pierForces": true,
+    "pointSpringAssignments": true,
+    "pierSection": true
+  },
+  "issues": [],
+  "pass": true,
+  "lockRule": "Full Pass 5 may be promoted only from mode=live after exact coverage, cross-checks, unit restore, prior gates and Search Brain hash all PASS."
+}

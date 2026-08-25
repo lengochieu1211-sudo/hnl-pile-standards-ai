@@ -1,0 +1,13 @@
+{
+  "formulaCellCount": 6082,
+  "uniqueFingerprints": 23,
+  "blockCounts": {
+    "UNCLASSIFIED": 5926,
+    "JOIN": 46,
+    "UTILIZATION": 108,
+    "STATUS": 2
+  },
+  "sheet": "TM SCT Coc",
+  "workbook": "10.1 DCE_SctCoc_10304 2025.xlsm",
+  "workbookSha256": "ec38b68f753b08e50d9d1f9df988be5084cab1aedf391ba1aaecf112e9d88bd1"
+}

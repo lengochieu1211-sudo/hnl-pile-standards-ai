@@ -1,0 +1,38 @@
+{
+  "schema": "HNL-P1-PASS4-PILE-REACTION-GOLDEN-SEED-V3",
+  "version": "1.25.7",
+  "status": "REVIEW",
+  "productionNumeric": false,
+  "engineTests": {
+    "total": 24,
+    "pass": 24,
+    "fail": 0
+  },
+  "goldenCategories": [
+    "pure N",
+    "N+Mx",
+    "N+Mx+My",
+    "3x3 grid",
+    "capacity exact boundary",
+    "epsilon above boundary",
+    "tension/uplift",
+    "compression-negative sign",
+    "translation/origin invariance",
+    "variable pile capacities",
+    "singular layout",
+    "duplicate IDs/combinations"
+  ],
+  "semanticRules": {
+    "maxCompressionPile": "largest positive axial demand",
+    "governingPile": "largest verified utilization; may differ from maxCompressionPile",
+    "tensionWithoutVerifiedCapacity": "BLOCK",
+    "VxVyT": "metadata only in axial reaction model"
+  },
+  "xlsm": {
+    "sheet": "TM SCT Coc",
+    "formulaCountKnown": 6082,
+    "udfCountKnown": 0,
+    "benchmark": "BLOCKED_ORIGINAL_BYTES_UNAVAILABLE"
+  },
+  "promotionBlocked": true
+}

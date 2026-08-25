@@ -1,0 +1,51 @@
+{
+  "schema": "HNL-P1-PASS7-FULL-CALCULATION-CORE-LOCKED-RELEASE",
+  "version": "1.25.7",
+  "release": "v18",
+  "status": "CORE_LOCKED_PATCH",
+  "scope": "Full calculation/report integration: Rsoil -> Rmaterial -> Rpile -> structural import -> per-pile check -> governing -> Vietnamese conclusion + production Excel.",
+  "gate": {
+    "pass": true,
+    "checks": 16,
+    "failed": []
+  },
+  "goldenSummary": {
+    "RsoilKn": 843.4285714285716,
+    "RmaterialKn": 2952,
+    "RpileKn": 843.4285714285716,
+    "gammaN": 1.15,
+    "NdMaxPerPileKn": 733.4161490683232,
+    "boreholeBranches": 6,
+    "pileChecks": 19,
+    "governingPileId": "168",
+    "governingCombinationId": "EULS",
+    "governingUtilization": 0.4980692764464232,
+    "overallPass": true
+  },
+  "excel": {
+    "file": "HNL_P1_Pass7_Bao_Cao_Tinh_Toan_Coc_San_Xuat_v18.xlsx",
+    "language": "vi-VN",
+    "formulaErrorScan": "PASS_0_ERRORS",
+    "sheetCount": 13,
+    "productionFormulaScope": "Material CT(50), lookup B7/B13/Table16 interpolation, soil branch Qb/Qs/Rk/Rd/Rpile/Ndmax from locked lookup intermediates, per-pile utilization/status/governing."
+  },
+  "boundaries": {
+    "liveEtabsSap": "READY_NOT_CERTIFIED_LIVE",
+    "fullSourceIntegration": "DEFERRED_SEPARATE_GATE",
+    "analyticalRigidCap": "REVIEW",
+    "soilRawInputExcelReLookup": "HNL_ENGINE_REQUIRED_FOR_RAW_GEOLOGY_CHANGES; Excel recomputes from exported locked qb/fi/tau intermediates."
+  },
+  "searchJsTouched": false,
+  "priorSearchBrainSha256": "f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2",
+  "hashes": {
+    "src/pass7-full-calculation-workflow.js": "f7c336df776a911fe6e295b51a023a3057e84465cab490c257e42f4cb5fbc313",
+    "src/multi-borehole-engine.js": "16b72f9dacf9a2c9d871085edbf5f9a8dfbc0421298194dc8ede663e62b88901",
+    "src/pile-capacity-engine.js": "b4eef09abd69cb18926d686bbc6a579305032ddb971fa2c5bee35dc9b943c18a",
+    "src/pile-material-engine.js": "ddcafd27e6ccce0b21814251809bb4ff050a951340b42d44846394f5f2b259af",
+    "src/pass6-structural-workflow.js": "65fa36ff25a24387c95717679ffc018a33c504d5722e1aacece811bf7c33864a",
+    "src/etabs-sap-importer.js": "ce5ad7c1d2e14721f14467bfe19e7e29531629fc4f5a3682ed38dc01dff1bd3d",
+    "src/pile-reaction-engine.js": "69a5efe4b5e25d6a88b34817dc9e6ea77ad03932996eed05d2b006e75fec5ce8",
+    "artifacts/p1-pass7-full-calculation-golden-v18.json": "c7e8c93d04413eaaf676086df7375a9c4d6d685ddece2ba0562f73b30ab4ebfb",
+    "HNL_P1_Pass7_Bao_Cao_Tinh_Toan_Coc_San_Xuat_v18.xlsx": "582e897788d3aa96895f7ff63e604899ad489cbe2d5fb59238bb186a4b62b9d1"
+  }
+}

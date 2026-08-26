@@ -1,0 +1,246 @@
+{
+  "schema": "HNL_P32_REAL_PDF_CORPUS_V1",
+  "researchVersion": "v1.27.0-P3.2",
+  "promotionState": "SHADOW_ONLY",
+  "containsPdfBytes": false,
+  "notes": [
+    "Corpus chỉ lưu tên/alias, trang gợi ý và anchor ngắn; không nhúng PDF tiêu chuẩn.",
+    "CI chứng nhận contract/harness; BENCHMARKED chỉ được tạo từ thao tác kéo vùng trên PDF thật trong HNL.",
+    "Scan tiếng Việt là case discovery: phải chọn một vùng ảnh/weak-text thật; không giả định một trang scan nếu chưa có evidence runtime."
+  ],
+  "documents": [
+    {
+      "id": "TCVN10304_2025",
+      "standard": "TCVN 10304:2025",
+      "pageCountHint": 124,
+      "matchAny": [
+        [
+          "10304",
+          "2025"
+        ]
+      ],
+      "knownNames": [
+        "1. TCVN 10304-2025 Móng cọc - Thiết kế.doc.pdf",
+        "1a9a3b69-aef7-4f82-ac78-5b8d5434af4c1.pdf"
+      ]
+    },
+    {
+      "id": "TCVN5574_2018",
+      "standard": "TCVN 5574:2018",
+      "pageCountHint": 193,
+      "matchAny": [
+        [
+          "5574",
+          "2018"
+        ]
+      ],
+      "knownNames": [
+        "1. TCVN 5574-2018 Thiết kế KCBT và BTCT.pdf",
+        "10.TCVN 5574-2018_THIET KE BE TONG VA BE TONG COT THEP.pdf",
+        "10.TCVN 5574-2018_THIET KE BE TONG VA BE TONG COT THEP (1).pdf"
+      ]
+    },
+    {
+      "id": "TCVN7888_2014",
+      "standard": "TCVN 7888:2014",
+      "pageCountHint": 36,
+      "matchAny": [
+        [
+          "7888",
+          "2014"
+        ]
+      ],
+      "knownNames": [
+        "1.TCVN 7888.CỌC BTLT ƯST.pdf"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "P32_10304_WEAK_VI_DISCOVERY",
+      "documentId": "TCVN10304_2025",
+      "title": "10304 · Scan/weak text tiếng Việt · discovery",
+      "profile": [
+        "scan-or-weak-text",
+        "vietnamese",
+        "fallback-routing"
+      ],
+      "pageHints": [],
+      "anchorsAny": [
+        "TCVN 10304:2025",
+        "THIẾT KẾ MÓNG CỌC"
+      ],
+      "requiredRuns": 1,
+      "manualInstruction": "Chọn một vùng nhìn rõ bằng mắt nhưng text-layer hỏng/rỗng. Ưu tiên trang scan hoặc trang có chữ Việt bị mã hóa sai."
+    },
+    {
+      "id": "P32_10304_TABLE_RQD_P29",
+      "documentId": "TCVN10304_2025",
+      "title": "10304 · Bảng 1 · RQD/Ks",
+      "profile": [
+        "table",
+        "native-or-ocr"
+      ],
+      "pageHints": [
+        29
+      ],
+      "anchorsAny": [
+        "Bảng 1",
+        "RQD",
+        "Ks"
+      ],
+      "requiredRuns": 1,
+      "manualInstruction": "Kéo vùng bao trọn tiêu đề và ít nhất hai dòng của Bảng 1."
+    },
+    {
+      "id": "P32_10304_FORMULA_CT9_P31",
+      "documentId": "TCVN10304_2025",
+      "title": "10304 · 7.2.2.1 · CT (9)",
+      "profile": [
+        "formula",
+        "symbols",
+        "native"
+      ],
+      "pageHints": [
+        31
+      ],
+      "anchorsAny": [
+        "7.2.2.1",
+        "(9)",
+        "qb"
+      ],
+      "requiredRuns": 1,
+      "manualInstruction": "Kéo vùng chứa CT (9) và phần giải thích ký hiệu gần công thức."
+    },
+    {
+      "id": "P32_10304_LATE_C2_P108",
+      "documentId": "TCVN10304_2025",
+      "title": "10304 · Phụ lục C · C.2/C.3 · late page",
+      "profile": [
+        "late-page",
+        "formula",
+        "mixed-stress"
+      ],
+      "pageHints": [
+        108
+      ],
+      "anchorsAny": [
+        "(C.2)",
+        "(C.3)",
+        "Rsi"
+      ],
+      "requiredRuns": 1,
+      "manualInstruction": "Kéo vùng có C.2/C.3 để kiểm ký hiệu, late-page và bbox."
+    },
+    {
+      "id": "P32_10304_SPT_MULTI_110_111",
+      "documentId": "TCVN10304_2025",
+      "title": "10304 · Phụ lục D SPT · nhiều trang",
+      "profile": [
+        "multi-page",
+        "table",
+        "formula",
+        "spt"
+      ],
+      "pageHints": [
+        110,
+        111
+      ],
+      "anchorsAny": [
+        "Phụ lục D",
+        "SPT",
+        "D."
+      ],
+      "requiredRuns": 2,
+      "requireDistinctPages": true,
+      "manualInstruction": "Ghi một vùng ở trang 110 và một vùng ở trang 111; không dùng cùng một trang hai lần."
+    },
+    {
+      "id": "P32_5574_TABLE10_ZOOM",
+      "documentId": "TCVN5574_2018",
+      "title": "5574 · Bảng 10 · zoom invariance",
+      "profile": [
+        "table",
+        "native",
+        "zoom-invariance"
+      ],
+      "pageHints": [
+        36,
+        38
+      ],
+      "anchorsAny": [
+        "Bảng 10",
+        "Mô đun đàn hồi",
+        "Eb"
+      ],
+      "requiredRuns": 2,
+      "requireDistinctViewports": true,
+      "bboxIouThreshold": 0.7,
+      "manualInstruction": "Kéo cùng một vùng Bảng 10 hai lần ở hai mức zoom khác nhau, ví dụ 100% và 175%."
+    },
+    {
+      "id": "P32_5574_CRACK_TABLE17",
+      "documentId": "TCVN5574_2018",
+      "title": "5574 · CT (155) + Bảng 17",
+      "profile": [
+        "formula",
+        "table",
+        "symbols",
+        "vietnamese"
+      ],
+      "pageHints": [
+        96,
+        98
+      ],
+      "anchorsAny": [
+        "(155)",
+        "Bảng 17",
+        "acrc"
+      ],
+      "requiredRuns": 1,
+      "manualInstruction": "Kéo vùng chứa CT (155), tiêu đề Bảng 17 hoặc cả hai nếu vừa khung."
+    },
+    {
+      "id": "P32_7888_TABLE1_P10_11",
+      "documentId": "TCVN7888_2014",
+      "title": "7888 · Bảng 1 · PC/PHC",
+      "profile": [
+        "table",
+        "native",
+        "vietnamese"
+      ],
+      "pageHints": [
+        10,
+        11
+      ],
+      "anchorsAny": [
+        "Bảng 1",
+        "PHC",
+        "PC"
+      ],
+      "requiredRuns": 1,
+      "manualInstruction": "Kéo vùng tiêu đề + dòng PHC/PC của Bảng 1."
+    },
+    {
+      "id": "P32_7888_APPENDIX_B_P32_33",
+      "documentId": "TCVN7888_2014",
+      "title": "7888 · Phụ lục B · B.4/B.5",
+      "profile": [
+        "formula",
+        "late-page",
+        "symbols"
+      ],
+      "pageHints": [
+        32,
+        33
+      ],
+      "anchorsAny": [
+        "Phụ lục B",
+        "B.4",
+        "B.5"
+      ],
+      "requiredRuns": 1,
+      "manualInstruction": "Kéo vùng có B.4/B.5 và ký hiệu công thức."
+    }
+  ]
+}

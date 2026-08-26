@@ -8,6 +8,7 @@ on:
       - 'index.html'
       - 'package.json'
       - 'src/pdf-intelligence/**'
+      - 'artifacts/pdf-intelligence/**'
       - 'offline/pdf-intelligence/**'
       - 'bridge/pdf-intelligence-shadow-server.mjs'
       - 'bridge/server-v127-shadow.mjs'
@@ -20,7 +21,7 @@ on:
 
 jobs:
   shadow-cert:
-    name: ${{ matrix.os }} · P0/P2/P3/P3.1 Shadow Golden
+    name: ${{ matrix.os }} · P0/P2/P3/P3.1/P3.2 Shadow Golden
     strategy:
       fail-fast: false
       matrix:
@@ -58,7 +59,14 @@ jobs:
         run: node scripts/pdf-intelligence-region-ui-selftest.mjs
       - name: P3.1 Production Bridge + Shadow runtime smoke
         run: node scripts/pdf-intelligence-region-ui-runtime-smoke.mjs
-      - name: P3.1 Web integration build
+      - name: P3.2 source syntax
+        run: |
+          node --check src/pdf-intelligence/real-pdf-golden-core.js
+          node --check src/pdf-intelligence/real-pdf-golden-corpus.js
+          node --check src/pdf-intelligence/real-pdf-golden-ui.js
+      - name: P3.2 Real PDF Golden contract
+        run: node scripts/pdf-intelligence-real-pdf-golden-contract.mjs
+      - name: P3.2/P3.1 Web integration build
         run: npm run build:web
       - name: Python runner syntax
         run: python -m py_compile offline/pdf-intelligence/deepdoc_vietocr_runner.py

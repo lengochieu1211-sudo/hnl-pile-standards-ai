@@ -102,6 +102,11 @@ async function runProcess(command, args, { timeoutMs = 15 * 60 * 1000, cwd, env 
   });
 }
 
+function safeInputName(fileName, fallbackExt) {
+  const raw = String(fileName || `document${fallbackExt}`).replace(/[^A-Za-z0-9._-]+/g, '_');
+  return /\.[A-Za-z0-9]{2,5}$/.test(raw) ? raw : `${raw}${fallbackExt}`;
+}
+
 export async function createDeepDocVietOcrAdapter({
   deepdocHome = nodeRuntime() ? process.env.HNL_DEEPDOC_HOME : null,
   runnerPath,
@@ -112,7 +117,7 @@ export async function createDeepDocVietOcrAdapter({
     return {
       available: false,
       runtime: 'browser',
-      capabilities: { ocr: false, layout: false, tableStructure: false, selectivePages: false },
+      capabilities: { ocr: false, layout: false, tableStructure: false, selectivePages: false, selectiveRegions: false },
       error: { code: 'NODE_ONLY', message: 'DeepDoc/VietOCR adapter is Desktop/Node-only in v1.27 shadow mode.' }
     };
   }
@@ -138,6 +143,53 @@ export async function createDeepDocVietOcrAdapter({
   }
 
   const health = await probe();
+
+  async function processInput(bytes, {
+    fileName,
+    fallbackExt,
+    pages = [],
+    threshold = 0.5,
+    tableStructure = true,
+    dpi = 216
+  } = {}) {
+    if (!health.available) {
+      const error = new Error(health.message || 'DeepDoc/VietOCR external runtime is unavailable.');
+      error.code = health.code || 'DEEPOCR_UNAVAILABLE';
+      throw error;
+    }
+    const os = await import('node:os');
+    const crypto = await import('node:crypto');
+    const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'hnl-deepdoc-'));
+    const safeName = safeInputName(fileName, fallbackExt);
+    const inputPath = path.join(tempRoot, safeName);
+    const outputPath = path.join(tempRoot, 'result.json');
+    try {
+      const array = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+      await fs.writeFile(inputPath, array);
+      const args = [
+        ...py.args,
+        resolvedRunner,
+        '--deepdoc-home', resolvedHome,
+        '--input', inputPath,
+        '--output-json', outputPath,
+        '--threshold', String(threshold),
+        '--dpi', String(dpi)
+      ];
+      if (fallbackExt === '.pdf' && Array.isArray(pages) && pages.length) {
+        args.push('--pages', pages.map(Number).filter(Number.isFinite).join(','));
+      }
+      if (!tableStructure) args.push('--no-tsr');
+      await runProcess(py.command, args, { timeoutMs });
+      const raw = JSON.parse(await fs.readFile(outputPath, 'utf8'));
+      return {
+        ...normalizeDeepDocResult(raw),
+        inputSha256: crypto.createHash('sha256').update(array).digest('hex')
+      };
+    } finally {
+      await fs.rm(tempRoot, { recursive: true, force: true }).catch(() => {});
+    }
+  }
+
   return {
     available: Boolean(health.available),
     runtime: 'node',
@@ -152,49 +204,14 @@ export async function createDeepDocVietOcrAdapter({
       layout: Boolean(health.available),
       tableStructure: Boolean(health.available),
       selectivePages: Boolean(health.available),
+      selectiveRegions: Boolean(health.available),
       calibratedOcrConfidence: false
     },
-    async process(bytes, {
-      fileName = 'document.pdf',
-      pages = [],
-      threshold = 0.5,
-      tableStructure = true,
-      dpi = 216
-    } = {}) {
-      if (!health.available) {
-        const error = new Error(health.message || 'DeepDoc/VietOCR external runtime is unavailable.');
-        error.code = health.code || 'DEEPOCR_UNAVAILABLE';
-        throw error;
-      }
-      const os = await import('node:os');
-      const crypto = await import('node:crypto');
-      const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'hnl-deepdoc-'));
-      const safeName = String(fileName || 'document.pdf').replace(/[^A-Za-z0-9._-]+/g, '_');
-      const inputPath = path.join(tempRoot, safeName.toLowerCase().endsWith('.pdf') ? safeName : `${safeName}.pdf`);
-      const outputPath = path.join(tempRoot, 'result.json');
-      try {
-        const array = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-        await fs.writeFile(inputPath, array);
-        const args = [
-          ...py.args,
-          resolvedRunner,
-          '--deepdoc-home', resolvedHome,
-          '--input', inputPath,
-          '--output-json', outputPath,
-          '--threshold', String(threshold),
-          '--dpi', String(dpi)
-        ];
-        if (Array.isArray(pages) && pages.length) args.push('--pages', pages.map(Number).filter(Number.isFinite).join(','));
-        if (!tableStructure) args.push('--no-tsr');
-        await runProcess(py.command, args, { timeoutMs });
-        const raw = JSON.parse(await fs.readFile(outputPath, 'utf8'));
-        return {
-          ...normalizeDeepDocResult(raw),
-          inputSha256: crypto.createHash('sha256').update(array).digest('hex')
-        };
-      } finally {
-        await fs.rm(tempRoot, { recursive: true, force: true }).catch(() => {});
-      }
+    async process(bytes, options = {}) {
+      return processInput(bytes, { ...options, fileName: options.fileName || 'document.pdf', fallbackExt: '.pdf' });
+    },
+    async processRegionImage(bytes, options = {}) {
+      return processInput(bytes, { ...options, fileName: options.fileName || 'hnl-region.jpg', fallbackExt: '.jpg', pages: [] });
     }
   };
 }

@@ -1,0 +1,47 @@
+name: v1.27 PDF Intelligence Shadow Certification
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'src/pdf-intelligence/**'
+      - 'offline/pdf-intelligence/**'
+      - 'scripts/pdf-intelligence-*.mjs'
+      - 'scripts/deepdoc-vietocr-selftest.mjs'
+      - 'docs/PDF_INTELLIGENCE_V1.27_*.md'
+      - '.github/workflows/v127-pdf-intelligence-shadow.yml'
+  workflow_dispatch:
+
+jobs:
+  shadow-cert:
+    name: ${{ matrix.os }} · P0/P2/P3 Shadow Golden
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install exact dependencies
+        run: npm ci
+      - name: P0/P1 PDF Intelligence selftest
+        run: node scripts/pdf-intelligence-selftest.mjs
+      - name: P2 DeepDoc/VietOCR controlled-runtime selftest
+        run: node scripts/deepdoc-vietocr-selftest.mjs
+      - name: P3 source syntax
+        run: |
+          node --check src/pdf-intelligence/region-selective-core.js
+          node --check src/pdf-intelligence/region-selective-ocr.js
+          node --check src/pdf-intelligence/deepdoc-region-bridge.js
+          node --check src/pdf-intelligence/deepdoc-vietocr-adapter.js
+      - name: P3 Region Selective OCR Golden
+        run: node scripts/pdf-intelligence-region-golden.mjs
+      - name: P3 Region adapter controlled-runtime selftest
+        run: node scripts/pdf-intelligence-region-adapter-selftest.mjs
+      - name: Python runner syntax
+        run: python -m py_compile offline/pdf-intelligence/deepdoc_vietocr_runner.py

@@ -1,12 +1,11 @@
-name: Build HNL Desktop AI for Windows
+name: Build HNL Desktop AI v1.26.0 for Windows
 
 on:
   workflow_dispatch:
   push:
     branches:
       - main
-    tags:
-      - "v*"
+    tags: ['v1.26.0']
 
 permissions:
   contents: read
@@ -14,106 +13,76 @@ permissions:
 jobs:
   build-windows:
     runs-on: windows-latest
+    timeout-minutes: 55
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: "false"
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v5
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
-
+          cache: npm
       - name: Read app version
         shell: pwsh
         run: |
           $version = node -p "require('./package.json').version"
           "APP_VERSION=$version" >> $env:GITHUB_ENV
-          Write-Host "HNL version: $version"
-
-      - name: Sync package-lock with app version
-        shell: pwsh
-        run: |
-          $pkgVersion = node -p "require('./package.json').version"
-          $lockVersion = ""
-          if (Test-Path package-lock.json) { $lockVersion = node -p "require('./package-lock.json').version || ''" }
-          if ((-not (Test-Path package-lock.json)) -or ($lockVersion -ne $pkgVersion)) {
-            Write-Host "Tạo/cập nhật lock tạm: v$lockVersion -> v$pkgVersion"
-            npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-            if ($LASTEXITCODE -ne 0) { throw "Không tạo/cập nhật được package-lock.json" }
-          }
-          if (-not (Test-Path package-lock.json)) { throw "Thiếu package-lock.json sau bootstrap" }
-
-      - name: Install locked dependencies
-        run: npm ci --no-audit --no-fund
-
-      - name: Version Gate
-        run: npm run check:version
-
-      - name: Test core logic
-        run: npm test
-
-      - name: Full Table Golden
-        run: npm run golden:tables
-
-      - name: ExcelJS runtime smoke
-        run: npm run excel:smoke
-
-      - name: Validate Windows builder config
+          if ($version -ne '1.26.0') { throw "Expected v1.26.0, got $version" }
+      - name: Validate Windows packaging contract
         shell: pwsh
         run: |
           $pkg = Get-Content package.json -Raw | ConvertFrom-Json
+          $targetMacro = '$' + '{target}'
           $setupName = [string]$pkg.build.nsis.artifactName
           $portableName = [string]$pkg.build.portable.artifactName
-          $winName = [string]$pkg.build.win.artifactName
-          $targetMacro = '$' + '{target}'
-          if ($winName -and $winName.Contains($targetMacro)) { throw "win.artifactName still contains unsupported target macro" }
-          if ($setupName -notmatch 'Setup') { throw "NSIS artifact name is invalid: $setupName" }
-          if ($portableName -notmatch 'Portable') { throw "Portable artifact name is invalid: $portableName" }
-          Write-Host "electron-builder artifact names OK"
-          Write-Host "Setup: $setupName"
-          Write-Host "Portable: $portableName"
-
+          if ($setupName.Contains($targetMacro) -or $portableName.Contains($targetMacro)) {
+            throw "Unsupported target macro in Windows artifactName"
+          }
+          if ($setupName -notmatch '^HNL-Pile-Standards-AI-Setup-\$\{version\}-\$\{arch\}\.\$\{ext\}$') {
+            throw "Unexpected NSIS artifactName: $setupName"
+          }
+          if ($portableName -notmatch '^HNL-Pile-Standards-AI-Portable-\$\{version\}-\$\{arch\}\.\$\{ext\}$') {
+            throw "Unexpected Portable artifactName: $portableName"
+          }
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Single-version identity gate
+        run: npm run check:version
+      - name: Release synchronization gate
+        run: npm run gate:release-sync
+      - name: Test core logic
+        run: npm test
+      - name: Full Table Golden
+        run: npm run golden:tables
+      - name: ExcelJS runtime smoke
+        run: npm run excel:smoke
+      - name: Excel Production smoke
+        run: npm run excel:production-smoke
+      - name: Master Audit · P0 must be closed before EXE
+        run: node scripts/master-system-audit.mjs --enforce-p0
       - name: Build NSIS and Portable EXE
         run: npm run dist:win
-
       - name: Verify Windows EXEs
         shell: pwsh
         run: |
-          $setup = Get-ChildItem release -Filter "HNL-Pile-Standards-AI-Setup-*.exe" -File
-          $portable = Get-ChildItem release -Filter "HNL-Pile-Standards-AI-Portable-*.exe" -File
-          if ($setup.Count -lt 1) { throw "Không tìm thấy Setup EXE trong release/" }
-          if ($portable.Count -lt 1) { throw "Không tìm thấy Portable EXE trong release/" }
-          Write-Host "Setup EXE:"
-          $setup | ForEach-Object { Write-Host " - $($_.Name) [$([math]::Round($_.Length/1MB,1)) MB]" }
-          Write-Host "Portable EXE:"
-          $portable | ForEach-Object { Write-Host " - $($_.Name) [$([math]::Round($_.Length/1MB,1)) MB]" }
-
+          $setup = Get-ChildItem release -Filter "HNL-Pile-Standards-AI-Setup-1.26.0-*.exe" -File
+          $portable = Get-ChildItem release -Filter "HNL-Pile-Standards-AI-Portable-1.26.0-*.exe" -File
+          if ($setup.Count -lt 1) { throw "Không tìm thấy Setup v1.26.0" }
+          if ($portable.Count -lt 1) { throw "Không tìm thấy Portable v1.26.0" }
       - name: Smoke test Portable EXE
         shell: pwsh
         run: |
-          $portable = Get-ChildItem release -Filter "HNL-Pile-Standards-AI-Portable-*.exe" -File | Select-Object -First 1
-          if (-not $portable) { throw "Không tìm thấy Portable EXE để smoke test" }
-          Write-Host "Smoke test: $($portable.Name)"
+          $portable = Get-ChildItem release -Filter "HNL-Pile-Standards-AI-Portable-1.26.0-*.exe" -File | Select-Object -First 1
           $process = Start-Process -FilePath $portable.FullName -ArgumentList "--smoke-test" -PassThru -WindowStyle Hidden
-          if (-not $process.WaitForExit(60000)) {
-            try { Stop-Process -Id $process.Id -Force } catch {}
-            throw "Portable smoke test timeout sau 60 giây"
-          }
-          if ($process.ExitCode -ne 0) { throw "Portable smoke test FAIL, exit code $($process.ExitCode)" }
-          Write-Host "Portable smoke test PASS"
-
-      - name: Show embedded build metadata
-        shell: pwsh
-        run: Get-Content dist/build-info.json
-
+          if (-not $process.WaitForExit(60000)) { try { Stop-Process -Id $process.Id -Force } catch {}; throw "Portable smoke timeout" }
+          if ($process.ExitCode -ne 0) { throw "Portable smoke FAIL: $($process.ExitCode)" }
       - name: Upload EXE artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: HNL-Pile-Standards-AI-Windows-v${{ env.APP_VERSION }}-build-${{ github.run_number }}
+          name: HNL-Pile-Standards-AI-Windows-v1.26.0-build-${{ github.run_number }}
           path: |
             release/HNL-Pile-Standards-AI-Setup-*.exe
             release/HNL-Pile-Standards-AI-Portable-*.exe
+            artifacts/master-system-audit/**
           if-no-files-found: error
           retention-days: 14

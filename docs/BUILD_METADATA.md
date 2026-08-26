@@ -1,20 +1,30 @@
-# Build metadata
+# Build metadata — HNL v1.26.0
 
 `dist/build-info.json` được sinh tự động sau build thành công.
+
+## Một nguồn version duy nhất
+
+- `package.json.version` → Web / Desktop / PWA / EXE / Service Worker / artifact release.
+- `public/release-meta.json.appVersion` phải bằng `package.json.version`.
+- `certificationStage` chỉ mô tả giai đoạn audit, **không phải version**.
+- `goldenBaseline` là danh tính bộ bằng chứng Golden.
+- `searchBrain` là danh tính lõi tìm kiếm khóa regression.
 
 Ví dụ:
 
 ```json
 {
-  "version": "1.25.7",
+  "version": "1.26.0",
+  "certificationStage": "MASTER_SYSTEM_AUDIT",
+  "goldenBaseline": "1.25.7",
+  "searchBrain": "1.9.23",
   "target": "web",
-  "builtAt": "2026-08-22T23:15:00.000Z",
+  "builtAt": "2026-08-26T03:00:00.000Z",
   "source": "GitHub Actions",
-  "runNumber": 128,
-  "repository": "owner/HNL-Pile-Standards-AI",
+  "runNumber": 34,
   "branch": "main",
   "commitShort": "abc1234"
 }
 ```
 
-Giao diện đọc file này ở runtime với `cache: no-store`. Nếu file không tồn tại (ví dụ chạy `vite dev`), app dùng metadata fallback và ghi rõ đây là local/source fallback.
+Giao diện đọc build metadata với `cache: no-store`; Service Worker cache key tiếp tục dùng `v1.26.0` qua query runtime.

@@ -1,0 +1,31 @@
+{
+  "schema": "HNL_V1_26_0_MASTER_AUDIT_PREFLIGHT_V1",
+  "appVersion": "1.26.0",
+  "status": "PASS",
+  "checks": {
+    "packageVersion": true,
+    "lockVersion": true,
+    "releaseMetaVersion": true,
+    "noParallelEngineeringRelease": true,
+    "jszipDirect": true,
+    "masterAuditScript": true,
+    "masterAuditWorkflow": true,
+    "releaseSyncGate": true,
+    "excelProductionSmoke": true,
+    "excelCompatLayer": true
+  },
+  "notExecuted": [
+    "npm ci on full repo",
+    "exact 574 regression",
+    "1242 Full Table Golden",
+    "Workflow Golden",
+    "Material Golden",
+    "DCE 213",
+    "SPT 26",
+    "Excel runtime on full repo",
+    "Vite full build",
+    "Windows EXE build",
+    "RC Final"
+  ],
+  "note": "These require the full repository after overwrite + GitHub Actions; no PASS is claimed for unexecuted gates."
+}

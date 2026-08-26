@@ -1,8 +1,8 @@
-name: Deploy HNL Web to GitHub Pages
+name: Deploy HNL Web v1.26.0 to GitHub Pages
 
 on:
   push:
-    branches: ["main"]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -11,61 +11,42 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: pages
   cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v5
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
-
-      - name: Sync package-lock with app version
-        shell: bash
-        run: |
-          PKG_VERSION=$(node -p "require('./package.json').version")
-          LOCK_VERSION=$(node -e "try{process.stdout.write(require('./package-lock.json').version||'')}catch(e){}")
-          if [ ! -f package-lock.json ] || [ "$LOCK_VERSION" != "$PKG_VERSION" ]; then
-            echo "Tạo/cập nhật lock tạm: v${LOCK_VERSION:-missing} → v$PKG_VERSION"
-            npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-          fi
-          test -f package-lock.json
-
+          cache: npm
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
-
-      - name: Version Gate
+      - name: Single-version identity gate
         run: npm run check:version
-
+      - name: Release synchronization gate
+        run: npm run gate:release-sync
       - name: Test core logic
         run: npm test
-
       - name: Full Table Golden
         run: npm run golden:tables
-
       - name: ExcelJS runtime smoke
         run: npm run excel:smoke
-
+      - name: Excel Production smoke
+        run: npm run excel:production-smoke
+      - name: Master Audit · P0 must be closed before deploy
+        run: node scripts/master-system-audit.mjs --enforce-p0
       - name: Build HNL Web
         run: npm run build:web
-
       - name: Show build metadata
         run: cat dist/build-info.json
-
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
-
   deploy:
     environment:
       name: github-pages

@@ -1,197 +1,143 @@
-name: HNL v1.25.7 RC Final Gate
+name: HNL v1.26.0 RC Final Gate
 
 on:
-  push:
-    branches:
-      - main
-      - release/v1.25.7-rc
   workflow_dispatch:
+  push:
+    branches: [main]
 
 permissions:
-  contents: write
+  contents: read
 
 env:
   CSC_IDENTITY_AUTO_DISCOVERY: "false"
 
 jobs:
-  bootstrap-lock:
-    name: Bootstrap and persist package-lock
-    runs-on: ubuntu-latest
-    outputs:
-      lock_created: ${{ steps.lock.outputs.created }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - id: lock
-        shell: bash
-        run: |
-          PKG_VERSION=$(node -p "require('./package.json').version")
-          LOCK_VERSION=$(node -e "try{process.stdout.write(require('./package-lock.json').version||'')}catch(e){}")
-          if [ -f package-lock.json ] && [ "$LOCK_VERSION" = "$PKG_VERSION" ]; then
-            echo "created=false" >> "$GITHUB_OUTPUT"
-            echo "package-lock.json đã đồng bộ v$PKG_VERSION."
-            exit 0
-          fi
-          echo "Tạo/cập nhật package-lock.json: lock=v${LOCK_VERSION:-missing} → package=v$PKG_VERSION"
-          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-          test -f package-lock.json
-          node -e "const p=require('./package.json'),l=require('./package-lock.json'); if(l.version!==p.version) throw new Error('package-lock version mismatch')"
-          echo "created=true" >> "$GITHUB_OUTPUT"
-
-      - name: Commit package-lock back to current branch
-        if: steps.lock.outputs.created == 'true'
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package-lock.json
-          git commit -m "build: sync package-lock for HNL v1.25.7 RC"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
-
   linux-gate:
-    name: Regression tests → P0/P1 Golden → ExcelJS → Web
-    needs: bootstrap-lock
-    if: needs.bootstrap-lock.outputs.lock_created == 'false'
+    name: Linux · Full Golden + Master Audit promotion gate
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           clean: true
-
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
-
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
-
-      - name: Version Gate + regression
-        run: npm test
-
+      - name: Single-version identity gate
+        run: npm run check:version
+      - name: Release synchronization gate
+        run: npm run gate:release-sync
+      - name: Source sync gate
+        run: npm run gate:pass83-source-sync
+      - name: Browser / Node boundary gate
+        run: npm run gate:pass83-web-boundary
+      - name: Exact 574 regression
+        run: npm run gate:pass83-tests
       - name: Full Table Golden
         run: npm run golden:tables
-
-      - name: P0 Pass 3 Workflow Golden
+      - name: Workflow Golden
         run: npm run golden:workflows
-
-      - name: P1 Pass 1 Material Golden
+      - name: Material Golden
         run: npm run golden:material
-
-      - name: P1 Material Rsoil/Rmaterial E2E Golden
+      - name: Material E2E Golden
         run: npm run golden:material-e2e
-
       - name: DCE UDF Behavioral Golden
         run: npm run golden:dce-udf
-
       - name: SPT PDF Decision Golden
         run: npm run golden:spt-decision
-
-      - name: P1 Multi-Borehole Golden
+      - name: Multi-Borehole Golden
         run: npm run golden:multiborehole
-
       - name: ExcelJS runtime smoke
         run: npm run excel:smoke
-
+      - name: Excel Production smoke
+        run: npm run excel:production-smoke
+      - name: Master System Audit · RC requires all open gaps closed
+        run: node scripts/master-system-audit.mjs --enforce-all
       - name: Build Web
         run: npm run build:web
-
+      - name: Verify v1.26.0 build metadata
+        run: node -e "const x=require('./dist/build-info.json'); if(x.version!=='1.26.0'||x.certificationStage!=='MASTER_SYSTEM_AUDIT'||x.goldenBaseline!=='1.25.7'||'engineeringRelease' in x) throw new Error(JSON.stringify(x));"
       - uses: actions/upload-artifact@v4
         with:
-          name: hnl-v1.25.7-web-golden-excel
+          name: hnl-v1.26.0-web-golden-excel
           path: |
             dist/**
+            public/release-meta.json
+            artifacts/master-system-audit/**
             artifacts/full-table-golden-v1.25.7.json
             artifacts/p0-pass3/workflow-golden-v1.25.7.json
             artifacts/p1-pass1/material-golden-v1.25.7.json
             artifacts/p1-material-e2e/material-e2e-golden-v1.25.7.json
-            artifacts/dce-udf-behavioral/dce-udf-observed-v1.25.7.json
-            artifacts/dce-udf-behavioral/dce-udf-behavioral-golden-v1.25.7.json
-            artifacts/spt-pdf-decision/spt-pdf-decision-v1.25.7.json
-            artifacts/p1-multiborehole/multiborehole-golden-v1.25.7.json
+            artifacts/dce-udf-behavioral/**
+            artifacts/spt-pdf-decision/**
+            artifacts/p1-multiborehole/**
             artifacts/excel-runtime-smoke/**
             package-lock.json
 
   windows-gate:
-    name: Windows Setup + Portable + ExcelJS runtime
+    name: Windows · Setup + Portable + Excel + Master Audit
     needs: linux-gate
     runs-on: windows-latest
+    timeout-minutes: 55
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           clean: true
-
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
-
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
-
-      - name: Regression tests
-        run: npm test
-
+      - name: Single-version identity gate
+        run: npm run check:version
+      - name: Release synchronization gate
+        run: npm run gate:release-sync
+      - name: Exact 574 regression
+        run: npm run gate:pass83-tests
       - name: Full Table Golden
         run: npm run golden:tables
-
-      - name: P0 Pass 3 Workflow Golden
+      - name: Workflow Golden
         run: npm run golden:workflows
-
-      - name: P1 Pass 1 Material Golden
+      - name: Material Golden
         run: npm run golden:material
-
-      - name: P1 Material Rsoil/Rmaterial E2E Golden
+      - name: Material E2E Golden
         run: npm run golden:material-e2e
-
       - name: DCE UDF Behavioral Golden
         run: npm run golden:dce-udf
-
       - name: SPT PDF Decision Golden
         run: npm run golden:spt-decision
-
-      - name: P1 Multi-Borehole Golden
+      - name: Multi-Borehole Golden
         run: npm run golden:multiborehole
-
       - name: ExcelJS runtime smoke
         run: npm run excel:smoke
-
+      - name: Excel Production smoke
+        run: npm run excel:production-smoke
+      - name: Master System Audit · RC requires all open gaps closed
+        run: node scripts/master-system-audit.mjs --enforce-all
       - name: Build Setup + Portable EXE
         run: npm run dist:win
-
+      - name: Verify v1.26.0 Windows artifacts
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem release -File -Recurse | Where-Object { $_.Name -like 'HNL-Pile-Standards-AI-Setup-1.26.0-*.exe' }
+          $portable = Get-ChildItem release -File -Recurse | Where-Object { $_.Name -like 'HNL-Pile-Standards-AI-Portable-1.26.0-*.exe' }
+          if (($setup | Measure-Object).Count -lt 1) { throw 'Missing Setup v1.26.0' }
+          if (($portable | Measure-Object).Count -lt 1) { throw 'Missing Portable v1.26.0' }
       - name: Microsoft Excel COM recalculation when available
         id: excelcom
         shell: pwsh
         continue-on-error: true
         run: ./scripts/verify-excel-com.ps1 -Dir artifacts/excel-runtime-smoke
-
-      - name: Record Excel COM availability
-        shell: pwsh
-        run: |
-          $status = "${{ steps.excelcom.outcome }}"
-          "Microsoft Excel COM step: $status" | Set-Content -Encoding UTF8 artifacts/excel-runtime-smoke/excel-com-status.txt
-          if ($status -ne "success") {
-            Write-Host "GitHub-hosted Windows runner không bảo đảm có Microsoft Excel; cần kiểm cuối trên máy Windows có Excel."
-          }
-
       - uses: actions/upload-artifact@v4
         with:
-          name: hnl-v1.25.7-windows-setup-portable-excel
+          name: hnl-v1.26.0-windows-setup-portable-excel
           path: |
             release/*.exe
-            artifacts/full-table-golden-v1.25.7.json
-            artifacts/p0-pass3/workflow-golden-v1.25.7.json
-            artifacts/p1-pass1/material-golden-v1.25.7.json
-            artifacts/p1-material-e2e/material-e2e-golden-v1.25.7.json
-            artifacts/dce-udf-behavioral/dce-udf-observed-v1.25.7.json
-            artifacts/dce-udf-behavioral/dce-udf-behavioral-golden-v1.25.7.json
-            artifacts/spt-pdf-decision/spt-pdf-decision-v1.25.7.json
-            artifacts/p1-multiborehole/multiborehole-golden-v1.25.7.json
+            public/release-meta.json
+            artifacts/master-system-audit/**
             artifacts/excel-runtime-smoke/**
             scripts/verify-excel-com.ps1

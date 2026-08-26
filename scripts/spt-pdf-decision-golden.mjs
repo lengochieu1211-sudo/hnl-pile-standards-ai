@@ -4,13 +4,26 @@
 // DCE is behavior reference only and can never override the PDF decision.
 import fs from 'node:fs';
 import path from 'node:path';
+import { moduleDir, resolveCliOutputPath } from './cross-platform-paths.mjs';
 import { calculateSptPile10304 } from '../src/pile-workflows.js';
 import { evaluateSptExcelModel10304 } from '../src/p0-pass3-excel-model.js';
 import { sptTipWindow10304, averageMeasuredSptN10304 } from '../src/tcvn10304-table-engine.js';
 import { productionStatusFor } from '../src/production-status-registry.js';
 
-const ROOT=path.resolve(path.dirname(new URL(import.meta.url).pathname),'..');
-const out=path.resolve(process.argv[2]||path.join(ROOT,'artifacts/spt-pdf-decision/spt-pdf-decision-v1.25.7.json'));
+const ROOT=path.resolve(moduleDir(import.meta.url),'..');
+const defaultOut=path.join(ROOT,'artifacts/spt-pdf-decision/spt-pdf-decision-v1.25.7.json');
+const out=resolveCliOutputPath(process.argv[2],defaultOut);
+
+// Cross-platform regression probe: a Windows absolute path must remain absolute and
+// must never be re-resolved into a duplicated drive path such as D:\\D:\\a\\...
+// This lives inside the existing Golden runner so the locked 574 regression count
+// is unchanged.
+const windowsProbe='D:\\a\\hnl-pile-standards-ai\\artifacts\\spt-pdf-decision\\probe.json';
+const windowsResolved=resolveCliOutputPath(windowsProbe,'',{cwd:'C:\\repo',pathImpl:path.win32});
+if(windowsResolved!==path.win32.normalize(windowsProbe)){
+  throw new Error(`Windows absolute-path regression: ${windowsProbe} -> ${windowsResolved}`);
+}
+
 const evidence=JSON.parse(fs.readFileSync(path.join(ROOT,'artifacts/dce-udf-behavioral/dce-udf-observed-v1.25.7.json'),'utf8'));
 const EPS=1e-9;
 const close=(a,b,t=EPS)=>Number.isFinite(Number(a))&&Number.isFinite(Number(b))&&Math.abs(Number(a)-Number(b))<=t;

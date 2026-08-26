@@ -1,6 +1,20 @@
 {
-  "current": "1.25.7",
+  "current": "1.26.0",
   "releases": [
+    {
+      "version": "1.26.0",
+      "date": "2026-08-26",
+      "title": "Excel Production Compatibility + Master System Audit Foundation",
+      "changes": [
+        "Chỉ dùng một version sản phẩm: v1.26.0 cho Web, Desktop, PWA, EXE, release metadata và artifact hiện hành.",
+        "Excel Production: dropdown tiếng Việt cho các lựa chọn đã triển khai; mã kỹ thuật được giữ trong vùng ẩn để không đổi Calculation Engine.",
+        "SPT explicit dùng VLOOKUP + IF + MIN ở q_b/f_s để tăng tương thích Excel và tránh #NAME? do LET/XLOOKUP trên Excel cũ.",
+        "Thêm biểu đồ Excel native động cho SPT explicit và cọc đóng/ép; biểu đồ liên kết trực tiếp với ô công thức.",
+        "Sửa DCE UDF Golden path trên Windows bằng fileURLToPath và bảo toàn absolute Windows path.",
+        "Bổ sung Master System Audit + Golden Gap Matrix P0/P1/P2 để sửa theo nguyên nhân gốc thay vì lỗi đơn lẻ.",
+        "Golden Baseline v1.25.7 và Search Brain v1.9.23 LOCKED là danh tính bằng chứng/lõi khóa, không phải version ứng dụng song song."
+      ]
+    },
     {
       "version": "1.25.7",
       "date": "2026-08-24",

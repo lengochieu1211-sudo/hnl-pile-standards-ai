@@ -1,129 +1,131 @@
-name: P1 Pass 8.3 Runtime Certification
+name: P1 Pass 8.3 Runtime Certification · HNL v1.26.0
 
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
-      - 'p1/pass8.3-runtime-cert-v21'
-      - 'p1/pass8.3-runtime-cert-v22'
-      - 'p1/pass8.3-runtime-cert-v23'
-      - 'p1/pass8.3-runtime-cert-v24'
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
   linux-certification:
-    name: Linux · npm ci + 574 tests + Golden + Vite
+    name: Linux · v1.26.0 · 574 + Golden + Excel + Audit + Vite
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: npm
-
       - name: Install exact dependencies
         run: npm ci
-
-      - name: Source sync gate
+      - name: Single-version identity gate
+        run: npm run check:version
+      - name: Release synchronization gate
+        run: npm run gate:release-sync
+      - name: Source synchronization gate
         run: npm run gate:pass83-source-sync
-
       - name: Browser / Node runtime boundary gate
         run: npm run gate:pass83-web-boundary
-
       - name: Locked regression suite · exact 574
         run: npm run gate:pass83-tests
-
-      - name: Full Table Golden 1242
+      - name: Full Table Golden · baseline v1.25.7
         run: npm run golden:tables
-
-      - name: Workflow Golden 35
+      - name: Workflow Golden · baseline v1.25.7
         run: npm run golden:workflows
-
-      - name: Material Golden
+      - name: Material Golden · baseline v1.25.7
         run: npm run golden:material
-
-      - name: DCE UDF Golden 213
+      - name: DCE UDF Golden · baseline v1.25.7
         run: npm run golden:dce-udf
-
-      - name: SPT decision Golden 26
+      - name: SPT PDF decision Golden · baseline v1.25.7
         run: npm run golden:spt-decision
-
       - name: Material E2E Golden
         run: npm run golden:material-e2e
-
       - name: Multi-borehole Golden
         run: npm run golden:multiborehole
-
+      - name: ExcelJS runtime smoke
+        run: npm run excel:smoke
+      - name: Excel Production Vietnamese / compatibility / native-chart smoke
+        run: npm run excel:production-smoke
+      - name: Master System Audit · enforce P0
+        run: node scripts/master-system-audit.mjs --enforce-p0
       - name: Pass 8.2 production UI E2E
         run: node --test tests/p1-pass82-full-app-ui-e2e.test.mjs
-
       - name: Build production web with Vite
         run: npm run build:web
-
-      - name: Upload web build and gate evidence
+      - name: Verify v1.26.0 build identity
+        run: node -e "const x=require('./dist/build-info.json'); if(x.version!=='1.26.0'||x.certificationStage!=='MASTER_SYSTEM_AUDIT'||x.goldenBaseline!=='1.25.7'||x.searchBrain!=='1.9.23'||'engineeringRelease' in x) throw new Error(JSON.stringify(x));"
+      - name: Upload web certification evidence
         uses: actions/upload-artifact@v4
         with:
-          name: pass83-web-v21
+          name: hnl-v1.26.0-pass83-web
           path: |
             dist/**
-            artifacts/P1_PASS8_2_FULL_SOURCE_PRODUCTION_UI_E2E_GATE_V21.json
+            public/release-meta.json
+            artifacts/master-system-audit/**
+            artifacts/excel-runtime-smoke/**
           if-no-files-found: warn
 
   windows-certification:
-    name: Windows · npm ci + tests + EXE
+    name: Windows · v1.26.0 · 574 + DCE + Excel + EXE
     needs: linux-certification
     runs-on: windows-latest
-    timeout-minutes: 45
+    timeout-minutes: 50
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: npm
-
       - name: Install exact dependencies
         run: npm ci
-
-      - name: Source sync gate on Windows
+      - name: Single-version identity gate
+        run: npm run check:version
+      - name: Release synchronization gate
+        run: npm run gate:release-sync
+      - name: Source synchronization gate
         run: npm run gate:pass83-source-sync
-
-      - name: Browser / Node runtime boundary gate on Windows
+      - name: Browser / Node runtime boundary gate
         run: npm run gate:pass83-web-boundary
-
-      - name: Locked regression suite on Windows · exact 574
+      - name: Locked regression suite · exact 574
         run: npm run gate:pass83-tests
-
+      - name: DCE UDF Golden
+        run: npm run golden:dce-udf
+      - name: ExcelJS runtime smoke
+        run: npm run excel:smoke
+      - name: Excel Production smoke
+        run: npm run excel:production-smoke
+      - name: Master System Audit · enforce P0
+        run: node scripts/master-system-audit.mjs --enforce-p0
       - name: Build desktop UI
         run: npm run build:desktop
-
+      - name: Verify desktop build identity
+        shell: pwsh
+        run: |
+          $x = Get-Content dist/build-info.json -Raw | ConvertFrom-Json
+          if ($x.version -ne '1.26.0' -or $x.certificationStage -ne 'MASTER_SYSTEM_AUDIT' -or $x.goldenBaseline -ne '1.25.7') { throw "Build identity mismatch" }
+          if ($null -ne $x.engineeringRelease) { throw "Parallel engineeringRelease must not exist" }
       - name: Build NSIS + Portable
         run: npx electron-builder --win nsis portable --publish never
-
       - name: Verify Windows artifacts
         shell: pwsh
         run: |
-          $files = Get-ChildItem release -File -Recurse | Where-Object { $_.Extension -eq '.exe' }
-          $files | Format-Table FullName, Length
-          if (($files | Measure-Object).Count -lt 2) { throw 'Expected NSIS and Portable EXE artifacts.' }
-
-      - name: Upload Windows runtime artifacts
+          $setup = Get-ChildItem release -File -Recurse | Where-Object { $_.Name -like 'HNL-Pile-Standards-AI-Setup-1.26.0-*.exe' }
+          $portable = Get-ChildItem release -File -Recurse | Where-Object { $_.Name -like 'HNL-Pile-Standards-AI-Portable-1.26.0-*.exe' }
+          if (($setup | Measure-Object).Count -lt 1) { throw 'Missing v1.26.0 NSIS Setup EXE.' }
+          if (($portable | Measure-Object).Count -lt 1) { throw 'Missing v1.26.0 Portable EXE.' }
+      - name: Upload Windows certification evidence
         uses: actions/upload-artifact@v4
         with:
-          name: pass83-windows-v21
-          path: release/**/*.exe
+          name: hnl-v1.26.0-pass83-windows
+          path: |
+            release/**/*.exe
+            artifacts/master-system-audit/**
+            artifacts/excel-runtime-smoke/**
           if-no-files-found: error

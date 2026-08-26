@@ -3,6 +3,7 @@
 // Purpose: characterize proprietary DCE behavior without making it a production authority.
 import fs from 'node:fs';
 import path from 'node:path';
+import { moduleDir, resolveCliOutputPath } from './cross-platform-paths.mjs';
 import {
   lookupRockKs10304,
   lookupTable8Qb10304,
@@ -12,9 +13,10 @@ import {
 import { calculateSptPile10304 } from '../src/pile-workflows.js';
 import { productionStatusFor } from '../src/production-status-registry.js';
 
-const ROOT=path.resolve(path.dirname(new URL(import.meta.url).pathname),'..');
-const evidencePath=path.resolve(ROOT,'artifacts/dce-udf-behavioral/dce-udf-observed-v1.25.7.json');
-const outputPath=path.resolve(process.argv[2]||path.join(ROOT,'artifacts/dce-udf-behavioral/dce-udf-behavioral-golden-v1.25.7.json'));
+const ROOT=path.resolve(moduleDir(import.meta.url),'..');
+const evidencePath=path.join(ROOT,'artifacts/dce-udf-behavioral/dce-udf-observed-v1.25.7.json');
+const defaultOutputPath=path.join(ROOT,'artifacts/dce-udf-behavioral/dce-udf-behavioral-golden-v1.25.7.json');
+const outputPath=resolveCliOutputPath(process.argv[2],defaultOutputPath);
 const ev=JSON.parse(fs.readFileSync(evidencePath,'utf8'));
 const EPS=1e-8;
 const close=(a,b,tol=EPS)=>Number.isFinite(Number(a))&&Number.isFinite(Number(b))&&Math.abs(Number(a)-Number(b))<=tol;

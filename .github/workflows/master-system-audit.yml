@@ -1,0 +1,117 @@
+name: HNL v1.26.0 · Master System Audit & Golden Certification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  linux-master-audit:
+    name: Linux · Web + Engine + Excel + CI + Provenance + Cross-workflow
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+      - name: npm ci
+        run: npm ci --no-audit --no-fund
+      - name: Version
+        run: npm run check:version
+      - name: Release Sync
+        run: npm run gate:release-sync
+      - name: Source Sync
+        run: npm run gate:pass83-source-sync
+      - name: Web Runtime Boundary
+        run: npm run gate:pass83-web-boundary
+      - name: Regression 574
+        run: npm run gate:pass83-tests
+      - name: Full Table Golden
+        run: npm run golden:tables
+      - name: Workflow Golden
+        run: npm run golden:workflows
+      - name: Material Golden
+        run: npm run golden:material
+      - name: DCE Golden
+        run: npm run golden:dce-udf
+      - name: SPT Decision Golden
+        run: npm run golden:spt-decision
+      - name: Material E2E
+        run: npm run golden:material-e2e
+      - name: Multi-borehole
+        run: npm run golden:multiborehole
+      - name: Excel Runtime Smoke
+        run: npm run excel:smoke
+      - name: Excel Production Smoke
+        run: npm run excel:production-smoke
+      - name: Generate Master Gap Matrix · block P0 only
+        run: node scripts/master-system-audit.mjs --enforce-p0
+      - name: Build Web
+        run: npm run build:web
+      - name: Upload Master Audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hnl-v1.26.0-master-audit-linux
+          path: |
+            artifacts/master-system-audit/**
+            artifacts/excel-runtime-smoke/**
+            dist/build-info.json
+          if-no-files-found: error
+
+  windows-master-audit:
+    name: Windows · Runtime + Excel + DCE + EXE
+    needs: linux-master-audit
+    runs-on: windows-latest
+    timeout-minutes: 55
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+      - name: npm ci
+        run: npm ci --no-audit --no-fund
+      - name: Version
+        run: npm run check:version
+      - name: Release Sync
+        run: npm run gate:release-sync
+      - name: Source Sync
+        run: npm run gate:pass83-source-sync
+      - name: Regression 574
+        run: npm run gate:pass83-tests
+      - name: DCE Golden
+        run: npm run golden:dce-udf
+      - name: SPT Decision Golden
+        run: npm run golden:spt-decision
+      - name: Excel Runtime Smoke
+        run: npm run excel:smoke
+      - name: Excel Production Smoke
+        run: npm run excel:production-smoke
+      - name: Generate Master Gap Matrix · block P0 only
+        run: node scripts/master-system-audit.mjs --enforce-p0
+      - name: Build Windows Setup + Portable
+        run: npm run dist:win
+      - name: Verify v1.26.0 EXE
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem release -Filter 'HNL-Pile-Standards-AI-Setup-1.26.0-*.exe' -File
+          $portable = Get-ChildItem release -Filter 'HNL-Pile-Standards-AI-Portable-1.26.0-*.exe' -File
+          if ($setup.Count -lt 1 -or $portable.Count -lt 1) { throw 'Thiếu Setup hoặc Portable v1.26.0' }
+      - name: Upload Windows Master Audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hnl-v1.26.0-master-audit-windows
+          path: |
+            release/*.exe
+            artifacts/master-system-audit/**
+            artifacts/excel-runtime-smoke/**
+          if-no-files-found: error

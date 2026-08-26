@@ -12,6 +12,10 @@ function git(args, fallback = '') {
 }
 
 const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+const releaseMeta = JSON.parse(fs.readFileSync(new URL('../public/release-meta.json', import.meta.url), 'utf8'));
+if (String(releaseMeta.appVersion) !== String(pkg.version)) {
+  throw new Error(`release-meta.appVersion=${releaseMeta.appVersion} != package=${pkg.version}`);
+}
 const target = arg('target', process.env.VITE_HNL_EDITION || 'web');
 const output = path.resolve(arg('output', 'dist/build-info.json'));
 const github = String(process.env.GITHUB_ACTIONS || '').toLowerCase() === 'true';
@@ -26,9 +30,15 @@ const server = process.env.GITHUB_SERVER_URL || 'https://github.com';
 const builtAt = new Date().toISOString();
 
 const info = {
-  schema: 1,
+  schema: 3,
   app: 'HNL Pile Standards AI',
   version: pkg.version,
+  certificationStage: releaseMeta.certificationStage,
+  goldenBaseline: releaseMeta.goldenBaseline,
+  searchBrain: releaseMeta.searchBrain,
+  searchBrainStatus: releaseMeta.searchBrainStatus,
+  releaseTitle: releaseMeta.releaseTitle,
+  baselineCommit: releaseMeta.baselineCommit,
   target,
   edition: target === 'desktop' ? 'HNL Desktop AI' : 'HNL Web',
   builtAt,
@@ -41,10 +51,10 @@ const info = {
   commit: sha || null,
   commitShort: sha ? sha.slice(0, 7) : null,
   workflowUrl: github && repository && runId ? `${server}/${repository}/actions/runs/${runId}` : null,
-  release: 'Build Metadata · Update Diagnostics · PWA Freshness'
+  release: `v${pkg.version} · ${releaseMeta.certificationStage} · Golden ${releaseMeta.goldenBaseline} · Search Brain ${releaseMeta.searchBrain}`
 };
 
 fs.mkdirSync(path.dirname(output), { recursive: true });
 fs.writeFileSync(output, `${JSON.stringify(info, null, 2)}\n`, 'utf8');
 console.log(`HNL build metadata -> ${output}`);
-console.log(`${info.version} · ${info.edition} · ${info.source} · ${info.builtAt}`);
+console.log(`v${info.version} · ${info.certificationStage} · ${info.edition} · ${info.source} · ${info.builtAt}`);

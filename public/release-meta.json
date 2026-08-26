@@ -1,0 +1,12 @@
+{
+  "schema": 2,
+  "appVersion": "1.26.0",
+  "certificationStage": "MASTER_SYSTEM_AUDIT",
+  "goldenBaseline": "1.25.7",
+  "searchBrain": "1.9.23",
+  "searchBrainStatus": "LOCKED",
+  "releaseDate": "2026-08-26",
+  "releaseTitle": "Excel Production Compatibility + Vietnamese UI + Native Charts + Master System Audit",
+  "baselineCommit": "660bda57ca50a7326e13c3b858f05c4864875f3c",
+  "versionPolicy": "Only appVersion is a release version. Passes and audit stages are labels, not parallel versions."
+}

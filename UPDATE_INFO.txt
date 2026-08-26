@@ -1,26 +1,33 @@
-HNL Pile Standards AI v1.26.0
-PR #3 · P0 Windows SPT Absolute Path Repair
+HNL PILE STANDARDS AI — v1.26.0 MASTER SYSTEM AUDIT UPDATE
 
-ROOT CAUSE
-- scripts/spt-pdf-decision-golden.mjs used new URL(import.meta.url).pathname with path.resolve().
-- On Windows GitHub Actions this produced a duplicated drive path such as D:\\D:\\a\\...
+APP VERSION      : 1.26.0
+AUDIT STAGE      : MASTER SYSTEM AUDIT
+GOLDEN BASELINE  : 1.25.7
+SEARCH BRAIN     : 1.9.23 LOCKED
+BASELINE COMMIT  : 660bda57ca50a7326e13c3b858f05c4864875f3c
+DATE             : 2026-08-26
 
-FIX
-- Use existing scripts/cross-platform-paths.mjs helper moduleDir(import.meta.url), which is based on fileURLToPath().
-- Use resolveCliOutputPath() for optional output path.
-- Add an in-runner Windows absolute-path regression probe using path.win32.
-- Keep locked 574 regression test count unchanged.
+QUY TAC VERSION
+- Chi mot version san pham: v1.26.0.
+- Pass 1 / Pass 2 / Master Audit la ten cong viec, khong phai version.
+- v1.25.7 la Golden Baseline cua bo bang chung hien hanh.
+- v1.9.23 la Search Brain LOCKED.
 
-UNCHANGED
-- Calculation Engine
-- SPT normative policy
-- src/search.js
-- Golden baseline identity 1.25.7
-- App version 1.26.0
+MUC TIEU
+- Kiem toan Web + Calculation Engine + Excel + Windows + CI + provenance + cross-workflow.
+- Sinh Gap Matrix P0/P1/P2.
+- P0 chan deploy/build promotion; P1 chan RC Final; P2 xu ly sau P0/P1 theo scope.
+- Khong lam Raw SPT pass tiep theo trong vong Master Audit nay.
+- Khong sua loi don le neu chua quy ve root cause + regression gate.
 
-HOW TO APPLY
-1. Copy the scripts folder from this package into the repository root.
-2. Replace scripts/spt-pdf-decision-golden.mjs.
-3. Commit on branch p1/v26-ai-input-interpreter.
-4. Push origin. PR #3 updates automatically.
-5. Do not merge until Master System Audit is green.
+CAP NHAT
+1. Giai nen ZIP.
+2. Copy toan bo noi dung thu muc da giai nen.
+3. GitHub Desktop -> Repository -> Show in Explorer.
+4. Dan vao repo root -> Replace All.
+5. Commit: audit: v1.26.0 master system audit and golden certification
+6. Push origin.
+7. Kiem GitHub Actions va tai artifact MASTER_GAP_MATRIX.
+
+CHUOI GATE
+Version -> Release Sync -> Source Sync -> Web Boundary -> 574 -> Full Table Golden -> Workflow Golden -> Material -> DCE -> SPT Decision -> Material E2E -> Multi-borehole -> Excel Runtime -> Excel Production -> Master Gap Matrix -> Web -> Windows EXE -> RC Final -> Pages.

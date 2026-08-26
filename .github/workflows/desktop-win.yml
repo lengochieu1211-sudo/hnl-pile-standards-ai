@@ -3,7 +3,8 @@ name: Build HNL Desktop AI v1.26.0 for Windows
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches:
+      - main
     tags: ['v1.26.0']
 
 permissions:
@@ -27,6 +28,22 @@ jobs:
           $version = node -p "require('./package.json').version"
           "APP_VERSION=$version" >> $env:GITHUB_ENV
           if ($version -ne '1.26.0') { throw "Expected v1.26.0, got $version" }
+      - name: Validate Windows packaging contract
+        shell: pwsh
+        run: |
+          $pkg = Get-Content package.json -Raw | ConvertFrom-Json
+          $targetMacro = '$' + '{target}'
+          $setupName = [string]$pkg.build.nsis.artifactName
+          $portableName = [string]$pkg.build.portable.artifactName
+          if ($setupName.Contains($targetMacro) -or $portableName.Contains($targetMacro)) {
+            throw "Unsupported target macro in Windows artifactName"
+          }
+          if ($setupName -notmatch '^HNL-Pile-Standards-AI-Setup-\$\{version\}-\$\{arch\}\.\$\{ext\}$') {
+            throw "Unexpected NSIS artifactName: $setupName"
+          }
+          if ($portableName -notmatch '^HNL-Pile-Standards-AI-Portable-\$\{version\}-\$\{arch\}\.\$\{ext\}$') {
+            throw "Unexpected Portable artifactName: $portableName"
+          }
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
       - name: Single-version identity gate

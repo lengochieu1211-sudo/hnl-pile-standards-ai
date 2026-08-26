@@ -1,0 +1,19 @@
+HNL v1.26.0 · PR #3 P0 WINDOWS WIRING CONTRACT REPAIR
+
+ROOT CAUSE
+- Regression 574 isolates tests/wiring.test.mjs: 114 tests, 112 pass, 2 fail.
+- Failure 1: locked test requires main trigger in YAML block form.
+- Failure 2: locked test requires PowerShell packaging validation using ConvertFrom-Json and explicit rejection of ${target} macro.
+
+REPAIR
+- .github/workflows/desktop-win.yml
+  * main trigger remains semantically identical, block YAML syntax.
+  * restores real PowerShell artifactName contract validation.
+  * keeps v1.26.0 Setup/Portable verification and smoke test.
+- RELEASE_SYNC_MANIFEST.json
+  * updates only desktop-win.yml normalized SHA-256.
+
+DESKTOP WORKFLOW NORMALIZED SHA-256
+5a19971cfdea2a52bf49e196bbcec219b029d3806422cef6ef7ff1f084366327
+
+DO NOT MERGE PR #3 UNTIL ALL CHECKS PASS.

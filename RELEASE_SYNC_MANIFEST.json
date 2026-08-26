@@ -26,7 +26,7 @@
     "tools/release-sync-gate.mjs": "378fbfe8781b44c622e6ddcc5826d51afee3a40e59cf4fb0cc362adebe72cd33",
     "tools/v26.3.1-release-sync-gate.mjs": "61626c6cdb5cc588f0f7fda880fe36f9dc3ecda9e091867ce020a074b4bd71df",
     ".github/workflows/pages.yml": "8b97f90443a8851c28fae3296e4cfbd758575e40c9b1a68e2aa8ef8aafe38e46",
-    ".github/workflows/desktop-win.yml": "e7141da9745d1ef6f30ec33b06c381e1ac65e98abc3ddb81adb1abd702de7b43",
+    ".github/workflows/desktop-win.yml": "5a19971cfdea2a52bf49e196bbcec219b029d3806422cef6ef7ff1f084366327",
     ".github/workflows/pass83-runtime-cert.yml": "c8e88bb214bca78e81cfb6eb68b8dc590dca5fd0f771ce98cca67e93a2a8756f",
     ".github/workflows/rc-final.yml": "24d3c1756f240bc5f6b89008fd3e676efdfc7c2a08544d0368cd506f4d428dcd",
     ".github/workflows/v26-spt-input-cert.yml": "b71c8959855f5391c8dc12d7b91bc2a956e23389016b6de57a4df09e0ea3d8cd",

@@ -5,8 +5,13 @@ on:
     branches:
       - main
     paths:
+      - 'index.html'
+      - 'package.json'
       - 'src/pdf-intelligence/**'
       - 'offline/pdf-intelligence/**'
+      - 'bridge/pdf-intelligence-shadow-server.mjs'
+      - 'bridge/server-v127-shadow.mjs'
+      - 'electron/main.cjs'
       - 'scripts/pdf-intelligence-*.mjs'
       - 'scripts/deepdoc-vietocr-selftest.mjs'
       - 'docs/PDF_INTELLIGENCE_V1.27_*.md'
@@ -15,7 +20,7 @@ on:
 
 jobs:
   shadow-cert:
-    name: ${{ matrix.os }} · P0/P2/P3 Shadow Golden
+    name: ${{ matrix.os }} · P0/P2/P3/P3.1 Shadow Golden
     strategy:
       fail-fast: false
       matrix:
@@ -43,5 +48,17 @@ jobs:
         run: node scripts/pdf-intelligence-region-golden.mjs
       - name: P3 Region adapter controlled-runtime selftest
         run: node scripts/pdf-intelligence-region-adapter-selftest.mjs
+      - name: P3.1 source syntax
+        run: |
+          node --check src/pdf-intelligence/region-shadow-ui.js
+          node --check bridge/pdf-intelligence-shadow-server.mjs
+          node --check bridge/server-v127-shadow.mjs
+          node --check electron/main.cjs
+      - name: P3.1 UI Integration Shadow selftest
+        run: node scripts/pdf-intelligence-region-ui-selftest.mjs
+      - name: P3.1 Production Bridge + Shadow runtime smoke
+        run: node scripts/pdf-intelligence-region-ui-runtime-smoke.mjs
+      - name: P3.1 Web integration build
+        run: npm run build:web
       - name: Python runner syntax
         run: python -m py_compile offline/pdf-intelligence/deepdoc_vietocr_runner.py

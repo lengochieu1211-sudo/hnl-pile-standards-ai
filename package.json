@@ -69,6 +69,9 @@
       "electron/**/*",
       "offline/**/*",
       "public/**/*",
+      "src/pdf-intelligence/contracts.js",
+      "src/pdf-intelligence/deepdoc-vietocr-adapter.js",
+      "src/pdf-intelligence/deepdoc-region-bridge.js",
       "package.json",
       "node_modules/node-unrar-js/**/*"
     ],

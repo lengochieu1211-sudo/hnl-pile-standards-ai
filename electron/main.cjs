@@ -101,7 +101,12 @@ async function ensureBridge() {
     if (occupied) continue;
 
     const root = app.getAppPath();
-    const serverFile = path.join(root, 'bridge', 'server.mjs');
+    // v1.27 research branch: prefer a wrapper that starts the unchanged v1.26
+    // Bridge plus the isolated P3.1 PDF Intelligence Shadow service. If the
+    // wrapper is absent, fall back to the Production bridge exactly as before.
+    const shadowWrapper = path.join(root, 'bridge', 'server-v127-shadow.mjs');
+    const productionServer = path.join(root, 'bridge', 'server.mjs');
+    const serverFile = fs.existsSync(shadowWrapper) ? shadowWrapper : productionServer;
     if (!fs.existsSync(serverFile)) throw new Error(`Thiếu HNL Bridge: ${serverFile}`);
     const logPath = path.join(app.getPath('userData'), 'hnl-bridge.log');
     if (!logStream) logStream = fs.createWriteStream(logPath, { flags: 'a' });

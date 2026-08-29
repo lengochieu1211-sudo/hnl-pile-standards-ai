@@ -1,6 +1,19 @@
 {
-  "current": "1.26.0",
+  "current": "1.27.0",
   "releases": [
+    {
+      "version": "1.27.0",
+      "date": "2026-08-29",
+      "title": "PDF/Image → Excel Intelligence · Runtime Golden · Windows + Web",
+      "changes": [
+        "P3.2 Real PDF Golden đóng 9/9 BENCHMARKED; không tự nâng thành numeric VERIFIED.",
+        "P4 PDF/Ảnh → Excel Intelligence hỗ trợ quét PDF, vùng PDF và Image Engineering review với provenance file → page → bbox → engine → state/source SHA.",
+        "OCR/Vision-readable vẫn REVIEW cho tới khi được xác nhận; không tự chảy vào Calculation Engine.",
+        "P4 Runtime Golden chạy Chromium thật trên Windows CI đạt 5/5, gồm ba workbook XLSX thực tế.",
+        "Full regression đạt 592/592; Search Brain v1.9.23 tiếp tục LOCKED và Calculation Engine không thay đổi.",
+        "Sản phẩm phát hành chỉ nhắm Web và Windows x64; Windows đóng gói NSIS Setup + Portable."
+      ]
+    },
     {
       "version": "1.26.0",
       "date": "2026-08-26",

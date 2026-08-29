@@ -1,0 +1,54 @@
+name: TEMP · Prepare HNL v1.27.0 Release Tree
+
+on:
+  push:
+    branches:
+      - temp/v127-release-prep-20260829
+    paths:
+      - '.github/workflows/v127-release-prepare.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: temp/v127-release-prep-20260829
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Prepare controlled v1.27.0 release tree
+        run: node scripts/prepare-v127-release.mjs
+      - name: Install exact dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Single-version gate
+        run: npm run check:version
+      - name: Release synchronization gate
+        run: npm run gate:release-sync
+      - name: Search Brain lock
+        run: npm run check:search
+      - name: Verify P4 source syntax
+        run: |
+          node --check src/p4-pdf-excel-intelligence.js
+          node --check src/pdf-excel-intelligence/core.js
+          node --check src/pdf-excel-intelligence/adapters.js
+          node --check src/pdf-excel-intelligence/exporter.js
+          node --check src/pdf-excel-intelligence/ui.js
+          node --check src/pdf-excel-intelligence/runtime-golden-ui.js
+          node --check src/pdf-excel-intelligence/runtime-golden-ci.js
+      - name: Commit prepared release tree
+        shell: pwsh
+        run: |
+          git config user.name "HNL Release Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git status --short
+          git commit -m "release: prepare HNL v1.27.0 Windows + Web"
+          git push origin HEAD:temp/v127-release-prep-20260829

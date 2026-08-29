@@ -21,8 +21,11 @@ const output = path.resolve(arg('output', 'dist/build-info.json'));
 const github = String(process.env.GITHUB_ACTIONS || '').toLowerCase() === 'true';
 const repository = process.env.GITHUB_REPOSITORY || git(['config', '--get', 'remote.origin.url'])
   .replace(/^.*github\.com[:/]/, '').replace(/\.git$/, '');
-const sha = process.env.GITHUB_SHA || git(['rev-parse', 'HEAD']);
-const branch = process.env.GITHUB_REF_NAME || git(['rev-parse', '--abbrev-ref', 'HEAD'], 'local');
+// HNL_SOURCE_* is intentionally preferred over GitHub's event SHA/ref. For pull_request
+// workflows GitHub may expose a synthetic merge SHA even when we explicitly checkout the
+// research head. Provenance must describe the exact source tree that was built.
+const sha = process.env.HNL_SOURCE_SHA || process.env.GITHUB_SHA || git(['rev-parse', 'HEAD']);
+const branch = process.env.HNL_SOURCE_REF || process.env.GITHUB_REF_NAME || git(['rev-parse', '--abbrev-ref', 'HEAD'], 'local');
 const runNumber = process.env.GITHUB_RUN_NUMBER || '';
 const runAttempt = process.env.GITHUB_RUN_ATTEMPT || '';
 const runId = process.env.GITHUB_RUN_ID || '';

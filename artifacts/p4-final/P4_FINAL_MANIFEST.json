@@ -1,0 +1,85 @@
+{
+  "schema": "HNL_P4_RELEASE_FINALIZATION_MANIFEST_V2",
+  "generatedAt": "2026-08-29T14:30:24Z",
+  "releaseParentSha": "f40fb68e8a087db87b033242198200798746cb37",
+  "promotionState": "SHADOW_ONLY",
+  "preparedArtifact": {
+    "primarySourceArtifact": "HNL_v1.27.0_P4_PDF_EXCEL_INTELLIGENCE_DROP_IN_UPDATE.zip",
+    "primarySourceSha256": "ae0cff3891336c3611ed6c6e58837ec277a8c19ce43940d9b1bfa0119b5edf1c",
+    "preparedReleaseSetCount": 17
+  },
+  "frozenP32Sha": "a494ee4a710de3b8e4fbfc48815e3a0039ae577f",
+  "backupBranch": "backup/p4-before-final-repair-20260829",
+  "backupCommit": "cc7eb5096fa838a1c915d3327eea248912528bba",
+  "releaseSet": {
+    "count": 17,
+    "sourcePaths": [
+      "README_P4_DROP_IN.txt",
+      "docs/PDF_EXCEL_INTELLIGENCE_P4.md",
+      "index.html",
+      "scripts/pdf-excel-intelligence-selftest.mjs",
+      "src/p4-pdf-excel-intelligence.js",
+      "src/pdf-excel-intelligence/core.js",
+      "src/pdf-excel-intelligence/adapters.js",
+      "src/pdf-excel-intelligence/exporter.js",
+      "src/pdf-excel-intelligence/ui.css",
+      "src/pdf-excel-intelligence/ui.js",
+      "tests/p4-pdf-excel-intelligence.test.mjs",
+      "tools/pass83-test-count-gate.mjs",
+      ".github/workflows/v127-pdf-intelligence-shadow.yml"
+    ],
+    "evidencePaths": [
+      "artifacts/p4-final/P4_FILE_HASHES.json",
+      "artifacts/p4-final/P4_FINAL_GAP_MATRIX.md",
+      "artifacts/p4-final/P4_FINAL_MANIFEST.json",
+      "artifacts/p4-final/P4_FINAL_TEST_REPORT.json"
+    ],
+    "noTemporaryHelpers": true,
+    "noCache": true,
+    "noNodeModules": true,
+    "noDistOrReleaseJunk": true
+  },
+  "preCommitByteAudit": {
+    "result": "PASS",
+    "preparedArtifactMatches": 14,
+    "runtimeOverrides": 3,
+    "runtimeOverridePaths": [
+      "index.html",
+      "src/pdf-excel-intelligence/ui.js",
+      ".github/workflows/v127-pdf-intelligence-shadow.yml"
+    ],
+    "runtimeOverrideHistoryVerified": true,
+    "note": "The three differing files were intentionally changed by Runtime Golden commits after the prepared manifest; their parent Git blob IDs are authoritative and are not rolled back."
+  },
+  "runtimeGolden": {
+    "sourceSha": "f40fb68e8a087db87b033242198200798746cb37",
+    "artifact": "HNL-P4-Runtime-Golden-f40fb68e-PASS-5of5.zip",
+    "state": "RUNTIME_PASS",
+    "casesPassed": 5,
+    "casesTotal": 5,
+    "engine": "Playwright Chromium",
+    "platform": "win32",
+    "productionMutationAllowed": false,
+    "calculationEngineMutationAllowed": false,
+    "searchBrain": "1.9.23",
+    "searchBrainStatus": "LOCKED",
+    "xlsxArtifacts": [
+      {"file": "P4_FULL_SCAN_REVIEW.xlsx", "sha256": "45736f26597eb6b7db86f9212453b2a7dd4139517438d4d14d455ed4dc95fd8a"},
+      {"file": "P4_PDF_REGION_REVIEW.xlsx", "sha256": "9482c2afcb3b88b376e0dfcd6a06fc8d0e21539027c4eb3446f4796d04498f8f"},
+      {"file": "P4_IMAGE_REVIEW.xlsx", "sha256": "ec373212439547723a80ba330c0a587063b2a020fac2129459bd9d1f32adfda6"}
+    ]
+  },
+  "intentionalNonChanges": [
+    "src/search.js",
+    "Calculation Engine modules",
+    "main branch",
+    "PR #4 merge state",
+    "Production deployment"
+  ],
+  "releaseCommitPolicy": {
+    "exactlyOneCommit": true,
+    "parentMustEqual": "f40fb68e8a087db87b033242198200798746cb37",
+    "changedPathsMustBeEvidenceOnly": true,
+    "postCommitGate": "Check GitHub Actions on exact new SHA; queued/in_progress is not PASS."
+  }
+}

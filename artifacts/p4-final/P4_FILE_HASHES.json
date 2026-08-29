@@ -1,0 +1,41 @@
+{
+  "schema": "HNL_P4_RELEASE_BYTE_AUDIT_V2",
+  "generatedAt": "2026-08-29T14:30:24Z",
+  "releaseParentSha": "f40fb68e8a087db87b033242198200798746cb37",
+  "preparedArtifact": {
+    "name": "HNL_v1.27.0_P4_FINAL_REPAIR_DROP_IN_UPDATE_IN_PROGRESS_2026-08-29.zip",
+    "primarySourceSha256": "ae0cff3891336c3611ed6c6e58837ec277a8c19ce43940d9b1bfa0119b5edf1c",
+    "sourceFileCount": 13,
+    "evidenceFileCount": 4,
+    "releaseSetCount": 17
+  },
+  "byteIdentity": {
+    "preparedByteMatchesParent": 14,
+    "preparedByteDiffersFromParent": 3,
+    "sourceFilesBaselineIdentical": 10,
+    "sourceFilesRuntimeOverridden": 3,
+    "method": "SHA-256 for prepared artifact baseline + Git blob SHA-1 for exact bytes on release parent"
+  },
+  "files": {
+    "README_P4_DROP_IN.txt": {"preparedSha256": "804aa793545b61c1cdf4b238db41212043f5134cb439c9a13bf3d63701233435", "parentGitBlobSha1": "2862e0981885f8e7db10340e8d368b00e2b937a7", "preparedBytesEqualParent": true},
+    "docs/PDF_EXCEL_INTELLIGENCE_P4.md": {"preparedSha256": "7f70e7345ee501f025ce34c5ea4d7b137dea67fc22a75b30451014038dd4ee16", "parentGitBlobSha1": "502fba1dd3da33e4b0d6126812eda3c5096f6f12", "preparedBytesEqualParent": true},
+    "index.html": {"preparedSha256": "ac671b1542d533b4bae437dcbdab7742d084c1fe7da1fe139c15e9d007d46889", "parentGitBlobSha1": "65bb68e27a627da270e0cd5e1350fcb9b8dfeec4", "preparedBytesEqualParent": false},
+    "scripts/pdf-excel-intelligence-selftest.mjs": {"preparedSha256": "778f21e98f0192c700ba081f96bbcc0e82565f7356184f1dd84ca42935a8ddde", "parentGitBlobSha1": "e0c422c3ab83c89f033f05df46c908dbc4416530", "preparedBytesEqualParent": true},
+    "src/p4-pdf-excel-intelligence.js": {"preparedSha256": "959a27d36eaa94f17eb07812c393635e7fc0d2c3de59d40413192bd82b1fbcdf", "parentGitBlobSha1": "9e3ab2ffcc32ed70644849c70468022ce43968e9", "preparedBytesEqualParent": true},
+    "src/pdf-excel-intelligence/core.js": {"preparedSha256": "1c751f07ea4290309b8f7beb861101771cb760801fbf90e7424de77a7437f96e", "parentGitBlobSha1": "7bebd283c2cfa0fd96b7347ee37b98a7b14e163f", "preparedBytesEqualParent": true},
+    "src/pdf-excel-intelligence/adapters.js": {"preparedSha256": "dd1419cef15dc5a215b6632a8683763b111ea5cf21bb6a62705da635e03cbd68", "parentGitBlobSha1": "0d1da78ae4a6a7d859cca830ed69f84f78329830", "preparedBytesEqualParent": true},
+    "src/pdf-excel-intelligence/exporter.js": {"preparedSha256": "8864cba041921eec390bd2bdfd642038ac333d803b2e1099803017c8eb114405", "parentGitBlobSha1": "f9275f8ee020e538cfa7cab3829b4e7207c0f435", "preparedBytesEqualParent": true},
+    "src/pdf-excel-intelligence/ui.css": {"preparedSha256": "e4ffab8766eb9933ad4dcb7aded0daa7ce3e09152d04832fe6e200b6403d3662", "parentGitBlobSha1": "f4331fada1384542013a04b6b138f23773eb8de5", "preparedBytesEqualParent": true},
+    "src/pdf-excel-intelligence/ui.js": {"preparedSha256": "45ceb7a4640613200b6f70b597003bfa392520460450deeffd755ec360b487da", "parentGitBlobSha1": "a2d377f254e3fa2d15647d2b4452092211d51e3c", "preparedBytesEqualParent": false},
+    "tests/p4-pdf-excel-intelligence.test.mjs": {"preparedSha256": "6740c580b5d3ac59583c059f9e6d432726d51131469a4f339b14aaa480e6acf2", "parentGitBlobSha1": "37e0d4d5c9344b9b105a955212460f318b69839f", "preparedBytesEqualParent": true},
+    "tools/pass83-test-count-gate.mjs": {"preparedSha256": "13afb6f926736764a90c0c152fc06bce3b579700acf9e6ba418b99b7eb80d4fb", "parentGitBlobSha1": "296ec62879ebdae00b3ef9a44963256fa894ca48", "preparedBytesEqualParent": true},
+    ".github/workflows/v127-pdf-intelligence-shadow.yml": {"preparedSha256": "8620d1aa12cac0fbd700a445ed979f9e49d90f2ae555ad141f8a3049ddcf45e8", "parentGitBlobSha1": "e3c437182994f849dc784c62fcc06be2ddc5df27", "preparedBytesEqualParent": false}
+  },
+  "runtimeOverrides": {
+    "index.html": {"reason": "Runtime Golden harness entrypoints added after prepared manifest", "commits": ["5506c9a4fc04edc5fe803e40291500c280423251", "9fdff9e7cf25b800c26a01173b80f87bb1a0c05f"]},
+    "src/pdf-excel-intelligence/ui.js": {"reason": "Observer-only Runtime Golden event bridge added after prepared manifest", "commits": ["5506c9a4fc04edc5fe803e40291500c280423251"]},
+    ".github/workflows/v127-pdf-intelligence-shadow.yml": {"reason": "Runtime Golden Chromium + diagnostics gates added after prepared manifest", "commits": ["5506c9a4fc04edc5fe803e40291500c280423251", "9fdff9e7cf25b800c26a01173b80f87bb1a0c05f", "171d3e772c84a405a521aa20f3e5c4e59566a140"]}
+  },
+  "auditResult": "PASS",
+  "policy": "Do not overwrite runtime-overridden files with prepared artifact bytes."
+}

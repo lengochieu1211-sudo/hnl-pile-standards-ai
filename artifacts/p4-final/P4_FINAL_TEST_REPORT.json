@@ -1,0 +1,36 @@
+{
+  "schema": "HNL_P4_RELEASE_FINALIZATION_TEST_REPORT_V2",
+  "generatedAt": "2026-08-29T14:30:24Z",
+  "releaseParentSha": "f40fb68e8a087db87b033242198200798746cb37",
+  "preRelease": {
+    "sourceSyntax": "PASS",
+    "originalSourceSelftest": "PASS 8/8",
+    "p4SafetyTests": "PASS 18/18",
+    "preparedManifestByteAudit": "PASS 14/17 exact + 3/17 verified Runtime Golden overrides",
+    "runtimeGolden": "PASS 5/5",
+    "runtimeGoldenSourceSha": "f40fb68e8a087db87b033242198200798746cb37",
+    "runtimeGoldenArtifact": "HNL-P4-Runtime-Golden-f40fb68e-PASS-5of5.zip"
+  },
+  "runtimeGoldenSafety": {
+    "searchBrain": "1.9.23 LOCKED",
+    "productionMutationAllowed": false,
+    "calculationEngineMutationAllowed": false,
+    "pdfRegionSemanticState": "REVIEW",
+    "pdfRegionCalculationEligible": false,
+    "imageSemanticState": "REVIEW",
+    "imageCalculationEligible": false
+  },
+  "releaseFinalization": {
+    "releaseCommit": "TO_BE_RESOLVED_FROM_BRANCH_HEAD_AFTER_THIS_SINGLE_COMMIT",
+    "githubActionsOnReleaseCommit": "PENDING_POST_COMMIT",
+    "releaseReadinessReport": "BLOCKED_UNTIL_ALL_ACTIONS_GREEN"
+  },
+  "safety": {
+    "searchBrainChangedByReleaseCommit": false,
+    "calculationEngineChangedByReleaseCommit": false,
+    "mainBranchChanged": false,
+    "pr4Merged": false,
+    "productionDeployed": false
+  },
+  "nextGate": "After the single evidence-only release commit, read the exact new branch SHA and evaluate GitHub Actions only for that SHA. Do not call queued/in_progress PASS."
+}

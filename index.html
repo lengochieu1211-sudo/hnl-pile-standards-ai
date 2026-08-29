@@ -36,5 +36,18 @@
       })();
     </script>
     <script type="module" src="/src/main.js"></script>
+    <!-- v1.27 research only: observes the real region-selection UI without
+         replacing v1.26 Production behavior. Remove/disable with ?pdfshadow=off. -->
+    <script type="module" src="/src/pdf-intelligence/region-shadow-ui.js"></script>
+    <!-- v1.27 P3.2 research harness: hidden by default; Ctrl+Shift+G or ?pdfgolden=1.
+         Records real-PDF evidence only and never mutates Production state. -->
+    <script type="module" src="/src/pdf-intelligence/real-pdf-golden-ui.js"></script>
+    <!-- v1.27 P4 research/shadow: isolated PDF region/text → Excel adapter. -->
+    <script type="module" src="/src/pdf-excel-intelligence/ui.js"></script>
+    <!-- P4 Runtime Golden: observer-only harness; Ctrl+Shift+X or ?p4golden=1.
+         It records real user actions and never sends OCR/Vision by itself. -->
+    <script type="module" src="/src/pdf-excel-intelligence/runtime-golden-ui.js"></script>
+    <!-- CI-only deterministic browser fixture helper; hard no-op unless ?p4ci=1. -->
+    <script type="module" src="/src/pdf-excel-intelligence/runtime-golden-ci.js"></script>
   </body>
 </html>

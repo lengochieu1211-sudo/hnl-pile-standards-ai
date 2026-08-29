@@ -1,0 +1,155 @@
+name: v1.27 PDF/Excel Intelligence · Windows + Web Certification
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'index.html'
+      - 'package.json'
+      - 'src/pdf-intelligence/**'
+      - 'src/pdf-excel-intelligence/**'
+      - 'src/p4-pdf-excel-intelligence.js'
+      - 'tests/p4-pdf-excel-intelligence.test.mjs'
+      - 'artifacts/pdf-intelligence/**'
+      - 'artifacts/p4-final/**'
+      - 'offline/pdf-intelligence/**'
+      - 'bridge/pdf-intelligence-shadow-server.mjs'
+      - 'bridge/server-v127-shadow.mjs'
+      - 'electron/main.cjs'
+      - 'scripts/pdf-intelligence-*.mjs'
+      - 'scripts/pdf-excel-intelligence-selftest.mjs'
+      - 'scripts/p4-runtime-golden-browser.mjs'
+      - 'scripts/deepdoc-vietocr-selftest.mjs'
+      - 'scripts/generate-build-info.mjs'
+      - 'docs/PDF_INTELLIGENCE_V1.27_*.md'
+      - 'docs/PDF_EXCEL_INTELLIGENCE_P4.md'
+      - 'README_P4_DROP_IN.txt'
+      - '.github/workflows/v127-pdf-intelligence-shadow.yml'
+  push:
+    branches:
+      - research/v1.27-pdf-intelligence-shadow
+  workflow_dispatch:
+
+jobs:
+  windows-web-cert:
+    name: Windows x64 · P0/P2/P3/P3.1/P3.2/P4 · Web + Desktop UI
+    runs-on: windows-latest
+    timeout-minutes: 70
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      HNL_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      HNL_SOURCE_REF: ${{ github.event.pull_request.head.ref || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: Verify exact research checkout
+        shell: pwsh
+        run: |
+          $head = (git rev-parse HEAD).Trim()
+          Write-Host "Expected research SHA: $env:HNL_SOURCE_SHA"
+          Write-Host "Checked out SHA:       $head"
+          if ($head -ne $env:HNL_SOURCE_SHA) { throw "Research SHA mismatch" }
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install exact dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Search Brain lock
+        run: npm run check:search
+      - name: P0/P1 PDF Intelligence selftest
+        run: node scripts/pdf-intelligence-selftest.mjs
+      - name: P2 DeepDoc/VietOCR controlled-runtime selftest
+        run: node scripts/deepdoc-vietocr-selftest.mjs
+      - name: P3 source syntax
+        run: |
+          node --check src/pdf-intelligence/region-selective-core.js
+          node --check src/pdf-intelligence/region-selective-ocr.js
+          node --check src/pdf-intelligence/deepdoc-region-bridge.js
+          node --check src/pdf-intelligence/deepdoc-vietocr-adapter.js
+      - name: P3 Region Selective OCR Golden
+        run: node scripts/pdf-intelligence-region-golden.mjs
+      - name: P3 Region adapter controlled-runtime selftest
+        run: node scripts/pdf-intelligence-region-adapter-selftest.mjs
+      - name: P3.1 source syntax
+        run: |
+          node --check src/pdf-intelligence/region-shadow-ui.js
+          node --check bridge/pdf-intelligence-shadow-server.mjs
+          node --check bridge/server-v127-shadow.mjs
+          node --check electron/main.cjs
+      - name: P3.1 UI Integration Shadow selftest
+        run: node scripts/pdf-intelligence-region-ui-selftest.mjs
+      - name: P3.1 Production Bridge + Shadow runtime smoke
+        run: node scripts/pdf-intelligence-region-ui-runtime-smoke.mjs
+      - name: P3.2 source syntax
+        run: |
+          node --check src/pdf-intelligence/real-pdf-golden-core.js
+          node --check src/pdf-intelligence/real-pdf-golden-corpus.js
+          node --check src/pdf-intelligence/real-pdf-golden-ui.js
+      - name: P3.2 Real PDF Golden contract
+        run: node scripts/pdf-intelligence-real-pdf-golden-contract.mjs
+      - name: P4 source syntax + original-source selftest
+        run: |
+          node --check src/p4-pdf-excel-intelligence.js
+          node --check src/pdf-excel-intelligence/core.js
+          node --check src/pdf-excel-intelligence/adapters.js
+          node --check src/pdf-excel-intelligence/exporter.js
+          node --check src/pdf-excel-intelligence/ui.js
+          node --check src/pdf-excel-intelligence/runtime-golden-ui.js
+          node --check src/pdf-excel-intelligence/runtime-golden-ci.js
+          node --check scripts/p4-runtime-golden-browser.mjs
+          node scripts/pdf-excel-intelligence-selftest.mjs
+      - name: P4 safety + ExcelJS runtime tests
+        run: node --test tests/p4-pdf-excel-intelligence.test.mjs
+      - name: Exact full regression · 592 tests
+        run: node tools/pass83-test-count-gate.mjs
+      - name: Build Web from exact research SHA
+        run: npm run build:web
+      - name: Verify Web metadata and freeze Web artifact
+        shell: pwsh
+        run: |
+          $info = Get-Content dist/build-info.json -Raw | ConvertFrom-Json
+          if ($info.target -ne 'web') { throw "Expected target=web, got $($info.target)" }
+          if ($info.commit -ne $env:HNL_SOURCE_SHA) { throw "build-info commit mismatch: $($info.commit)" }
+          if ($info.branch -ne $env:HNL_SOURCE_REF) { throw "build-info branch mismatch: $($info.branch)" }
+          Write-Host (Get-Content dist/build-info.json -Raw)
+          New-Item -ItemType Directory -Force artifacts/p4-web-dist | Out-Null
+          Copy-Item dist/* artifacts/p4-web-dist -Recurse -Force
+      - name: Upload certified Web build
+        uses: actions/upload-artifact@v4
+        with:
+          name: HNL-v1.27-P4-Web-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/p4-web-dist/**
+          if-no-files-found: error
+          retention-days: 14
+      - name: Install Chromium for P4 Runtime Golden
+        shell: pwsh
+        run: |
+          npm install --no-save --package-lock=false playwright@1.55.0
+          npx playwright install chromium
+      - name: P4 Runtime Golden · Chromium · deterministic PDF/Image · 5/5
+        shell: pwsh
+        run: node scripts/p4-runtime-golden-browser.mjs --sha $env:HNL_SOURCE_SHA --out artifacts/p4-runtime-golden
+      - name: Upload P4 Runtime Golden evidence / failure diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: HNL-P4-Runtime-Golden-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/p4-runtime-golden/**
+          if-no-files-found: error
+          retention-days: 30
+      - name: Build Windows Desktop UI
+        run: npm run build:desktop
+      - name: Verify Windows Desktop metadata
+        shell: pwsh
+        run: |
+          $info = Get-Content dist/build-info.json -Raw | ConvertFrom-Json
+          if ($info.target -ne 'desktop') { throw "Expected target=desktop, got $($info.target)" }
+          if ($info.commit -ne $env:HNL_SOURCE_SHA) { throw "desktop build-info commit mismatch: $($info.commit)" }
+          if ($info.branch -ne $env:HNL_SOURCE_REF) { throw "desktop build-info branch mismatch: $($info.branch)" }
+
+# No Linux desktop target. Runtime Golden is executed in real Chromium on Windows CI.
+# Final NSIS + Portable x64 EXE packaging remains deferred until P4 Runtime Golden closes.

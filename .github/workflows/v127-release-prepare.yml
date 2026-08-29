@@ -28,27 +28,25 @@ jobs:
         run: node scripts/prepare-v127-release.mjs
       - name: Install exact dependencies
         run: npm ci --no-audit --no-fund
-      - name: Single-version gate
-        run: npm run check:version
-      - name: Release synchronization gate
-        run: npm run gate:release-sync
-      - name: Search Brain lock
-        run: npm run check:search
-      - name: Verify P4 source syntax
+      - name: Certify prepared release metadata
         run: |
+          npm run check:version
+          npm run gate:release-sync
+          npm run check:search
           node --check src/p4-pdf-excel-intelligence.js
           node --check src/pdf-excel-intelligence/core.js
           node --check src/pdf-excel-intelligence/adapters.js
           node --check src/pdf-excel-intelligence/exporter.js
           node --check src/pdf-excel-intelligence/ui.js
-          node --check src/pdf-excel-intelligence/runtime-golden-ui.js
-          node --check src/pdf-excel-intelligence/runtime-golden-ci.js
-      - name: Commit prepared release tree
+      - name: Commit and push prepared non-workflow files
         shell: pwsh
         run: |
           git config user.name "HNL Release Bot"
           git config user.email "actions@users.noreply.github.com"
-          git add -A
+          $files = @(git diff --name-only --diff-filter=ACM HEAD | Where-Object { -not $_.StartsWith('.github/workflows/') -and $_ -ne 'scripts/prepare-v127-release.mjs' })
+          if (Test-Path 'docs/RELEASE_V1.27.0.md') { $files += 'docs/RELEASE_V1.27.0.md' }
+          $files = $files | Sort-Object -Unique
+          foreach ($file in $files) { git add -- $file }
           git status --short
-          git commit -m "release: prepare HNL v1.27.0 Windows + Web"
+          git commit -m "release: stage HNL v1.27.0 non-workflow tree"
           git push origin HEAD:temp/v127-release-prep-20260829

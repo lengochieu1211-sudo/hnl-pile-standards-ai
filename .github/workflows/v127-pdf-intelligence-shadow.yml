@@ -97,6 +97,7 @@ jobs:
           node --check src/pdf-excel-intelligence/adapters.js
           node --check src/pdf-excel-intelligence/exporter.js
           node --check src/pdf-excel-intelligence/ui.js
+          node --check src/pdf-excel-intelligence/runtime-golden-ui.js
           node scripts/pdf-excel-intelligence-selftest.mjs
       - name: P4 safety + ExcelJS runtime tests
         run: node --test tests/p4-pdf-excel-intelligence.test.mjs

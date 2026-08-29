@@ -1,0 +1,33 @@
+{
+  "schema": "HNL_P4_PASS0_GATE_V1",
+  "sourceSha": "a494ee4a710de3b8e4fbfc48815e3a0039ae577f",
+  "generatedAt": "2026-08-28T23:34:40.316Z",
+  "checks": [
+    {
+      "name": "frozen-source-sha",
+      "pass": true,
+      "detail": "/mnt/data/HNL_P3.2_R1_FINAL_REAL_PDF_UI_GOLDEN_2026-08-28T23-17-02-243Z.json"
+    },
+    {
+      "name": "p32-import-count",
+      "pass": true,
+      "detail": "runs=11"
+    },
+    {
+      "name": "no-p32-calculation-promotion",
+      "pass": true,
+      "detail": "eligible=0"
+    },
+    {
+      "name": "self-contained-source-sha",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "ocr-confirmation-barrier",
+      "pass": true,
+      "detail": ""
+    }
+  ],
+  "pass": true
+}

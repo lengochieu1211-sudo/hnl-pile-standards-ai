@@ -1,0 +1,83 @@
+{
+  "schema": "HNL_P4_PASS0_PASS1_PASS2_TEST_REPORT_V1",
+  "baselineSha": "a494ee4a710de3b8e4fbfc48815e3a0039ae577f",
+  "promotionState": "SHADOW_ONLY",
+  "implementationState": "PASS0_PASS1_PASS2_IMPLEMENTED_NOT_CERTIFIED",
+  "generatedAt": "2026-08-28T23:34:31.489676Z",
+  "testsRun": [
+    {
+      "name": "node --check src/p4-pdf-excel-intelligence.js",
+      "status": "PASS"
+    },
+    {
+      "name": "node --check src/p4-pdf-excel-ui.js",
+      "status": "PASS"
+    },
+    {
+      "name": "node --check tests/p4-pdf-excel-intelligence.test.mjs",
+      "status": "PASS"
+    },
+    {
+      "name": "node --check tools/p4-pass0-gate.mjs",
+      "status": "PASS"
+    },
+    {
+      "name": "node --test tests/p4-pdf-excel-intelligence.test.mjs",
+      "status": "PASS",
+      "passed": 18,
+      "failed": 0
+    },
+    {
+      "name": "node tools/p4-pass0-gate.mjs FINAL_P3.2_JSON",
+      "status": "PASS",
+      "checks": 5
+    },
+    {
+      "name": "Independent Excel workbook design smoke via artifact_tool",
+      "status": "PASS",
+      "file": "HNL_P4_PASS0_EXCEL_RUNTIME_SMOKE.xlsx",
+      "formula": "A0=PI()/4*(D^2-(D-2*t)^2)",
+      "computed": 144199.1027997715,
+      "formulaErrorScan": 0
+    },
+    {
+      "name": "Static isolation scan for Search Brain / Calculation Engine imports",
+      "status": "PASS",
+      "detail": "P4 modules do not import src/search.js, engineering-router.js, pile-workflows.js or calculator modules."
+    },
+    {
+      "name": "index.html baseline preservation audit",
+      "status": "PASS",
+      "detail": "Frozen index.html retained; only P4 module script tag added after existing P3.2 harness."
+    },
+    {
+      "name": "P4 Image Engineering review adapter regression",
+      "status": "PASS",
+      "detail": "Extracted image fields + confidence + source image export as REVIEW; calculationEligible remains false."
+    }
+  ],
+  "notRun": [
+    {
+      "name": "exportP4ExcelWorkbook() with repository ExcelJS runtime",
+      "reason": "Local container has no repository node_modules/exceljs and external clone/install is unavailable. Must run after drop-in is applied in the repository/CI."
+    },
+    {
+      "name": "Full existing repository test suite / Vite build",
+      "reason": "Full frozen source could not be cloned into local runtime because external DNS is disabled. New P4 modules were tested standalone against the final P3.2 evidence."
+    },
+    {
+      "name": "P4 staging deployment/runtime UI Golden",
+      "reason": "Not deployed intentionally before repository build/runtime certification."
+    }
+  ],
+  "safety": {
+    "searchBrainChanged": false,
+    "calculationEngineChanged": false,
+    "mainJsChanged": false,
+    "productionMutationAllowed": false,
+    "p32BenchmarkedAutoPromoted": false,
+    "ocrWithoutConfirmationCalculationEligible": false,
+    "arbitraryPdfSelectionAutoVerified": false,
+    "imageReviewAutoConfirmed": false
+  }
+}

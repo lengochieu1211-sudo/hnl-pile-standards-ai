@@ -1,0 +1,37 @@
+{
+  "schema": "HNL_P4_DROP_IN_MANIFEST_V3",
+  "version": "v1.27.0-P4-PASS0-PASS1-PASS2",
+  "baselineSha": "a494ee4a710de3b8e4fbfc48815e3a0039ae577f",
+  "promotionState": "SHADOW_ONLY",
+  "implementationState": "PASS0_PASS1_PASS2_IMPLEMENTED_NOT_CERTIFIED",
+  "productionMutationAllowed": false,
+  "fileCount": 10,
+  "changedFiles": [
+    "index.html",
+    "src/p4-pdf-excel-intelligence.js",
+    "src/p4-pdf-excel-ui.js",
+    "tests/p4-pdf-excel-intelligence.test.mjs",
+    "tools/p4-pass0-gate.mjs",
+    "artifacts/p4-pass0/P4_GAP_MATRIX.md",
+    "artifacts/p4-pass0/P4_PASS0_GATE.json",
+    "artifacts/p4-pass0/P4_TEST_REPORT.json",
+    "artifacts/p4-pass0/P4_DROP_IN_MANIFEST.json",
+    "artifacts/p4-pass0/P4_FILE_HASHES.json"
+  ],
+  "intentionallyUntouched": [
+    "src/search.js (Search Brain v1.9.23 LOCKED)",
+    "Calculation Engine modules",
+    "src/pdf-intelligence/*",
+    "src/excel-export.js",
+    "src/image-engineering.js",
+    "src/main.js",
+    "package.json"
+  ],
+  "notes": [
+    "index.html only adds the isolated P4 module script tag to the frozen baseline.",
+    "Pass 1 adds PDF text/region → P4 Excel; Pass 2 adds existing Image Engineering REVIEW card → P4 Excel.",
+    "No P3.2 evidence is deleted or promoted.",
+    "No OCR/Vision/image-review source becomes Calculation Engine eligible without the required verification/confirmation.",
+    "src/main.js remains unchanged."
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "schema": "HNL_P4_FILE_HASHES_V3",
+  "baselineSha": "a494ee4a710de3b8e4fbfc48815e3a0039ae577f",
+  "files": [
+    {
+      "path": "index.html",
+      "bytes": 2407,
+      "sha256": "74e4d39517e2f1e9f1d4c344cbff300c6f82dc3a5f8c63774c2c0f57595ba13e"
+    },
+    {
+      "path": "src/p4-pdf-excel-intelligence.js",
+      "bytes": 28459,
+      "sha256": "959a27d36eaa94f17eb07812c393635e7fc0d2c3de59d40413192bd82b1fbcdf"
+    },
+    {
+      "path": "src/p4-pdf-excel-ui.js",
+      "bytes": 12637,
+      "sha256": "b44c34511d04efb60dddfbe6be8ae2471af0cde273dc8f04fe90eae005b23a1d"
+    },
+    {
+      "path": "tests/p4-pdf-excel-intelligence.test.mjs",
+      "bytes": 9320,
+      "sha256": "6b28c6730e53786a4a1c61db54e00ad692a1588f7a33fd52cdbe8108401bb542"
+    },
+    {
+      "path": "tools/p4-pass0-gate.mjs",
+      "bytes": 1810,
+      "sha256": "3dda58b291497b9df1ab11f3a3ccd2cfd2f590671bbe7e741beb315b3417167c"
+    },
+    {
+      "path": "artifacts/p4-pass0/P4_GAP_MATRIX.md",
+      "bytes": 3672,
+      "sha256": "cd7202fd22d09921f8e8aa78d95cc910ea470642ae67e0ae245a87dde32427a7"
+    },
+    {
+      "path": "artifacts/p4-pass0/P4_PASS0_GATE.json",
+      "bytes": 729,
+      "sha256": "5dec198726ab261c962032f656e28ef03515ae609090fc0bb16a47c8250ceedf"
+    },
+    {
+      "path": "artifacts/p4-pass0/P4_TEST_REPORT.json",
+      "bytes": 2926,
+      "sha256": "8c7ac446161f0eef3e1efc0ea5467af1e9bd2ac4fce672398eaf4899c5968de5"
+    },
+    {
+      "path": "artifacts/p4-pass0/P4_DROP_IN_MANIFEST.json",
+      "bytes": 1412,
+      "sha256": "933d06440015d1718f6118fb49e44fc6454fe6873b2f4466e4cdd6eb2025a380"
+    }
+  ],
+  "note": "Self hash intentionally omitted to avoid recursion."
+}

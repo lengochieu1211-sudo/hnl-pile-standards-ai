@@ -1,0 +1,59 @@
+name: TEMP · Export Prepared HNL v1.27.0 Tree
+
+on:
+  push:
+    branches:
+      - temp/v127-release-prep-20260829
+    paths:
+      - '.github/workflows/v127-release-export.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: temp/v127-release-prep-20260829
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Prepare controlled v1.27.0 release tree
+        run: node scripts/prepare-v127-release.mjs
+      - name: Install exact dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Certify prepared release metadata
+        run: |
+          npm run check:version
+          npm run gate:release-sync
+          npm run check:search
+          node --check src/p4-pdf-excel-intelligence.js
+          node --check src/pdf-excel-intelligence/core.js
+          node --check src/pdf-excel-intelligence/adapters.js
+          node --check src/pdf-excel-intelligence/exporter.js
+          node --check src/pdf-excel-intelligence/ui.js
+      - name: Collect prepared files
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force artifacts/v127-prepared | Out-Null
+          $files = git diff --name-only --diff-filter=ACM HEAD
+          foreach ($file in $files) {
+            if ($file -in @('.github/workflows/v127-release-export.yml','.github/workflows/v127-release-prepare.yml','scripts/prepare-v127-release.mjs')) { continue }
+            $dest = Join-Path 'artifacts/v127-prepared' $file
+            New-Item -ItemType Directory -Force (Split-Path $dest -Parent) | Out-Null
+            Copy-Item $file $dest -Force
+          }
+          $files | Set-Content artifacts/v127-prepared/CHANGED_FILES_SOURCE.txt -Encoding utf8
+          Get-ChildItem artifacts/v127-prepared -File -Recurse | ForEach-Object { $_.FullName }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HNL-v1.27.0-PREPARED-TREE
+          path: artifacts/v127-prepared/**
+          if-no-files-found: error
+          retention-days: 7

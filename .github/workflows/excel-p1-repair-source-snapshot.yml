@@ -1,0 +1,37 @@
+name: Excel P1 Repair Source Snapshot
+
+on:
+  push:
+    branches:
+      - repair/post-merge-excel-audit-p1
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact repair SHA
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+      - name: Record snapshot identity
+        shell: bash
+        run: |
+          printf '%s\n' "$GITHUB_SHA" > REPAIR_SOURCE_SHA.txt
+          git rev-parse HEAD
+      - name: Upload exact source snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: hnl-excel-p1-repair-source-${{ github.sha }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            .
+            !.git/**
+            !node_modules/**
+            !dist/**
+            !release/**
+            !artifacts/**

@@ -1,3 +1,21 @@
 {
-  "placeholder": true
+  "schema": "HNL_P4_FINAL_REPAIR_TEST_REPORT_V1",
+  "generatedAt": "2026-08-29T06:40:24.866443+00:00",
+  "local": {
+    "sourceSyntax": "PASS",
+    "originalSourceSelftest": "PASS 8/8",
+    "p4SafetyTests": "PASS 18/18",
+    "excelJsRuntime": "PENDING_CI_NPM_CI",
+    "viteBuild": "PENDING_CI",
+    "full592Regression": "PENDING_CI"
+  },
+  "safety": {
+    "searchBrainChanged": false,
+    "calculationEngineChanged": false,
+    "mainJsChanged": false,
+    "p32BenchmarkedAutoPromoted": false,
+    "ocrWithoutConfirmationCalculationEligible": false,
+    "fullScanFormulaExecutableWithoutVerified": false
+  },
+  "nextGate": "Push one P4 FINAL REPAIR commit to research branch, then check all workflows on exact new SHA."
 }

@@ -25,7 +25,9 @@ jobs:
           node-version: '22'
           cache: npm
       - name: Prepare controlled v1.27.0 release tree
-        run: node scripts/prepare-v127-release.mjs
+        run: |
+          node scripts/prepare-v127-release.mjs
+          node scripts/fix-v127-workflow-release.mjs
       - name: Install exact dependencies
         run: npm ci --no-audit --no-fund
       - name: Certify prepared release metadata
@@ -46,7 +48,7 @@ jobs:
           $files += @('docs/RELEASE_V1.27.0.md')
           $files = $files | Sort-Object -Unique
           foreach ($file in $files) {
-            if ($file -in @('.github/workflows/v127-release-export.yml','.github/workflows/v127-release-prepare.yml','scripts/prepare-v127-release.mjs')) { continue }
+            if ($file -in @('.github/workflows/v127-release-export.yml','.github/workflows/v127-release-prepare.yml','scripts/prepare-v127-release.mjs','scripts/fix-v127-workflow-release.mjs')) { continue }
             if (!(Test-Path $file)) { continue }
             $dest = Join-Path 'artifacts/v127-prepared' $file
             New-Item -ItemType Directory -Force (Split-Path $dest -Parent) | Out-Null

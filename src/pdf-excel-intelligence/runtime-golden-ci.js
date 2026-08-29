@@ -40,6 +40,7 @@ async function install(){
   function regionPopup(){
     document.querySelector('[data-p4-ci-region]')?.remove();
     const popup=document.createElement('div');popup.className='pdf-selection-popup';popup.dataset.p4CiRegion='1';
+    popup.style.cssText='position:fixed;left:24px;top:24px;z-index:2147483600;display:block;background:#fff;padding:12px;border:1px solid #94a3b8;border-radius:8px;box-shadow:0 8px 24px #0003';
     popup.innerHTML='<div class="pdf-selection-actions"></div>';
     popup._hnlSource={docId:DOC_ID,docName:fileName,standard:'HNL P4 Runtime Golden Fixture',page:1,text:'a = 0.70; b = 1.25 kPa',method:'text-layer',sourceRectNorm:{x:0.10,y:0.20,width:0.50,height:0.30},fingerprint:'p4-ci-fixture-v1'};
     document.body.appendChild(popup);return true;
@@ -49,6 +50,7 @@ async function install(){
     const chip=document.createElement('div');chip.className='chat-image-chip';chip.dataset.p4CiImageChip='1';
     chip.innerHTML=`<img alt="P4 fixture" src="${makePngDataUrl()}"><span><b>P4_Runtime_Golden_Image.png</b></span>`;document.body.appendChild(chip);
     const card=document.createElement('div');card.className='image-engineering-review';card.dataset.p4CiImageReview='1';
+    card.style.cssText='position:fixed;left:24px;top:110px;z-index:2147483600;display:block;background:#fff;padding:12px;border:1px solid #94a3b8;border-radius:8px;box-shadow:0 8px 24px #0003';
     card.innerHTML='<div class="image-review-row"><span><b>Đường kính thân cọc</b> <em>mm</em></span><input data-image-field-path="pile.diameterMm" value="600"><strong>96%</strong><small>P4_Runtime_Golden_Image.png · fixture</small></div><div class="image-engineering-review-actions"></div>';
     document.body.appendChild(card);return true;
   }

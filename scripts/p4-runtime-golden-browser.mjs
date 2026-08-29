@@ -10,6 +10,7 @@ const expectedSha=String(args.sha||process.env.HNL_SOURCE_SHA||'').trim();
 if(!/^[0-9a-f]{40}$/i.test(expectedSha))throw new Error(`Invalid --sha: ${expectedSha}`);
 const outDir=path.resolve(args.out||'artifacts/p4-runtime-golden');
 fs.mkdirSync(outDir,{recursive:true});
+const progressFile=path.join(outDir,'PROGRESS.json');
 const port=Number(args.port||4173);
 const base=`http://127.0.0.1:${port}`;
 const serverLog=[];
@@ -18,6 +19,7 @@ server.stdout.on('data',d=>{const s=String(d);serverLog.push(`[vite] ${s}`);proc
 server.stderr.on('data',d=>{const s=String(d);serverLog.push(`[vite:err] ${s}`);process.stderr.write(`[vite] ${s}`);});
 
 async function waitHttp(url,timeout=30000){const start=Date.now();let last;while(Date.now()-start<timeout){try{const r=await fetch(url);if(r.ok)return;}catch(e){last=e;}await new Promise(r=>setTimeout(r,300));}throw new Error(`Server not ready: ${url} ${last||''}`);}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 function sha256(file){return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');}
 async function validateXlsx(file,requiredSheets=[]){
   const buf=fs.readFileSync(file);if(buf.length<1500)throw new Error(`XLSX too small: ${file} ${buf.length}`);
@@ -26,11 +28,40 @@ async function validateXlsx(file,requiredSheets=[]){
   const xml=await zip.file('xl/workbook.xml').async('string');for(const s of requiredSheets)if(!xml.includes(`name="${s}"`))throw new Error(`Missing sheet ${s} in ${file}`);
   return{file:path.basename(file),bytes:buf.length,sha256:sha256(file),sheets:requiredSheets};
 }
-async function waitCase(page,id,state='RUNTIME_PASS',timeout=30000){await page.waitForFunction(({id,state})=>window.__HNL_P4_RUNTIME_GOLDEN__?.getState?.().cases?.[id]?.state===state,{id,state},{timeout});}
+async function runtimeState(page){return await page.evaluate(()=>window.__HNL_P4_RUNTIME_GOLDEN__?.getState?.()||null);}
+async function waitRuntimeCase(page,id,state='RUNTIME_PASS',timeout=30000){
+  const start=Date.now();let last=null;
+  while(Date.now()-start<timeout){
+    last=await runtimeState(page);
+    if(last?.cases?.[id]?.state===state)return last.cases[id];
+    await sleep(150);
+  }
+  throw new Error(`Runtime case timeout: ${id} wanted=${state} got=${last?.cases?.[id]?.state||'MISSING'} evidence=${JSON.stringify(last?.cases?.[id]?.evidence||null)}`);
+}
+async function waitRuntimeEvent(page,kind,timeout=15000){
+  const start=Date.now();let events=[];
+  while(Date.now()-start<timeout){
+    events=await page.evaluate(()=>Array.isArray(window.__HNL_P4_CI_EVENTS__)?window.__HNL_P4_CI_EVENTS__:[]);
+    const hit=events.find(e=>e?.detail?.kind===kind);
+    if(hit)return hit;
+    await sleep(100);
+  }
+  throw new Error(`Runtime event timeout: ${kind}; events=${JSON.stringify(events.slice(-12))}`);
+}
+async function waitEnabled(page,selector,timeout=20000){
+  const start=Date.now();
+  while(Date.now()-start<timeout){const enabled=await page.locator(selector).evaluate(el=>!el.disabled).catch(()=>false);if(enabled)return;await sleep(120);}
+  throw new Error(`Element did not enable: ${selector}`);
+}
 async function saveDownload(download,name){const p=path.join(outDir,name);await download.saveAs(p);return p;}
-function mark(next,extra={}){stage=next;console.log(`P4 RUNTIME GOLDEN STAGE: ${stage}${Object.keys(extra).length?` · ${JSON.stringify(extra)}`:''}`);}
-
 let browser,page,stage='BOOT';
+function mark(next,extra={}){
+  stage=next;
+  const record={schema:'HNL_P4_RUNTIME_GOLDEN_PROGRESS_V1',updatedAt:new Date().toISOString(),stage,expectedSha,...extra};
+  fs.writeFileSync(progressFile,JSON.stringify(record,null,2));
+  console.log(`P4 RUNTIME GOLDEN STAGE: ${stage}${Object.keys(extra).length?` · ${JSON.stringify(extra)}`:''}`);
+}
+
 try{
   mark('WAIT_WEB');
   await waitHttp(`${base}/build-info.json`);
@@ -43,10 +74,16 @@ try{
   mark('LOAD_APP');
   await page.goto(`${base}/?p4golden=1&p4ci=1`,{waitUntil:'networkidle',timeout:60000});
   await page.waitForFunction(()=>window.__HNL_P4_RUNTIME_GOLDEN__&&window.__HNL_P4_RUNTIME_CI__&&window.__HNL_P4_PDF_EXCEL__,null,{timeout:30000});
+  await page.evaluate(()=>{
+    window.__HNL_P4_CI_EVENTS__=[];
+    for(const name of ['hnl:p4-runtime-scan','hnl:p4-runtime-export','hnl:p4-runtime-error']){
+      window.addEventListener(name,e=>window.__HNL_P4_CI_EVENTS__.push({name,at:new Date().toISOString(),detail:e.detail||null}));
+    }
+  });
   if(await page.evaluate(()=>window.__HNL_P4_RUNTIME_CI_ERROR__||''))throw new Error(await page.evaluate(()=>window.__HNL_P4_RUNTIME_CI_ERROR__));
   mark('WEB_ENV');
-  await waitCase(page,'P4_WEB_ENV');
-  const env=await page.evaluate(()=>window.__HNL_P4_RUNTIME_GOLDEN__.getState().environment);
+  await waitRuntimeCase(page,'P4_WEB_ENV');
+  const env=(await runtimeState(page)).environment;
   if(env.commit!==expectedSha)throw new Error(`Web runtime SHA mismatch ${env.commit} != ${expectedSha}`);
   if(env.target!=='web'||env.searchBrain!=='1.9.23'||env.searchBrainStatus!=='LOCKED')throw new Error(`Web/Search Brain preflight failed: ${JSON.stringify(env)}`);
 
@@ -58,39 +95,56 @@ try{
   await page.locator('#p4img').selectOption('relevant');
   mark('SCAN_PDF');
   await page.locator('#p4scan').click();
-  await waitCase(page,'P4_REAL_PDF_SCAN');
-  await page.waitForFunction(()=>!document.querySelector('#p4excel')?.disabled,null,{timeout:20000});
+  const scanEvent=await waitRuntimeEvent(page,'full-scan');
+  if(scanEvent.name!=='hnl:p4-runtime-scan')throw new Error(`Unexpected scan event ${JSON.stringify(scanEvent)}`);
+  await waitRuntimeCase(page,'P4_REAL_PDF_SCAN');
+  await waitEnabled(page,'#p4excel');
 
-  mark('FULL_XLSX');
+  mark('FULL_XLSX_CLICK');
   const fullPromise=page.waitForEvent('download',{timeout:30000});
   await page.locator('#p4excel').click();
   const full=await saveDownload(await fullPromise,'P4_FULL_SCAN_REVIEW.xlsx');
-  await waitCase(page,'P4_FULL_SCAN_XLSX');
+  mark('FULL_XLSX_DOWNLOADED',{bytes:fs.statSync(full).size});
+  const fullEvent=await waitRuntimeEvent(page,'full-scan-xlsx');
+  if(fullEvent.name!=='hnl:p4-runtime-export'||fullEvent.detail?.ok!==true)throw new Error(`Full XLSX runtime event failed: ${JSON.stringify(fullEvent)}`);
+  mark('FULL_XLSX_EVENT_PASS');
+  await waitRuntimeCase(page,'P4_FULL_SCAN_XLSX');
+  mark('FULL_XLSX_CASE_PASS');
   const fullAudit=await validateXlsx(full,['00_TONG_QUAN','01_THAM_SO','03_NGUON']);
+  mark('FULL_XLSX_VALIDATED',fullAudit);
 
-  mark('REGION_XLSX');
+  mark('REGION_PREPARE');
   await page.evaluate(()=>window.__HNL_P4_RUNTIME_CI__.regionPopup());
   await page.locator('[data-p4-ui-action="excel"]').waitFor({state:'visible',timeout:10000});
+  mark('REGION_XLSX_CLICK');
   const regionPromise=page.waitForEvent('download',{timeout:30000});
   await page.locator('[data-p4-ui-action="excel"]').click();
   const region=await saveDownload(await regionPromise,'P4_PDF_REGION_REVIEW.xlsx');
-  await waitCase(page,'P4_PDF_REGION_XLSX');
+  mark('REGION_XLSX_DOWNLOADED',{bytes:fs.statSync(region).size});
+  const regionEvent=await waitRuntimeEvent(page,'pdf-region-xlsx');
+  if(regionEvent.name!=='hnl:p4-runtime-export'||regionEvent.detail?.ok!==true)throw new Error(`Region runtime event failed: ${JSON.stringify(regionEvent)}`);
+  await waitRuntimeCase(page,'P4_PDF_REGION_XLSX');
   const regionAudit=await validateXlsx(region,['00_TONG_QUAN','01_NGUON','05_REVIEW']);
+  mark('REGION_XLSX_VALIDATED',regionAudit);
 
-  mark('IMAGE_XLSX');
+  mark('IMAGE_PREPARE');
   await page.evaluate(()=>window.__HNL_P4_RUNTIME_CI__.imageReview());
   await page.locator('[data-p4-image-action="excel"]').waitFor({state:'visible',timeout:10000});
+  mark('IMAGE_XLSX_CLICK');
   const imagePromise=page.waitForEvent('download',{timeout:30000});
   await page.locator('[data-p4-image-action="excel"]').click();
   const image=await saveDownload(await imagePromise,'P4_IMAGE_REVIEW.xlsx');
-  await waitCase(page,'P4_IMAGE_REVIEW_XLSX');
+  mark('IMAGE_XLSX_DOWNLOADED',{bytes:fs.statSync(image).size});
+  const imageEvent=await waitRuntimeEvent(page,'image-review-xlsx');
+  if(imageEvent.name!=='hnl:p4-runtime-export'||imageEvent.detail?.ok!==true)throw new Error(`Image runtime event failed: ${JSON.stringify(imageEvent)}`);
+  await waitRuntimeCase(page,'P4_IMAGE_REVIEW_XLSX');
   const imageAudit=await validateXlsx(image,['00_TONG_QUAN','01_NGUON','04_THAM_SO','05_REVIEW']);
+  mark('IMAGE_XLSX_VALIDATED',imageAudit);
 
   mark('FINAL_AUDIT');
-  await page.waitForFunction(()=>window.__HNL_P4_RUNTIME_GOLDEN__.getState().overallState==='COMPLETE',null,{timeout:10000});
-  const state=await page.evaluate(()=>window.__HNL_P4_RUNTIME_GOLDEN__.getState());
-  const pass=Object.values(state.cases||{}).filter(x=>x.state==='RUNTIME_PASS').length;
-  if(pass!==5||state.productionMutationAllowed!==false||state.calculationEngineMutationAllowed!==false)throw new Error(`Golden state invalid: ${JSON.stringify({pass,overall:state.overallState})}`);
+  const state=await runtimeState(page);
+  const pass=Object.values(state?.cases||{}).filter(x=>x.state==='RUNTIME_PASS').length;
+  if(pass!==5||state?.overallState!=='COMPLETE'||state.productionMutationAllowed!==false||state.calculationEngineMutationAllowed!==false)throw new Error(`Golden state invalid: ${JSON.stringify({pass,overall:state?.overallState})}`);
   const regionBox=state.cases?.P4_PDF_REGION_XLSX?.evidence?.source?.bbox;
   if(!Array.isArray(regionBox)||regionBox.length!==4||regionBox[2]-regionBox[0]>=0.985||regionBox[3]-regionBox[1]>=0.985)throw new Error(`Region evidence not selective: ${JSON.stringify(regionBox)}`);
   if(state.cases?.P4_IMAGE_REVIEW_XLSX?.evidence?.trust?.calculationEligible!==false)throw new Error('Image REVIEW became calculation eligible');
@@ -104,8 +158,9 @@ try{
   console.log(`Evidence: ${path.join(outDir,'HNL_P4_RUNTIME_GOLDEN_CI.json')}`);
 } catch(error) {
   const failure={schema:'HNL_P4_RUNTIME_GOLDEN_FAILURE_V1',failedAt:new Date().toISOString(),stage,expectedSha,message:String(error?.message||error),stack:String(error?.stack||''),serverLog:serverLog.join('').slice(-20000)};
-  try{if(page){failure.url=page.url();failure.runtimeState=await page.evaluate(()=>window.__HNL_P4_RUNTIME_GOLDEN__?.getState?.()||null);failure.ciError=await page.evaluate(()=>window.__HNL_P4_RUNTIME_CI_ERROR__||null);await page.screenshot({path:path.join(outDir,'P4_RUNTIME_GOLDEN_FAILURE.png'),fullPage:true});}}catch(captureError){failure.captureError=String(captureError?.stack||captureError);}
+  try{if(page){failure.url=page.url();failure.runtimeState=await runtimeState(page);failure.runtimeEvents=await page.evaluate(()=>window.__HNL_P4_CI_EVENTS__||[]);failure.ciError=await page.evaluate(()=>window.__HNL_P4_RUNTIME_CI_ERROR__||null);}}catch(captureError){failure.captureError=String(captureError?.stack||captureError);}
   fs.writeFileSync(path.join(outDir,'FAILURE.json'),JSON.stringify(failure,null,2));
+  try{if(page)await page.screenshot({path:path.join(outDir,'P4_RUNTIME_GOLDEN_FAILURE.png'),fullPage:true,timeout:8000});}catch{}
   console.error(`P4 RUNTIME GOLDEN BROWSER: FAIL at ${stage}:`,error);
   process.exitCode=1;
 } finally {

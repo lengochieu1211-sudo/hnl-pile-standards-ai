@@ -26,11 +26,12 @@ jobs:
           cache: npm
       - name: Install exact dependencies
         run: npm ci
-      - name: Apply deterministic sheet-language patch
+      - name: Apply deterministic sheet-language and certification-contract patch
         run: node scripts/repair-excel-p1-sheet-language.mjs
       - name: Source syntax and immutable Search Brain
         run: |
           node --check src/excel-export.js
+          node --check scripts/excel-runtime-smoke.mjs
           npm run check:search
       - name: Master Audit P0 and sheet-language proof
         shell: bash
@@ -42,6 +43,9 @@ jobs:
           const row=j.gaps.find(x=>x.id==='EXCEL:SHEET_LANGUAGE');
           if(!row || row.status!=='PASS') throw new Error(`EXCEL:SHEET_LANGUAGE not PASS: ${JSON.stringify(row)}`);
           if(j.summary.openP0!==0) throw new Error(`Unexpected P0 gap: ${JSON.stringify(j.summary)}`);
+          const ps=fs.readFileSync('scripts/verify-excel-com.ps1','utf8');
+          if(ps.includes('Worksheets.Item("INPUT")')) throw new Error('Windows COM still expects legacy INPUT sheet.');
+          if(!ps.includes('Worksheets.Item("01_DAU_VAO")')) throw new Error('Windows COM missing localized input-sheet contract.');
           console.log('SHEET LANGUAGE GATE PASS',j.summary);
           NODE
       - name: Full regression
@@ -78,7 +82,7 @@ jobs:
           git diff --check
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/excel-export.js tools/pass83-source-sync-gate.mjs
+          git add src/excel-export.js scripts/excel-runtime-smoke.mjs scripts/verify-excel-com.ps1 tools/pass83-source-sync-gate.mjs
           if git diff --cached --quiet; then
             echo "No certified repair changes to commit."
             exit 0

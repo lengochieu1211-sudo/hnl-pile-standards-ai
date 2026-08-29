@@ -133,7 +133,8 @@ jobs:
       - name: P4 Runtime Golden · Chromium · deterministic PDF/Image · 5/5
         shell: pwsh
         run: node scripts/p4-runtime-golden-browser.mjs --sha $env:HNL_SOURCE_SHA --out artifacts/p4-runtime-golden
-      - name: Upload P4 Runtime Golden evidence
+      - name: Upload P4 Runtime Golden evidence / failure diagnostic
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: HNL-P4-Runtime-Golden-${{ github.event.pull_request.head.sha || github.sha }}

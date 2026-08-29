@@ -45,7 +45,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force artifacts/v127-prepared | Out-Null
           $files = @(git diff --name-only --diff-filter=ACM HEAD)
-          $files += @('docs/RELEASE_V1.27.0.md')
+          $files += @('docs/RELEASE_V1.27.0.md','.github/workflows/v127-pdf-intelligence-shadow.yml')
           $files = $files | Sort-Object -Unique
           foreach ($file in $files) {
             if ($file -in @('.github/workflows/v127-release-export.yml','.github/workflows/v127-release-prepare.yml','scripts/prepare-v127-release.mjs','scripts/fix-v127-workflow-release.mjs')) { continue }

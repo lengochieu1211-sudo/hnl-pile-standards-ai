@@ -1,4 +1,4 @@
-name: v1.27 PDF Intelligence Shadow Certification
+name: v1.27 PDF/Excel Intelligence · Windows + Web Certification
 
 on:
   pull_request:
@@ -8,33 +8,57 @@ on:
       - 'index.html'
       - 'package.json'
       - 'src/pdf-intelligence/**'
+      - 'src/pdf-excel-intelligence/**'
+      - 'src/p4-pdf-excel-intelligence.js'
+      - 'tests/p4-pdf-excel-intelligence.test.mjs'
       - 'artifacts/pdf-intelligence/**'
+      - 'artifacts/p4-final/**'
       - 'offline/pdf-intelligence/**'
       - 'bridge/pdf-intelligence-shadow-server.mjs'
       - 'bridge/server-v127-shadow.mjs'
       - 'electron/main.cjs'
       - 'scripts/pdf-intelligence-*.mjs'
+      - 'scripts/pdf-excel-intelligence-selftest.mjs'
       - 'scripts/deepdoc-vietocr-selftest.mjs'
+      - 'scripts/generate-build-info.mjs'
       - 'docs/PDF_INTELLIGENCE_V1.27_*.md'
+      - 'docs/PDF_EXCEL_INTELLIGENCE_P4.md'
+      - 'README_P4_DROP_IN.txt'
       - '.github/workflows/v127-pdf-intelligence-shadow.yml'
+  push:
+    branches:
+      - research/v1.27-pdf-intelligence-shadow
   workflow_dispatch:
 
 jobs:
-  shadow-cert:
-    name: ${{ matrix.os }} · P0/P2/P3/P3.1/P3.2 Shadow Golden
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+  windows-web-cert:
+    name: Windows x64 · P0/P2/P3/P3.1/P3.2/P4 · Web + Desktop UI
+    runs-on: windows-latest
+    timeout-minutes: 55
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      HNL_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      HNL_SOURCE_REF: ${{ github.event.pull_request.head.ref || github.ref_name }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: Verify exact research checkout
+        shell: pwsh
+        run: |
+          $head = (git rev-parse HEAD).Trim()
+          Write-Host "Expected research SHA: $env:HNL_SOURCE_SHA"
+          Write-Host "Checked out SHA:       $head"
+          if ($head -ne $env:HNL_SOURCE_SHA) { throw "Research SHA mismatch" }
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: npm
       - name: Install exact dependencies
-        run: npm ci
+        run: npm ci --no-audit --no-fund
+      - name: Search Brain lock
+        run: npm run check:search
       - name: P0/P1 PDF Intelligence selftest
         run: node scripts/pdf-intelligence-selftest.mjs
       - name: P2 DeepDoc/VietOCR controlled-runtime selftest
@@ -66,7 +90,46 @@ jobs:
           node --check src/pdf-intelligence/real-pdf-golden-ui.js
       - name: P3.2 Real PDF Golden contract
         run: node scripts/pdf-intelligence-real-pdf-golden-contract.mjs
-      - name: P3.2/P3.1 Web integration build
+      - name: P4 source syntax + original-source selftest
+        run: |
+          node --check src/p4-pdf-excel-intelligence.js
+          node --check src/pdf-excel-intelligence/core.js
+          node --check src/pdf-excel-intelligence/adapters.js
+          node --check src/pdf-excel-intelligence/exporter.js
+          node --check src/pdf-excel-intelligence/ui.js
+          node scripts/pdf-excel-intelligence-selftest.mjs
+      - name: P4 safety + ExcelJS runtime tests
+        run: node --test tests/p4-pdf-excel-intelligence.test.mjs
+      - name: Exact full regression · 592 tests
+        run: node tools/pass83-test-count-gate.mjs
+      - name: Build Web from exact research SHA
         run: npm run build:web
-      - name: Python runner syntax
-        run: python -m py_compile offline/pdf-intelligence/deepdoc_vietocr_runner.py
+      - name: Verify Web metadata and freeze Web artifact
+        shell: pwsh
+        run: |
+          $info = Get-Content dist/build-info.json -Raw | ConvertFrom-Json
+          if ($info.target -ne 'web') { throw "Expected target=web, got $($info.target)" }
+          if ($info.commit -ne $env:HNL_SOURCE_SHA) { throw "build-info commit mismatch: $($info.commit)" }
+          if ($info.branch -ne $env:HNL_SOURCE_REF) { throw "build-info branch mismatch: $($info.branch)" }
+          Write-Host (Get-Content dist/build-info.json -Raw)
+          New-Item -ItemType Directory -Force artifacts/p4-web-dist | Out-Null
+          Copy-Item dist/* artifacts/p4-web-dist -Recurse -Force
+      - name: Upload certified Web build
+        uses: actions/upload-artifact@v4
+        with:
+          name: HNL-v1.27-P4-Web-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/p4-web-dist/**
+          if-no-files-found: error
+          retention-days: 14
+      - name: Build Windows Desktop UI
+        run: npm run build:desktop
+      - name: Verify Windows Desktop metadata
+        shell: pwsh
+        run: |
+          $info = Get-Content dist/build-info.json -Raw | ConvertFrom-Json
+          if ($info.target -ne 'desktop') { throw "Expected target=desktop, got $($info.target)" }
+          if ($info.commit -ne $env:HNL_SOURCE_SHA) { throw "desktop build-info commit mismatch: $($info.commit)" }
+          if ($info.branch -ne $env:HNL_SOURCE_REF) { throw "desktop build-info branch mismatch: $($info.branch)" }
+
+# No Linux desktop target. Final NSIS + Portable x64 EXE packaging is intentionally
+# deferred until P4 Web Runtime Golden closes and the research version is bumped to 1.27.0.

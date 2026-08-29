@@ -1,0 +1,15 @@
+{
+  "README_P4_DROP_IN.txt": "804aa793545b61c1cdf4b238db41212043f5134cb439c9a13bf3d63701233435",
+  "docs/PDF_EXCEL_INTELLIGENCE_P4.md": "7f70e7345ee501f025ce34c5ea4d7b137dea67fc22a75b30451014038dd4ee16",
+  "index.html": "ac671b1542d533b4bae437dcbdab7742d084c1fe7da1fe139c15e9d007d46889",
+  "scripts/pdf-excel-intelligence-selftest.mjs": "778f21e98f0192c700ba081f96bbcc0e82565f7356184f1dd84ca42935a8ddde",
+  "src/p4-pdf-excel-intelligence.js": "959a27d36eaa94f17eb07812c393635e7fc0d2c3de59d40413192bd82b1fbcdf",
+  "src/pdf-excel-intelligence/core.js": "1c751f07ea4290309b8f7beb861101771cb760801fbf90e7424de77a7437f96e",
+  "src/pdf-excel-intelligence/adapters.js": "dd1419cef15dc5a215b6632a8683763b111ea5cf21bb6a62705da635e03cbd68",
+  "src/pdf-excel-intelligence/exporter.js": "8864cba041921eec390bd2bdfd642038ac333d803b2e1099803017c8eb114405",
+  "src/pdf-excel-intelligence/ui.css": "e4ffab8766eb9933ad4dcb7aded0daa7ce3e09152d04832fe6e200b6403d3662",
+  "src/pdf-excel-intelligence/ui.js": "45ceb7a4640613200b6f70b597003bfa392520460450deeffd755ec360b487da",
+  "tests/p4-pdf-excel-intelligence.test.mjs": "6740c580b5d3ac59583c059f9e6d432726d51131469a4f339b14aaa480e6acf2",
+  "tools/pass83-test-count-gate.mjs": "13afb6f926736764a90c0c152fc06bce3b579700acf9e6ba418b99b7eb80d4fb",
+  ".github/workflows/v127-pdf-intelligence-shadow.yml": "8620d1aa12cac0fbd700a445ed979f9e49d90f2ae555ad141f8a3049ddcf45e8"
+}

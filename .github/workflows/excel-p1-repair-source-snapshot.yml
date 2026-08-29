@@ -34,4 +34,3 @@ jobs:
             !node_modules/**
             !dist/**
             !release/**
-            !artifacts/**

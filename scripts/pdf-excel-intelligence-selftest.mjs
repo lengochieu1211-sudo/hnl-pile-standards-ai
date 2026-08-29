@@ -1,0 +1,17 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+const p='src/pdf-excel-intelligence/core.js';
+let s=fs.readFileSync(p,'utf8').replace(/export const /g,'const ').replace(/export function /g,'function ');
+s+='\n;globalThis.__x={parseVariableQuery,extractAssignments,numericValue,detectSimpleFormula,analyzeCandidateAmbiguity};';
+const c={crypto:{randomUUID:()=> 'selftest-id'}};vm.createContext(c);vm.runInContext(s,c);const x=c.__x;
+let pass=0,total=0;const t=(ok,msg)=>{total++;if(!ok)throw new Error(msg);pass++;};
+t(JSON.stringify(x.parseVariableQuery('Tìm giá trị a, b trong tài liệu rồi xuất Excel'))==='["a","b"]','parse vars');
+t(x.extractAssignments('a = 0,7; b = 1.25 kPa','a')[0]?.valueRaw==='0,7','extract a');
+t(x.numericValue('1,25')===1.25,'numeric comma');
+t(x.numericValue('2×10^3')===2000,'numeric scientific');
+t(x.detectSimpleFormula('R = a*b + 2',['a','b']).length===1,'formula safe');
+t(x.detectSimpleFormula('R = WEBSERVICE(a)',['a']).length===0,'formula unknown function not accepted');
+const issues=x.analyzeCandidateAmbiguity({variables:['a'],candidates:[{variable:'a',value:1,unit:'m',page:1},{variable:'a',value:2,unit:'m',page:2}]});
+t(issues.length===1 && issues[0].type==='MULTIPLE_VALUES','ambiguity');
+t(x.analyzeCandidateAmbiguity({variables:['b'],candidates:[]})[0]?.type==='NOT_FOUND','not found review');
+console.log(`P4 PDF EXCEL INTELLIGENCE SELFTEST: PASS ${pass}/${total}`);

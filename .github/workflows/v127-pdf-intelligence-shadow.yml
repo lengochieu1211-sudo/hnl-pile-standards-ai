@@ -19,6 +19,7 @@ on:
       - 'electron/main.cjs'
       - 'scripts/pdf-intelligence-*.mjs'
       - 'scripts/pdf-excel-intelligence-selftest.mjs'
+      - 'scripts/p4-runtime-golden-browser.mjs'
       - 'scripts/deepdoc-vietocr-selftest.mjs'
       - 'scripts/generate-build-info.mjs'
       - 'docs/PDF_INTELLIGENCE_V1.27_*.md'
@@ -34,7 +35,7 @@ jobs:
   windows-web-cert:
     name: Windows x64 · P0/P2/P3/P3.1/P3.2/P4 · Web + Desktop UI
     runs-on: windows-latest
-    timeout-minutes: 55
+    timeout-minutes: 70
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
       HNL_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
@@ -98,6 +99,8 @@ jobs:
           node --check src/pdf-excel-intelligence/exporter.js
           node --check src/pdf-excel-intelligence/ui.js
           node --check src/pdf-excel-intelligence/runtime-golden-ui.js
+          node --check src/pdf-excel-intelligence/runtime-golden-ci.js
+          node --check scripts/p4-runtime-golden-browser.mjs
           node scripts/pdf-excel-intelligence-selftest.mjs
       - name: P4 safety + ExcelJS runtime tests
         run: node --test tests/p4-pdf-excel-intelligence.test.mjs
@@ -122,6 +125,21 @@ jobs:
           path: artifacts/p4-web-dist/**
           if-no-files-found: error
           retention-days: 14
+      - name: Install Chromium for P4 Runtime Golden
+        shell: pwsh
+        run: |
+          npm install --no-save --package-lock=false playwright@1.55.0
+          npx playwright install chromium
+      - name: P4 Runtime Golden · Chromium · deterministic PDF/Image · 5/5
+        shell: pwsh
+        run: node scripts/p4-runtime-golden-browser.mjs --sha $env:HNL_SOURCE_SHA --out artifacts/p4-runtime-golden
+      - name: Upload P4 Runtime Golden evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: HNL-P4-Runtime-Golden-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/p4-runtime-golden/**
+          if-no-files-found: error
+          retention-days: 30
       - name: Build Windows Desktop UI
         run: npm run build:desktop
       - name: Verify Windows Desktop metadata
@@ -132,5 +150,5 @@ jobs:
           if ($info.commit -ne $env:HNL_SOURCE_SHA) { throw "desktop build-info commit mismatch: $($info.commit)" }
           if ($info.branch -ne $env:HNL_SOURCE_REF) { throw "desktop build-info branch mismatch: $($info.branch)" }
 
-# No Linux desktop target. Final NSIS + Portable x64 EXE packaging is intentionally
-# deferred until P4 Web Runtime Golden closes and the research version is bumped to 1.27.0.
+# No Linux desktop target. Runtime Golden is executed in real Chromium on Windows CI.
+# Final NSIS + Portable x64 EXE packaging remains deferred until P4 Runtime Golden closes.

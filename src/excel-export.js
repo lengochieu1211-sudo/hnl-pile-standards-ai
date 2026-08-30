@@ -488,8 +488,8 @@ export async function export10304AdvancedWorkflowWorkbook(workflowId, input={}, 
       r.eta=addInput('η',input.eta??1,'-','Bảng D.1; cọc đóng/ép mũi kín thường η=1');
       r.Nbar=addInput('N̄ vùng mũi',input.nBarTip??'','-','Giá trị trung bình vùng mũi do người dùng cung cấp; không sinh điểm SPT');
       r.Ns=addInput('Ns thân cọc',input.nsShaft??'','-','Giá trị đại diện cho khoảng thân được khai báo');
-      r.A=addInput('A',input.areaM2??input.A??0.16,'m²','Diện tích mũi');
-      r.u=addInput('u',input.perimeterM??input.u??1.6,'m','Chu vi thân');
+      r.A=addInput('A',input.areaM2??input.A??'','m²','Giá trị dẫn xuất hình học ở lớp Production; không phải input gốc');
+      r.u=addInput('u',input.perimeterM??input.u??'','m','Giá trị dẫn xuất hình học ở lớp Production; không phải input gốc');
       r.Ls=addInput('Ls',input.shaftLengthM??input.Ls??input.lengthM??'','m','Chiều dài thân áp dụng Ns');
       r.gk=addInput('γk',input.gammaK??1.5,'-','Hệ số độ tin cậy');
       r.gn=addInput('γn',input.gammaN??1.15,'-','Hệ số tầm quan trọng/điều kiện thiết kế theo workflow HNL');

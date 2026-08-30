@@ -23,16 +23,23 @@ function barrierReasons(packet={}){
   if(packet?.calculationEngineMutationAllowed!==false)reasons.push('SOURCE_CALCULATION_BARRIER_MISSING');
   return reasons;
 }
+function nativePdfReasons(source={}){
+  const reasons=[];
+  if(text(source.sourceType)!=='pdf-native')reasons.push('REVIEW_PRODUCTION_NATIVE_PDF_ONLY');
+  if(text(source.engine)!=='pdfjs-native-region')reasons.push('REVIEW_PRODUCTION_NATIVE_ENGINE_REQUIRED');
+  if(text(source.route)!=='native')reasons.push('REVIEW_PRODUCTION_NATIVE_ROUTE_REQUIRED');
+  return reasons;
+}
 
 export function createP4ReviewedNativeExportPacket(packet={},confirmation={},opts={}){
   const source=packet?.source||{};
   const src=validateP4ConfirmationSource(source);
-  const reasons=[...barrierReasons(packet)];
+  const reasons=[...barrierReasons(packet),...nativePdfReasons(source)];
   if(!src.ok)reasons.push(...src.errors);
-  if(text(source.sourceType)!=='pdf-native')reasons.push('REVIEW_PRODUCTION_NATIVE_PDF_ONLY');
   if(!['REVIEW','VERIFIED'].includes(text(source.state)))reasons.push('SOURCE_STATE_NOT_REVIEW_ELIGIBLE');
   if(lowConfidence(source))reasons.push('SOURCE_CONFIDENCE_BELOW_075');
   const fieldKey=fieldKeyFor(opts),value=valueFor(packet,opts);
+  if(value===null||value===undefined||text(value)==='')reasons.push('SOURCE_VALUE_MISSING');
   const confirmed=validateP4ReviewConfirmation(confirmation,{source,fieldKey,value,maxAgeMs:opts.maxAgeMs});
   if(!confirmed.ok)reasons.push(...confirmed.errors);
   if(reasons.length){
@@ -45,7 +52,7 @@ export function createP4ReviewedNativeExportPacket(packet={},confirmation={},opt
     ...packet,
     source:{...source},
     trust:packet?.trust?{...packet.trust}:packet?.trust,
-    warnings:[...(Array.isArray(packet?.warnings)?packet.warnings:[]),'Đã xác nhận nguồn PDF native cho phạm vi xuất workbook בלבד; không phải xác nhận Calculation Engine.'],
+    warnings:[...(Array.isArray(packet?.warnings)?packet.warnings:[]),'Đã xác nhận nguồn PDF native chỉ cho phạm vi xuất workbook; đây không phải xác nhận cho Calculation Engine.'],
     reviewProduction:{
       schema:P4_REVIEW_PRODUCTION_SCHEMA,
       state:P4_REVIEW_PRODUCTION_STATE,
@@ -66,8 +73,10 @@ export function evaluateP4ReviewProductionExport(packet={},confirmation={},opts=
   const source=packet?.source||{};
   const src=validateP4ConfirmationSource(source);
   if(!src.ok)reasons.push(...src.errors);
-  if(text(source.sourceType)!=='pdf-native')reasons.push('REVIEW_PRODUCTION_NATIVE_PDF_ONLY');
+  reasons.push(...nativePdfReasons(source));
   if(lowConfidence(source))reasons.push('SOURCE_CONFIDENCE_BELOW_075');
+  const value=valueFor(packet,opts);
+  if(value===null||value===undefined||text(value)==='')reasons.push('SOURCE_VALUE_MISSING');
 
   const marker=packet?.reviewProduction||{};
   const scoped=markerValid(packet);
@@ -84,7 +93,7 @@ export function evaluateP4ReviewProductionExport(packet={},confirmation={},opts=
   const confirmationCheck=validateP4ReviewConfirmation(record,{
     source,
     fieldKey,
-    value:valueFor(packet,opts),
+    value,
     maxAgeMs:opts.maxAgeMs,
   });
   if(!confirmationCheck.ok)reasons.push(...confirmationCheck.errors);

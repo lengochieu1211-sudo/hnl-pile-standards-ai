@@ -1,4 +1,4 @@
-name: P1 Pass 8.3 Runtime Certification · HNL v1.26.0
+name: P1 Pass 8.3 Runtime Certification · HNL v1.27.0
 
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   linux-certification:
-    name: Linux · v1.26.0 · 574 + Golden + Excel + Audit + Vite
+    name: Linux · v1.27.0 · 574 + Golden + Excel + Audit + Vite
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -57,12 +57,12 @@ jobs:
         run: node --test tests/p1-pass82-full-app-ui-e2e.test.mjs
       - name: Build production web with Vite
         run: npm run build:web
-      - name: Verify v1.26.0 build identity
-        run: node -e "const x=require('./dist/build-info.json'); if(x.version!=='1.26.0'||x.certificationStage!=='MASTER_SYSTEM_AUDIT'||x.goldenBaseline!=='1.25.7'||x.searchBrain!=='1.9.23'||'engineeringRelease' in x) throw new Error(JSON.stringify(x));"
+      - name: Verify v1.27.0 build identity
+        run: node -e "const x=require('./dist/build-info.json'); if(x.version!=='1.27.0'||x.certificationStage!=='MASTER_SYSTEM_AUDIT'||x.goldenBaseline!=='1.25.7'||x.searchBrain!=='1.9.23'||'engineeringRelease' in x) throw new Error(JSON.stringify(x));"
       - name: Upload web certification evidence
         uses: actions/upload-artifact@v4
         with:
-          name: hnl-v1.26.0-pass83-web
+          name: hnl-v1.27.0-pass83-web
           path: |
             dist/**
             public/release-meta.json
@@ -71,7 +71,7 @@ jobs:
           if-no-files-found: warn
 
   windows-certification:
-    name: Windows · v1.26.0 · 574 + DCE + Excel + EXE
+    name: Windows · v1.27.0 · 574 + DCE + Excel + EXE
     needs: linux-certification
     runs-on: windows-latest
     timeout-minutes: 50
@@ -109,21 +109,21 @@ jobs:
         shell: pwsh
         run: |
           $x = Get-Content dist/build-info.json -Raw | ConvertFrom-Json
-          if ($x.version -ne '1.26.0' -or $x.certificationStage -ne 'MASTER_SYSTEM_AUDIT' -or $x.goldenBaseline -ne '1.25.7') { throw "Build identity mismatch" }
+          if ($x.version -ne '1.27.0' -or $x.certificationStage -ne 'MASTER_SYSTEM_AUDIT' -or $x.goldenBaseline -ne '1.25.7') { throw "Build identity mismatch" }
           if ($null -ne $x.engineeringRelease) { throw "Parallel engineeringRelease must not exist" }
       - name: Build NSIS + Portable
         run: npx electron-builder --win nsis portable --publish never
       - name: Verify Windows artifacts
         shell: pwsh
         run: |
-          $setup = Get-ChildItem release -File -Recurse | Where-Object { $_.Name -like 'HNL-Pile-Standards-AI-Setup-1.26.0-*.exe' }
-          $portable = Get-ChildItem release -File -Recurse | Where-Object { $_.Name -like 'HNL-Pile-Standards-AI-Portable-1.26.0-*.exe' }
-          if (($setup | Measure-Object).Count -lt 1) { throw 'Missing v1.26.0 NSIS Setup EXE.' }
-          if (($portable | Measure-Object).Count -lt 1) { throw 'Missing v1.26.0 Portable EXE.' }
+          $setup = Get-ChildItem release -File -Recurse | Where-Object { $_.Name -like 'HNL-Pile-Standards-AI-Setup-1.27.0-*.exe' }
+          $portable = Get-ChildItem release -File -Recurse | Where-Object { $_.Name -like 'HNL-Pile-Standards-AI-Portable-1.27.0-*.exe' }
+          if (($setup | Measure-Object).Count -lt 1) { throw 'Missing v1.27.0 NSIS Setup EXE.' }
+          if (($portable | Measure-Object).Count -lt 1) { throw 'Missing v1.27.0 Portable EXE.' }
       - name: Upload Windows certification evidence
         uses: actions/upload-artifact@v4
         with:
-          name: hnl-v1.26.0-pass83-windows
+          name: hnl-v1.27.0-pass83-windows
           path: |
             release/**/*.exe
             artifacts/master-system-audit/**

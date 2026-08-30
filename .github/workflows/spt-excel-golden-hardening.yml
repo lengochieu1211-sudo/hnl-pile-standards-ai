@@ -17,7 +17,7 @@ jobs:
       - run: npm ci
       - name: Apply deterministic hardening patch
         run: |
-          node scripts/prepare-spt-patcher-v2.mjs
+          node scripts/prepare-spt-patcher-v3.mjs
           node scripts/apply-spt-excel-golden-hardening.mjs
       - name: Focused SPT regression before commit
         run: node --test tests/spt-excel-golden-hardening.test.mjs

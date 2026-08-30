@@ -1,4 +1,4 @@
-name: Deploy HNL Web v1.26.0 to GitHub Pages
+name: Deploy HNL Web v1.27.0 to GitHub Pages
 
 on:
   push:

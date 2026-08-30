@@ -1,11 +1,11 @@
-name: Build HNL Desktop AI v1.26.0 for Windows
+name: Build HNL Desktop AI v1.27.0 for Windows
 
 on:
   workflow_dispatch:
   push:
     branches:
       - main
-    tags: ['v1.26.0']
+    tags: ['v1.27.0']
 
 permissions:
   contents: read
@@ -27,7 +27,7 @@ jobs:
         run: |
           $version = node -p "require('./package.json').version"
           "APP_VERSION=$version" >> $env:GITHUB_ENV
-          if ($version -ne '1.26.0') { throw "Expected v1.26.0, got $version" }
+          if ($version -ne '1.27.0') { throw "Expected v1.27.0, got $version" }
       - name: Validate Windows packaging contract
         shell: pwsh
         run: |
@@ -65,21 +65,21 @@ jobs:
       - name: Verify Windows EXEs
         shell: pwsh
         run: |
-          $setup = Get-ChildItem release -Filter "HNL-Pile-Standards-AI-Setup-1.26.0-*.exe" -File
-          $portable = Get-ChildItem release -Filter "HNL-Pile-Standards-AI-Portable-1.26.0-*.exe" -File
-          if ($setup.Count -lt 1) { throw "Không tìm thấy Setup v1.26.0" }
-          if ($portable.Count -lt 1) { throw "Không tìm thấy Portable v1.26.0" }
+          $setup = Get-ChildItem release -Filter "HNL-Pile-Standards-AI-Setup-1.27.0-*.exe" -File
+          $portable = Get-ChildItem release -Filter "HNL-Pile-Standards-AI-Portable-1.27.0-*.exe" -File
+          if ($setup.Count -lt 1) { throw "Không tìm thấy Setup v1.27.0" }
+          if ($portable.Count -lt 1) { throw "Không tìm thấy Portable v1.27.0" }
       - name: Smoke test Portable EXE
         shell: pwsh
         run: |
-          $portable = Get-ChildItem release -Filter "HNL-Pile-Standards-AI-Portable-1.26.0-*.exe" -File | Select-Object -First 1
+          $portable = Get-ChildItem release -Filter "HNL-Pile-Standards-AI-Portable-1.27.0-*.exe" -File | Select-Object -First 1
           $process = Start-Process -FilePath $portable.FullName -ArgumentList "--smoke-test" -PassThru -WindowStyle Hidden
           if (-not $process.WaitForExit(60000)) { try { Stop-Process -Id $process.Id -Force } catch {}; throw "Portable smoke timeout" }
           if ($process.ExitCode -ne 0) { throw "Portable smoke FAIL: $($process.ExitCode)" }
       - name: Upload EXE artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: HNL-Pile-Standards-AI-Windows-v1.26.0-build-${{ github.run_number }}
+          name: HNL-Pile-Standards-AI-Windows-v1.27.0-build-${{ github.run_number }}
           path: |
             release/HNL-Pile-Standards-AI-Setup-*.exe
             release/HNL-Pile-Standards-AI-Portable-*.exe

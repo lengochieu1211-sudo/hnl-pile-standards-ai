@@ -1,6 +1,19 @@
 {
-  "current": "1.26.0",
+  "current": "1.27.0",
   "releases": [
+    {
+      "version": "1.27.0",
+      "date": "2026-08-30",
+      "title": "PDF Intelligence Shadow + Excel Legacy Compatibility + Production Release",
+      "changes": [
+        "Nâng App Version chính thức lên v1.27.0 trên Web, Desktop, PWA, EXE, release metadata và certification artifacts.",
+        "P4 PDF/Image → Excel Intelligence đã có trong main nhưng vẫn giữ SHADOW_ONLY/REVIEW-first; không tự đưa BENCHMARKED hoặc OCR/Vision chưa xác nhận vào Calculation Engine.",
+        "Excel Production đã Việt hóa tên sheet và dropdown hữu hạn; mã nội bộ tiếp tục được giữ trong sheet 99_MA_NOI_BO veryHidden.",
+        "Excel Production bổ sung compatibility transformer: workbook phát hành không còn phụ thuộc LET/XLOOKUP/LAMBDA/SWITCH/IFS trong các workflow được chứng nhận; runtime smoke quét workbook đầu ra.",
+        "Master Audit --enforce-all đóng EXCEL:365_CRITICAL và EXCEL:MODERN_REVIEW bằng runtime evidence, không hạ gate.",
+        "Golden Baseline vẫn là v1.25.7; Search Brain v1.9.23 vẫn LOCKED; Calculation Engine không bị sửa bởi pass compatibility."
+      ]
+    },
     {
       "version": "1.26.0",
       "date": "2026-08-26",

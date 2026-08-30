@@ -15,13 +15,13 @@ let m={};
 if(!fail.length){ try{m=JSON.parse(fs.readFileSync(manifestPath,'utf8'));}catch(e){fail.push(`Manifest JSON lỗi: ${e.message}`);} }
 let pkg={},meta={};
 try{pkg=JSON.parse(read('package.json'));meta=JSON.parse(read('public/release-meta.json'));}catch(e){fail.push(`Không đọc được version metadata: ${e.message}`);}
-if(String(pkg.version)!=='1.26.0') fail.push(`package.json version=${pkg.version}`);
-if(String(meta.appVersion)!=='1.26.0') fail.push(`release-meta appVersion=${meta.appVersion}`);
+if(String(pkg.version)!=='1.27.0') fail.push(`package.json version=${pkg.version}`);
+if(String(meta.appVersion)!=='1.27.0') fail.push(`release-meta appVersion=${meta.appVersion}`);
 if('engineeringRelease' in meta) fail.push('release-meta còn engineeringRelease song song');
 if(String(meta.certificationStage)!=='MASTER_SYSTEM_AUDIT') fail.push(`certificationStage=${meta.certificationStage}`);
 if(String(meta.goldenBaseline)!=='1.25.7') fail.push(`goldenBaseline=${meta.goldenBaseline}`);
 if(String(meta.searchBrain)!=='1.9.23'||String(meta.searchBrainStatus)!=='LOCKED') fail.push('Search Brain identity lệch');
-if(String(m.appVersion)!=='1.26.0'||String(m.certificationStage)!=='MASTER_SYSTEM_AUDIT') fail.push('Manifest identity lệch');
+if(String(m.appVersion)!=='1.27.0'||String(m.certificationStage)!=='MASTER_SYSTEM_AUDIT') fail.push('Manifest identity lệch');
 for(const [file,want] of Object.entries(m.files||{})){
   const abs=path.join(root,file);
   if(!fs.existsSync(abs)){fail.push(`MISSING ${file}`);continue;}
@@ -29,4 +29,4 @@ for(const [file,want] of Object.entries(m.files||{})){
   if(got!==want) fail.push(`HASH ${file} got=${got} want=${want}`);
 }
 if(fail.length){for(const x of fail) console.error(`FAIL ${x}`);console.error(`RELEASE SYNC GATE: FAIL (${fail.length})`);process.exit(1);}
-console.log(`RELEASE SYNC GATE: PASS · HNL v1.26.0 · ${meta.certificationStage} · Golden ${meta.goldenBaseline} · Search Brain ${meta.searchBrain} LOCKED`);
+console.log(`RELEASE SYNC GATE: PASS · HNL v1.27.0 · ${meta.certificationStage} · Golden ${meta.goldenBaseline} · Search Brain ${meta.searchBrain} LOCKED`);

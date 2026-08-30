@@ -1,12 +1,12 @@
-# HNL Pile Standards AI v1.26.0
+# HNL Pile Standards AI v1.27.0
 
-**Version duy nhất của ứng dụng:** v1.26.0  
+**Version duy nhất của ứng dụng:** v1.27.0  
 **Giai đoạn chứng nhận:** Master System Audit  
 **Golden Baseline:** v1.25.7  
 **Search Brain:** v1.9.23 — LOCKED  
 **Baseline source trước cập nhật:** `660bda57ca50a7326e13c3b858f05c4864875f3c`
 
-## Mục tiêu v1.26.0
+## Mục tiêu v1.27.0
 
 - Chuẩn hóa Excel Production theo hướng tiếng Việt, dropdown cho lựa chọn hữu hạn và công thức thật có thể thay input.
 - Tăng tương thích Excel cũ; không để đường tính Production phụ thuộc tùy tiện vào `LET/XLOOKUP/LAMBDA`.
@@ -17,27 +17,27 @@
 
 ## Quy ước version
 
-- **Chỉ có một version sản phẩm: `v1.26.0`.** Đây là version trên Web, EXE, PWA, package, changelog, release và artifact hiện hành.
+- **Chỉ có một version sản phẩm: `v1.27.0`.** Đây là version trên Web, EXE, PWA, package, changelog, release và artifact hiện hành.
 - Các tên **Pass 1 / Pass 2 / Master Audit** chỉ là giai đoạn công việc, **không phải version**.
 - **Golden Baseline `v1.25.7`** là danh tính bộ bằng chứng Golden đang dùng để chứng nhận; giữ nguyên để bảo toàn lịch sử benchmark.
 - **Search Brain `v1.9.23 LOCKED`** là lõi tìm kiếm đã khóa; không phải version ứng dụng.
 
 ## Cập nhật bằng GitHub Desktop
 
-1. Giải nén gói `HNL-Pile-Standards-AI-v1.26.0-MASTER-AUDIT-FULL-OVERWRITE.zip`.
+1. Giải nén gói `HNL-Pile-Standards-AI-v1.27.0-MASTER-AUDIT-FULL-OVERWRITE.zip`.
 2. Copy toàn bộ nội dung bên trong thư mục đã giải nén.
 3. GitHub Desktop → **Repository → Show in Explorer**.
 4. Dán vào thư mục gốc `hnl-pile-standards-ai` → **Replace the files in the destination**.
-5. GitHub Desktop → **Changes** → Commit: `audit: v1.26.0 master system audit and golden certification`.
+5. GitHub Desktop → **Changes** → Commit: `audit: v1.27.0 master system audit and golden certification`.
 6. **Push origin** và chờ Actions.
 7. Chưa gọi `PRODUCTION VERIFIED` cho tới khi Master Audit/RC Final đóng hết P0/P1 theo quy định.
 
 ## Lịch sử phát hành
 
-### v1.26.0 — Excel Production Compatibility + Master System Audit Foundation
+### v1.27.0 — Excel Production Compatibility + Master System Audit Foundation
 Ngày: 2026-08-26
 
-- Một version duy nhất: v1.26.0.
+- Một version duy nhất: v1.27.0.
 - Excel Production: dropdown tiếng Việt, mã nội bộ ẩn, native chart cho các workflow đã triển khai.
 - SPT explicit dùng VLOOKUP + IF + MIN cho q_b/f_s để tăng tương thích Excel.
 - Windows DCE path repair.

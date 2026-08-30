@@ -1,6 +1,6 @@
 {
   "schema": "HNL_V1_26_0_MASTER_AUDIT_PREFLIGHT_V1",
-  "appVersion": "1.26.0",
+  "appVersion": "1.27.0",
   "status": "PASS",
   "checks": {
     "packageVersion": true,

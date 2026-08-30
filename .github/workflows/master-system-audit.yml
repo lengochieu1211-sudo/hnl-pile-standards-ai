@@ -1,4 +1,4 @@
-name: HNL v1.26.0 · Master System Audit & Golden Certification
+name: HNL v1.27.0 · Master System Audit & Golden Certification
 
 on:
   workflow_dispatch:
@@ -58,7 +58,7 @@ jobs:
       - name: Upload Master Audit
         uses: actions/upload-artifact@v4
         with:
-          name: hnl-v1.26.0-master-audit-linux
+          name: hnl-v1.27.0-master-audit-linux
           path: |
             artifacts/master-system-audit/**
             artifacts/excel-runtime-smoke/**
@@ -100,16 +100,16 @@ jobs:
         run: node scripts/master-system-audit.mjs --enforce-p0
       - name: Build Windows Setup + Portable
         run: npm run dist:win
-      - name: Verify v1.26.0 EXE
+      - name: Verify v1.27.0 EXE
         shell: pwsh
         run: |
-          $setup = Get-ChildItem release -Filter 'HNL-Pile-Standards-AI-Setup-1.26.0-*.exe' -File
-          $portable = Get-ChildItem release -Filter 'HNL-Pile-Standards-AI-Portable-1.26.0-*.exe' -File
-          if ($setup.Count -lt 1 -or $portable.Count -lt 1) { throw 'Thiếu Setup hoặc Portable v1.26.0' }
+          $setup = Get-ChildItem release -Filter 'HNL-Pile-Standards-AI-Setup-1.27.0-*.exe' -File
+          $portable = Get-ChildItem release -Filter 'HNL-Pile-Standards-AI-Portable-1.27.0-*.exe' -File
+          if ($setup.Count -lt 1 -or $portable.Count -lt 1) { throw 'Thiếu Setup hoặc Portable v1.27.0' }
       - name: Upload Windows Master Audit
         uses: actions/upload-artifact@v4
         with:
-          name: hnl-v1.26.0-master-audit-windows
+          name: hnl-v1.27.0-master-audit-windows
           path: |
             release/*.exe
             artifacts/master-system-audit/**

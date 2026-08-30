@@ -1,10 +1,10 @@
-# HNL v1.26.0 — Preliminary Gap Matrix trước khi chạy Actions
+# HNL v1.27.0 — Preliminary Gap Matrix trước khi chạy Actions
 
-Đây là kết quả **pre-flight/static** từ source `main` hiện tại + gói overwrite v1.26.0. Kết quả chính thức sẽ do `scripts/master-system-audit.mjs` tạo trong GitHub Actions sau khi dán đè và Push.
+Đây là kết quả **pre-flight/static** từ source `main` hiện tại + gói overwrite v1.27.0. Kết quả chính thức sẽ do `scripts/master-system-audit.mjs` tạo trong GitHub Actions sau khi dán đè và Push.
 
 | Nhóm | Priority | Trạng thái | Nhận định trước CI |
 |---|---:|---|---|
-| Một version sản phẩm v1.26.0 | P0 | PRE-FLIGHT PASS | package/release/build/workflow trong overwrite đã được chuẩn hóa về một version. |
+| Một version sản phẩm v1.27.0 | P0 | PRE-FLIGHT PASS | package/release/build/workflow trong overwrite đã được chuẩn hóa về một version. |
 | Search Brain v1.9.23 | P0 | EXPECT PASS | Hash khóa hiện hành trên `main` đã được giữ; overwrite không sửa `src/search.js`. |
 | DCE/XLL authority separation | P0 | EXPECT PASS | Registry hiện tại giữ XLL ở REFERENCE/REVIEW, không mở numeric Production. |
 | Windows DCE path | P0 | PRE-FLIGHT PASS | Có `fileURLToPath`/absolute-path repair và smoke regression. |

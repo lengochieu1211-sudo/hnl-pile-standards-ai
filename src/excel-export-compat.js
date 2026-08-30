@@ -1,10 +1,11 @@
-// HNL v1.26.0 Excel Production compatibility/UI layer.
+// HNL v1.27.0 Excel Production compatibility/UI layer.
 // Keeps src/excel-export.js untouched. Vite aliases the app import to this module.
 // Engineering formulas remain owned by the existing deterministic exporter; this
 // layer only post-processes the generated XLSX for legacy Excel compatibility,
 // Vietnamese finite-choice UX, and native dynamic charts.
 import * as core from './excel-export.js?core';
 import { addNativeColumnChart } from './xlsx-native-chart.js';
+import { applyLegacyExcelFormulaCompatibility } from './excel-formula-compat.js';
 
 export * from './excel-export.js?core';
 
@@ -227,6 +228,8 @@ export async function postProcessHnlWorkbook(buffer,fileName='HNL.xlsx'){
   const driven=applyDrivenVietnamese(wb);
   const genericLocalization=(!explicitSpt&&!driven)?applyGenericVietnameseCodeLists(wb):null;
   if(genericLocalization && genericLocalization.translatedValidations===0 && genericLocalization.translatedCells===0 && genericLocalization.translatedFormulas===0){const map=wb.getWorksheet('99_MA_NOI_BO');if(map) wb.removeWorksheet(map.id);}
+  const legacyFormulaCompatibility=applyLegacyExcelFormulaCompatibility(wb);
+  if(legacyFormulaCompatibility.remaining!==0) throw new Error('Excel compatibility transformer left modern formulas');
   let out=await wb.xlsx.writeBuffer();
   if(explicitSpt){
     out=await addNativeColumnChart(out,{sheetName:'08_BIEU_DO',title:'Thành phần và sức chịu tải cọc theo SPT',categoryRange:'$A$2:$A$6',valueRange:'$B$2:$B$6',seriesName:'Sức chịu tải',axisTitle:'kN',fromCol:4,fromRow:1,toCol:12,toRow:19});

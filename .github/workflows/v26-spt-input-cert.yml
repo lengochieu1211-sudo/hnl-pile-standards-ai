@@ -1,4 +1,4 @@
-name: Excel Production & SPT Input Certification · HNL v1.26.0
+name: Excel Production & SPT Input Certification · HNL v1.27.0
 
 on:
   workflow_dispatch:
@@ -43,16 +43,16 @@ jobs:
       - name: Normalize evidence names
         shell: bash
         run: |
-          mkdir -p artifacts/release-v1.26.0
-          [ -f artifacts/v26/V26_SPT_GOLDEN_RESULT.json ] && cp artifacts/v26/V26_SPT_GOLDEN_RESULT.json artifacts/release-v1.26.0/SPT_GOLDEN_RESULT.json || true
-          [ -f artifacts/v26/V26_SPT_EXCEL_GOLDEN_RESULT.json ] && cp artifacts/v26/V26_SPT_EXCEL_GOLDEN_RESULT.json artifacts/release-v1.26.0/SPT_EXCEL_GOLDEN_RESULT.json || true
-          [ -f artifacts/v26/HNL_V26_SPT_FORMULA_GOLDEN.xlsx ] && cp artifacts/v26/HNL_V26_SPT_FORMULA_GOLDEN.xlsx artifacts/release-v1.26.0/HNL_SPT_FORMULA_GOLDEN.xlsx || true
+          mkdir -p artifacts/release-v1.27.0
+          [ -f artifacts/v26/V26_SPT_GOLDEN_RESULT.json ] && cp artifacts/v26/V26_SPT_GOLDEN_RESULT.json artifacts/release-v1.27.0/SPT_GOLDEN_RESULT.json || true
+          [ -f artifacts/v26/V26_SPT_EXCEL_GOLDEN_RESULT.json ] && cp artifacts/v26/V26_SPT_EXCEL_GOLDEN_RESULT.json artifacts/release-v1.27.0/SPT_EXCEL_GOLDEN_RESULT.json || true
+          [ -f artifacts/v26/HNL_V26_SPT_FORMULA_GOLDEN.xlsx ] && cp artifacts/v26/HNL_V26_SPT_FORMULA_GOLDEN.xlsx artifacts/release-v1.27.0/HNL_SPT_FORMULA_GOLDEN.xlsx || true
       - name: Upload evidence
         uses: actions/upload-artifact@v4
         with:
-          name: hnl-v1.26.0-spt-excel-linux
+          name: hnl-v1.27.0-spt-excel-linux
           path: |
             public/release-meta.json
-            artifacts/release-v1.26.0/**
+            artifacts/release-v1.27.0/**
             artifacts/master-system-audit/**
           if-no-files-found: warn

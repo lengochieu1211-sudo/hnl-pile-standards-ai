@@ -1,6 +1,6 @@
-HNL PILE STANDARDS AI — v1.26.0 MASTER SYSTEM AUDIT UPDATE
+HNL PILE STANDARDS AI — v1.27.0 MASTER SYSTEM AUDIT UPDATE
 
-APP VERSION      : 1.26.0
+APP VERSION      : 1.27.0
 AUDIT STAGE      : MASTER SYSTEM AUDIT
 GOLDEN BASELINE  : 1.25.7
 SEARCH BRAIN     : 1.9.23 LOCKED
@@ -8,7 +8,7 @@ BASELINE COMMIT  : 660bda57ca50a7326e13c3b858f05c4864875f3c
 DATE             : 2026-08-26
 
 QUY TAC VERSION
-- Chi mot version san pham: v1.26.0.
+- Chi mot version san pham: v1.27.0.
 - Pass 1 / Pass 2 / Master Audit la ten cong viec, khong phai version.
 - v1.25.7 la Golden Baseline cua bo bang chung hien hanh.
 - v1.9.23 la Search Brain LOCKED.
@@ -25,7 +25,7 @@ CAP NHAT
 2. Copy toan bo noi dung thu muc da giai nen.
 3. GitHub Desktop -> Repository -> Show in Explorer.
 4. Dan vao repo root -> Replace All.
-5. Commit: audit: v1.26.0 master system audit and golden certification
+5. Commit: audit: v1.27.0 master system audit and golden certification
 6. Push origin.
 7. Kiem GitHub Actions va tai artifact MASTER_GAP_MATRIX.
 

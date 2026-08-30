@@ -48,7 +48,8 @@ export function parseSptPileLength(raw=''){
   const text=fold(raw);
   const direct=[
     /(?:^|\b)(?:chieu dai(?: coc)?|coc dai)\s*(?:=|:)?\s*(\d+(?:[.,]\d+)?)\s*(mm|m)\b/i,
-    /(?:^|[^a-z0-9_])l\s*(?:=|:)\s*(\d+(?:[.,]\d+)?)\s*(mm|m)\b/i
+    /(?:^|[^a-z0-9_])l\s*(?:=|:)\s*(\d+(?:[.,]\d+)?)\s*(mm|m)\b/i,
+    /\bdai\s*(?:=|:)?\s*(\d+(?:[.,]\d+)?)\s*(mm|m)\b/i
   ];
   for(const re of direct){const m=text.match(re);if(m)return {lengthM:lengthToM(m[1],m[2]),sourceText:m[0].trim(),origin:'RAW_TEXT'};}
   const triple=text.match(/(?:coc[^\n,;:]*)?(\d+(?:[.,]\d+)?)\s*x\s*(\d+(?:[.,]\d+)?)\s*x\s*(\d+(?:[.,]\d+)?)\s*(mm|m)\b/i);

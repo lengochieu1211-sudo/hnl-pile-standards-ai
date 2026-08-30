@@ -19,7 +19,9 @@ jobs:
       - name: Install exact dependencies
         run: npm ci
       - name: Apply compatibility repair
-        run: node scripts/apply-v127-excel-compat-repair.mjs
+        run: |
+          node scripts/patch-v127-formula-compat-modern-only.mjs
+          node scripts/apply-v127-excel-compat-repair.mjs
       - name: Syntax + immutable Search Brain
         run: |
           node --check src/excel-formula-compat.js

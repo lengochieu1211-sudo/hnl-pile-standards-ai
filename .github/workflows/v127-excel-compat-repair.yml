@@ -1,0 +1,67 @@
+name: v1.27 Excel Legacy Formula Compatibility Certification
+on:
+  push:
+    branches: [repair/v127-excel-compat-release]
+permissions:
+  contents: write
+jobs:
+  certify:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install exact dependencies
+        run: npm ci
+      - name: Apply compatibility repair
+        run: node scripts/apply-v127-excel-compat-repair.mjs
+      - name: Syntax + immutable Search Brain
+        run: |
+          node --check src/excel-formula-compat.js
+          node --check src/excel-export-compat.js
+          node --check scripts/excel-production-smoke.mjs
+          node --check scripts/master-system-audit.mjs
+          npm run check:search
+      - name: Excel Production compatibility smoke
+        run: npm run excel:production-smoke
+      - name: Master Audit must close all OPEN P0/P1/P2
+        run: node scripts/master-system-audit.mjs --enforce-all
+      - name: Release and source synchronization
+        run: |
+          npm run gate:release-sync
+          npm run gate:pass83-source-sync
+          npm run gate:pass83-tests
+      - name: Full regression
+        run: npm test
+      - name: Full Table Golden
+        run: npm run golden:tables
+      - name: Workflow Golden
+        run: npm run golden:workflows
+      - name: Material Golden
+        run: npm run golden:material
+      - name: DCE UDF Behavioral Golden
+        run: npm run golden:dce-udf
+      - name: SPT PDF Decision Golden
+        run: npm run golden:spt-decision
+      - name: Material E2E Golden
+        run: npm run golden:material-e2e
+      - name: Multi-Borehole Golden
+        run: npm run golden:multiborehole
+      - name: Excel runtime smoke
+        run: npm run excel:smoke
+      - name: Web build
+        run: npm run build:web
+      - name: Commit only certified compatibility repair
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add RELEASE_SYNC_MANIFEST.json src/excel-export-compat.js src/excel-formula-compat.js scripts/excel-production-smoke.mjs scripts/master-system-audit.mjs
+          if git diff --cached --quiet; then echo "No certified source diff to commit"; exit 1; fi
+          git commit -m "fix(excel): certify legacy formula compatibility"
+          git push origin HEAD:repair/v127-excel-compat-release

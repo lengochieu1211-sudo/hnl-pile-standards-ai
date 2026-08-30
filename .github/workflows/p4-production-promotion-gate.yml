@@ -1,0 +1,98 @@
+name: P4 v1.27 · Production Promotion Evidence Gate
+
+on:
+  push:
+    branches:
+      - research/p4-production-promotion-gate-v1.27
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'src/pdf-excel-intelligence/confirmation-contract.js'
+      - 'src/pdf-excel-intelligence/review-production-export.js'
+      - 'scripts/p4-production-promotion-*.mjs'
+      - 'scripts/p4-runtime-golden-browser.mjs'
+      - 'docs/P4_PRODUCTION_PROMOTION_GATE_V1.27.md'
+      - '.github/workflows/p4-production-promotion-gate.yml'
+      - 'src/p4-pdf-excel-intelligence.js'
+      - 'tests/p4-pdf-excel-intelligence.test.mjs'
+
+permissions:
+  contents: read
+
+jobs:
+  exact-head-evidence:
+    name: Windows · exact-head P4 exporter-only evidence closure
+    runs-on: windows-latest
+    timeout-minutes: 75
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      HNL_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      HNL_SOURCE_REF: ${{ github.event.pull_request.head.ref || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: Verify exact checkout
+        shell: pwsh
+        run: |
+          $head=(git rev-parse HEAD).Trim()
+          if($head -ne $env:HNL_SOURCE_SHA){ throw "Exact-head mismatch: $head != $env:HNL_SOURCE_SHA" }
+          Write-Host "P4 promotion evidence SHA: $head"
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install exact dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Version + Search Brain locks
+        run: |
+          npm run check:version
+          npm run check:search
+      - name: P4 promotion failure-mode selftest · 12/12
+        run: node scripts/p4-production-promotion-selftest.mjs
+      - name: Existing P4 safety/runtime tests · 18/18
+        run: node --test tests/p4-pdf-excel-intelligence.test.mjs
+      - name: Exact full regression · 592/592
+        run: npm run gate:pass83-tests
+      - name: Build Web from exact head
+        run: npm run build:web
+      - name: Verify Web metadata exact SHA
+        shell: pwsh
+        run: |
+          $x=Get-Content dist/build-info.json -Raw | ConvertFrom-Json
+          if($x.version -ne '1.27.0'){ throw "Version mismatch $($x.version)" }
+          if($x.commit -ne $env:HNL_SOURCE_SHA){ throw "Build SHA mismatch $($x.commit) != $env:HNL_SOURCE_SHA" }
+          if($x.searchBrain -ne '1.9.23'){ throw "Search Brain mismatch" }
+      - name: Install Chromium for current-head Runtime Golden
+        shell: pwsh
+        run: |
+          npm install --no-save --package-lock=false playwright@1.55.0
+          npx playwright install chromium
+      - name: P4 current-head Runtime Golden · 5/5
+        run: node scripts/p4-runtime-golden-browser.mjs --sha $env:HNL_SOURCE_SHA --out artifacts/p4-runtime-golden
+      - name: P4 exporter-only promotion audit · enforce READY
+        run: node scripts/p4-production-promotion-audit.mjs --enforce-ready
+      - name: Build Desktop UI without promotion mutation
+        run: npm run build:desktop
+      - name: Guard hard-locked source paths
+        shell: pwsh
+        run: |
+          git fetch origin main --quiet
+          $changed = git diff --name-only origin/main...HEAD
+          Write-Host $changed
+          if($changed -contains 'src/search.js'){ throw 'Search Brain changed' }
+          $bad = $changed | Where-Object { $_ -match '^src/(?:calculation|calc|engine)/' }
+          if($bad){ throw "Calculation Engine path changed: $($bad -join ', ')" }
+      - name: Upload promotion evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: HNL-v1.27-P4-Production-Promotion-Evidence-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            artifacts/p4-production-promotion/**
+            artifacts/p4-runtime-golden/**
+            dist/build-info.json
+          if-no-files-found: error
+          retention-days: 90

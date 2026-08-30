@@ -1,8 +1,10 @@
-name: HNL v1.26.0 RC Final Gate
+name: HNL v1.27.0 RC Final Gate
 
 on:
   workflow_dispatch:
   push:
+    branches: [main]
+  pull_request:
     branches: [main]
 
 permissions:
@@ -58,11 +60,11 @@ jobs:
         run: node scripts/master-system-audit.mjs --enforce-all
       - name: Build Web
         run: npm run build:web
-      - name: Verify v1.26.0 build metadata
-        run: node -e "const x=require('./dist/build-info.json'); if(x.version!=='1.26.0'||x.certificationStage!=='MASTER_SYSTEM_AUDIT'||x.goldenBaseline!=='1.25.7'||'engineeringRelease' in x) throw new Error(JSON.stringify(x));"
+      - name: Verify v1.27.0 build metadata
+        run: node -e "const x=require('./dist/build-info.json'); if(x.version!=='1.27.0'||x.certificationStage!=='MASTER_SYSTEM_AUDIT'||x.goldenBaseline!=='1.25.7'||'engineeringRelease' in x) throw new Error(JSON.stringify(x));"
       - uses: actions/upload-artifact@v4
         with:
-          name: hnl-v1.26.0-web-golden-excel
+          name: hnl-v1.27.0-web-golden-excel
           path: |
             dist/**
             public/release-meta.json
@@ -120,13 +122,13 @@ jobs:
         run: node scripts/master-system-audit.mjs --enforce-all
       - name: Build Setup + Portable EXE
         run: npm run dist:win
-      - name: Verify v1.26.0 Windows artifacts
+      - name: Verify v1.27.0 Windows artifacts
         shell: pwsh
         run: |
-          $setup = Get-ChildItem release -File -Recurse | Where-Object { $_.Name -like 'HNL-Pile-Standards-AI-Setup-1.26.0-*.exe' }
-          $portable = Get-ChildItem release -File -Recurse | Where-Object { $_.Name -like 'HNL-Pile-Standards-AI-Portable-1.26.0-*.exe' }
-          if (($setup | Measure-Object).Count -lt 1) { throw 'Missing Setup v1.26.0' }
-          if (($portable | Measure-Object).Count -lt 1) { throw 'Missing Portable v1.26.0' }
+          $setup = Get-ChildItem release -File -Recurse | Where-Object { $_.Name -like 'HNL-Pile-Standards-AI-Setup-1.27.0-*.exe' }
+          $portable = Get-ChildItem release -File -Recurse | Where-Object { $_.Name -like 'HNL-Pile-Standards-AI-Portable-1.27.0-*.exe' }
+          if (($setup | Measure-Object).Count -lt 1) { throw 'Missing Setup v1.27.0' }
+          if (($portable | Measure-Object).Count -lt 1) { throw 'Missing Portable v1.27.0' }
       - name: Microsoft Excel COM recalculation when available
         id: excelcom
         shell: pwsh
@@ -134,7 +136,7 @@ jobs:
         run: ./scripts/verify-excel-com.ps1 -Dir artifacts/excel-runtime-smoke
       - uses: actions/upload-artifact@v4
         with:
-          name: hnl-v1.26.0-windows-setup-portable-excel
+          name: hnl-v1.27.0-windows-setup-portable-excel
           path: |
             release/*.exe
             public/release-meta.json

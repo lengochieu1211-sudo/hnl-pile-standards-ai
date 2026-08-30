@@ -19,7 +19,7 @@ export default defineConfig({
     __HNL_SEARCH_BRAIN__: JSON.stringify(releaseMeta.searchBrain)
   },
   resolve: {
-    // v1.26.0 Excel Production compatibility layer. Keep the deterministic core
+    // v1.27.0 Excel Production compatibility layer. Keep the deterministic core
     // exporter untouched; the layer post-processes only user-facing workbook UI,
     // compatibility formulas and native chart OOXML.
     alias: [

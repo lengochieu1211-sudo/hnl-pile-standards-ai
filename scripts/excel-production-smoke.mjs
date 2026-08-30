@@ -13,7 +13,7 @@ const here=path.dirname(fileURLToPath(import.meta.url));
 const root=path.resolve(here,'..');
 const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
 const releaseMeta=JSON.parse(fs.readFileSync(path.join(root,'public/release-meta.json'),'utf8'));
-assert.equal(pkg.version,'1.26.0','Excel Production smoke yêu cầu App Version 1.26.0');
+assert.equal(pkg.version,'1.27.0','Excel Production smoke yêu cầu App Version 1.27.0');
 assert.equal(releaseMeta.appVersion,pkg.version);
 assert.equal(releaseMeta.goldenBaseline,'1.25.7');
 assert.equal(releaseMeta.searchBrain,'1.9.23');

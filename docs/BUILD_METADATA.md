@@ -1,4 +1,4 @@
-# Build metadata — HNL v1.26.0
+# Build metadata — HNL v1.27.0
 
 `dist/build-info.json` được sinh tự động sau build thành công.
 
@@ -14,7 +14,7 @@ Ví dụ:
 
 ```json
 {
-  "version": "1.26.0",
+  "version": "1.27.0",
   "certificationStage": "MASTER_SYSTEM_AUDIT",
   "goldenBaseline": "1.25.7",
   "searchBrain": "1.9.23",
@@ -27,4 +27,4 @@ Ví dụ:
 }
 ```
 
-Giao diện đọc build metadata với `cache: no-store`; Service Worker cache key tiếp tục dùng `v1.26.0` qua query runtime.
+Giao diện đọc build metadata với `cache: no-store`; Service Worker cache key tiếp tục dùng `v1.27.0` qua query runtime.

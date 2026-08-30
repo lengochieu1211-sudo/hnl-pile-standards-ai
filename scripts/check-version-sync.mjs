@@ -21,12 +21,12 @@ if (String(meta.appVersion) !== version) fail(`release-meta.appVersion=${meta.ap
 if (!/^\d+\.\d+\.\d+$/.test(goldenBaseline)) fail(`goldenBaseline không đúng SemVer: ${goldenBaseline}`);
 if (String(meta.searchBrain) !== '1.9.23' || String(meta.searchBrainStatus) !== 'LOCKED') fail('Search Brain identity phải giữ 1.9.23 / LOCKED.');
 if (String(meta.certificationStage) !== 'MASTER_SYSTEM_AUDIT') fail(`certificationStage không đúng: ${meta.certificationStage}`);
-if ('engineeringRelease' in meta) fail('release-meta không được chứa engineeringRelease; v1.26.0 là version sản phẩm duy nhất.');
+if ('engineeringRelease' in meta) fail('release-meta không được chứa engineeringRelease; v1.27.0 là version sản phẩm duy nhất.');
 
 const readme = read('README.md');
 const firstHeading = readme.split(/\r?\n/).find(line => line.trim()) || '';
 if (firstHeading.trim() !== `# HNL Pile Standards AI v${version}`) fail(`README heading lệch version: ${firstHeading}`);
-if (!readme.includes('Version duy nhất của ứng dụng:** v1.26.0')) fail('README chưa khóa quy tắc một version duy nhất.');
+if (!readme.includes('Version duy nhất của ứng dụng:** v1.27.0')) fail('README chưa khóa quy tắc một version duy nhất.');
 if (/Engineering Release:\*\*/i.test(readme)) fail('README còn nhãn Engineering Release song song.');
 if (!readme.includes(`Golden Baseline:** v${goldenBaseline}`)) fail('README thiếu Golden Baseline hiện hành.');
 

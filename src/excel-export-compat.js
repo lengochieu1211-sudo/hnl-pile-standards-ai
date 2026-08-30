@@ -1,4 +1,4 @@
-// HNL v1.26.0 Excel Production compatibility/UI layer.
+// HNL v1.27.0 Excel Production compatibility/UI layer.
 // Keeps src/excel-export.js untouched. Vite aliases the app import to this module.
 // Engineering formulas remain owned by the existing deterministic exporter; this
 // layer only post-processes the generated XLSX for legacy Excel compatibility,

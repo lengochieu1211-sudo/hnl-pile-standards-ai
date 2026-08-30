@@ -21,7 +21,7 @@ function requireFile(p,priority='P0',area='Repository'){
 }
 
 const required=[
-  'package.json','package-lock.json','public/release-meta.json','README.md','docs/RELEASE_V1.26.0.md',
+  'package.json','package-lock.json','public/release-meta.json','README.md','docs/RELEASE_V1.27.0.md',
   'src/search.js','src/excel-export.js','src/excel-export-compat.js','src/excel-formula-compat.js','src/engineering-router.js','src/production-status-registry.js',
   'src/pile-capacity-engine.js','src/pile-material-engine.js','src/multi-borehole-engine.js',
   'scripts/check-version-sync.mjs','scripts/generate-build-info.mjs','scripts/excel-production-smoke.mjs',
@@ -34,8 +34,8 @@ for(const p of required) requireFile(p);
 let pkg={},meta={};
 try{pkg=json('package.json');meta=json('public/release-meta.json');}catch{}
 const version=String(pkg.version||'');
-const singleVersionOk=version==='1.26.0'&&String(meta.appVersion)==='1.26.0'&&!('engineeringRelease' in meta);
-add('VERSION:SINGLE','Version/Release','P0',singleVersionOk?'PASS':'OPEN',`package=${version}; release-meta=${meta.appVersion||''}; engineeringRelease=${meta.engineeringRelease??'absent'}`,'Chỉ dùng v1.26.0 làm version sản phẩm.');
+const singleVersionOk=version==='1.27.0'&&String(meta.appVersion)==='1.27.0'&&!('engineeringRelease' in meta);
+add('VERSION:SINGLE','Version/Release','P0',singleVersionOk?'PASS':'OPEN',`package=${version}; release-meta=${meta.appVersion||''}; engineeringRelease=${meta.engineeringRelease??'absent'}`,'Chỉ dùng v1.27.0 làm version sản phẩm.');
 const goldenOk=String(meta.goldenBaseline)==='1.25.7';
 add('VERSION:GOLDEN_BASELINE','Version/Release','P0',goldenOk?'PASS':'OPEN',`Golden Baseline=${meta.goldenBaseline||''}`,'Giữ danh tính evidence v1.25.7 cho đến khi tái-baseline có chứng nhận riêng.');
 const searchIdentity=String(meta.searchBrain)==='1.9.23'&&String(meta.searchBrainStatus)==='LOCKED';
@@ -154,9 +154,9 @@ const report={
   gaps:rows
 };
 fs.mkdirSync(outDir,{recursive:true});
-fs.writeFileSync(path.join(outDir,'HNL_MASTER_CERTIFICATION_v1.26.0.json'),JSON.stringify(report,null,2)+'\n');
+fs.writeFileSync(path.join(outDir,'HNL_MASTER_CERTIFICATION_v1.27.0.json'),JSON.stringify(report,null,2)+'\n');
 const md=[
-  '# HNL v1.26.0 — Master System Audit & Golden Gap Matrix','',
+  '# HNL v1.27.0 — Master System Audit & Golden Gap Matrix','',
   `- Trạng thái: **${state}**`,
   `- P0 mở: **${p0.length}** · P1 mở: **${p1.length}** · P2 mở: **${p2.length}** · Deferred: **${report.summary.deferred}**`,
   `- Golden Baseline: **${meta.goldenBaseline||''}**`,

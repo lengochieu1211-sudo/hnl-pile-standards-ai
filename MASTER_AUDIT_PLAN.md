@@ -1,4 +1,4 @@
-# HNL v1.26.0 — Master System Audit & Golden Certification
+# HNL v1.27.0 — Master System Audit & Golden Certification
 
 ## Mục tiêu
 

@@ -29,6 +29,12 @@ async function hasNativeChart(buffer){
   const zip=await JSZip.loadAsync(buffer);
   return Object.keys(zip.files).some(n=>/^xl\/drawings\/charts\/chart\d+\.xml$/.test(n));
 }
+function assertNoInternalCodeDropdowns(wb,label){
+  const internal=/^(?:square|circle|rectangle|hammer|press|sand|clay|sandyClay|clayeySand|bored|vibro-pipe|screw|driven|yes|no|YES|NO|long|short|Tension|Compression|plain|coldRibbed|hotRibbed)$/i;
+  const bad=[];
+  for(const ws of wb.worksheets){if(ws.name==='99_MA_NOI_BO') continue;ws.eachRow({includeEmpty:false},row=>row.eachCell({includeEmpty:false},cell=>{const dv=cell.dataValidation;if(dv?.type==='list'&&Array.isArray(dv.formulae)) for(const f of dv.formulae){const text=String(f||'');if(text.length>=2&&text[0]==='"'&&text[text.length-1]==='"'){const list=text.slice(1,-1);if(list.split(',').some(v=>internal.test(v.trim()))) bad.push(ws.name+'!'+cell.address+':'+list);}}}));}
+  assert.deepEqual(bad,[],label+' còn dropdown internal code: '+bad.join(' | '));
+}
 function rowByLabel(ws,label){
   for(let r=1;r<=ws.rowCount;r++) if(String(ws.getCell(r,1).value??'').trim()===label) return r;
   return null;
@@ -89,6 +95,20 @@ assert.ok(driven?.buffer,'Không tạo được buffer cọc đóng/ép');
   assert.ok(await hasNativeChart(driven.buffer),'Driven thiếu native chart');
 }
 
+// Excel Production Pass 3: generic finite-choice localization outside dedicated SPT/driven adapters.
+const rock=await export10304AdvancedWorkflowWorkbook('end-bearing',{shape:'circle',diameterM:1,rockCompressiveStrengthKpa:31300,rqdPercent:30,gammaG:1.4,embedmentLengthM:5,embeddedOuterDiameterM:1,minimumQbKpa:1000,gammaK:1.4,gammaN:1.15},{returnBuffer:true});
+assert.ok(rock?.buffer,'Không tạo được buffer end-bearing compat');
+{
+  const wb=new ExcelJS.Workbook(); await wb.xlsx.load(rock.buffer);
+  const inp=wb.getWorksheet('01_DAU_VAO'),map=wb.getWorksheet('99_MA_NOI_BO');
+  assert.ok(inp&&map,'End-bearing compat thiếu 01_DAU_VAO hoặc 99_MA_NOI_BO');
+  assert.equal(map.state,'veryHidden');
+  assertNoInternalCodeDropdowns(wb,'End-bearing compat');
+  const shape=rowByLabel(inp,'Tiết diện');
+  assert.equal(String(inp.getCell(shape,2).value),'Tròn');
+  assert.match(String(inp.getCell(shape,2).dataValidation?.formulae?.[0]||''),/Tròn/);
+}
+
 console.log(JSON.stringify({
   ok:true,
   appVersion:pkg.version,
@@ -96,5 +116,6 @@ console.log(JSON.stringify({
   searchBrain:`${releaseMeta.searchBrain} ${releaseMeta.searchBrainStatus}`,
   windowsPathPortable:true,
   explicitSpt:{vietnameseDropdown:true,legacyFormula:true,nativeChart:true},
-  driven:{vietnameseDropdowns:true,hiddenInternalCodes:true,nativeChart:true}
+  driven:{vietnameseDropdowns:true,hiddenInternalCodes:true,nativeChart:true},
+  genericCompat:{vietnameseDropdowns:true,hiddenInternalCodeMap:true}
 },null,2));

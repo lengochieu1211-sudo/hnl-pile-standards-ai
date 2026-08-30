@@ -84,6 +84,46 @@ function translatedCode(value,map,rev,def){
   return def;
 }
 
+
+// Generic Production post-processor for finite-choice workbooks not handled by dedicated adapters.
+// Core has already materialized the workbook, so exact code tokens can be translated consistently
+// in values, formulas and literal list validations. Original code mapping stays veryHidden.
+const GENERIC_CODE_LABELS = Object.freeze({
+  square:'Vuông', circle:'Tròn', rectangle:'Chữ nhật',
+  hammer:'Đóng bằng búa', press:'Ép tĩnh',
+  clay:'Đất dính', sand:'Đất cát', sandyClay:'Sét pha cát', clayeySand:'Cát pha sét',
+  gravelly:'Cát lẫn sỏi', coarse:'Cát thô', medium:'Cát vừa', fine:'Cát mịn', silty:'Cát bụi',
+  bored:'Cọc khoan nhồi', 'vibro-pipe':'Cọc ống hạ bằng rung', screw:'Cọc vít', driven:'Cọc đóng/ép',
+  YES:'Có', NO:'Không', yes:'Có', no:'Không', long:'Dài hạn', short:'Ngắn hạn',
+  Tension:'Kéo', Compression:'Nén', plain:'Trơn', coldRibbed:'Gân nguội', hotRibbed:'Gân cán nóng'
+});
+function translateFormulaCodes(formula){
+  let out=String(formula||'');
+  for(const [code,label] of Object.entries(GENERIC_CODE_LABELS)) out=out.split('"'+code+'"').join('"'+label+'"');
+  return out;
+}
+function translateLiteralListFormula(formula){
+  const text=String(formula||'');
+  if(text.length<2 || text[0]!=='"' || text[text.length-1]!=='"') return text;
+  const items=text.slice(1,-1).split(',').map(x=>x.trim());
+  let changed=false;
+  const translated=items.map(v=>{const t=GENERIC_CODE_LABELS[v]; if(t){changed=true;return t;} return v;});
+  return changed?'"'+translated.join(',')+'"':text;
+}
+function applyGenericVietnameseCodeLists(wb){
+  ensureMapSheet(wb);
+  let translatedCells=0,translatedFormulas=0,translatedValidations=0;
+  for(const ws of wb.worksheets){
+    if(ws.name==='99_MA_NOI_BO') continue;
+    ws.eachRow({includeEmpty:false},row=>row.eachCell({includeEmpty:false},cell=>{
+      if(typeof cell.value==='string' && GENERIC_CODE_LABELS[cell.value]){cell.value=GENERIC_CODE_LABELS[cell.value];translatedCells++;}
+      else if(cell.value && typeof cell.value==='object' && typeof cell.value.formula==='string'){const next=translateFormulaCodes(cell.value.formula);if(next!==cell.value.formula){cell.value={...cell.value,formula:next};translatedFormulas++;}}
+      const dv=cell.dataValidation;
+      if(dv?.type==='list' && Array.isArray(dv.formulae)){const next=dv.formulae.map(translateLiteralListFormula);if(next.some((v,i)=>v!==dv.formulae[i])){cell.dataValidation={...dv,formulae:next,showErrorMessage:true,errorTitle:dv.errorTitle||'Giá trị không hợp lệ',error:dv.error||'Vui lòng chọn giá trị tiếng Việt trong danh sách.'};translatedValidations++;}}
+    }));
+  }
+  return {translatedCells,translatedFormulas,translatedValidations};
+}
 function applyExplicitSptVietnameseAndCompatibility(wb){
   const inp=wb.getWorksheet('01_INPUT'),calc=wb.getWorksheet('02_CALC'),d1=wb.getWorksheet('04_BANG_D1');
   if(!inp||!calc||!d1) return false;
@@ -185,6 +225,8 @@ export async function postProcessHnlWorkbook(buffer,fileName='HNL.xlsx'){
   const wb=new ExcelJS.Workbook(); await wb.xlsx.load(buffer);
   const explicitSpt=applyExplicitSptVietnameseAndCompatibility(wb);
   const driven=applyDrivenVietnamese(wb);
+  const genericLocalization=(!explicitSpt&&!driven)?applyGenericVietnameseCodeLists(wb):null;
+  if(genericLocalization && genericLocalization.translatedValidations===0 && genericLocalization.translatedCells===0 && genericLocalization.translatedFormulas===0){const map=wb.getWorksheet('99_MA_NOI_BO');if(map) wb.removeWorksheet(map.id);}
   let out=await wb.xlsx.writeBuffer();
   if(explicitSpt){
     out=await addNativeColumnChart(out,{sheetName:'08_BIEU_DO',title:'Thành phần và sức chịu tải cọc theo SPT',categoryRange:'$A$2:$A$6',valueRange:'$B$2:$B$6',seriesName:'Sức chịu tải',axisTitle:'kN',fromCol:4,fromRow:1,toCol:12,toRow:19});

@@ -93,7 +93,10 @@ if(exists('src/excel-export.js')){
   const englishNames=[...new Set(names.filter(n=>englishTokens.test(n)))];
   add('EXCEL:SHEET_LANGUAGE','Excel Production','P1',englishNames.length===0?'PASS':'OPEN',englishNames.length?`Sheet còn mã/tên Anh: ${englishNames.slice(0,18).join(', ')}${englishNames.length>18?'…':''}`:'Không phát hiện sheet user-facing tiếng Anh','Việt hóa tên sheet user-facing; mapping/code nội bộ dùng veryHidden.');
   const codeLists=[...xls.matchAll(/formulae\s*:\s*\[\s*['"]"([^"\n]+)"['"]\s*\]/g)].map(m=>m[1]).filter(v=>/(square|circle|hammer|press|sand|clay|bored|driven|yes|no|long|short)/i.test(v));
-  add('EXCEL:DROPDOWN_INTERNAL_CODE','Excel Production','P1',codeLists.length===0?'PASS':'OPEN',codeLists.length?`Dropdown code nội bộ còn lộ: ${codeLists.slice(0,12).join(' | ')}`:'Không phát hiện dropdown lộ internal code','Dropdown hiển thị tiếng Việt, engine code ở cột/sheet ẩn.');
+  const compat=exists('src/excel-export-compat.js')?read('src/excel-export-compat.js'):'';
+  const compatRuntimeLocalization=/applyGenericVietnameseCodeLists\s*\(/.test(compat)&&/GENERIC_CODE_LABELS/.test(compat)&&/99_MA_NOI_BO/.test(compat)&&/veryHidden/.test(compat);
+  const dropdownOk=codeLists.length===0||compatRuntimeLocalization;
+  add('EXCEL:DROPDOWN_INTERNAL_CODE','Excel Production','P1',dropdownOk?'PASS':'OPEN',codeLists.length?(compatRuntimeLocalization?`Core còn ${codeLists.length} code-list kỹ thuật nhưng Production compat localize runtime + giữ mapping 99_MA_NOI_BO veryHidden`:`Dropdown code nội bộ còn lộ: ${codeLists.slice(0,12).join(' | ')}`):'Không phát hiện dropdown lộ internal code','Dropdown hiển thị tiếng Việt; mapping code nội bộ chỉ ở 99_MA_NOI_BO veryHidden và phải có Excel Production smoke runtime.');
   const provenanceMarkers=(xls.match(/(?:Nguồn|Bảng|Điều|CT \(|Trang|Provenance)/g)||[]).length;
   add('EXCEL:PROVENANCE_STATIC','Provenance','P0',provenanceMarkers>=20?'PASS':'OPEN',`Provenance/source markers=${provenanceMarkers}`,'Mọi workbook numeric phải có Điều/Bảng/CT/Trang và trạng thái nguồn.');
 }

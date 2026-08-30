@@ -60,11 +60,11 @@ delete globalThis.__HNL_CAPTURE_XLSX__;
 const expectations=[
   {match:'TCVN7888',required:['00_TONG_QUAN','01_INPUT','02_BANG_TRA','03_TINH_TOAN','04_KET_QUA','05_THUYET_MINH','06_NGUON'],forbidden:['10304','5574'],formulaMin:10,inputRef:/01_INPUT/},
   {match:'Coc_Dong_Ep',required:['00_HUONG_DAN','01_INPUT','02_DIA_CHAT','03_PHAN_DOAN','04_TRA_BANG_10304','05_CALC_10304','07_KET_QUA','08_THUYET_MINH_NGUON'],forbidden:['7888','5574','BENCHMARK'],formulaMin:40,inputRef:/01_INPUT|02_DIA_CHAT/},
-  {match:'Rock_EndBearing_P0Pass3',required:['README','INPUT','LOOKUP_BANG1','CALC_ROCK','SOURCE'],forbidden:['_xll'],formulaMin:8,inputRef:/INPUT|LOOKUP_BANG1/},
-  {match:'Bored_Raw_P0Pass3',required:['README','INPUT','SOIL_PROFILE','LOOKUP_BANG3_6','LOOKUP_MUI','SHAFT_SEGMENTS','CALC_TIP_RK_RD','SOURCE'],forbidden:['_xll'],formulaMin:100,inputRef:/INPUT|SOIL_PROFILE|LOOKUP_BANG3_6|LOOKUP_MUI/},
-  {match:'SPT_Raw_P0Pass3',required:['README','INPUT','SOIL_PROFILE','SPT_POINTS','LOOKUP_D1','CALC_TIP','CALC_SHAFT','CALC_RK_RD','SOURCE'],forbidden:['_xll'],formulaMin:100,inputRef:/INPUT|SOIL_PROFILE|SPT_POINTS|LOOKUP_D1/},
-  {match:'Pile_Capacity_Rsoil_Rmaterial_E2E',required:['README','INPUT','LOOKUP_BANG1','CALC_ROCK','SOURCE','MATERIAL_INPUT','MATERIAL_LOOKUP','MATERIAL_CALC','PILE_GOVERNING','E2E_SOURCE'],forbidden:['_xll'],formulaMin:25,inputRef:/INPUT|LOOKUP_BANG1|MATERIAL_INPUT/},
-  {match:'Multi_Borehole_CoLy_SPT_Rmaterial',required:['README','BATCH_INPUT','BOREHOLE_BATCH','BATCH_SOURCE'],forbidden:['_xll'],formulaMin:250,inputRef:/B0\d[MS]_/},
+  {match:'Rock_EndBearing_P0Pass3',required:['00_HUONG_DAN','01_DAU_VAO','LOOKUP_BANG1','CALC_ROCK','98_NGUON'],forbidden:['_xll'],formulaMin:8,inputRef:/01_DAU_VAO|LOOKUP_BANG1/},
+  {match:'Bored_Raw_P0Pass3',required:['00_HUONG_DAN','01_DAU_VAO','SOIL_PROFILE','LOOKUP_BANG3_6','LOOKUP_MUI','SHAFT_SEGMENTS','CALC_TIP_RK_RD','98_NGUON'],forbidden:['_xll'],formulaMin:100,inputRef:/01_DAU_VAO|SOIL_PROFILE|LOOKUP_BANG3_6|LOOKUP_MUI/},
+  {match:'SPT_Raw_P0Pass3',required:['00_HUONG_DAN','01_DAU_VAO','SOIL_PROFILE','SPT_POINTS','LOOKUP_D1','CALC_TIP','CALC_SHAFT','CALC_RK_RD','98_NGUON'],forbidden:['_xll'],formulaMin:100,inputRef:/01_DAU_VAO|SOIL_PROFILE|SPT_POINTS|LOOKUP_D1/},
+  {match:'Pile_Capacity_Rsoil_Rmaterial_E2E',required:['00_HUONG_DAN','01_DAU_VAO','LOOKUP_BANG1','CALC_ROCK','98_NGUON','MATERIAL_INPUT','MATERIAL_LOOKUP','MATERIAL_CALC','PILE_GOVERNING','E2E_SOURCE'],forbidden:['_xll'],formulaMin:25,inputRef:/01_DAU_VAO|LOOKUP_BANG1|MATERIAL_INPUT/},
+  {match:'Multi_Borehole_CoLy_SPT_Rmaterial',required:['00_HUONG_DAN','BATCH_INPUT','BOREHOLE_BATCH','BATCH_SOURCE'],forbidden:['_xll'],formulaMin:250,inputRef:/B0\d[MS]_/},
   {match:'TCVN5574',required:['00_TONG_QUAN','01_INPUT','02_VAT_LIEU','03_TINH_TOAN','04_KIEM_TRA','05_THUYET_MINH','06_NGUON'],forbidden:['7888','10304','BENCHMARK'],formulaMin:10,inputRef:/01_INPUT|02_VAT_LIEU/}
 ]
 const reports=[];

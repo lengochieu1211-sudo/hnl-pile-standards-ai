@@ -31,7 +31,7 @@ try {
 
   # P0 Pass 3 rock: RQD must drive Ks -> Rm -> qb -> Rk with live Excel formulas.
   $a=Open-Recalc "HNL_TCVN10304_Rock_EndBearing_P0Pass3_*.xlsx"; $wb=$a[0]
-  $inp=$wb.Worksheets.Item("INPUT"); $calc=$wb.Worksheets.Item("CALC_ROCK")
+  $inp=$wb.Worksheets.Item("01_DAU_VAO"); $calc=$wb.Worksheets.Item("CALC_ROCK")
   function Row-ByLabel1($sheet,[string]$label){
     $used=$sheet.UsedRange; for($r=1;$r-le $used.Rows.Count;$r++){if([string]$sheet.Cells.Item($r,1).Value2 -eq $label){return $r}}; throw "Không thấy label $label"
   }

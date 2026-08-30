@@ -10,7 +10,7 @@ const expected = {
   'src/codepack-tables.js':'3118da3c167cdb7a9acac74a83864d564849b173cb8a644cd11849f82d5293fc',
   'src/tcvn10304-table-engine.js':'3e5aab020ac2f910e6301dbb64aa745d3fac12ecd83cbdc3c3d3a2b511ef794f',
   'src/pile-workflows.js':'e47f37b940857e079bb8031d574cc5ea79f84379a0553ecd69f860cd1cf39805',
-  'src/excel-export.js':'32048bc31f5c32bfad553479a651998bc32fa7b419e2a9fe7858ffcb533530ea',
+  'src/excel-export.js':'8a3b41cc6c6f16a5aaad9d941fe470671765529f0ba9eeb8282dd311adf56b08',
   'src/main.js':'b70689d4688480955f90458e70110a4be4bb5c0aeb3f224e454cb46c2b5a34fd',
   'tests/v1.25.6.test.mjs':'22700e80dda3f2f2fc5fcc20554b7f23cf60f383f042f1eee3e19a2922233e06',
   'src/search.js':'f9b65e5e6fb61dcca233a4fe43950e3174c73536f2fa83452da3041fbd0021d2',

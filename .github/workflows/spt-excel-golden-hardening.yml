@@ -4,38 +4,9 @@ on:
     branches: [repair/spt-excel-golden-hardening]
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
 jobs:
-  apply-reviewed-patch:
-    if: github.actor != 'github-actions[bot]'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-        with: {fetch-depth: 0}
-      - uses: actions/setup-node@v5
-        with: {node-version: 22, cache: npm}
-      - run: npm ci
-      - name: Apply deterministic hardening patch
-        run: |
-          node scripts/prepare-spt-patcher-v3.mjs
-          node scripts/apply-spt-excel-golden-hardening.mjs
-      - name: Focused SPT regression before commit
-        run: node --test tests/spt-excel-golden-hardening.test.mjs
-      - name: Safety locks
-        run: |
-          npm run check:search
-          node -e "const fs=require('fs');const s=fs.readFileSync('src/p4-pdf-excel-intelligence.js','utf8');if(!s.includes(\"P4_PROMOTION_STATE = 'SHADOW_ONLY'\"))throw Error('P4 drift')"
-      - name: Commit reviewed source patch
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/engineering-input-interpreter.js src/pile-workflows.js src/engineering-router.js src/excel-export.js src/excel-export-compat.js
-          if git diff --cached --quiet; then echo 'No source patch produced'; exit 1; fi
-          git commit -m "fix(spt): harden geometry parser and Excel recalculation"
-          git push origin HEAD:repair/spt-excel-golden-hardening
   linux-golden:
-    if: github.actor == 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -58,7 +29,6 @@ jobs:
           npm run gate:release-sync
           npm run build:web
   windows-excel-com-golden:
-    if: github.actor == 'github-actions[bot]'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5

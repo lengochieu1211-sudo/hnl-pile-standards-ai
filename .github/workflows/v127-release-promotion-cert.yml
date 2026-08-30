@@ -2,6 +2,9 @@ name: HNL v1.27.0 Release Promotion Certification
 on:
   push:
     branches: [repair/v127-excel-compat-release]
+    paths:
+      - scripts/apply-v127-release-promotion.mjs
+  workflow_dispatch:
 permissions:
   contents: write
 jobs:
@@ -65,18 +68,20 @@ jobs:
           done
           test -f docs/RELEASE_V1.27.0.md
           grep -q 'SHADOW_ONLY' docs/RELEASE_V1.27.0.md
+      - name: Ensure promotion does not mutate workflow files
+        shell: bash
+        run: |
+          if ! git diff --quiet -- .github/workflows; then
+            echo 'Promotion script must not mutate .github/workflows files.'
+            git diff -- .github/workflows
+            exit 1
+          fi
       - name: Commit only certified v1.27.0 release files
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add \
-            .github/workflows/desktop-win.yml \
-            .github/workflows/master-system-audit.yml \
-            .github/workflows/pages.yml \
-            .github/workflows/pass83-runtime-cert.yml \
-            .github/workflows/rc-final.yml \
-            .github/workflows/v26-spt-input-cert.yml \
             00_HUONG_DAN_DAN_DE.md FULL_OVERWRITE_INFO.txt FULL_OVERWRITE_MANIFEST.json \
             MASTER_AUDIT_PLAN.md MASTER_AUDIT_PREFLIGHT.json MASTER_AUDIT_PRELIMINARY_GAP_MATRIX.md \
             README.md RELEASE_SYNC_MANIFEST.json UPDATE_INFO.txt docs/BUILD_METADATA.md docs/RELEASE_V1.27.0.md \

@@ -18,9 +18,9 @@
     "scripts/generate-build-info.mjs": "4c1ec43e56a7f563e04cd16d47071f4d059187e876ad69ab48de4b24dad315ab",
     "scripts/cross-platform-paths.mjs": "11dbfb50f1a9f55db3d3576335dd95f5d099998507b7e34385a52c41842bdf1f",
     "scripts/dce-udf-behavioral-golden.mjs": "c7432e11fc9689393008372220fd461a997fda5cd33ecaebff723ea42a451823",
-    "scripts/excel-production-smoke.mjs": "621ca61317687dc6bfc3bf05ca3aac939c6adedf1518818d71ab22af65faf9b7",
-    "scripts/master-system-audit.mjs": "4b9295df7a723d6e247cf5042a4f4e967fd1ccd29fa756904763fa5604a71d73",
-    "src/excel-export-compat.js": "eb1f4b3aa7a07498e5dd557da773253ee5982289cdebd61ff39662b6a59b276d",
+    "scripts/excel-production-smoke.mjs": "9e8946095b2183168453b17442ae5d43937c413222e5308930db50016e5ea7d0",
+    "scripts/master-system-audit.mjs": "c873fa884b4c600a3015523a14bd0b3c2577a934f1a788eb9da8a092b2ee2486",
+    "src/excel-export-compat.js": "f7e315c755b9ad206daec083e8e98a7949eb437814b30fa710860c3e96761a32",
     "src/excel-export-v26.js": "b33bc2b417c71d05d23a380c0e26284d715540dfbe4ac6446985f8446c8afc48",
     "src/xlsx-native-chart.js": "b369db5b349fa69ccf1ed2af8589def558d932a5391060a069a689836eb925d2",
     "tools/release-sync-gate.mjs": "378fbfe8781b44c622e6ddcc5826d51afee3a40e59cf4fb0cc362adebe72cd33",
@@ -36,6 +36,7 @@
     "FULL_OVERWRITE_INFO.txt": "67adfb47697f3b3ca2e78d0a22a6f2c87240558be2116ccb0f6429d1a6021b04",
     "MASTER_AUDIT_PLAN.md": "f438a58b6d090345a106c211a2ec1668f53fd4d95dc29a2213a093b111ec22bb",
     "MASTER_AUDIT_PRELIMINARY_GAP_MATRIX.md": "6ac773e13c34eadd785ae335f55005a79d7117033dca06dba95b0bd8bb07dfc2",
-    "MASTER_AUDIT_PREFLIGHT.json": "d7efda2475036b034bd528e5e88778e6be6f8231360244b821b722a59d356cea"
+    "MASTER_AUDIT_PREFLIGHT.json": "d7efda2475036b034bd528e5e88778e6be6f8231360244b821b722a59d356cea",
+    "src/excel-formula-compat.js": "9559c8f5bdb3a50386e9e9e33a2807a3e67f6be368d3fff2b5871f2017568ddd"
   }
 }

@@ -159,7 +159,10 @@ export function applyLegacyExcelFormulaCompatibility(wb){
       const v=cell.value;
       if(!v||typeof v!=='object'||typeof v.formula!=='string') return;
       scanned++;
-      const next=downgradeModernExcelFormula(v.formula);
+      if(!MODERN_EXCEL_FORMULA_RE.test(v.formula)){maxFormulaLength=Math.max(maxFormulaLength,v.formula.length);return;}
+      let next;
+      try{next=downgradeModernExcelFormula(v.formula);}
+      catch(error){throw new Error(`Excel formula compatibility failed at ${ws.name}!${cell.address}: ${error.message}; formula=${v.formula.slice(0,500)}`);}
       maxFormulaLength=Math.max(maxFormulaLength,next.length);
       if(next!==v.formula){cell.value={...v,formula:next};changed++;}
       if(MODERN_EXCEL_FORMULA_RE.test(next)) remaining.push(`${ws.name}!${cell.address}`);

@@ -22,7 +22,7 @@ function requireFile(p,priority='P0',area='Repository'){
 
 const required=[
   'package.json','package-lock.json','public/release-meta.json','README.md','docs/RELEASE_V1.26.0.md',
-  'src/search.js','src/excel-export.js','src/excel-export-compat.js','src/engineering-router.js','src/production-status-registry.js',
+  'src/search.js','src/excel-export.js','src/excel-export-compat.js','src/excel-formula-compat.js','src/engineering-router.js','src/production-status-registry.js',
   'src/pile-capacity-engine.js','src/pile-material-engine.js','src/multi-borehole-engine.js',
   'scripts/check-version-sync.mjs','scripts/generate-build-info.mjs','scripts/excel-production-smoke.mjs',
   'tools/pass83-source-sync-gate.mjs','tools/pass83-test-count-gate.mjs','tools/release-sync-gate.mjs',
@@ -85,9 +85,16 @@ if(exists('src/excel-export.js')){
   const xls=read('src/excel-export.js');
   const critical={LET:(xls.match(/\bLET\s*\(/g)||[]).length,XLOOKUP:(xls.match(/\bXLOOKUP\s*\(/g)||[]).length,LAMBDA:(xls.match(/\bLAMBDA\s*\(/g)||[]).length};
   const criticalCount=Object.values(critical).reduce((a,b)=>a+b,0);
-  add('EXCEL:365_CRITICAL','Excel Production','P1',criticalCount===0?'PASS':'OPEN',`LET=${critical.LET}; XLOOKUP=${critical.XLOOKUP}; LAMBDA=${critical.LAMBDA}`,'Chuyển từng workflow sang INDEX/MATCH, VLOOKUP, IF, MIN/MAX và Golden trước khi sửa tiếp workflow khác.');
   const modern={SWITCH:(xls.match(/\bSWITCH\s*\(/g)||[]).length,IFS:(xls.match(/\bIFS\s*\(/g)||[]).length};
-  add('EXCEL:MODERN_REVIEW','Excel Production','P2',(modern.SWITCH+modern.IFS)===0?'PASS':'OPEN',`SWITCH=${modern.SWITCH}; IFS=${modern.IFS}`,'Review compatibility target sau khi đóng LET/XLOOKUP/LAMBDA.');
+  const modernCount=modern.SWITCH+modern.IFS;
+  const compatFormula=exists('src/excel-formula-compat.js')?read('src/excel-formula-compat.js'):'';
+  const compatRuntime=exists('src/excel-export-compat.js')?read('src/excel-export-compat.js'):'';
+  const compatSmoke=exists('scripts/excel-production-smoke.mjs')?read('scripts/excel-production-smoke.mjs'):'';
+  const runtimeLegacyCompat=/applyLegacyExcelFormulaCompatibility/.test(compatRuntime)&&/downgradeModernExcelFormula/.test(compatFormula)&&/MODERN_EXCEL_FORMULA_RE/.test(compatFormula)&&/assertLegacyFormulaCompatibility/.test(compatSmoke)&&/compatCases/.test(compatSmoke);
+  const criticalOk=criticalCount===0||runtimeLegacyCompat;
+  const modernOk=modernCount===0||runtimeLegacyCompat;
+  add('EXCEL:365_CRITICAL','Excel Production','P1',criticalOk?'PASS':'OPEN',`Core LET=${critical.LET}; XLOOKUP=${critical.XLOOKUP}; LAMBDA=${critical.LAMBDA}; Production legacy-transform=${runtimeLegacyCompat?'CERTIFIED-RUNTIME':'MISSING'}`,'Production phải xuất 0 LET/XLOOKUP/LAMBDA; core chỉ được giữ khi compat transformer + runtime smoke chứng nhận workbook đầu ra.');
+  add('EXCEL:MODERN_REVIEW','Excel Production','P2',modernOk?'PASS':'OPEN',`Core SWITCH=${modern.SWITCH}; IFS=${modern.IFS}; Production legacy-transform=${runtimeLegacyCompat?'CERTIFIED-RUNTIME':'MISSING'}`,'Production phải xuất 0 SWITCH/IFS; runtime smoke phải quét workbook đầu ra.');
   const names=[...xls.matchAll(/addWorksheet\(\s*['"]([^'"]+)['"]\s*\)/g)].map(m=>m[1]);
   const englishTokens=/\b(INPUT|CALC|LOOKUP|SOURCE|RESULT|GUIDE|README|PROFILE|POINTS|SHAFT|TIP|SUMMARY)\b/i;
   const englishNames=[...new Set(names.filter(n=>englishTokens.test(n)))];

@@ -139,7 +139,7 @@ function applyExplicitSptVietnameseAndCompatibility(wb,context={}){
   if(![pileRow,etaRow,nbarRow,nsRow,aRow,uRow,lsRow,gkRow,qbRow,fsRow,rubRow,rufRow,rkRow,rdRow].every(Boolean)) return false;
 
   ensureMapSheet(wb);
-  const sourceInput=(context.fnName==='export10304AdvancedWorkflowWorkbook'?context.args?.[1]:context.args?.[0]?.input)||{};
+  const sourceInput=context.sourceInput||(context.fnName==='export10304AdvancedWorkflowWorkbook'?context.args?.[1]:context.args?.[0]?.input)||{};
   const sectionCode=normalizeSptSectionType(sourceInput.sectionType??sourceInput.shape) || (Number(sourceInput.diameterM)>0?'circle':(Number(sourceInput.widthM)>0&&Number(sourceInput.heightM)>0&&Math.abs(Number(sourceInput.widthM)-Number(sourceInput.heightM))>1e-12?'rectangle':'square'));
   const widthMm=Number(sourceInput.widthM??sourceInput.sideM)>0?Number(sourceInput.widthM??sourceInput.sideM)*1000:'';
   const heightMm=Number(sourceInput.heightM??sourceInput.sideM)>0?Number(sourceInput.heightM??sourceInput.sideM)*1000:'';
@@ -152,8 +152,8 @@ function applyExplicitSptVietnameseAndCompatibility(wb,context={}){
   [sectionRow,bRow,hRow,dRow].forEach(r=>inputFill(inp.getCell(r,2)));
   inp.getCell(sectionRow,5).value={formula:`VLOOKUP(B${sectionRow},'99_MA_NOI_BO'!$D$2:$E$4,2,FALSE)`};
   inp.getCell(aRow,1).value='A_b (dẫn xuất)'; inp.getCell(uRow,1).value='u (dẫn xuất)'; inp.getCell(lsRow,1).value='L'; inp.getCell(lsRow,3).value='m';
-  const areaFormula=`IF('01_INPUT'!E${sectionRow}="circle",PI()*('01_INPUT'!B${dRow}/1000)^2/4,IF('01_INPUT'!E${sectionRow}="rectangle",('01_INPUT'!B${bRow}/1000)*('01_INPUT'!B${hRow}/1000),('01_INPUT'!B${bRow}/1000)^2))`;
-  const perimeterFormula=`IF('01_INPUT'!E${sectionRow}="circle",PI()*('01_INPUT'!B${dRow}/1000),IF('01_INPUT'!E${sectionRow}="rectangle",2*(('01_INPUT'!B${bRow}/1000)+('01_INPUT'!B${hRow}/1000)),4*('01_INPUT'!B${bRow}/1000)))`;
+  const areaFormula=`IF('01_INPUT'!B${sectionRow}="${SHAPE.circle}",PI()*('01_INPUT'!B${dRow}/1000)^2/4,IF('01_INPUT'!B${sectionRow}="${SHAPE.rectangle}",('01_INPUT'!B${bRow}/1000)*('01_INPUT'!B${hRow}/1000),('01_INPUT'!B${bRow}/1000)^2))`;
+  const perimeterFormula=`IF('01_INPUT'!B${sectionRow}="${SHAPE.circle}",PI()*('01_INPUT'!B${dRow}/1000),IF('01_INPUT'!B${sectionRow}="${SHAPE.rectangle}",2*(('01_INPUT'!B${bRow}/1000)+('01_INPUT'!B${hRow}/1000)),4*('01_INPUT'!B${bRow}/1000)))`;
   inp.getCell(aRow,2).value={formula:areaFormula}; inp.getCell(uRow,2).value={formula:perimeterFormula};
   formulaFill(inp.getCell(aRow,2)); formulaFill(inp.getCell(uRow,2));
   inp.getCell(aRow,4).value='DERIVED — không nhập tay; tự đổi theo b/h/D.'; inp.getCell(uRow,4).value='DERIVED — không nhập tay; tự đổi theo b/h/D.';
@@ -272,7 +272,7 @@ function downloadBuffer(buffer,name){
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click();
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1200);
 }
-async function runProcessed(fn,args,{returnBuffer=false}={}){
+async function runProcessed(fn,args,{returnBuffer=false,context={}}={}){
   const previous=globalThis.__HNL_CAPTURE_XLSX__;
   let captured=null;
   globalThis.__HNL_CAPTURE_XLSX__=async(buf,name)=>{captured={buffer:buf,fileName:name};return captured;};
@@ -281,17 +281,17 @@ async function runProcessed(fn,args,{returnBuffer=false}={}){
   finally{ if(previous===undefined) delete globalThis.__HNL_CAPTURE_XLSX__; else globalThis.__HNL_CAPTURE_XLSX__=previous; }
   if(!captured && ret?.buffer) captured={buffer:ret.buffer,fileName:ret.fileName||'HNL.xlsx'};
   if(!captured) return ret;
-  const processed=await postProcessHnlWorkbook(captured.buffer,captured.fileName,{fnName:fn?.name||'',args});
+  const processed=await postProcessHnlWorkbook(captured.buffer,captured.fileName,{...context,fnName:fn?.name||'',args});
   if(returnBuffer) return processed;
   if(typeof previous==='function') return previous(processed.buffer,processed.fileName);
   return downloadBuffer(processed.buffer,processed.fileName);
 }
 
 export async function exportDrivenPileWorkflowWorkbook(input={},options={}){
-  return runProcessed(core.exportDrivenPileWorkflowWorkbook,[input,{...options,returnBuffer:true}],{returnBuffer:Boolean(options?.returnBuffer)});
+  return runProcessed(core.exportDrivenPileWorkflowWorkbook,[input,{...options,returnBuffer:true}],{returnBuffer:Boolean(options?.returnBuffer),context:{kind:'driven',sourceInput:input}});
 }
 export async function export10304AdvancedWorkflowWorkbook(workflowId,input={},options={}){
-  return runProcessed(core.export10304AdvancedWorkflowWorkbook,[workflowId,input,{...options,returnBuffer:true}],{returnBuffer:Boolean(options?.returnBuffer)});
+  return runProcessed(core.export10304AdvancedWorkflowWorkbook,[workflowId,input,{...options,returnBuffer:true}],{returnBuffer:Boolean(options?.returnBuffer),context:{kind:'10304-advanced',workflowId,sourceInput:input}});
 }
 export async function exportUnifiedEngineeringWorkbook(...args){
   return runProcessed(core.exportUnifiedEngineeringWorkbook,args,{returnBuffer:false});

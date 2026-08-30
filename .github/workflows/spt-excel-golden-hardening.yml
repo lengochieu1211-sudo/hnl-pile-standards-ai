@@ -4,31 +4,42 @@ on:
     branches: [repair/spt-excel-golden-hardening]
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
 jobs:
-  apply-excel-context-repair:
-    if: github.actor != 'github-actions[bot]'
+  linux-focused-and-regression:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-        with: {fetch-depth: 0}
       - uses: actions/setup-node@v5
         with: {node-version: 22, cache: npm}
       - run: npm ci
-      - name: Apply explicit sourceInput repair
-        run: node scripts/repair-spt-excel-context-v2.mjs
-      - name: Focused SPT regression
+      - name: Focused SPT Golden
         run: node --test tests/spt-excel-golden-hardening.test.mjs
+      - name: Existing SPT Decision Golden
+        run: npm run golden:spt-decision
+      - name: Full regression
+        run: npm test
+      - name: Excel Production smoke
+        run: npm run excel:production-smoke
+      - name: Master Audit enforce all
+        run: node scripts/master-system-audit.mjs --enforce-all
       - name: Search/P4 safety locks
         run: |
           npm run check:search
           node -e "const fs=require('fs');const s=fs.readFileSync('src/p4-pdf-excel-intelligence.js','utf8');if(!s.includes(\"P4_PROMOTION_STATE = 'SHADOW_ONLY'\"))throw Error('P4 drift')"
-      - name: Commit only repaired adapter
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/excel-export-compat.js
-          if git diff --cached --quiet; then echo 'No Excel context repair diff'; exit 1; fi
-          git commit -m "fix(spt): pass explicit geometry context to Excel"
-          git push origin HEAD:repair/spt-excel-golden-hardening
+  windows-excel-com-golden:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: {node-version: 22, cache: npm}
+      - run: npm ci
+      - name: Generate Production SPT workbook
+        run: node scripts/spt-excel-golden-generate.mjs
+      - name: Excel COM recalculation A/B/C/D
+        shell: powershell
+        run: ./scripts/spt-excel-com-golden.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spt-excel-golden-com-evidence
+          path: artifacts/spt-excel-golden/HNL_SPT_GOLDEN.xlsx

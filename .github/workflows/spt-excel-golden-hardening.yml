@@ -16,7 +16,9 @@ jobs:
         with: {node-version: 22, cache: npm}
       - run: npm ci
       - name: Apply deterministic hardening patch
-        run: node scripts/apply-spt-excel-golden-hardening.mjs
+        run: |
+          node scripts/prepare-spt-patcher-v2.mjs
+          node scripts/apply-spt-excel-golden-hardening.mjs
       - name: Focused SPT regression before commit
         run: node --test tests/spt-excel-golden-hardening.test.mjs
       - name: Safety locks

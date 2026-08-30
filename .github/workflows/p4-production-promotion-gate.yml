@@ -1,15 +1,17 @@
-name: P4 v1.27 · Production Promotion Evidence Gate
+name: P4 v1.27 · Review Production Export Activation Gate
 
 on:
   push:
     branches:
       - research/p4-production-promotion-gate-v1.27
+      - promotion/p4-review-production-export-v1.27
   pull_request:
     branches:
       - main
     paths:
       - 'src/pdf-excel-intelligence/confirmation-contract.js'
       - 'src/pdf-excel-intelligence/review-production-export.js'
+      - 'src/pdf-excel-intelligence/ui.js'
       - 'scripts/p4-production-promotion-*.mjs'
       - 'scripts/p4-runtime-golden-browser.mjs'
       - 'docs/P4_PRODUCTION_PROMOTION_GATE_V1.27.md'
@@ -21,8 +23,8 @@ permissions:
   contents: read
 
 jobs:
-  exact-head-evidence:
-    name: Windows · exact-head P4 exporter-only evidence closure
+  exact-head-activation:
+    name: Windows · exact-head P4 reviewed native export activation
     runs-on: windows-latest
     timeout-minutes: 75
     env:
@@ -39,7 +41,7 @@ jobs:
         run: |
           $head=(git rev-parse HEAD).Trim()
           if($head -ne $env:HNL_SOURCE_SHA){ throw "Exact-head mismatch: $head != $env:HNL_SOURCE_SHA" }
-          Write-Host "P4 promotion evidence SHA: $head"
+          Write-Host "P4 activation SHA: $head"
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
@@ -50,7 +52,13 @@ jobs:
         run: |
           npm run check:version
           npm run check:search
-      - name: P4 promotion failure-mode selftest · 12/12
+      - name: Activation syntax gate
+        run: |
+          node --check src/pdf-excel-intelligence/review-production-export.js
+          node --check src/pdf-excel-intelligence/ui.js
+          node --check scripts/p4-production-promotion-selftest.mjs
+          node --check scripts/p4-production-promotion-audit.mjs
+      - name: P4 activation failure-mode selftest · 18/18
         run: node scripts/p4-production-promotion-selftest.mjs
       - name: Existing P4 safety/runtime tests · 18/18
         run: node --test tests/p4-pdf-excel-intelligence.test.mjs
@@ -72,9 +80,9 @@ jobs:
           npx playwright install chromium
       - name: P4 current-head Runtime Golden · 5/5
         run: node scripts/p4-runtime-golden-browser.mjs --sha $env:HNL_SOURCE_SHA --out artifacts/p4-runtime-golden
-      - name: P4 exporter-only promotion audit · enforce READY
+      - name: P4 reviewed native export activation audit · enforce CERTIFIED
         run: node scripts/p4-production-promotion-audit.mjs --enforce-ready
-      - name: Build Desktop UI without promotion mutation
+      - name: Build Desktop UI with calculation barrier locked
         run: npm run build:desktop
       - name: Guard hard-locked source paths
         shell: pwsh
@@ -85,11 +93,11 @@ jobs:
           if($changed -contains 'src/search.js'){ throw 'Search Brain changed' }
           $bad = $changed | Where-Object { $_ -match '^src/(?:calculation|calc|engine)/' }
           if($bad){ throw "Calculation Engine path changed: $($bad -join ', ')" }
-      - name: Upload promotion evidence
+      - name: Upload activation evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: HNL-v1.27-P4-Production-Promotion-Evidence-${{ github.event.pull_request.head.sha || github.sha }}
+          name: HNL-v1.27-P4-Review-Production-Activation-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             artifacts/p4-production-promotion/**
             artifacts/p4-runtime-golden/**

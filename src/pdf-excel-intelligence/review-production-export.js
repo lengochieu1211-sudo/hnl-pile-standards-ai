@@ -1,34 +1,107 @@
 import { buildP4ExcelPlan, exportP4ExcelWorkbook } from '../p4-pdf-excel-intelligence.js';
 import { validateP4ConfirmationSource, validateP4ReviewConfirmation } from './confirmation-contract.js';
 
-export const P4_REVIEW_PRODUCTION_MODE='REVIEW_PRODUCTION_EXPORT_CANDIDATE';
+export const P4_REVIEW_PRODUCTION_MODE='REVIEW_PRODUCTION_EXPORT';
+export const P4_REVIEW_PRODUCTION_SCHEMA='HNL_P4_REVIEW_PRODUCTION_EXPORT_V1';
+export const P4_REVIEW_PRODUCTION_STATE='VERIFIED_FOR_EXPORT';
+export const P4_REVIEW_PRODUCTION_SCOPE='WORKBOOK_EXPORT_ONLY';
 
 function text(v=''){return String(v??'').trim();}
 function lowConfidence(source={}){
   return source.confidenceUsable===true&&Number.isFinite(Number(source.confidence))&&Number(source.confidence)<0.75;
 }
-
-export function evaluateP4ReviewProductionExport(packet={},confirmation={},opts={}){
+function valueFor(packet={},opts={}){return Object.prototype.hasOwnProperty.call(opts,'value')?opts.value:packet?.text??null;}
+function fieldKeyFor(opts={}){return text(opts.fieldKey||'__packet__');}
+function markerValid(packet={}){
+  const m=packet?.reviewProduction||{};
+  return m.schema===P4_REVIEW_PRODUCTION_SCHEMA&&m.state===P4_REVIEW_PRODUCTION_STATE&&m.scope===P4_REVIEW_PRODUCTION_SCOPE;
+}
+function barrierReasons(packet={}){
   const reasons=[];
-  const source=packet?.source||{};
-  const src=validateP4ConfirmationSource(source);
-  if(!src.ok)reasons.push(...src.errors);
-  if(text(source.state)!=='VERIFIED')reasons.push('SOURCE_NOT_VERIFIED');
-  if(lowConfidence(source))reasons.push('SOURCE_CONFIDENCE_BELOW_075');
   if(packet?.promotionState!=='SHADOW_ONLY')reasons.push('UNEXPECTED_SOURCE_PROMOTION_STATE');
   if(packet?.productionMutationAllowed!==false)reasons.push('SOURCE_PRODUCTION_MUTATION_BARRIER_MISSING');
   if(packet?.calculationEngineMutationAllowed!==false)reasons.push('SOURCE_CALCULATION_BARRIER_MISSING');
+  return reasons;
+}
+function nativePdfReasons(source={}){
+  const reasons=[];
+  if(text(source.sourceType)!=='pdf-native')reasons.push('REVIEW_PRODUCTION_NATIVE_PDF_ONLY');
+  if(text(source.engine)!=='pdfjs-native-region')reasons.push('REVIEW_PRODUCTION_NATIVE_ENGINE_REQUIRED');
+  if(text(source.route)!=='native')reasons.push('REVIEW_PRODUCTION_NATIVE_ROUTE_REQUIRED');
+  return reasons;
+}
 
-  const confirmationCheck=validateP4ReviewConfirmation(confirmation,{
+export function createP4ReviewedNativeExportPacket(packet={},confirmation={},opts={}){
+  const source=packet?.source||{};
+  const src=validateP4ConfirmationSource(source);
+  const reasons=[...barrierReasons(packet),...nativePdfReasons(source)];
+  if(!src.ok)reasons.push(...src.errors);
+  if(!['REVIEW','VERIFIED'].includes(text(source.state)))reasons.push('SOURCE_STATE_NOT_REVIEW_ELIGIBLE');
+  if(lowConfidence(source))reasons.push('SOURCE_CONFIDENCE_BELOW_075');
+  const fieldKey=fieldKeyFor(opts),value=valueFor(packet,opts);
+  if(value===null||value===undefined||text(value)==='')reasons.push('SOURCE_VALUE_MISSING');
+  const confirmed=validateP4ReviewConfirmation(confirmation,{source,fieldKey,value,maxAgeMs:opts.maxAgeMs});
+  if(!confirmed.ok)reasons.push(...confirmed.errors);
+  if(reasons.length){
+    const error=new Error(`P4_REVIEW_PRODUCTION_DERIVATION_BLOCKED:${[...new Set(reasons)].join(',')}`);
+    error.code='P4_REVIEW_PRODUCTION_DERIVATION_BLOCKED';
+    error.reasons=[...new Set(reasons)];
+    throw error;
+  }
+  return {
+    ...packet,
+    source:{...source},
+    trust:packet?.trust?{...packet.trust}:packet?.trust,
+    warnings:[...(Array.isArray(packet?.warnings)?packet.warnings:[]),'Đã xác nhận nguồn PDF native chỉ cho phạm vi xuất workbook; đây không phải xác nhận cho Calculation Engine.'],
+    reviewProduction:{
+      schema:P4_REVIEW_PRODUCTION_SCHEMA,
+      state:P4_REVIEW_PRODUCTION_STATE,
+      scope:P4_REVIEW_PRODUCTION_SCOPE,
+      fieldKey,
+      confirmedAt:confirmation.confirmedAt,
+      sourceSha:src.source.sourceSha,
+      confirmation,
+      workbookProductionExportAllowed:true,
+      productionMutationAllowed:false,
+      calculationEngineMutationAllowed:false,
+    },
+  };
+}
+
+export function evaluateP4ReviewProductionExport(packet={},confirmation={},opts={}){
+  const reasons=[...barrierReasons(packet)];
+  const source=packet?.source||{};
+  const src=validateP4ConfirmationSource(source);
+  if(!src.ok)reasons.push(...src.errors);
+  reasons.push(...nativePdfReasons(source));
+  if(lowConfidence(source))reasons.push('SOURCE_CONFIDENCE_BELOW_075');
+  const value=valueFor(packet,opts);
+  if(value===null||value===undefined||text(value)==='')reasons.push('SOURCE_VALUE_MISSING');
+
+  const marker=packet?.reviewProduction||{};
+  const scoped=markerValid(packet);
+  const globallyVerified=text(source.state)==='VERIFIED';
+  if(!globallyVerified&&!scoped)reasons.push('SOURCE_NOT_VERIFIED_FOR_EXPORT');
+  if(scoped){
+    if(marker.productionMutationAllowed!==false)reasons.push('REVIEW_PRODUCTION_MUTATION_BARRIER_MISSING');
+    if(marker.calculationEngineMutationAllowed!==false)reasons.push('REVIEW_CALCULATION_BARRIER_MISSING');
+    if(text(marker.sourceSha)!==text(source.sourceSha).toLowerCase())reasons.push('REVIEW_PRODUCTION_SOURCE_SHA_MISMATCH');
+  }
+
+  const record=confirmation?.schema?confirmation:(scoped?marker.confirmation:{});
+  const fieldKey=scoped?text(marker.fieldKey||fieldKeyFor(opts)):fieldKeyFor(opts);
+  const confirmationCheck=validateP4ReviewConfirmation(record,{
     source,
-    fieldKey:text(opts.fieldKey||'__packet__'),
-    value:opts.value??packet?.text??null,
+    fieldKey,
+    value,
     maxAgeMs:opts.maxAgeMs,
   });
   if(!confirmationCheck.ok)reasons.push(...confirmationCheck.errors);
 
   return {
     mode:P4_REVIEW_PRODUCTION_MODE,
+    state:scoped?P4_REVIEW_PRODUCTION_STATE:(globallyVerified?'SOURCE_VERIFIED':'BLOCKED'),
+    scope:P4_REVIEW_PRODUCTION_SCOPE,
     ready:reasons.length===0,
     workbookProductionExportAllowed:reasons.length===0,
     productionMutationAllowed:false,

@@ -9,14 +9,9 @@ const write=(p,s)=>fs.writeFileSync(p,s);
 const hash=p=>crypto.createHash('sha256').update(read(p).replace(/\r\n/g,'\n')).digest('hex');
 const replaceVersion=p=>{let s=read(p); if(!s.includes(OLD)) throw new Error(`${p}: missing ${OLD}`); write(p,s.split(OLD).join(VER));};
 
-// Current product identity / certification files only. Historical release v1.26.0 and PR3 evidence stay untouched.
+// Current product identity / certification files only. Workflow YAML files are promoted as
+// ordinary reviewed source before this script runs, so the Actions bot never self-modifies workflows.
 const currentTextFiles=[
-  '.github/workflows/desktop-win.yml',
-  '.github/workflows/master-system-audit.yml',
-  '.github/workflows/pages.yml',
-  '.github/workflows/pass83-runtime-cert.yml',
-  '.github/workflows/rc-final.yml',
-  '.github/workflows/v26-spt-input-cert.yml',
   '00_HUONG_DAN_DAN_DE.md',
   'FULL_OVERWRITE_INFO.txt',
   'MASTER_AUDIT_PLAN.md',

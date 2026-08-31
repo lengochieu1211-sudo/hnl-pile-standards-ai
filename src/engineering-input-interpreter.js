@@ -1,4 +1,5 @@
 import { normalizeEngineeringText, extractEngineeringNumber } from './engineering-text-normalizer.js';
+import { buildNormalizedSptGeometryInput, parseSptPileLength } from './spt-shared-spec.js';
 
 export const ENGINEERING_INPUT_INTERPRETER_STATUS = Object.freeze({
   id: 'v26-ai-input-interpreter',
@@ -139,7 +140,9 @@ export function extractSptSummaryInputV26(question = '', aiExtraction = null) {
   const raw = String(question || '');
   const text = normalizeEngineeringText(raw);
   const norm = deaccent(raw);
-  const length = deterministicOrAi(raw, scalarWithSource(raw, ['L', 'chiều dài', 'chieu dai'], '(?:m)?'), aiExtraction, 'lengthM');
+  const normalizedGeometry=buildNormalizedSptGeometryInput(raw);
+  const deterministicLength=parseSptPileLength(raw);
+  const length = deterministicLength ? {value:deterministicLength.lengthM,sourceText:deterministicLength.sourceText,origin:deterministicLength.origin} : deterministicOrAi(raw, scalarWithSource(raw, ['L', 'chiều dài', 'chieu dai'], '(?:m)?'), aiExtraction, 'lengthM');
   const eta = deterministicOrAi(raw, scalarWithSource(raw, ['η', 'eta']), aiExtraction, 'eta');
   const nBarTip = deterministicOrAi(raw, findNbarTip(raw), aiExtraction, 'nBarTip');
   const nsShaft = deterministicOrAi(raw, findNsShaft(raw), aiExtraction, 'nsShaft');
@@ -163,7 +166,15 @@ export function extractSptSummaryInputV26(question = '', aiExtraction = null) {
 
   return {
     schema: 'HNL-V26-SPT-SUMMARY-INPUT',
-    lengthM: length?.value ?? null,
+    lengthM: length?.value ?? normalizedGeometry.lengthM ?? null,
+    sectionType: normalizedGeometry.sectionType,
+    widthM: normalizedGeometry.widthM,
+    heightM: normalizedGeometry.heightM,
+    sideM: normalizedGeometry.sideM,
+    diameterM: normalizedGeometry.diameterM,
+    geometryOrigin: normalizedGeometry.geometryOrigin,
+    geometrySourceText: normalizedGeometry.geometrySourceText,
+    unitAssumption: normalizedGeometry.unitAssumption,
     eta: eta?.value ?? null,
     nBarTip: nBarTip?.value ?? null,
     nsShaft: nsShaft?.value ?? null,
@@ -173,7 +184,7 @@ export function extractSptSummaryInputV26(question = '', aiExtraction = null) {
     soilGroup,
     fullShaft,
     closedTip,
-    shaftLengthM: fullShaft && length?.value != null ? length.value : null,
+    shaftLengthM: fullShaft && (length?.value ?? normalizedGeometry.lengthM) != null ? (length?.value ?? normalizedGeometry.lengthM) : null,
     origins: { length, eta, nBarTip, nsShaft, gammaK, gammaN },
     formulaGuard: {
       qb: { legacyCandidate: qbLegacy, scalarCandidate: qbScalar, rejectedCoefficient: qbLegacy != null && qbScalar == null },

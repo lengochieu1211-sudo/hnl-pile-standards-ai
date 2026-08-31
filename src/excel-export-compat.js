@@ -6,6 +6,7 @@
 import * as core from './excel-export.js?core';
 import { addNativeColumnChart } from './xlsx-native-chart.js';
 import { applyLegacyExcelFormulaCompatibility } from './excel-formula-compat.js';
+import { normalizeSptSectionType } from './spt-shared-spec.js';
 
 export * from './excel-export.js?core';
 
@@ -15,7 +16,7 @@ const PILE_TYPE = Object.freeze({
   'vibro-pipe':'Cọc ống hạ bằng rung',
   screw:'Cọc vít'
 });
-const SHAPE = Object.freeze({square:'Vuông',circle:'Tròn'});
+const SHAPE = Object.freeze({square:'Vuông',rectangle:'Chữ nhật',circle:'Tròn'});
 const METHOD = Object.freeze({hammer:'Đóng bằng búa',press:'Ép tĩnh'});
 const SOIL = Object.freeze({clay:'Đất dính',sand:'Đất cát'});
 const SAND = Object.freeze({
@@ -125,7 +126,7 @@ function applyGenericVietnameseCodeLists(wb){
   }
   return {translatedCells,translatedFormulas,translatedValidations};
 }
-function applyExplicitSptVietnameseAndCompatibility(wb){
+function applyExplicitSptVietnameseAndCompatibility(wb,context={}){
   const inp=wb.getWorksheet('01_INPUT'),calc=wb.getWorksheet('02_CALC'),d1=wb.getWorksheet('04_BANG_D1');
   if(!inp||!calc||!d1) return false;
   const pileRow=labelRow(inp,'Loại cọc'),etaRow=labelRow(inp,'η'),nbarRow=labelRow(inp,'N̄ vùng mũi'),nsRow=labelRow(inp,'Ns thân cọc');
@@ -138,6 +139,33 @@ function applyExplicitSptVietnameseAndCompatibility(wb){
   if(![pileRow,etaRow,nbarRow,nsRow,aRow,uRow,lsRow,gkRow,qbRow,fsRow,rubRow,rufRow,rkRow,rdRow].every(Boolean)) return false;
 
   ensureMapSheet(wb);
+  const sourceInput=context.sourceInput||(context.fnName==='export10304AdvancedWorkflowWorkbook'?context.args?.[1]:context.args?.[0]?.input)||{};
+  const sectionCode=normalizeSptSectionType(sourceInput.sectionType??sourceInput.shape) || (Number(sourceInput.diameterM)>0?'circle':(Number(sourceInput.widthM)>0&&Number(sourceInput.heightM)>0&&Math.abs(Number(sourceInput.widthM)-Number(sourceInput.heightM))>1e-12?'rectangle':'square'));
+  const widthMm=Number(sourceInput.widthM??sourceInput.sideM)>0?Number(sourceInput.widthM??sourceInput.sideM)*1000:'';
+  const heightMm=Number(sourceInput.heightM??sourceInput.sideM)>0?Number(sourceInput.heightM??sourceInput.sideM)*1000:'';
+  const diameterMm=Number(sourceInput.diameterM)>0?Number(sourceInput.diameterM)*1000:'';
+  const sectionRow=inp.addRow(['Tiết diện',SHAPE[sectionCode]||'Vuông','-','INPUT hình học gốc: Vuông / Chữ nhật / Tròn']).number;
+  const bRow=inp.addRow(['b',widthMm,'mm','Bề rộng/cạnh; dùng cho vuông/chữ nhật']).number;
+  const hRow=inp.addRow(['h',heightMm,'mm','Chiều cao/cạnh; dùng cho vuông/chữ nhật']).number;
+  const dRow=inp.addRow(['D',diameterMm,'mm','Đường kính; chỉ dùng cho cọc tròn']).number;
+  inp.getCell(sectionRow,2).dataValidation=listValidation(Object.values(SHAPE),'Vui lòng chọn Vuông, Chữ nhật hoặc Tròn.');
+  [sectionRow,bRow,hRow,dRow].forEach(r=>inputFill(inp.getCell(r,2)));
+  inp.getCell(sectionRow,5).value={formula:`VLOOKUP(B${sectionRow},'99_MA_NOI_BO'!$D$2:$E$4,2,FALSE)`};
+  inp.getCell(aRow,1).value='A_b (dẫn xuất)'; inp.getCell(uRow,1).value='u (dẫn xuất)'; inp.getCell(lsRow,1).value='L'; inp.getCell(lsRow,3).value='m';
+  const areaFormula=`IF('01_INPUT'!B${sectionRow}="${SHAPE.circle}",PI()*('01_INPUT'!B${dRow}/1000)^2/4,IF('01_INPUT'!B${sectionRow}="${SHAPE.rectangle}",('01_INPUT'!B${bRow}/1000)*('01_INPUT'!B${hRow}/1000),('01_INPUT'!B${bRow}/1000)^2))`;
+  const perimeterFormula=`IF('01_INPUT'!B${sectionRow}="${SHAPE.circle}",PI()*('01_INPUT'!B${dRow}/1000),IF('01_INPUT'!B${sectionRow}="${SHAPE.rectangle}",2*(('01_INPUT'!B${bRow}/1000)+('01_INPUT'!B${hRow}/1000)),4*('01_INPUT'!B${bRow}/1000)))`;
+  inp.getCell(aRow,2).value={formula:areaFormula}; inp.getCell(uRow,2).value={formula:perimeterFormula};
+  formulaFill(inp.getCell(aRow,2)); formulaFill(inp.getCell(uRow,2));
+  inp.getCell(aRow,4).value='DERIVED — không nhập tay; tự đổi theo b/h/D.'; inp.getCell(uRow,4).value='DERIVED — không nhập tay; tự đổi theo b/h/D.';
+  const abCalcRow=calc.addRow(['A_b',{formula:areaFormula},'m²','Hình học deterministic từ Tiết diện + b/h/D']).number;
+  const uCalcRow=calc.addRow(['u',{formula:perimeterFormula},'m','Hình học deterministic từ Tiết diện + b/h/D']).number;
+  formulaFill(calc.getCell(abCalcRow,2)); formulaFill(calc.getCell(uCalcRow,2));
+  calc.getCell(rubRow,2).value={formula:`IF(ISNUMBER(B${qbRow}),B${qbRow}*B${abCalcRow},"")`};
+  calc.getCell(rufRow,2).value={formula:`IF(ISNUMBER(B${fsRow}),B${fsRow}*'01_INPUT'!B${lsRow}*B${uCalcRow},"")`};
+  [rubRow,rufRow,rkRow,rdRow,ndRow,abCalcRow,uCalcRow].filter(Boolean).forEach(r=>{calc.getCell(r,2).numFmt='#,##0.00';});
+  inp.getCell(aRow,2).numFmt='0.0000'; inp.getCell(uRow,2).numFmt='0.0000';
+  inp.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0}; inp.pageSetup.printArea=`A1:E${inp.rowCount}`;
+  calc.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0}; calc.pageSetup.printArea=`A1:D${calc.rowCount}`;
   if(inp.columnCount<5) inp.getColumn(5).width=2;
   inp.getColumn(5).hidden=true;
   const code=translatedCode(inp.getCell(pileRow,2).value,PILE_TYPE,PILE_TYPE_REV,'driven');
@@ -189,7 +217,7 @@ function applyDrivenVietnamese(wb){
   const shapeCode=translatedCode(inp.getCell(shapeRow,2).value,SHAPE,SHAPE_REV,'square');
   inp.getCell(shapeRow,2).value=SHAPE[shapeCode]; inputFill(inp.getCell(shapeRow,2));
   inp.getCell(shapeRow,2).dataValidation=listValidation(Object.values(SHAPE),'Vui lòng chọn tiết diện trong danh sách.');
-  inp.getCell(shapeRow,5).value={formula:`VLOOKUP(B${shapeRow},'99_MA_NOI_BO'!$D$2:$E$3,2,FALSE)`};
+  inp.getCell(shapeRow,5).value={formula:`VLOOKUP(B${shapeRow},'99_MA_NOI_BO'!$D$2:$E$4,2,FALSE)`};
   const methodCode=translatedCode(inp.getCell(methodRow,2).value,METHOD,METHOD_REV,'hammer');
   inp.getCell(methodRow,2).value=METHOD[methodCode]; inputFill(inp.getCell(methodRow,2));
   inp.getCell(methodRow,2).dataValidation=listValidation(Object.values(METHOD),'Vui lòng chọn phương pháp hạ cọc trong danh sách.');
@@ -221,10 +249,10 @@ function applyDrivenVietnamese(wb){
   return true;
 }
 
-export async function postProcessHnlWorkbook(buffer,fileName='HNL.xlsx'){
+export async function postProcessHnlWorkbook(buffer,fileName='HNL.xlsx',context={}){
   const mod=await import('exceljs'); const ExcelJS=mod.default||mod;
   const wb=new ExcelJS.Workbook(); await wb.xlsx.load(buffer);
-  const explicitSpt=applyExplicitSptVietnameseAndCompatibility(wb);
+  const explicitSpt=applyExplicitSptVietnameseAndCompatibility(wb,context);
   const driven=applyDrivenVietnamese(wb);
   const genericLocalization=(!explicitSpt&&!driven)?applyGenericVietnameseCodeLists(wb):null;
   if(genericLocalization && genericLocalization.translatedValidations===0 && genericLocalization.translatedCells===0 && genericLocalization.translatedFormulas===0){const map=wb.getWorksheet('99_MA_NOI_BO');if(map) wb.removeWorksheet(map.id);}
@@ -244,7 +272,7 @@ function downloadBuffer(buffer,name){
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click();
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1200);
 }
-async function runProcessed(fn,args,{returnBuffer=false}={}){
+async function runProcessed(fn,args,{returnBuffer=false,context={}}={}){
   const previous=globalThis.__HNL_CAPTURE_XLSX__;
   let captured=null;
   globalThis.__HNL_CAPTURE_XLSX__=async(buf,name)=>{captured={buffer:buf,fileName:name};return captured;};
@@ -253,17 +281,17 @@ async function runProcessed(fn,args,{returnBuffer=false}={}){
   finally{ if(previous===undefined) delete globalThis.__HNL_CAPTURE_XLSX__; else globalThis.__HNL_CAPTURE_XLSX__=previous; }
   if(!captured && ret?.buffer) captured={buffer:ret.buffer,fileName:ret.fileName||'HNL.xlsx'};
   if(!captured) return ret;
-  const processed=await postProcessHnlWorkbook(captured.buffer,captured.fileName);
+  const processed=await postProcessHnlWorkbook(captured.buffer,captured.fileName,{...context,fnName:fn?.name||'',args});
   if(returnBuffer) return processed;
   if(typeof previous==='function') return previous(processed.buffer,processed.fileName);
   return downloadBuffer(processed.buffer,processed.fileName);
 }
 
 export async function exportDrivenPileWorkflowWorkbook(input={},options={}){
-  return runProcessed(core.exportDrivenPileWorkflowWorkbook,[input,{...options,returnBuffer:true}],{returnBuffer:Boolean(options?.returnBuffer)});
+  return runProcessed(core.exportDrivenPileWorkflowWorkbook,[input,{...options,returnBuffer:true}],{returnBuffer:Boolean(options?.returnBuffer),context:{kind:'driven',sourceInput:input}});
 }
 export async function export10304AdvancedWorkflowWorkbook(workflowId,input={},options={}){
-  return runProcessed(core.export10304AdvancedWorkflowWorkbook,[workflowId,input,{...options,returnBuffer:true}],{returnBuffer:Boolean(options?.returnBuffer)});
+  return runProcessed(core.export10304AdvancedWorkflowWorkbook,[workflowId,input,{...options,returnBuffer:true}],{returnBuffer:Boolean(options?.returnBuffer),context:{kind:'10304-advanced',workflowId,sourceInput:input}});
 }
 export async function exportUnifiedEngineeringWorkbook(...args){
   return runProcessed(core.exportUnifiedEngineeringWorkbook,args,{returnBuffer:false});

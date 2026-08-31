@@ -19,7 +19,7 @@
     "scripts/dce-udf-behavioral-golden.mjs": "c7432e11fc9689393008372220fd461a997fda5cd33ecaebff723ea42a451823",
     "scripts/excel-production-smoke.mjs": "5636ed76c839936b83d3d05b1b3a934383a5e74e28aeb612fb528e5d26ffa355",
     "scripts/master-system-audit.mjs": "e394fde440c6e630d174324026cd30b7c006c13246ff8f9bf59393d683604d8f",
-    "src/excel-export-compat.js": "70a40667c52b714f664fe77aa21d3d5804a5bcde8588116a940bf64297035b30",
+    "src/excel-export-compat.js": "48745b7827a8b40ef1afa9490d79f99f8241cf8ef99fa100b35982e3d93a1ebc",
     "src/excel-export-v26.js": "b33bc2b417c71d05d23a380c0e26284d715540dfbe4ac6446985f8446c8afc48",
     "src/xlsx-native-chart.js": "b369db5b349fa69ccf1ed2af8589def558d932a5391060a069a689836eb925d2",
     "tools/release-sync-gate.mjs": "5e8a19dca744be3b2083f9dca6329eb22fea82c024109db334676416c176ea0c",
@@ -37,6 +37,19 @@
     "MASTER_AUDIT_PRELIMINARY_GAP_MATRIX.md": "0f378dddb7460b95effecb88575dec5da8abaab23e82689180344c3dc021e773",
     "MASTER_AUDIT_PREFLIGHT.json": "608f48211144e61342e5795a0119071916a10f981f8ab5339422d50c46795918",
     "src/excel-formula-compat.js": "9559c8f5bdb3a50386e9e9e33a2807a3e67f6be368d3fff2b5871f2017568ddd",
-    "docs/RELEASE_V1.27.0.md": "c4e3cf1d6e38881c0279ec95846ea757f7fd1b294766895f7793b0c568cdeac4"
+    "docs/RELEASE_V1.27.0.md": "c4e3cf1d6e38881c0279ec95846ea757f7fd1b294766895f7793b0c568cdeac4",
+    ".github/workflows/spt-excel-golden-hardening.yml": "94f62757f21a44627a61e73ec2f7fab83774b77ebc93e78ba9586d298b36d9bd",
+    "scripts/spt-excel-com-golden.ps1": "b0cab90973800c8886fd0b2604f78ce762b8a4c34ae3afb9e9824aa830f3583b",
+    "scripts/spt-excel-golden-generate.mjs": "dcf5c993168e18d218e33d9e147589cc27b1995c9f0637fb2656672ff6d44156",
+    "scripts/spt-spreadsheet-runtime-golden.mjs": "1ac9ded4ea533c90711af6f1e378301a42912d332e721e9f5c42255abe64eab9",
+    "src/engineering-input-interpreter.js": "a62e4d2550584caf19a600c204e90ed7b2a32af77fe0012ebaf3f993e98df45d",
+    "src/engineering-router.js": "cd7c2583997c4d72b6540fac1723ca5c1711522148f3032d87927a206cf1426d",
+    "src/excel-export.js": "c611cbb5243b1530366eee0913473b66c025cd430dc2db5f25ce7e9416baaefb",
+    "src/pile-geometry-engine.js": "6ea077c65c98d6649060a8c4ddfd76095679efa7bb16c5ee9c0f32e995e22561",
+    "src/pile-workflows.js": "7a30166a35026c0c6e01069ba586a2ca73b2ac14e90d4796c776b58b4ddceb5a",
+    "src/spt-shared-spec.js": "6e59289ddd2b74d2f6478cf8e323a18e1f62d8c86cbaa76eeadacec026d0aff8",
+    "tests/spt-excel-golden-hardening.test.mjs": "75fabeaf9addc4c9e50a14e612ec375851bdffd7e5f375a35659631535979ccd",
+    "tests/spt-excel-parity-provenance.test.mjs": "efb28a2c6c8f59496ae2eedca9af682c3f1a07023a984d0ff9069eab875c5689",
+    "tools/pass83-source-sync-gate.mjs": "445a3073afe1c4d094895d272520fdff95c458828fed6e0fb4a23b6919fb00af"
   }
 }

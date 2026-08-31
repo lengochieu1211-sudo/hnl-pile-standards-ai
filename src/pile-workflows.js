@@ -1,5 +1,6 @@
 import { linear1DStrict, bilinear2DStrict } from './interpolation-engine.js';
 import { calculatePileGeometry } from './pile-geometry-engine.js';
+import { deriveSptSectionGeometry } from './spt-shared-spec.js';
 import { splitBoreholeInterval, findLayerAtDepth } from './borehole-engine.js';
 import { lookupRockKs10304, lookupTable6GammaRf10304, lookupTable7Alphas10304, lookupTable8Qb10304, lookupSptTipResistance10304, lookupSptShaftResistance10304, sptEta10304, sptTipWindow10304, averageMeasuredSptN10304 } from './tcvn10304-table-engine.js';
 // HNL deterministic engineering workflows.
@@ -204,11 +205,12 @@ const PROV_BORED = {standard:'TCVN 10304:2025',edition:2025,clause:'7.2.3',formu
 const PROV_SPT = {standard:'TCVN 10304:2025',edition:2025,clause:'Phụ lục D',formula:'D.1–D.6',table:'Bảng D.1',standardPage:'110-111',pdfPage:'110-111',status:'VERIFIED',unit:'kN'};
 
 function geometryFromInput(input={}){
-  const L=num(input.lengthM)??(num(input.tipDepthM)!=null&&num(input.headDepthM)!=null?Math.abs(num(input.tipDepthM)-num(input.headDepthM)):null);
-  if(input.shape==='circle'||num(input.diameterM)!=null) return calculatePileGeometry({shape:'circle',diameterM:input.diameterM,lengthM:L,tipInnerDiameterM:input.tipInnerDiameterM,massInnerDiameterM:input.massInnerDiameterM});
-  if(input.shape==='square'||num(input.sideM)!=null) return calculatePileGeometry({shape:'square',sideM:input.sideM,lengthM:L,tipInnerSideM:input.tipInnerSideM,massInnerSideM:input.massInnerSideM});
+  const L=num(input.lengthM);
+  if(input.shape==='circle'||input.sectionType==='circle'||num(input.diameterM)!=null) return calculatePileGeometry({shape:'circle',diameterM:num(input.diameterM),lengthM:L,innerDiameterTipM:num(input.innerDiameterM)});
+  if(input.shape==='rectangle'||input.sectionType==='rectangle') return calculatePileGeometry({shape:'rectangle',widthM:num(input.widthM??input.bM),heightM:num(input.heightM??input.hM),lengthM:L});
+  if(input.shape==='square'||input.sectionType==='square'||num(input.sideM)!=null||num(input.widthM)!=null) return calculatePileGeometry({shape:'square',sideM:num(input.sideM??input.widthM??input.bM),heightM:num(input.heightM??input.hM),lengthM:L});
   const area=num(input.areaM2),perimeter=num(input.perimeterM);
-  return {areaM2:area,tipAreaM2:area,perimeterM:perimeter,lengthM:L,diameterM:num(input.diameterM),sideM:num(input.sideM),verification:{status:'INPUT'}};
+  return {areaM2:area,tipAreaM2:area,perimeterM:perimeter,lengthM:L,verification:{status:'INPUT'}};
 }
 function normalizeGeoLayers10304(layers=[]){
   return (layers||[]).map((raw,index)=>({
@@ -299,11 +301,12 @@ function representativeNForLayer(points,layer){
  * copied from the standard as measured q_b/f_s values.
  */
 export function calculateSptSummary10304(input={}){
-  const geometry=geometryFromInput(input),A=num(input.areaM2)??num(geometry.tipAreaM2)??num(geometry.areaM2),u=num(input.perimeterM)??num(geometry.perimeterM);
+  let geometry; try{geometry=deriveSptSectionGeometry(input);}catch(e){return {ok:false,missing:[e.message],inputMode:'EXPLICIT_SPT_SUMMARY',provenance:PROV_SPT};}
+  const A=num(geometry.tipAreaM2)??num(geometry.areaM2),u=num(geometry.perimeterM);
   const L=num(input.lengthM),shaftStart=num(input.shaftStartDepthM)??0,shaftLength=num(input.shaftLengthM)??(L!=null?L-shaftStart:null),pileType=input.pileType||'driven';
   const tipSoilGroup=input.tipSoilGroup||input.soilGroup||'sand',shaftSoilGroup=input.shaftSoilGroup||input.soilGroup||'sand';
   const nBarTip=num(input.nBarTip),nsShaft=num(input.nsShaft),tipCuKpa=num(input.tipCuKpa),shaftCuKpa=num(input.shaftCuKpa),missing=[];
-  if(!(A>0))missing.push('A diện tích mũi');if(!(u>0))missing.push('u chu vi');if(!(L>0))missing.push('chiều dài cọc L');if(!(shaftLength>0))missing.push('chiều dài thân chịu ma sát');
+  if(!(A>0))missing.push('A diện tích mũi dẫn xuất từ b/h/D');if(!(u>0))missing.push('u chu vi dẫn xuất từ b/h/D');if(!(L>0))missing.push('chiều dài cọc L');if(!(shaftLength>0))missing.push('chiều dài thân chịu ma sát');
   if(tipSoilGroup==='sand'&&nBarTip==null)missing.push('N̄ vùng mũi do người dùng cung cấp');
   if(tipSoilGroup!=='sand'&&tipCuKpa==null)missing.push('c_u tại mũi cho đất dính');
   if(shaftSoilGroup==='sand'&&nsShaft==null)missing.push('N_s đại diện thân cọc do người dùng cung cấp');
@@ -325,13 +328,14 @@ export function calculateSptSummary10304(input={}){
     formulaCoefficientsAreNotInputs:true,
     note:'V26 chỉ nhận N̄/Ns mà người dùng nêu rõ; hệ số/cap qb,fs lấy từ table engine LOCKED, không parse 300 hoặc 2 từ công thức nguồn thành giá trị đo.'
   };
-  return {ok:true,status:'VERIFIED_SUMMARY_INPUT',inputMode:'EXPLICIT_SPT_SUMMARY',summaryInputPolicy,inputs:{...input,areaM2:A,perimeterM:u,lengthM:L,shaftStartDepthM:shaftStart,shaftLengthM:shaftLength,pileType,eta:eta.value},geometry,pileType,eta:eta.value,nBarTip,nsShaft,qbKpa:qb.value,shaftUnitResistanceKpa:shaft.value,qbLookup:qb,shaftLookup:shaft,RubKn,RufKn,RkKn,gammaK,RdKn,gammaN,NdMaxKn,noInterpolationPolicy:true,steps:[`Bảng D.1: dùng N̄ mũi do người dùng cung cấp = ${nBarTip}; q_b=${qb.value.toFixed(3)} kPa (raw=${qb.raw.toFixed(3)}, cap=${qb.cap.toFixed(3)}).`,`D.3: Ru,b=q_b·A=${RubKn.toFixed(3)} kN.`,`Bảng D.1/D.5-D.6: dùng Ns thân cọc do người dùng cung cấp = ${nsShaft}; f_s=${shaft.value.toFixed(3)} kPa; Ru,f=${RufKn.toFixed(3)} kN.`,`D.1-D.2: Rk=Ru=${RkKn.toFixed(3)} kN.${RdKn!=null?` Rd=Rk/γk=${RdKn.toFixed(3)} kN.`:''}${NdMaxKn!=null?` Nd,max=Rd/γn=${NdMaxKn.toFixed(3)} kN/cọc.`:''}`],provenance:[PROV_SPT,'V26 · Input provenance: N̄/Ns được trích từ đề bài; hệ số/cap lấy từ Bảng D.1 trong table engine LOCKED.']};
+  return {ok:true,status:'VERIFIED_SUMMARY_INPUT',inputMode:'EXPLICIT_SPT_SUMMARY',summaryInputPolicy,inputs:{...input,areaM2:A,perimeterM:u,lengthM:L,shaftStartDepthM:shaftStart,shaftLengthM:shaftLength,pileType,eta:eta.value},geometry,pileType,eta:eta.value,nBarTip,nsShaft,qbKpa:qb.value,shaftUnitResistanceKpa:shaft.value,qbLookup:qb,shaftLookup:shaft,RubKn,RufKn,RkKn,RcKKn:RkKn,gammaK,RdKn,gammaN,NdMaxKn,noInterpolationPolicy:true,steps:[`Bảng D.1: dùng N̄ mũi do người dùng cung cấp = ${nBarTip}; q_b=${qb.value.toFixed(3)} kPa (raw=${qb.raw.toFixed(3)}, cap=${qb.cap.toFixed(3)}).`,`D.3: Ru,b=q_b·A=${RubKn.toFixed(3)} kN.`,`Bảng D.1/D.5-D.6: dùng Ns thân cọc do người dùng cung cấp = ${nsShaft}; f_s=${shaft.value.toFixed(3)} kPa; Ru,f=${RufKn.toFixed(3)} kN.`,`D.1-D.2: Rk=Ru=${RkKn.toFixed(3)} kN.${RdKn!=null?` Rd=Rk/γk=${RdKn.toFixed(3)} kN.`:''}${NdMaxKn!=null?` Nd,max=Rd/γn=${NdMaxKn.toFixed(3)} kN/cọc.`:''}`],provenance:[PROV_SPT,'V26 · Input provenance: N̄/Ns được trích từ đề bài; hệ số/cap lấy từ Bảng D.1 trong table engine LOCKED.']};
 }
 
 /** Appendix D raw-profile SPT calculator. SPT PDF Decision Pass: no hidden continuous interpolation. */
 export function calculateSptPile10304(input={}){
-  const geometry=geometryFromInput(input),A=num(input.areaM2)??num(geometry.tipAreaM2)??num(geometry.areaM2),u=num(input.perimeterM)??num(geometry.perimeterM),tipDepth=num(input.tipDepthM)??num(input.lengthM),shaftStart=num(input.shaftStartDepthM)??0,pileType=input.pileType||'bored',layers=normalizeGeoLayers10304(input.layers),points=input.sptPoints||[];
-  const d=num(input.diameterM)??num(input.sideM);const missing=[];if(!(A>0))missing.push('A diện tích mũi');if(!(u>0))missing.push('u chu vi');if(!(tipDepth>0))missing.push('độ sâu mũi');if(!(d>0))missing.push('đường kính/cạnh đặc trưng d');if(!layers.length)missing.push('địa chất theo lớp');if(missing.length)return {ok:false,missing,geometry,provenance:PROV_SPT};
+  let geometry; try{geometry=deriveSptSectionGeometry(input);}catch(e){return {ok:false,missing:[e.message],provenance:PROV_SPT};}
+  const A=num(geometry.tipAreaM2)??num(geometry.areaM2),u=num(geometry.perimeterM),tipDepth=num(input.tipDepthM)??num(input.lengthM),shaftStart=num(input.shaftStartDepthM)??0,pileType=input.pileType||'bored',layers=normalizeGeoLayers10304(input.layers),points=input.sptPoints||[];
+  const d=num(geometry.characteristicM)??num(input.diameterM)??num(input.sideM);const missing=[];if(!(A>0))missing.push('A diện tích mũi');if(!(u>0))missing.push('u chu vi');if(!(tipDepth>0))missing.push('độ sâu mũi');if(!(d>0))missing.push('đường kính/cạnh đặc trưng d');if(!layers.length)missing.push('địa chất theo lớp');if(missing.length)return {ok:false,missing,geometry,provenance:PROV_SPT};
   const tip=findLayerAtDepth(layers,tipDepth,{boundaryPolicy:'deeper'})||findLayerAtDepth(layers,tipDepth,{boundaryPolicy:'shallower'});if(!tip)return {ok:false,missing:[`Không có lớp chứa mũi tại ${tipDepth} m.`],geometry,provenance:PROV_SPT};
   let eta;try{eta=sptEta10304({pileType,closedTip:input.closedTip!==false,lengthM:num(input.lengthM),innerDiameterM:num(input.innerDiameterM),eta:input.eta});}catch(e){return {ok:false,missing:[e.message],geometry,provenance:PROV_SPT};}
   let tipN=null,tipNAudit=null,tipCu=tip.cuKpa;
@@ -346,6 +350,7 @@ export function calculateSptPile10304(input={}){
     segmentResults.push({...l,hM,NUsed:N,NSource:nRep.source,NMeasuredPoints:nRep.used,unitResistanceKpa:r.value,resistanceKn,lookup:r});
   }
   const RubKn=qb.value*A,RufKn=segmentResults.reduce((s,x)=>s+x.resistanceKn,0),RkKn=RubKn+RufKn,gammaK=num(input.gammaK),RdKn=gammaK&&gammaK>0?RkKn/gammaK:null,gammaN=num(input.gammaN),NdMaxKn=RdKn!=null&&gammaN&&gammaN>0?RdKn/gammaN:null;
+  const coveredLengthM=segmentResults.reduce((sum,x)=>sum+x.hM,0),requiredShaftLengthM=Math.max(0,tipDepth-shaftStart),coverageGapM=Math.max(0,requiredShaftLengthM-coveredLengthM),warnings=coverageGapM>1e-6?[`Địa tầng chỉ phủ ${coveredLengthM.toFixed(3)} / ${requiredShaftLengthM.toFixed(3)} m chiều dài thân cọc; thiếu ${coverageGapM.toFixed(3)} m.`]:[];
   const sptDataPolicy={
     decision:'PDF-DECISION-LOCKED',
     normativeSource:'TCVN 10304:2025 · Phụ lục D · D.1–D.6 · Bảng D.1 · trang 110–111',
@@ -358,5 +363,5 @@ export function calculateSptPile10304(input={}){
     partitionedD56:true,
     partitionNote:'HNL áp dụng D.5/D.6 theo từng lớp địa chất đồng nhất rồi cộng; đây là phép phân hoạch deterministic, không phải công thức mới của TCVN.'
   };
-  return {ok:true,status:'VERIFIED',inputs:{...input,areaM2:A,perimeterM:u,tipDepthM:tipDepth,shaftStartDepthM:shaftStart,pileType,eta:eta.value},geometry,pileType,eta:eta.value,tipDepthM:tipDepth,shaftStartDepthM:shaftStart,tipLayer:tip,tipN,tipNAudit,qbKpa:qb.value,qbLookup:qb,RubKn,segmentResults,RufKn,RkKn,gammaK,RdKn,gammaN,NdMaxKn,noInterpolationPolicy:true,sptDataPolicy,steps:[`Phụ lục D/Bảng D.1: N mũi là trung bình số học các điểm SPT đo thực trong cửa sổ quy định, giới hạn N≤100; không sinh điểm bằng nội suy.`,`Bảng D.1: qb=${qb.value.toFixed(3)} kPa; Ru,b=${RubKn.toFixed(3)} kN.`,`D.5–D.6: HNL phân hoạch theo từng lớp địa chất; Ns/Nc của lớp lấy từ giá trị đại diện có provenance hoặc trung bình điểm đo thực trong [top,bottom), không nội suy theo z; Ru,f=${RufKn.toFixed(3)} kN.`,`D.1–D.2: Rk=Ru=${RkKn.toFixed(3)} kN.`],provenance:PROV_SPT};
+  return {ok:true,status:'VERIFIED',inputs:{...input,areaM2:A,perimeterM:u,tipDepthM:tipDepth,shaftStartDepthM:shaftStart,pileType,eta:eta.value},geometry,pileType,eta:eta.value,tipDepthM:tipDepth,shaftStartDepthM:shaftStart,tipLayer:tip,tipN,tipNAudit,qbKpa:qb.value,qbLookup:qb,RubKn,segmentResults,RufKn,RkKn,RcKKn:RkKn,gammaK,RdKn,gammaN,NdMaxKn,coveredLengthM,requiredShaftLengthM,coverageGapM,warnings,noInterpolationPolicy:true,sptDataPolicy,steps:[`Phụ lục D/Bảng D.1: N mũi là trung bình số học các điểm SPT đo thực trong cửa sổ quy định, giới hạn N≤100; không sinh điểm bằng nội suy.`,`Bảng D.1: qb=${qb.value.toFixed(3)} kPa; Ru,b=${RubKn.toFixed(3)} kN.`,`D.5–D.6: HNL phân hoạch theo từng lớp địa chất; Ns/Nc của lớp lấy từ giá trị đại diện có provenance hoặc trung bình điểm đo thực trong [top,bottom), không nội suy theo z; Ru,f=${RufKn.toFixed(3)} kN.`,`D.1–D.2: Rk=Ru=${RkKn.toFixed(3)} kN.`],provenance:PROV_SPT};
 }

@@ -11,6 +11,7 @@ import { calcDynamic10304, calcSingleSettlement10304, calcGroupSettlement10304, 
 import { lookupTable7Alphas10304, lookupTable8Qb10304, lookupTable15Beta1, lookupTable15SideBeta } from './tcvn10304-table-engine.js';
 import { normalizeEngineeringText, extractEngineeringNumber, inferPileGeometry } from './engineering-text-normalizer.js';
 import { extractEngineeringScalarNumber, extractSptSummaryInputV26 } from './engineering-input-interpreter.js';
+import { buildNormalizedSptGeometryInput, deriveSptSectionGeometry } from './spt-shared-spec.js';
 import { productionStatusFor, isProductionNumericAllowed } from './production-status-registry.js';
 import { calculateNearCenteredRectPileCapacity5574, combineSoilAndMaterialResistance } from './pile-material-engine.js';
 import { combineLockedPileResistance } from './pile-capacity-engine.js';
@@ -285,26 +286,28 @@ function calcCpt10304(q='') {
   return {ok:true,RkKn:Ru,inputs:{A,u,h,qs,fs,b1,b2,pile,load,soil,probe,b1Auto:!!b1Lookup,b2Auto:!!b2Lookup,saturatedSand:/bao hoa/.test(norm)},tableLookups:{b1:b1Lookup,b2:b2Lookup},steps:[`Bảng 15: β1=${b1}${b1Lookup?` (${b1Lookup.mode})`:''}; ${probe==='mechanical'?'β2':'βi'}=${b2}${b2Lookup?` (${b2Lookup.mode})`:''}.`,`CT (26): Rs=β1·qs=${Rs.toFixed(3)} kPa.`,`CT (27)/(28): f=β·fs=${f.toFixed(3)} kPa.`,`CT (25): Ru=Rs·A+f·h·u=${Ru.toFixed(3)} kN.`],provenance:['TCVN 10304:2025 · 7.3.4.2 · CT (25)-(28) · tr.55-56','Bảng 15 · tr.57 · không tự nội suy nếu không có chú thích cho phép']};
 }
 function calcSpt10304(q='', options={}) {
-  const geometry=inferPileGeometry(q),layers=parsePileLayers(q),points=parseSptPoints(q),norm=n(q); const L=explicit(q,['L','chiều dài','chieu dai'],'m?'),tipDepth=explicit(q,['z_tip','tipDepth','độ sâu mũi','do sau mui'],'m?')??L;
+  const geometry=inferPileGeometry(q),normalizedGeometry=buildNormalizedSptGeometryInput(q,geometry),layers=parsePileLayers(q),points=parseSptPoints(q),norm=n(q); const L=normalizedGeometry.lengthM??explicit(q,['L','chiều dài','chieu dai'],'m?'),tipDepth=explicit(q,['z_tip','tipDepth','độ sâu mũi','do sau mui'],'m?')??L;
   const pileType=/coc vit/.test(norm)?'screw':(/rung.*moi dat|ống rung|ong rung/.test(norm)?'vibro-pipe':(/coc dong|coc ep|đóng|ép/.test(norm)?'driven':'bored'));
   if(layers.length&&tipDepth!=null&&(points.length||layers.some(x=>x.sptN!=null||x.cuKpa!=null))){
-    const rawExcelInput={pileType,shape:geometry.shape,diameterM:geometry.diameterM,sideM:geometry.sideM,areaM2:geometry.areaM2,perimeterM:geometry.perimeterM,lengthM:L,tipDepthM:tipDepth,shaftStartDepthM:explicit(q,['shaftStart','z_head','độ sâu đầu cọc','do sau dau coc'],'m?')??0,layers,sptPoints:points,closedTip:!/hở mũi|ho mui|open tip/.test(norm),innerDiameterM:explicit(q,['d_in','dtrong','đường kính trong','duong kinh trong'],'m?'),gammaK:explicit(q,['gamma_k','γk']),gammaN:explicit(q,['gamma_n','γn'])};
+    const rawExcelInput={pileType,sectionType:normalizedGeometry.sectionType,shape:normalizedGeometry.sectionType,widthM:normalizedGeometry.widthM,heightM:normalizedGeometry.heightM,diameterM:normalizedGeometry.diameterM,sideM:normalizedGeometry.sideM,lengthM:L,tipDepthM:tipDepth,shaftStartDepthM:explicit(q,['shaftStart','z_head','độ sâu đầu cọc','do sau dau coc'],'m?')??0,layers,sptPoints:points,closedTip:!/hở mũi|ho mui|open tip/.test(norm),innerDiameterM:explicit(q,['d_in','dtrong','đường kính trong','duong kinh trong'],'m?'),gammaK:explicit(q,['gamma_k','γk']),gammaN:explicit(q,['gamma_n','γn'])};
     const result=calculateSptPile10304(rawExcelInput); if(result.ok) result.excelInputs=rawExcelInput; return result;
   }
 
   // V26: natural-language SPT summary route. The interpreter may use AI only to
   // identify inputs/semantics; the deterministic engine below owns all formulas.
   const interpreted=extractSptSummaryInputV26(q,options.aiExtraction||null);
-  const summaryReady=interpreted.soilGroup==='sand'&&interpreted.pileType!=='unknown'&&interpreted.fullShaft&&interpreted.lengthM>0&&interpreted.nBarTip!=null&&interpreted.nsShaft!=null&&geometry.areaM2>0&&geometry.perimeterM>0;
+  let summaryGeometry=null; try{summaryGeometry=deriveSptSectionGeometry(interpreted);}catch{}
+  const summaryReady=interpreted.soilGroup==='sand'&&interpreted.pileType!=='unknown'&&interpreted.fullShaft&&interpreted.lengthM>0&&interpreted.nBarTip!=null&&interpreted.nsShaft!=null&&summaryGeometry?.areaM2>0&&summaryGeometry?.perimeterM>0;
   if(summaryReady){
     const summaryInput={
       inputMode:'EXPLICIT_SPT_SUMMARY',
       pileType:interpreted.pileType,
-      shape:geometry.shape,
-      diameterM:geometry.diameterM,
-      sideM:geometry.sideM,
-      areaM2:geometry.areaM2,
-      perimeterM:geometry.perimeterM,
+      sectionType:interpreted.sectionType,
+      shape:interpreted.sectionType,
+      widthM:interpreted.widthM,
+      heightM:interpreted.heightM,
+      diameterM:interpreted.diameterM,
+      sideM:interpreted.sideM,
       lengthM:interpreted.lengthM,
       shaftStartDepthM:0,
       shaftLengthM:interpreted.shaftLengthM,

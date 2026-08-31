@@ -1,10 +1,45 @@
 name: HNL SPT Excel Golden Hardening
 on:
+  push:
+    branches: [repair/spt-excel-golden-hardening]
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  status:
+  linux-golden:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
-      - run: echo "SPT Golden workflow is being finalized; no branch auto-run during controlled hardening."
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: {node-version: 22, cache: npm}
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install spreadsheet runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libreoffice-calc
+          libreoffice --version
+      - name: Focused SPT Golden
+        run: node --test tests/spt-excel-golden-hardening.test.mjs tests/spt-excel-parity-provenance.test.mjs
+      - name: Mandatory spreadsheet runtime Web parity
+        run: node scripts/spt-spreadsheet-runtime-golden.mjs
+      - name: Existing SPT Decision Golden
+        run: npm run golden:spt-decision
+      - name: Full regression
+        run: npm test
+      - name: Excel Production smoke
+        run: npm run excel:production-smoke
+      - name: Master Audit enforce all
+        run: node scripts/master-system-audit.mjs --enforce-all
+      - name: Search/P4 safety locks
+        run: |
+          npm run check:search
+          node -e "const fs=require('fs');const s=fs.readFileSync('src/p4-pdf-excel-intelligence.js','utf8');if(!s.includes(\"P4_PROMOTION_STATE = 'SHADOW_ONLY'\"))throw Error('P4 drift')"
+      - name: Build Web
+        run: npm run build:web
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: spt-spreadsheet-runtime-evidence
+          path: artifacts/spt-spreadsheet-runtime/**

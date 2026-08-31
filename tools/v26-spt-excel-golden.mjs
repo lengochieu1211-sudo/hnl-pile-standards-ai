@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { engineeringExcelPayload } from '../src/engineering-router.js';
-import { exportUnifiedEngineeringWorkbook } from '../src/excel-export.js';
+import { exportUnifiedEngineeringWorkbook } from '../src/excel-export-compat.js';
 
 const QUESTION=`Tính sức chịu tải cọc đóng/ép vuông 400×400 mm, L=10 m theo SPT, Phụ lục D TCVN 10304:2025.
 Cọc mũi kín, η=1,0.
@@ -18,6 +18,10 @@ assert.equal(payload.recognized,true);
 assert.equal(payload.canExport,true);
 assert.equal(payload.workflow.id,'10304-spt');
 assert.equal(payload.input.inputMode,'EXPLICIT_SPT_SUMMARY');
+assert.equal(payload.input.sectionType,'square');
+assert.ok(Math.abs(Number(payload.input.widthM)-0.4)<1e-12);
+assert.ok(Math.abs(Number(payload.input.heightM)-0.4)<1e-12);
+assert.ok(Math.abs(Number(payload.input.lengthM)-10)<1e-12);
 
 let captured=null;
 globalThis.__HNL_CAPTURE_XLSX__=(buf,name)=>{
@@ -25,13 +29,14 @@ globalThis.__HNL_CAPTURE_XLSX__=(buf,name)=>{
   return captured;
 };
 await exportUnifiedEngineeringWorkbook(payload);
-assert.ok(captured?.buffer?.length>1000,'Excel exporter did not return a workbook buffer');
+assert.ok(captured?.buffer?.length>1000,'Production Excel exporter did not return a workbook buffer');
 
 const mod=await import('exceljs');
 const ExcelJS=mod.default||mod;
 const wb=new ExcelJS.Workbook();
 await wb.xlsx.load(captured.buffer);
-for(const sheet of ['00_HUONG_DAN','01_INPUT','02_CALC','03_NGUON','04_BANG_D1']) assert.ok(wb.getWorksheet(sheet),`missing sheet ${sheet}`);
+for(const sheet of ['00_HUONG_DAN','01_INPUT','02_CALC','04_BANG_D1']) assert.ok(wb.getWorksheet(sheet),`missing sheet ${sheet}`);
+assert.ok(wb.getWorksheet('98_NGUON')||wb.getWorksheet('03_NGUON')||wb.worksheets.find(s=>/NGUON|SOURCE/i.test(s.name)),'missing provenance/source sheet');
 const input=wb.getWorksheet('01_INPUT'),calc=wb.getWorksheet('02_CALC'),d1=wb.getWorksheet('04_BANG_D1');
 const findRow=(ws,label)=>{
   let found=null;
@@ -40,22 +45,53 @@ const findRow=(ws,label)=>{
   return found;
 };
 const num=v=>Number(v?.result??v?.value??v);
+const formula=(ws,label)=>String(findRow(ws,label).getCell(2).value?.formula||'');
+
 assert.equal(num(findRow(input,'N̄ vùng mũi').getCell(2).value),20);
 assert.equal(num(findRow(input,'Ns thân cọc').getCell(2).value),20);
 assert.equal(num(findRow(input,'η').getCell(2).value),1);
-assert.ok(Math.abs(num(findRow(input,'A').getCell(2).value)-0.16)<1e-9);
-assert.ok(Math.abs(num(findRow(input,'u').getCell(2).value)-1.6)<1e-9);
-assert.equal(num(findRow(input,'Ls').getCell(2).value),10);
+assert.equal(String(findRow(input,'Tiết diện').getCell(2).value),'Vuông');
+assert.equal(num(findRow(input,'b').getCell(2).value),400);
+assert.equal(num(findRow(input,'h').getCell(2).value),400);
+assert.equal(num(findRow(input,'L').getCell(2).value),10);
 assert.equal(num(findRow(input,'γk').getCell(2).value),1.5);
 assert.equal(num(findRow(input,'γn').getCell(2).value),1.15);
 
-const qbFormula=String(findRow(calc,'q_b').getCell(2).value?.formula||'');
-const fsFormula=String(findRow(calc,'f_s').getCell(2).value?.formula||'');
-const rkFormula=String(findRow(calc,'R_c,k / R_k').getCell(2).value?.formula||'');
-const ndFormula=String(findRow(calc,'N_d,max').getCell(2).value?.formula||'');
-assert.match(qbFormula,/XLOOKUP/); assert.match(qbFormula,/MIN\(/); assert.match(qbFormula,/Nbar|B\d+/i);
-assert.match(fsFormula,/XLOOKUP/); assert.match(fsFormula,/MIN\(/);
-assert.match(rkFormula,/\+/); assert.match(ndFormula,/γn|B\d+/i);
+// Geometry-first contract: b/h/D are editable source inputs; A/u are live derived formulas.
+const areaInputFormula=formula(input,'A_b (dẫn xuất)');
+const perimeterInputFormula=formula(input,'u (dẫn xuất)');
+const areaCalcFormula=formula(calc,'A_b');
+const perimeterCalcFormula=formula(calc,'u');
+assert.ok(areaInputFormula,'A_b input-side derived formula missing');
+assert.ok(perimeterInputFormula,'u input-side derived formula missing');
+assert.ok(areaCalcFormula,'A_b calc formula missing');
+assert.ok(perimeterCalcFormula,'u calc formula missing');
+assert.match(areaInputFormula,/\/1000/);
+assert.match(perimeterInputFormula,/\/1000/);
+assert.match(areaInputFormula,/PI\(\)/);
+assert.match(perimeterInputFormula,/PI\(\)/);
+
+const qbFormula=formula(calc,'q_b');
+const fsFormula=formula(calc,'f_s');
+const rubFormula=formula(calc,'R_u,b');
+const rufFormula=formula(calc,'R_u,f');
+const rkFormula=formula(calc,'R_c,k / R_k');
+const rdFormula=formula(calc,'R_d');
+const ndFormula=formula(calc,'N_d,max');
+assert.match(qbFormula,/VLOOKUP/); assert.match(qbFormula,/MIN\(/); assert.match(qbFormula,/B\d+/i);
+assert.match(fsFormula,/VLOOKUP/); assert.match(fsFormula,/MIN\(/);
+assert.match(rubFormula,/B\d+\*B\d+/);
+assert.match(rufFormula,/B\d+/);
+assert.match(rkFormula,/\+/); assert.ok(rdFormula); assert.match(ndFormula,/B\d+/i);
+
+const allFormulas=[];
+for(const ws of wb.worksheets) ws.eachRow(row=>row.eachCell(cell=>{
+  const v=cell.value;
+  if(v&&typeof v==='object'&&typeof v.formula==='string') allFormulas.push(v.formula);
+}));
+for(const modern of ['XLOOKUP(','LET(','LAMBDA(','SWITCH(','IFS(']){
+  assert.equal(allFormulas.some(f=>f.toUpperCase().includes(modern)),false,`Production workbook still contains ${modern}`);
+}
 
 const drivenRow=[];
 d1.eachRow((row,index)=>{if(index>1&&String(row.getCell(1).value)==='driven') drivenRow.push(...row.values.slice(1));});
@@ -69,10 +105,12 @@ fs.mkdirSync(path.dirname(out),{recursive:true});
 fs.writeFileSync(out,captured.buffer);
 const evidence={
   schema:'HNL-V26-SPT-EXCEL-GOLDEN',status:'PASS',fileName:captured.fileName,bytes:captured.buffer.length,
+  contract:'GEOMETRY_FIRST_PRODUCTION_FORMULA_ONLY',
   sheets:wb.worksheets.map(s=>s.name),
-  verifiedInputs:{Nbar:20,Ns:20,eta:1,A:0.16,u:1.6,Ls:10,gammaK:1.5,gammaN:1.15},
-  formulaChecks:{qb:qbFormula,fs:fsFormula,Rk:rkFormula,NdMax:ndFormula},
-  note:'Workbook stores editable inputs and real Excel formulas; V26 Golden does not rely on cached numeric results.'
+  sourceInputs:{sectionType:'Vuông',bMm:400,hMm:400,lengthM:10,Nbar:20,Ns:20,eta:1,gammaK:1.5,gammaN:1.15},
+  derivedFormulaChecks:{areaInput:areaInputFormula,perimeterInput:perimeterInputFormula,areaCalc:areaCalcFormula,perimeterCalc:perimeterCalcFormula},
+  resistanceFormulaChecks:{qb:qbFormula,fs:fsFormula,Rub:rubFormula,Ruf:rufFormula,Rk:rkFormula,Rd:rdFormula,NdMax:ndFormula},
+  note:'Production workbook keeps b/h/D as editable source geometry and A/u as formulas. Numeric recalculation parity is certified separately by the mandatory SPT spreadsheet runtime Golden.'
 };
 fs.writeFileSync(path.resolve('artifacts/v26/V26_SPT_EXCEL_GOLDEN_RESULT.json'),JSON.stringify(evidence,null,2)+'\n');
-console.log(`V26 SPT Excel Golden: PASS · ${captured.buffer.length} bytes · ${out}`);
+console.log(`V26 SPT Excel Golden: PASS · geometry-first Production contract · ${captured.buffer.length} bytes · ${out}`);

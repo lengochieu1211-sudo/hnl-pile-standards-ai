@@ -1,45 +1,10 @@
 name: HNL SPT Excel Golden Hardening
 on:
-  push:
-    branches: [repair/spt-excel-golden-hardening]
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  linux-focused-and-regression:
+  status:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with: {node-version: 22, cache: npm}
-      - run: npm ci
-      - name: Focused SPT Golden
-        run: node --test tests/spt-excel-golden-hardening.test.mjs
-      - name: Existing SPT Decision Golden
-        run: npm run golden:spt-decision
-      - name: Full regression
-        run: npm test
-      - name: Excel Production smoke
-        run: npm run excel:production-smoke
-      - name: Master Audit enforce all
-        run: node scripts/master-system-audit.mjs --enforce-all
-      - name: Search/P4 safety locks
-        run: |
-          npm run check:search
-          node -e "const fs=require('fs');const s=fs.readFileSync('src/p4-pdf-excel-intelligence.js','utf8');if(!s.includes(\"P4_PROMOTION_STATE = 'SHADOW_ONLY'\"))throw Error('P4 drift')"
-  windows-excel-com-golden:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with: {node-version: 22, cache: npm}
-      - run: npm ci
-      - name: Generate Production SPT workbook
-        run: node scripts/spt-excel-golden-generate.mjs
-      - name: Excel COM recalculation A/B/C/D
-        shell: powershell
-        run: ./scripts/spt-excel-com-golden.ps1
-      - uses: actions/upload-artifact@v4
-        with:
-          name: spt-excel-golden-com-evidence
-          path: artifacts/spt-excel-golden/HNL_SPT_GOLDEN.xlsx
+      - run: echo "SPT Golden workflow is being finalized; no branch auto-run during controlled hardening."

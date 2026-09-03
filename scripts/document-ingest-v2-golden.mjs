@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import ExcelJS from 'exceljs';
 import { isModernOfficeFileName, isLegacyOfficeFileName, parseOfficeFile } from '../src/office-ingest.js';
-import { parseInputFile } from '../src/ingest.js';
+import { parseImageSourceFile } from '../src/image-source-ingest.js';
 
 function fakeFile(name, bytes, type = '') {
   const data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
@@ -95,14 +95,14 @@ assert.equal(xlsm.officeMeta.format, 'xlsm');
 assert.match(allText(xlsm), /B4: =B2\*B3 → 0\.16/);
 console.log('PASS 4/6 · XLSM workbook content path');
 
-const image = await parseInputFile(fakeFile('mat-cat.png', new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]), 'image/png'), { sourcePath: 'du-an/mat-cat.png' });
+const image = await parseImageSourceFile(fakeFile('mat-cat.png', new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]), 'image/png'), { sourcePath: 'du-an/mat-cat.png' });
 assert.equal(image.sourceKind, 'image');
 assert.equal(image.viewerKind, 'image');
 assert.equal(image.provenance.status, 'REVIEW');
 assert.equal(image.provenance.calculationMutationAllowed, false);
 assert.match(image.fingerprint, /^[0-9a-f]{64}$/);
 assert.match(allText(image), /Hình ảnh nguồn: du-an\/mat-cat\.png/);
-console.log('PASS 5/6 · image production ingest + REVIEW provenance');
+console.log('PASS 5/6 · image source ingest + REVIEW provenance');
 
 await assert.rejects(
   () => parseOfficeFile(fakeFile('legacy.xls', new Uint8Array([1, 2, 3]))),

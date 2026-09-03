@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#102b4e" />
-    <meta name="description" content="HNL Pile Standards AI - đọc PDF/ZIP/thư mục/hình ảnh, hỏi đáp AI offline/online và tra cứu tiêu chuẩn cọc." />
+    <meta name="description" content="HNL Pile Standards AI - đọc PDF/Word/Excel/ZIP/thư mục/hình ảnh, hỏi đáp AI offline/online và tra cứu tiêu chuẩn cọc." />
     <link rel="icon" href="./favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" sizes="32x32" href="./hnl-mark-32.png" />
     <link rel="icon" type="image/png" sizes="64x64" href="./hnl-mark-64.png" />
@@ -36,6 +36,9 @@
       })();
     </script>
     <script type="module" src="/src/main.js"></script>
+    <!-- Document Ingest v2: keeps the core main.js renderer untouched while
+         exposing DOCX + XLSX/XLSM in every re-rendered source picker. -->
+    <script type="module" src="/src/document-input-ui.js"></script>
     <!-- v1.27 research only: observes the real region-selection UI without
          replacing v1.26 Production behavior. Remove/disable with ?pdfshadow=off. -->
     <script type="module" src="/src/pdf-intelligence/region-shadow-ui.js"></script>

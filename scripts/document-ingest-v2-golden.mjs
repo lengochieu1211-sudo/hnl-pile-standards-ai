@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import ExcelJS from 'exceljs';
 import { isModernOfficeFileName, isLegacyOfficeFileName, parseOfficeFile } from '../src/office-ingest.js';
+import { parseInputFile } from '../src/ingest.js';
 
 function fakeFile(name, bytes, type = '') {
   const data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
@@ -13,6 +14,9 @@ function fakeFile(name, bytes, type = '') {
     lastModified: 1788147631000,
     async arrayBuffer() {
       return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+    },
+    async text() {
+      return new TextDecoder().decode(data);
     }
   };
 }
@@ -55,7 +59,7 @@ assert.equal(isModernOfficeFileName('spt.xlsx'), true);
 assert.equal(isModernOfficeFileName('spt.xlsm'), true);
 assert.equal(isLegacyOfficeFileName('cu.xls'), true);
 assert.equal(isLegacyOfficeFileName('cu.doc'), true);
-console.log('PASS 1/5 · extension contract');
+console.log('PASS 1/6 · extension contract');
 
 const docxBytes = await makeDocx();
 const word = await parseOfficeFile(fakeFile('bao-cao.docx', docxBytes), { sourcePath: 'du-an/bao-cao.docx' });
@@ -69,7 +73,7 @@ assert.match(wordText, /Cọc BTCT 400x400, dài 10m/);
 assert.match(wordText, /Lớp 1/);
 assert.match(wordText, /Ns=20/);
 assert.match(wordText, /HNL nguồn Word/);
-console.log('PASS 2/5 · real DOCX text/table/header + provenance');
+console.log('PASS 2/6 · real DOCX text/table/header + provenance');
 
 const xlsxBytes = await makeXlsx();
 const excel = await parseOfficeFile(fakeFile('spt.xlsx', xlsxBytes), { sourcePath: 'du-an/spt.xlsx' });
@@ -84,12 +88,21 @@ assert.match(excelText, /\[Sheet: INPUT_SPT\]/);
 assert.match(excelText, /B4: =B2\*B3 → 0\.16/);
 assert.match(excelText, /\[Sheet: DIA_CHAT\]/);
 assert.match(excelText, /Cát/);
-console.log('PASS 3/5 · real XLSX sheets/cells/formula + provenance');
+console.log('PASS 3/6 · real XLSX sheets/cells/formula + provenance');
 
 const xlsm = await parseOfficeFile(fakeFile('spt.xlsm', xlsxBytes, 'application/vnd.ms-excel.sheet.macroEnabled.12'), { sourcePath: 'du-an/spt.xlsm' });
 assert.equal(xlsm.officeMeta.format, 'xlsm');
 assert.match(allText(xlsm), /B4: =B2\*B3 → 0\.16/);
-console.log('PASS 4/5 · XLSM workbook content path');
+console.log('PASS 4/6 · XLSM workbook content path');
+
+const image = await parseInputFile(fakeFile('mat-cat.png', new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]), 'image/png'), { sourcePath: 'du-an/mat-cat.png' });
+assert.equal(image.sourceKind, 'image');
+assert.equal(image.viewerKind, 'image');
+assert.equal(image.provenance.status, 'REVIEW');
+assert.equal(image.provenance.calculationMutationAllowed, false);
+assert.match(image.fingerprint, /^[0-9a-f]{64}$/);
+assert.match(allText(image), /Hình ảnh nguồn: du-an\/mat-cat\.png/);
+console.log('PASS 5/6 · image production ingest + REVIEW provenance');
 
 await assert.rejects(
   () => parseOfficeFile(fakeFile('legacy.xls', new Uint8Array([1, 2, 3]))),
@@ -103,6 +116,6 @@ assert.match(uiModule, /\.xlsx/);
 assert.match(uiModule, /\.xlsm/);
 assert.doesNotMatch(uiModule, /'\.doc'/);
 assert.doesNotMatch(uiModule, /'\.xls'/);
-console.log('PASS 5/5 · legacy safety + production picker contract');
+console.log('PASS 6/6 · legacy safety + production picker contract');
 
-console.log('DOCUMENT INGEST V2 GOLDEN: PASS 5/5');
+console.log('DOCUMENT INGEST V2 GOLDEN: PASS 6/6');

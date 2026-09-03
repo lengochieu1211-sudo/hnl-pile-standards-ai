@@ -1,4 +1,5 @@
 import { parsePdf } from './pdf.js';
+import { isModernOfficeFileName, isLegacyOfficeFileName, officeMimeForName, parseOfficeFile } from './office-ingest.js';
 
 const TEXT_EXT = /\.(txt|md|csv|json|xml|html?|log|ini|cfg|yaml|yml)$/i;
 const IMAGE_EXT = /\.(png|jpe?g|webp|bmp|gif)$/i;
@@ -12,6 +13,8 @@ function ext(name='') {
 }
 
 export function inferMime(name='') {
+  const officeMime = officeMimeForName(name);
+  if (officeMime) return officeMime;
   const e = ext(name);
   const map = {
     '.pdf':'application/pdf', '.txt':'text/plain', '.md':'text/markdown', '.csv':'text/csv', '.json':'application/json',
@@ -23,15 +26,26 @@ export function inferMime(name='') {
 }
 
 export function supportedInput(name='') {
-  return PDF_EXT.test(name) || TEXT_EXT.test(name) || IMAGE_EXT.test(name) || ZIP_EXT.test(name);
+  return PDF_EXT.test(name) || TEXT_EXT.test(name) || IMAGE_EXT.test(name) || ZIP_EXT.test(name) || isModernOfficeFileName(name) || isLegacyOfficeFileName(name);
 }
 
 export function isArchiveFile(name='') { return LOCAL_ARCHIVE_EXT.test(String(name || '')); }
 
-
 async function sha256Hex(buffer) {
   const hash = await crypto.subtle.digest('SHA-256', buffer);
   return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function reviewProvenance({ sourceKind, sourcePath, fingerprint, extractor, details = {} }) {
+  return {
+    status: 'REVIEW',
+    sourceKind,
+    sourcePath,
+    fingerprint,
+    extractor,
+    calculationMutationAllowed: false,
+    ...details
+  };
 }
 
 function splitTextPages(text, maxChars = 6500) {
@@ -61,11 +75,13 @@ async function parseTextFile(file, sourcePath='') {
   if (/\.json$/i.test(file.name)) {
     try { text = JSON.stringify(JSON.parse(text), null, 2); } catch { /* keep original */ }
   }
-  const pages = splitTextPages(text);
+  const resolvedPath = sourcePath || file.name;
+  const pages = splitTextPages(text).map(page => ({ ...page, sourceKind: 'text' }));
   return {
     id: crypto.randomUUID(), fingerprint, name: file.name, standard: file.name.replace(/\.[^.]+$/, ''),
     pageCount: pages.length, size: file.size, type: file.type || inferMime(file.name), createdAt: new Date().toISOString(),
-    blob: file, textChars: text.length, scannedLikely: false, pages, viewerKind: 'text', sourcePath
+    blob: file, textChars: text.length, scannedLikely: false, pages, viewerKind: 'text', sourceKind: 'text', sourcePath: resolvedPath,
+    provenance: reviewProvenance({ sourceKind: 'text', sourcePath: resolvedPath, fingerprint, extractor: 'UTF8_TEXT' })
   };
 }
 
@@ -84,12 +100,15 @@ async function parseImageFile(file, sourcePath='') {
   const buffer = await file.arrayBuffer();
   const fingerprint = await sha256Hex(buffer);
   const browserText = await tryBrowserOcr(file);
-  const baseText = browserText || `Hình ảnh nguồn: ${sourcePath || file.name}. Chưa có OCR cục bộ. Khi dùng Gemini hoặc HNL Offline AI có model nhìn ảnh, trợ lý có thể đọc trực tiếp hình này.`;
+  const resolvedPath = sourcePath || file.name;
+  const baseText = browserText || `Hình ảnh nguồn: ${resolvedPath}. Chưa có OCR cục bộ. Khi dùng Gemini hoặc HNL Offline AI có model nhìn ảnh, trợ lý có thể đọc trực tiếp hình này.`;
+  const extractor = browserText ? 'BROWSER_TEXT_DETECTOR' : 'VISION_REVIEW_REQUIRED';
   return {
     id: crypto.randomUUID(), fingerprint, name: file.name, standard: file.name.replace(/\.[^.]+$/, ''),
     pageCount: 1, size: file.size, type: file.type || inferMime(file.name), createdAt: new Date().toISOString(),
-    blob: file, textChars: browserText.length, scannedLikely: false, pages: [{ page: 1, text: baseText }],
-    viewerKind: 'image', sourcePath, ocrStatus: browserText ? 'browser' : 'vision'
+    blob: file, textChars: browserText.length, scannedLikely: false, pages: [{ page: 1, text: baseText, sourceKind: 'image' }],
+    viewerKind: 'image', sourceKind: 'image', sourcePath: resolvedPath, ocrStatus: browserText ? 'browser' : 'vision',
+    provenance: reviewProvenance({ sourceKind: 'image', sourcePath: resolvedPath, fingerprint, extractor })
   };
 }
 
@@ -151,14 +170,18 @@ export async function extractZip(file, { maxEntries = 800, maxUncompressed = 350
 }
 
 export async function parseInputFile(file, { sourcePath = '', onPdfProgress = () => {} } = {}) {
+  const resolvedPath = sourcePath || file.name;
   if (PDF_EXT.test(file.name) || file.type === 'application/pdf') {
     const doc = await parsePdf(file, onPdfProgress);
     doc.viewerKind = 'pdf';
-    doc.sourcePath = sourcePath;
+    doc.sourceKind = 'pdf';
+    doc.sourcePath = resolvedPath;
+    doc.provenance = reviewProvenance({ sourceKind: 'pdf', sourcePath: resolvedPath, fingerprint: doc.fingerprint || '', extractor: 'PDFJS_NATIVE_OR_EXISTING_PDF_PIPELINE' });
     return doc;
   }
-  if (IMAGE_EXT.test(file.name) || String(file.type).startsWith('image/')) return parseImageFile(file, sourcePath);
-  if (TEXT_EXT.test(file.name) || String(file.type).startsWith('text/')) return parseTextFile(file, sourcePath);
+  if (isModernOfficeFileName(file.name) || isLegacyOfficeFileName(file.name)) return parseOfficeFile(file, { sourcePath: resolvedPath });
+  if (IMAGE_EXT.test(file.name) || String(file.type).startsWith('image/')) return parseImageFile(file, resolvedPath);
+  if (TEXT_EXT.test(file.name) || String(file.type).startsWith('text/')) return parseTextFile(file, resolvedPath);
   throw new Error(`Chưa hỗ trợ loại file: ${file.name}`);
 }
 

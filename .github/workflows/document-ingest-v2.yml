@@ -1,0 +1,41 @@
+name: HNL Document Ingest v2 · Word Excel Image
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, feature/document-ingest-v2]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  document-ingest-golden:
+    name: DOCX + XLSX/XLSM + Image provenance + full regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Document Ingest v2 Golden
+        run: node scripts/document-ingest-v2-golden.mjs
+      - name: Release synchronization lock
+        run: npm run gate:release-sync
+      - name: Search Brain lock
+        run: npm run check:search
+      - name: Full locked regression
+        run: npm run gate:pass83-tests
+      - name: Excel Production smoke
+        run: npm run excel:production-smoke
+      - name: Master Audit P0
+        run: node scripts/master-system-audit.mjs --enforce-p0
+      - name: Build Web
+        run: npm run build:web
+      - name: Build Desktop UI
+        run: npm run build:desktop

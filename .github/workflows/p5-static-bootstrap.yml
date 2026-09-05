@@ -17,5 +17,5 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Apply P5.3 patch, run gates, commit final tree
-        run: node scripts/p5-static-bootstrap.mjs
+      - name: Apply P5.3 patch, run gates, commit source tree
+        run: node scripts/p5-static-bootstrap-safe.mjs

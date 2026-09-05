@@ -1,0 +1,36 @@
+name: P5.5 Settlement CT46 Bootstrap
+
+on:
+  push:
+    branches: [p5/settlement-promotion]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch-source:
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: p5/settlement-promotion
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Apply source patch
+        run: node scripts/p5-settlement-bootstrap.mjs
+      - name: Commit patched source when changed
+        shell: bash
+        run: |
+          if git diff --quiet -- src/tcvn10304-advanced.js; then
+            echo 'Source already patched.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/tcvn10304-advanced.js
+          git commit -m 'feat(p5.5): add CT46 irregular interaction branch'
+          git push origin HEAD:p5/settlement-promotion

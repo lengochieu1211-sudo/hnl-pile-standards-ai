@@ -43,13 +43,15 @@
     "scripts/spt-excel-golden-generate.mjs": "dcf5c993168e18d218e33d9e147589cc27b1995c9f0637fb2656672ff6d44156",
     "scripts/spt-spreadsheet-runtime-golden.mjs": "1ac9ded4ea533c90711af6f1e378301a42912d332e721e9f5c42255abe64eab9",
     "src/engineering-input-interpreter.js": "a62e4d2550584caf19a600c204e90ed7b2a32af77fe0012ebaf3f993e98df45d",
-    "src/engineering-router.js": "236442d07a8ade6303e6e9aa0038b083776ad1cc13c8282e77dfdae7cdaf54eb",
+    "src/engineering-router.js": "fcde1ce8870f3a5922a36ca1c040e2330b482839e794374bc905810bcdc22ecf",
     "src/excel-export.js": "c611cbb5243b1530366eee0913473b66c025cd430dc2db5f25ce7e9416baaefb",
     "src/pile-geometry-engine.js": "6ea077c65c98d6649060a8c4ddfd76095679efa7bb16c5ee9c0f32e995e22561",
     "src/pile-workflows.js": "7a30166a35026c0c6e01069ba586a2ca73b2ac14e90d4796c776b58b4ddceb5a",
     "src/spt-shared-spec.js": "6e59289ddd2b74d2f6478cf8e323a18e1f62d8c86cbaa76eeadacec026d0aff8",
     "tests/spt-excel-golden-hardening.test.mjs": "75fabeaf9addc4c9e50a14e612ec375851bdffd7e5f375a35659631535979ccd",
     "tests/spt-excel-parity-provenance.test.mjs": "efb28a2c6c8f59496ae2eedca9af682c3f1a07023a984d0ff9069eab875c5689",
-    "tools/pass83-source-sync-gate.mjs": "f439e16243d63331335fe9a5a5a7e8a7c5e2119691ff9dd0e6cd1a900e5933a9"
+    "tools/pass83-source-sync-gate.mjs": "e668935da2c7dbcc63dd59787c3d6503de76724c719253c18caf2a8994cf9f9a",
+    "tools/pass83-test-count-gate.mjs": "a4fda548cac9f1ba378cd71fd6c1febede9342e31cc0792b360d065874ccc7e6",
+    "tests/p5-static-load-promotion.test.mjs": "af1cbe72ca5492ba0f74be08d9b743382cf56308629ee8adc66a492f7d6a983a"
   }
 }

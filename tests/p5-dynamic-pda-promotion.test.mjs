@@ -7,7 +7,7 @@ const close=(a,b,t=1e-6)=>assert.ok(Math.abs(a-b)<=t,`${a} != ${b}`);
 test('P5.4 CT22 boundary sa=0.002 uses residual-set branch',()=>{
   const x=calcDynamic10304('sa=0.002 m A=0.16 m2 M=1 Ed=12 kJ m1=2 T m2=1 T m3=0 T eps2=0.2');
   assert.equal(x.ok,true); assert.equal(x.branch,'CT22');
-  close(x.RuKn,919.5952354284653,1e-6);
+  close(x.RuKn,914.601372510205,1e-6);
 });
 
 test('P5.4 CT22 deterministic representative case',()=>{

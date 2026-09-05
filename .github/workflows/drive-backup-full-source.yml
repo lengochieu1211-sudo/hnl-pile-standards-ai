@@ -1,0 +1,48 @@
+name: Temporary Drive Backup Full Source
+
+on:
+  push:
+    branches:
+      - backup/chat-handoff-2026-09-05
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact production main
+        uses: actions/checkout@v5
+        with:
+          ref: a91f632f807a58e9a819a1b8ea7cfc737f5988d4
+          fetch-depth: 1
+          path: source
+
+      - name: Verify exact source SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git -C source rev-parse HEAD)"
+          test "$actual" = "a91f632f807a58e9a819a1b8ea7cfc737f5988d4"
+          echo "Exact source: $actual"
+
+      - name: Create exact full-source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C source archive --format=zip --output="../HNL-Pile-Standards-AI-v1.27.0-FULL-SOURCE-a91f632f.zip" HEAD
+          sha256sum HNL-Pile-Standards-AI-v1.27.0-FULL-SOURCE-a91f632f.zip > HNL-Pile-Standards-AI-v1.27.0-FULL-SOURCE-a91f632f.zip.sha256
+          ls -lh HNL-Pile-Standards-AI-v1.27.0-FULL-SOURCE-a91f632f.zip*
+
+      - name: Upload exact full-source archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: HNL-Pile-Standards-AI-v1.27.0-FULL-SOURCE-a91f632f
+          path: |
+            HNL-Pile-Standards-AI-v1.27.0-FULL-SOURCE-a91f632f.zip
+            HNL-Pile-Standards-AI-v1.27.0-FULL-SOURCE-a91f632f.zip.sha256
+          if-no-files-found: error
+          retention-days: 14

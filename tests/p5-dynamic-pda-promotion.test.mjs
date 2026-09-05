@@ -32,9 +32,13 @@ test('P5.4 CT24 derived-theta path refuses incomplete geometry',()=>{
   assert.equal(x.ok,false); assert.ok(x.missing.includes('A (m²)')); assert.ok(x.missing.includes('A_f (m²)'));
 });
 
-test('P5.4 PDA/HSDT isolation: PDA alone is not falsely routed through CT22-24',()=>{
+test('P5.4 PDA/HSDT safety boundary: no numeric CT22-24 result without required dynamic inputs',()=>{
   const x=solveEngineeringQuestion('PDA HSDT xác định sức chịu tải cọc từ báo cáo thử động biến dạng lớn');
-  assert.notEqual(x?.workflow?.id,'10304-dynamic');
+  assert.equal(x?.workflow?.id,'10304-dynamic');
+  assert.equal(x?.result?.ok,false);
+  assert.ok(x?.result?.missing?.some(v=>v.includes('s_a')));
+  const pdaExport=engineeringExcelPayload('PDA HSDT xác định sức chịu tải cọc từ báo cáo thử động biến dạng lớn');
+  assert.equal(pdaExport.canExport,false);
   const y=engineeringExcelPayload('Thử động sa=0.004 m A=0.16 m2 M=1 Ed=12 kJ m1=2 T m2=1 T');
   assert.equal(y.canExport,true);
 });

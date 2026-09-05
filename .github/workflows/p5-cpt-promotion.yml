@@ -1,0 +1,57 @@
+name: P5 CPT Promotion Golden
+
+on:
+  push:
+    branches:
+      - p5/cpt-promotion-hardening
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cpt-promotion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Version identity
+        run: npm run check:version
+
+      - name: Search Brain lock
+        run: npm run check:search
+
+      - name: CPT CT25-29 focused Golden
+        run: node --test tests/p5-cpt-promotion.test.mjs
+
+      - name: Exact additive test-count gate
+        run: npm run gate:pass83-tests
+
+      - name: Full regression suite
+        run: npm test
+
+      - name: CPT source guards
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -F "lookupTable16Cpt10304" src/engineering-router.js
+          grep -F "cptMode:'BORED_CT29'" src/engineering-router.js
+          grep -F "'10304-cpt':{status:'VERIFIED',productionNumeric:true" src/production-status-registry.js
+          test ! -f .github/workflows/p5-cpt-bootstrap.yml
+          test ! -f scripts/p5-apply-cpt-router-patch.mjs

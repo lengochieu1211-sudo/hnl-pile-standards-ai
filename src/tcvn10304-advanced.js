@@ -81,14 +81,30 @@ export function calcSingleSettlement10304(q=''){
   return {ok:true,branch:'short',settlementM:s,k,zeta,mv,inputs:{N,G1,G2,L,d,A,v1,v2,EA},steps:[`k=${k.toFixed(3)} ≤ 7,5 → CT (34).`,`Bảng 17: m_v=${mv.toFixed(4)} (${mvLookup.mode}); ζ0=${zeta0.toFixed(5)} theo CT (34); ζ′=${zeta.toFixed(5)}.`,`s=${s.toFixed(6)} m = ${(s*1000).toFixed(2)} mm.`],provenance:['TCVN 10304:2025 · 7.4.2.1 · CT (34) · Bảng 17 · trang 60']};
 }
 
-function interactionDelta(G1,G2,L,v,a){ const kv=2.82-3.78*v+2.18*v*v; const r=kv*G1*L/(2*G2*a); return r>1?0.17*Math.log(r):0; }
+function interactionDeltaCt37(G1,G2,L,v,a){ const kv=2.82-3.78*v+2.18*v*v; const r=kv*G1*L/(2*G2*a); return {delta:r>1?0.17*Math.log(r):0,kv,r}; }
+function interactionDeltaCt46(G1,G2,L,v,a,d){
+  const k1=(1-v)/(2*Math.PI);
+  const k2=(0.34-0.29*v)*Math.pow(L/d,-0.163);
+  const delta=k1/(k2+G2*a/(G1*L));
+  return {delta,k1,k2};
+}
 export function calcGroupSettlement10304(q=''){
   const G1=pick(q,['G1','G_1'],'(?:MPa)?'); const G2=pick(q,['G2','G_2'],'(?:MPa)?'); const L=pick(q,['L'],'m?'); const v1=pick(q,['v1','nu1','ν1']); const v2=pick(q,['v2','nu2','ν2']);
   const sSingle=pick(q,['s_single','s0','s_coc_don'],'m?'); const Ni=pick(q,['Ni','N_i','NdSLSi'],'(?:MN)?') ?? 0;
   const missing=requireVals([[G1,'G1 (MPa)'],[G2,'G2 (MPa)'],[L,'L (m)'],[v1,'ν1'],[v2,'ν2'],[sSingle,'s_single (m), lấy từ CT (30)/(34)']]); if(missing.length) return {ok:false,missing};
-  const v=(v1+v2)/2; let sum=0; const pairs=[];
+  const v=(v1+v2)/2;
+  if(v<0||v>0.5||v1<0||v1>0.5||v2<0||v2>0.5) return {ok:false,invalid:true,missing:['CT (37)/(46): ν1, ν2 và ν trung bình phải trong 0–0,5; không ngoại suy.']};
+  const useCt46=/\bct\s*46\b|cong\s*thuc\s*46|công\s*thức\s*46|bo\s*tri\s*khong\s*deu|bố\s*trí\s*không\s*đều/i.test(q);
+  const dCt46=useCt46?pick(q,['d'],'m?'):null;
+  if(useCt46 && !(dCt46>0)) return {ok:false,missing:['d (m) của cọc để dùng CT (46) cho bố trí không đều']};
+  let sum=0; const pairs=[];
   const re=/a(\d+)\s*=\s*(\d+(?:[.,]\d+)?)\s*m[^;\n]*?N\1\s*=\s*(\d+(?:[.,]\d+)?)\s*MN/gi; let m;
-  while((m=re.exec(q))){ const a=num(m[2]),Nj=num(m[3]),delta=interactionDelta(G1,G2,L,v,a); sum+=delta*Nj; pairs.push({a,Nj,delta}); }
+  while((m=re.exec(q))){
+    const a=num(m[2]),Nj=num(m[3]);
+    const meta=useCt46?interactionDeltaCt46(G1,G2,L,v,a,dCt46):interactionDeltaCt37(G1,G2,L,v,a);
+    const delta=meta.delta; sum+=delta*Nj;
+    pairs.push({a,Nj,delta,...(useCt46?{k1:meta.k1,k2:meta.k2}:{kv:meta.kv,r:meta.r})});
+  }
   const explicitSum=pick(q,['sum_deltaN','ΣδN'],'(?:MN)?'); if(explicitSum!=null) sum=explicitSum;
   if(!pairs.length && explicitSum==null) return {ok:false,missing:['Các cọc tương tác dạng a1=...m N1=...MN, a2=...m N2=...MN; hoặc sum_deltaN=Σ(δij·Nj) (MN)']};
   const s=sSingle+sum/(G1*L);
@@ -99,10 +115,10 @@ export function calcGroupSettlement10304(q=''){
   const kw0=pick(q,['kw0','k_w0'],'(?:MN/m|kN/m)?');
   const Nu=pick(q,['Nu','N_u'],'(?:MN|kN)?'); const mCorr=pick(q,['m_corr','m hiệu chỉnh','m_hieu_chinh']);
   const kw=(kw0!=null&&Nu!=null&&mCorr!=null&&Nu>0&&mCorr>0)?kw0*Math.pow(1+Math.pow(kw0/Nu,mCorr),-1/mCorr):null;
-  const steps=[`CT (36),(37): tính δ cho từng khoảng cách cọc.`,`Σ(δij·Nj)=${sum.toFixed(5)} MN.`,`CT (38): s_i=s_single+Σδij·Nj/(G1L)=${s.toFixed(6)} m = ${(s*1000).toFixed(2)} mm.`];
+  const steps=[useCt46?`CT (46): bố trí không đều → dùng δ=k1/(k2+G2·a/(G1·L)) thay CT (37).`:`CT (36),(37): tính δ cho từng khoảng cách cọc.`,`Σ(δij·Nj)=${sum.toFixed(5)} MN.`,`CT (38): s_i=s_single+Σδij·Nj/(G1L)=${s.toFixed(6)} m = ${(s*1000).toFixed(2)} mm.`];
   if(equivalentLengthM!=null) steps.push(`CT (39): L_eq=${equivalentLengthM.toFixed(4)} m.`);
   if(kw!=null) steps.push(`CT (40): k_w=${kw.toFixed(6)} (cùng đơn vị k_w0).`);
-  return {ok:true,settlementM:s,interactionSumMN:sum,pairs,equivalentLengthM,kw,inputs:{G1,G2,L,v1,v2,sSingle,Ni,sumDeltaN:sum,pairs,Li,Lj,kw0,Nu,mCorr},steps,provenance:['TCVN 10304:2025 · 7.4.3.1-7.4.3.4 · CT (36)-(40) · trang 61-62']};
+  return {ok:true,settlementM:s,interactionSumMN:sum,pairs,equivalentLengthM,kw,interactionFormula:useCt46?'CT46':'CT37',inputs:{G1,G2,L,v1,v2,sSingle,Ni,sumDeltaN:sum,pairs,Li,Lj,kw0,Nu,mCorr,d:dCt46},steps,provenance:useCt46?['TCVN 10304:2025 · 7.4.4.5 · CT (46) · trang 64-65','CT (46) thay CT (37) trong điều kiện bố trí cọc không đều nêu tại 7.4.4.5']:['TCVN 10304:2025 · 7.4.3.1-7.4.3.4 · CT (36)-(40) · trang 61-62']};
 }
 
 export function calcEquivalentBlock10304(q=''){

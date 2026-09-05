@@ -50,6 +50,6 @@
     "src/spt-shared-spec.js": "6e59289ddd2b74d2f6478cf8e323a18e1f62d8c86cbaa76eeadacec026d0aff8",
     "tests/spt-excel-golden-hardening.test.mjs": "75fabeaf9addc4c9e50a14e612ec375851bdffd7e5f375a35659631535979ccd",
     "tests/spt-excel-parity-provenance.test.mjs": "efb28a2c6c8f59496ae2eedca9af682c3f1a07023a984d0ff9069eab875c5689",
-    "tools/pass83-source-sync-gate.mjs": "445a3073afe1c4d094895d272520fdff95c458828fed6e0fb4a23b6919fb00af"
+    "tools/pass83-source-sync-gate.mjs": "f439e16243d63331335fe9a5a5a7e8a7c5e2119691ff9dd0e6cd1a900e5933a9"
   }
 }

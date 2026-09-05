@@ -270,10 +270,41 @@ function calcScrew10304(q='') {
   const R0=(a1*c1+a2*gamma1*h1)*A, Rf=u*fi*(h-d), Rk=gammaC*(gammaRR*R0+gammaRf*Rf);
   return {ok:true,RkKn:Rk,inputs:{c1,gamma1,h1,A,a1,a2,u,fi,h,d,gammaC,gammaRR,gammaRf},steps:[`CT (18): Rk,0=(α1·c1+α2·γ1·h1)A=${R0.toFixed(3)} kN.`,`CT (19): Rk,f=u·fi·(h−d)=${Rf.toFixed(3)} kN.`,`CT (17): Rk=γc(γRR·Rk,0+γRf·Rk,f)=${Rk.toFixed(3)} kN.`],provenance:['TCVN 10304:2025 · 7.2.4 · CT (17)-(19) · tr.43-44','Bảng 9 · tr.43','Bảng 10 · tr.45']};
 }
+function parseStaticLoadCurve10304(q='') {
+  const points=[]; const re=/(\d+(?:[.,]\d+)?)\s*kN\s*(?:@|:|\/|->|→)\s*(\d+(?:[.,]\d+)?)\s*mm/gi; let m;
+  while((m=re.exec(String(q)))) points.push({loadKn:number(m[1]),settlementMm:number(m[2])});
+  points.sort((a,b)=>a.settlementMm-b.settlementMm);
+  return points;
+}
+function interpolateStaticLoadAtSettlement10304(points,targetMm){
+  if(!Array.isArray(points)||points.length<2) return {ok:false,reason:'Cần ít nhất 2 điểm tải–lún dạng 500kN@10mm.'};
+  for(let i=1;i<points.length;i++){
+    if(!(points[i].settlementMm>points[i-1].settlementMm)) return {ok:false,reason:'Độ lún các điểm thử phải tăng nghiêm ngặt.'};
+    if(points[i].loadKn+1e-9<points[i-1].loadKn) return {ok:false,reason:'Tải trọng đường cong nén phải không giảm theo độ lún.'};
+  }
+  if(targetMm<points[0].settlementMm-1e-9||targetMm>points.at(-1).settlementMm+1e-9) return {ok:false,reason:`Độ lún mục tiêu ${targetMm.toFixed(3)} mm nằm ngoài phạm vi đường cong ${points[0].settlementMm}–${points.at(-1).settlementMm} mm; không được ngoại suy.`};
+  const exact=points.find(p=>Math.abs(p.settlementMm-targetMm)<=1e-9); if(exact) return {ok:true,loadKn:exact.loadKn,mode:'EXACT'};
+  for(let i=1;i<points.length;i++){ const a=points[i-1],b=points[i]; if(targetMm>a.settlementMm&&targetMm<b.settlementMm){ const t=(targetMm-a.settlementMm)/(b.settlementMm-a.settlementMm); return {ok:true,loadKn:a.loadKn+t*(b.loadKn-a.loadKn),mode:'LINEAR_INTERPOLATION',bracket:[a,b]}; }}
+  return {ok:false,reason:'Không xác định được tải tại độ lún mục tiêu.'};
+}
 function calcStatic10304(q='') {
-  const Ru=explicit(q,['Ru,k','R_u,k','Ruk','Ru'],'(?:kN)?'); const gammaCg1=explicit(q,['gamma_cg1','γc,g1']) ?? 1; const gammaC=explicit(q,['gamma_c','γc']) ?? 1;
-  if(Ru==null) return {ok:false,missing:['Ru,k sức chịu tải giới hạn từ đường cong tải-lún/thí nghiệm (kN)']};
-  const Rk=gammaC*Ru/gammaCg1; return {ok:true,RkKn:Rk,inputs:{Ru,gammaCg1,gammaC},steps:[`CT (20): Rk=γc·Ru,k/γc,g1=${Rk.toFixed(3)} kN.`],provenance:['TCVN 10304:2025 · 7.3.2.1-7.3.2.3 · CT (20),(21) · tr.49-50']};
+  let Ru=explicit(q,['Ru,k','R_u,k','Ruk','Ru'],'(?:kN)?'); const gammaCg1=explicit(q,['gamma_cg1','γc,g1']) ?? 1; const gammaC=explicit(q,['gamma_c','γc']) ?? 1;
+  let staticCriterion=null;
+  if(Ru==null){
+    const suMt=explicit(q,['su,mt','su_mt','s_u,mt','s_u_mt','su mt'],'(?:mm)?');
+    const IL=explicit(q,['IL','I_L']); let zeta=explicit(q,['zeta','ζ']);
+    if(zeta==null&&IL!=null) zeta=IL>0.5?0.2:0.35;
+    const points=parseStaticLoadCurve10304(q);
+    const missing=[]; if(!(suMt>0)) missing.push('su,mt độ lún giới hạn trung bình (mm)'); if(!(zeta>0)) missing.push('ζ hoặc IL để chọn ζ=0,2/0,35'); if(points.length<2) missing.push('ít nhất 2 điểm đường cong tải–lún, ví dụ 500kN@10mm');
+    if(missing.length) return {ok:false,status:'REVIEW',missing};
+    const targetSettlementMm=Math.min(zeta*suMt,40); const interp=interpolateStaticLoadAtSettlement10304(points,targetSettlementMm);
+    if(!interp.ok) return {ok:false,status:'REVIEW',inputs:{suMt,IL,zeta,targetSettlementMm,curve:points},missing:[interp.reason]};
+    Ru=interp.loadKn; staticCriterion={suMt,IL,zeta,targetSettlementMm,curve:points,interpolation:interp.mode,bracket:interp.bracket||null};
+  }
+  const Rk=gammaC*Ru/gammaCg1;
+  const steps=[]; if(staticCriterion) steps.push(`CT (21): s= min(ζ·su,mt;40)=min(${staticCriterion.zeta}·${staticCriterion.suMt};40)=${staticCriterion.targetSettlementMm.toFixed(3)} mm → Ru,k=${Ru.toFixed(3)} kN (${staticCriterion.interpolation}).`);
+  steps.push(`CT (20): Rk=γc·Ru,k/γc,g1=${Rk.toFixed(3)} kN.`);
+  return {ok:true,status:'VERIFIED',staticMode:staticCriterion?'CURVE_CT21':'DIRECT_RU_CT20',formulaId:staticCriterion?21:20,RkKn:Rk,inputs:{Ru,gammaCg1,gammaC,...(staticCriterion||{})},steps,provenance:['TCVN 10304:2025 · 7.3.2.1-7.3.2.3 · CT (20),(21) · tr.49-50','CT (21): Ru lấy tại s=ζ·su,mt, khống chế s≤40 mm; nội suy tuyến tính chỉ trong miền đường cong đo được']};
 }
 function calcCpt10304(q='') {
   const geometry=inferPileGeometry(q);

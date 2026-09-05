@@ -51,10 +51,14 @@
     "tests/spt-excel-golden-hardening.test.mjs": "75fabeaf9addc4c9e50a14e612ec375851bdffd7e5f375a35659631535979ccd",
     "tests/spt-excel-parity-provenance.test.mjs": "efb28a2c6c8f59496ae2eedca9af682c3f1a07023a984d0ff9069eab875c5689",
     "tools/pass83-source-sync-gate.mjs": "e668935da2c7dbcc63dd59787c3d6503de76724c719253c18caf2a8994cf9f9a",
-    "tools/pass83-test-count-gate.mjs": "71c382ab54eaaaff5d6d533bdc0bddb3d594f763c61e42bd99b5339e24627fa3",
+    "tools/pass83-test-count-gate.mjs": "8b044841fe84f08ea938bf88ce39f6f77e7437be8b9856df3417c12dfaefe4df",
     "tests/p5-static-load-promotion.test.mjs": "af1cbe72ca5492ba0f74be08d9b743382cf56308629ee8adc66a492f7d6a983a",
     ".github/workflows/p5-static-load-golden.yml": "4d8239036e8107fad688cba265f863df65ffef951105070298ce6eca103ce60d",
     "tests/p5-dynamic-pda-promotion.test.mjs": "432c326cb0fb9790b92cefba69bf15b941d82472162b55f84be05e0883ec890a",
-    ".github/workflows/p5-dynamic-pda-golden.yml": "9c23330a912ad53a5b2cc367d9be3f9ffdd9a4006c96a47876171d9ecef5ad8a"
+    ".github/workflows/p5-dynamic-pda-golden.yml": "9c23330a912ad53a5b2cc367d9be3f9ffdd9a4006c96a47876171d9ecef5ad8a",
+    "src/tcvn10304-advanced.js": "6e9aaa14b882dd6ae1fc17297a47c2eb352ab2f127e3ce527bb3f2bf7da8c552",
+    "tests/p5-settlement-promotion.test.mjs": "f092d7ab5586303cf33980106be956e290008e10e624d3fec1b9bc9b358b4622",
+    ".github/workflows/p5-settlement-golden.yml": "8645d9ff6b455a6089c80b08af513dd93d83ce9348fd6bb8315ea947769e3c9f",
+    "docs/P5.5-SETTLEMENT-PROMOTION-EVIDENCE.md": "751ca1b01b8e0861b4fd9c5a3b583bc44ea614532ef0e1c38c8239b9519bb70f"
   }
 }

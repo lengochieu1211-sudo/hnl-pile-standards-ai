@@ -1,0 +1,26 @@
+name: P5 Dynamic PDA Promotion Golden
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main, 'p5/dynamic-pda-promotion' ]
+jobs:
+  dynamic-pda-promotion:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Version identity
+        run: npm run check:version
+      - name: Search Brain lock
+        run: npm run check:search
+      - name: Dynamic CT22-24 focused Golden
+        run: node --test tests/p5-dynamic-pda-promotion.test.mjs
+      - name: Exact additive test-count gate
+        run: npm run gate:pass83-tests
+      - name: Full regression suite
+        run: npm test

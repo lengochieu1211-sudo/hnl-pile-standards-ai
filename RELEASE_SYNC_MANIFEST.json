@@ -43,7 +43,7 @@
     "scripts/spt-excel-golden-generate.mjs": "dcf5c993168e18d218e33d9e147589cc27b1995c9f0637fb2656672ff6d44156",
     "scripts/spt-spreadsheet-runtime-golden.mjs": "1ac9ded4ea533c90711af6f1e378301a42912d332e721e9f5c42255abe64eab9",
     "src/engineering-input-interpreter.js": "a62e4d2550584caf19a600c204e90ed7b2a32af77fe0012ebaf3f993e98df45d",
-    "src/engineering-router.js": "cd7c2583997c4d72b6540fac1723ca5c1711522148f3032d87927a206cf1426d",
+    "src/engineering-router.js": "236442d07a8ade6303e6e9aa0038b083776ad1cc13c8282e77dfdae7cdaf54eb",
     "src/excel-export.js": "c611cbb5243b1530366eee0913473b66c025cd430dc2db5f25ce7e9416baaefb",
     "src/pile-geometry-engine.js": "6ea077c65c98d6649060a8c4ddfd76095679efa7bb16c5ee9c0f32e995e22561",
     "src/pile-workflows.js": "7a30166a35026c0c6e01069ba586a2ca73b2ac14e90d4796c776b58b4ddceb5a",

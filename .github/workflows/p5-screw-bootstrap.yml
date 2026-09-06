@@ -1,0 +1,165 @@
+name: P5.6 Screw Pile Bootstrap
+
+on:
+  push:
+    branches: [p5/screw-pile-promotion]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: p5/screw-pile-promotion
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - name: Patch deterministic CT17-19 screw workflow
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('src/engineering-router.js')
+          s=p.read_text(encoding='utf-8')
+          a=s.index("function calcScrew10304(q='') {")
+          b=s.index("function parseStaticLoadCurve10304",a)
+          new=r'''function calcScrew10304(q='') {
+            const norm=n(q);
+            const c1=explicit(q,['c1','c_1'],'(?:kPa)?');
+            const gamma1=explicit(q,['gamma1','γ1'],'(?:kN/m3|kN/m³)?');
+            const h1=explicit(q,['h1','h_1','độ sâu cánh','do sau canh'],'m?');
+            let A=explicit(q,['A','dien tich canh','diện tích cánh'],'(?:m2|m²)?');
+            const phi1=explicit(q,['phi1','φ1','phi','φ'],'(?:deg|°)?');
+            const manualA1=explicit(q,['alpha1','α1']); const manualA2=explicit(q,['alpha2','α2']);
+            let u=explicit(q,['u','chu vi','chu vi thân','chu vi than'],'m?');
+            const fi=explicit(q,['fi','f_i'],'(?:kPa)?');
+            const h=explicit(q,['h','L','chieu dai than','chiều dài thân','chiều dài','chieu dai'],'m?');
+            const d=explicit(q,['d','duong kinh canh','đường kính cánh'],'m?');
+            const ds=explicit(q,['ds','d_shaft','đường kính thân','duong kinh than'],'m?');
+            const manualGammaC=explicit(q,['gamma_c','γc']);
+            let gammaRR=explicit(q,['gamma_RR','γRR']); let gammaRf=explicit(q,['gamma_Rf','γRf']);
+            const loadType=/doi dau|đổi dấu|alternat|reversal/.test(norm)?'reversal':(/keo|kéo|nho|nhổ|tension/.test(norm)?'tension':(/nen|nén|compression/.test(norm)?'compression':null));
+            const clay=/dat set|đất sét|set pha|sét pha|clay/.test(norm);
+            const sand=/cat|cát|sand/.test(norm);
+            let soilCondition=null;
+            if(clay){
+              if(/deo chay|dẻo chảy/.test(norm)) soilCondition='clay-flowing';
+              else if(/deo mem|dẻo mềm/.test(norm)) soilCondition='clay-soft';
+              else if(/cung|cứng|nua cung|nửa cứng|deo cung|dẻo cứng/.test(norm)) soilCondition='clay-hard';
+            } else if(sand){
+              if(/bao hoa|bão hòa|pha chay|pha chảy/.test(norm)) soilCondition='sand-saturated';
+              else if(/it am|ít ẩm|pha cung|pha cứng/.test(norm)) soilCondition='sand-dry-hard';
+              else if(/am|ẩm|pha deo|pha dẻo/.test(norm)) soilCondition='sand-wet-soft';
+            }
+            if(/hai canh|hai cánh|2 canh|2 cánh|nhieu canh|nhiều cánh|multi.?helix/.test(norm)) return {ok:false,status:'REVIEW',screwMode:'CT17_19',missing:['7.2.4 CT (17)–(19) được nêu cho cọc vít một cánh; hai/nhiều cánh phải dùng thí nghiệm hoặc mô hình đã được kiểm chứng.']};
+            if(/luc ngang|lực ngang|mo men|mô men|horizontal|moment/.test(norm)) return {ok:false,status:'REVIEW',screwMode:'CT17_19',missing:['7.2.4: trường hợp có lực ngang hoặc mô men không dùng trực tiếp CT (17)–(19); cần thí nghiệm hoặc mô hình đất đã được kiểm chứng.']};
+            const applicability=[];
+            if(d!=null && d>1.2+1e-12) applicability.push(`7.2.4 giới hạn đường kính cánh d ≤ 1,2 m; d=${d} m.`);
+            if(h!=null && h>10+1e-12) applicability.push(`7.2.4 giới hạn chiều dài L ≤ 10 m; L=${h} m.`);
+            if(d!=null&&h1!=null&&clay&&h1<5*d-1e-12) applicability.push(`Chú thích 2: đất sét yêu cầu độ sâu cánh h1 ≥ 5d; h1=${h1} m, 5d=${5*d} m.`);
+            if(d!=null&&h1!=null&&sand&&h1<6*d-1e-12) applicability.push(`Chú thích 2: đất cát yêu cầu độ sâu cánh h1 ≥ 6d; h1=${h1} m, 6d=${6*d} m.`);
+            if(applicability.length) return {ok:false,status:'REVIEW',screwMode:'CT17_19',inputs:{c1,gamma1,h1,A,phi1,u,fi,h,d,ds,loadType,soilCondition},missing:applicability};
+            const phiNodes=[13,15,16,18,20,22,24,26,28,30,32,34];
+            const alpha1Nodes=[7.8,8.4,9.4,10.1,12.1,15.0,18.0,23.1,29.5,38.0,48.4,64.9];
+            const alpha2Nodes=[2.8,3.3,3.8,4.5,5.5,7.0,9.2,12.3,16.5,22.5,31.0,44.4];
+            let a1=null,a2=null,table10Auto=false;
+            if(phi1!=null){
+              const idx=phiNodes.findIndex(v=>Math.abs(v-phi1)<=1e-9);
+              if(idx<0) return {ok:false,status:'REVIEW',screwMode:'CT17_19',missing:[`Bảng 10 chưa được VERIFIED nội suy cho φ1=${phi1}°. Hãy dùng đúng mốc 13,15,16,18,20,22,24,26,28,30,32,34° hoặc cung cấp bằng chứng quy tắc nội suy.`]};
+              a1=alpha1Nodes[idx]; a2=alpha2Nodes[idx]; table10Auto=true;
+            } else if(manualA1!=null&&manualA2!=null){ a1=manualA1; a2=manualA2; }
+            let gammaC=null,table9Auto=false;
+            const gammaTable={
+              'clay-hard':{compression:0.8,tension:0.7,reversal:0.7},
+              'clay-soft':{compression:0.8,tension:0.7,reversal:0.6},
+              'clay-flowing':{compression:0.7,tension:0.6,reversal:0.4},
+              'sand-dry-hard':{compression:0.8,tension:0.7,reversal:0.5},
+              'sand-wet-soft':{compression:0.7,tension:0.6,reversal:0.4},
+              'sand-saturated':{compression:0.6,tension:0.5,reversal:0.3}
+            };
+            if(loadType&&soilCondition){ gammaC=gammaTable[soilCondition]?.[loadType]??null; table9Auto=gammaC!=null; }
+            if(gammaC==null&&manualGammaC!=null) gammaC=manualGammaC;
+            if(A==null&&d>0&&loadType==='compression') A=Math.PI*d*d/4;
+            if(A==null&&d>0&&ds>0&&loadType==='tension') A=Math.PI*(d*d-ds*ds)/4;
+            if(u==null&&ds>0) u=Math.PI*ds;
+            if(/ho khoan dan|hố khoan dẫn|pilot bore/.test(norm) && (gammaRR==null||gammaRf==null)) return {ok:false,status:'REVIEW',screwMode:'CT17_19',missing:['Thi công trong hố khoan dẫn: phải xác định γR,R và γR,f theo điểm 2 Bảng 4; không tự lấy 1,0.']};
+            gammaRR=gammaRR??1; gammaRf=gammaRf??1;
+            const missing=[];
+            for(const [v,nm] of [[c1,'c1 (kPa)'],[gamma1,'γ1 (kN/m³)'],[h1,'h1 độ sâu cánh (m)'],[A,'A diện tích cánh (m²)'],[a1,'φ1 đúng mốc Bảng 10 hoặc α1 thủ công'],[a2,'φ1 đúng mốc Bảng 10 hoặc α2 thủ công'],[u,'u chu vi thân cọc (m)'],[fi,'fi Bảng 3/giá trị có provenance (kPa)'],[h,'L/h chiều dài thân trong đất (m)'],[d,'d đường kính cánh (m)'],[gammaC,'Loại tải + trạng thái đất để tra γc Bảng 9, hoặc γc thủ công']]) if(v==null) missing.push(nm);
+            if(!clay&&!sand) missing.push('Loại đất vùng làm việc: đất sét/sét pha hoặc cát/cát pha để kiểm Chú thích 2.');
+            if(missing.length) return {ok:false,status:'REVIEW',screwMode:'CT17_19',missing};
+            const R0=(a1*c1+a2*gamma1*h1)*A, Rf=u*fi*(h-d), Rk=gammaC*(gammaRR*R0+gammaRf*Rf);
+            const finalVerified=table10Auto&&table9Auto;
+            return {ok:true,status:finalVerified?'VERIFIED':'MIXED/MANUAL',screwMode:'CT17_19_TABLE9_10',formulaId:17,RkKn:Rk,designFinal:finalVerified,productionNumeric:finalVerified,inputs:{c1,gamma1,h1,A,a1,a2,u,fi,h,d,ds,gammaC,gammaRR,gammaRf,phi1,loadType,soilCondition,table9Auto,table10Auto},steps:[`Bảng 10: φ1=${phi1??'MANUAL'}° → α1=${a1}; α2=${a2}.`,`Bảng 9: γc=${gammaC}${table9Auto?` (${soilCondition}/${loadType})`:' (MANUAL)'}.`,`CT (18): Rk,0=(α1·c1+α2·γ1·h1)A=${R0.toFixed(3)} kN.`,`CT (19): Rk,f=u·fi·(h−d)=${Rf.toFixed(3)} kN.`,`CT (17): Rk=γc(γR,R·Rk,0+γR,f·Rk,f)=${Rk.toFixed(3)} kN.`],provenance:['TCVN 10304:2025 · 7.2.4 · CT (17)–(19) · tr.43–44','TCVN 10304:2025 · Bảng 9 · tr.43','TCVN 10304:2025 · Bảng 10 · tr.45','Chú thích 2 tr.44: h1≥5d (đất sét), h1≥6d (đất cát)']};
+          }
+          '''
+          s=s[:a]+new+s[b:]
+          old="if(workflow.id==='10304-cpt' && result?.cptMode) return '10304-cpt';"
+          newmap=old+"\n  if(workflow.id==='10304-screw' && result?.screwMode==='CT17_19_TABLE9_10' && result?.designFinal===true) return '10304-screw';"
+          if old not in s: raise SystemExit('production mapping anchor missing')
+          s=s.replace(old,newmap,1)
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('src/production-status-registry.js'); s=p.read_text(encoding='utf-8')
+          anchor="  '10304-cpt':{status:'VERIFIED',productionNumeric:true,source:'7.3.4 · CT (25)–(29) · Bảng 15–16 · P5.2 CPT Golden + applicability gate'},"
+          add=anchor+"\n  '10304-screw':{status:'VERIFIED',productionNumeric:true,source:'7.2.4 · CT (17)–(19) · Bảng 9–10 · P5.6 Screw Golden + applicability/no-invention gate'},"
+          if anchor not in s: raise SystemExit('registry anchor missing')
+          s=s.replace(anchor,add,1); p.write_text(s,encoding='utf-8')
+
+          p=Path('tools/pass83-test-count-gate.mjs'); s=p.read_text(encoding='utf-8')
+          s=s.replace('// P5.5 settlement promotion adds 9 additive CT30-46/Table17/applicability/export tests.\n// Never lower any certified component and never skip tests. Final expected suite = 634/634/0.','// P5.5 settlement promotion adds 9 additive CT30-46/Table17/applicability/export tests.\n// P5.6 screw-pile promotion adds 10 additive CT17-19/Table9-10/applicability/export tests.\n// Never lower any certified component and never skip tests. Final expected suite = 644/644/0.')
+          s=s.replace('const SETTLEMENT_P5_ADDITIVE_TESTS = 9;\nconst EXPECTED_TESTS = BASELINE_TESTS + P4_ADDITIVE_TESTS + SPT_GOLDEN_ADDITIVE_TESTS + CPT_P5_ADDITIVE_TESTS + STATIC_P5_ADDITIVE_TESTS + DYNAMIC_P5_ADDITIVE_TESTS + SETTLEMENT_P5_ADDITIVE_TESTS;','const SETTLEMENT_P5_ADDITIVE_TESTS = 9;\nconst SCREW_P5_ADDITIVE_TESTS = 10;\nconst EXPECTED_TESTS = BASELINE_TESTS + P4_ADDITIVE_TESTS + SPT_GOLDEN_ADDITIVE_TESTS + CPT_P5_ADDITIVE_TESTS + STATIC_P5_ADDITIVE_TESTS + DYNAMIC_P5_ADDITIVE_TESTS + SETTLEMENT_P5_ADDITIVE_TESTS + SCREW_P5_ADDITIVE_TESTS;')
+          s=s.replace('`settlementP5Additive=${SETTLEMENT_P5_ADDITIVE_TESTS}`','`settlementP5Additive=${SETTLEMENT_P5_ADDITIVE_TESTS}`,`screwP5Additive=${SCREW_P5_ADDITIVE_TESTS}`')
+          s=s.replace('+ Settlement P5 ${SETTLEMENT_P5_ADDITIVE_TESTS}`);','+ Settlement P5 ${SETTLEMENT_P5_ADDITIVE_TESTS} + Screw P5 ${SCREW_P5_ADDITIVE_TESTS}`);')
+          p.write_text(s,encoding='utf-8')
+
+          Path('tests/p5-screw-pile-promotion.test.mjs').write_text(r'''import test from 'node:test';
+          import assert from 'node:assert/strict';
+          import { solveEngineeringQuestion, engineeringExcelPayload } from '../src/engineering-router.js';
+          const close=(a,b,t=1e-9)=>assert.ok(Math.abs(a-b)<=t,`${a} != ${b}`);
+          const solve=q=>solveEngineeringQuestion(q).result;
+
+          test('P5.6 CT17-19 clay-hard compression Table9/Table10 independent Golden',()=>{
+            const q='cọc vít một cánh nén đất sét cứng phi1=30deg c1=20kPa gamma1=18kN/m3 h1=6m A=0.5m2 u=0.314m fi=30kPa h=8m d=1m';
+            const x=solve(q); assert.equal(x.ok,true); assert.equal(x.status,'VERIFIED'); assert.equal(x.inputs.a1,38); assert.equal(x.inputs.a2,22.5); assert.equal(x.inputs.gammaC,0.8); close(x.RkKn,1328.752); assert.equal(engineeringExcelPayload(q).canExport,true);
+          });
+          test('P5.6 CT17-19 sand wet tension Table9/Table10 independent Golden',()=>{
+            const q='cọc vít một cánh kéo cát ẩm phi1=24deg c1=0kPa gamma1=18kN/m3 h1=6m A=0.4m2 u=0.314m fi=30kPa h=8m d=1m';
+            const x=solve(q); assert.equal(x.ok,true); assert.equal(x.status,'VERIFIED'); assert.equal(x.inputs.a1,18); assert.equal(x.inputs.a2,9.2); assert.equal(x.inputs.gammaC,0.6); close(x.RkKn,278.028);
+          });
+          test('P5.6 Table10 does not invent interpolation',()=>{ const x=solve('cọc vít nén đất sét cứng phi1=29deg c1=20kPa gamma1=18kN/m3 h1=6m A=0.5m2 u=0.314m fi=30kPa h=8m d=1m'); assert.equal(x.ok,false); assert.match(x.missing.join(' '),/chưa được VERIFIED nội suy/); });
+          test('P5.6 clay blade depth guard h1>=5d',()=>{ const x=solve('cọc vít nén đất sét cứng phi1=30deg c1=20kPa gamma1=18kN/m3 h1=4m A=0.5m2 u=0.314m fi=30kPa h=8m d=1m'); assert.equal(x.ok,false); assert.match(x.missing.join(' '),/h1 ≥ 5d/); });
+          test('P5.6 sand blade depth guard h1>=6d',()=>{ const x=solve('cọc vít nén cát ẩm phi1=30deg c1=0kPa gamma1=18kN/m3 h1=5m A=0.5m2 u=0.314m fi=30kPa h=8m d=1m'); assert.equal(x.ok,false); assert.match(x.missing.join(' '),/h1 ≥ 6d/); });
+          test('P5.6 diameter applicability d<=1.2m',()=>{ const x=solve('cọc vít nén đất sét cứng phi1=30deg c1=20kPa gamma1=18kN/m3 h1=7m A=0.6m2 u=0.314m fi=30kPa h=8m d=1.3m'); assert.equal(x.ok,false); assert.match(x.missing.join(' '),/d ≤ 1,2/); });
+          test('P5.6 length applicability L<=10m',()=>{ const x=solve('cọc vít nén đất sét cứng phi1=30deg c1=20kPa gamma1=18kN/m3 h1=6m A=0.5m2 u=0.314m fi=30kPa h=11m d=1m'); assert.equal(x.ok,false); assert.match(x.missing.join(' '),/L ≤ 10/); });
+          test('P5.6 multiple helix is REVIEW not numeric',()=>{ const x=solve('cọc vít hai cánh nén đất sét cứng phi1=30deg c1=20kPa gamma1=18kN/m3 h1=6m A=0.5m2 u=0.314m fi=30kPa h=8m d=1m'); assert.equal(x.ok,false); assert.match(x.missing.join(' '),/một cánh/); });
+          test('P5.6 horizontal or moment load is REVIEW',()=>{ const x=solve('cọc vít một cánh lực ngang đất sét cứng phi1=30deg c1=20kPa gamma1=18kN/m3 h1=6m A=0.5m2 u=0.314m fi=30kPa h=8m d=1m'); assert.equal(x.ok,false); assert.match(x.missing.join(' '),/lực ngang/); });
+          test('P5.6 manual coefficients stay preliminary and cannot export',()=>{
+            const q='cọc vít đất sét c1=20kPa gamma1=18kN/m3 h1=6m A=0.5m2 alpha1=38 alpha2=22.5 u=0.314m fi=30kPa h=8m d=1m gamma_c=0.8';
+            const x=solve(q); assert.equal(x.ok,true); assert.equal(x.status,'MIXED/MANUAL'); assert.equal(x.designFinal,false); assert.equal(engineeringExcelPayload(q).canExport,false);
+          });
+          ''',encoding='utf-8')
+
+          Path('docs/P5_6_SCREW_PILE_PROMOTION_EVIDENCE.md').write_text('''# P5.6 Screw Pile Promotion Evidence\n\nBaseline: `main@3a0efb2879be77013116399be0347a4be9fcfcc8`.\n\n## Normative scope\n- TCVN 10304:2025, 7.2.4, CT (17)–(19), printed pages 43–44.\n- Table 9, printed page 43: pile working-condition coefficient `γc` by soil state and compression/tension/reversal load.\n- Table 10, printed page 45: `α1`, `α2` versus design internal-friction angle `φ1`.\n- Note 2, printed page 44: helix depth at least `5d` in clay and `6d` in sand.\n- Formula scope on page 43: one helix, `d ≤ 1.2 m`, `L ≤ 10 m`; other geometries, lateral load or moment require test/calibrated soil-model evidence.\n\n## P5.6 safety policy\n- Production numeric is unlocked only when Table 9 and Table 10 are deterministically resolved and all applicability guards pass.\n- No interpolation of Table 10 is enabled in P5.6 because an interpolation rule has not been independently certified here. Off-node `φ1` returns REVIEW.\n- Manual `α1/α2/γc` remains available only as MIXED/MANUAL reference and is blocked from Production export.\n- `γR,R = γR,f = 1.0` follows 7.2.4 for the general case; pilot-bore construction is blocked unless the Table 4 coefficients are provided/verified.\n- Search Brain is unchanged.\n''',encoding='utf-8')
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Focused P5.6 Golden
+        run: node --test tests/p5-screw-pile-promotion.test.mjs
+      - name: Exact additive count
+        run: node tools/pass83-test-count-gate.mjs
+      - name: Full regression
+        run: npm test
+      - name: Commit certified source patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/engineering-router.js src/production-status-registry.js tools/pass83-test-count-gate.mjs tests/p5-screw-pile-promotion.test.mjs docs/P5_6_SCREW_PILE_PROMOTION_EVIDENCE.md
+          git diff --cached --quiet && exit 0
+          git commit -m "feat(p5.6): harden screw pile CT17-19 tables 9-10"
+          git push origin HEAD:p5/screw-pile-promotion

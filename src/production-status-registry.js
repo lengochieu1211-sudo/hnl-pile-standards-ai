@@ -14,6 +14,7 @@ export const PRODUCTION_STATUS_REGISTRY = Object.freeze({
   '10304-bored-raw':{status:'LOCKED',productionNumeric:true,source:'7.2.3 · CT (13)–(16) · Bảng 3,6,7,8 · P0 Pass 3 E2E'},
   '10304-cpt':{status:'VERIFIED',productionNumeric:true,source:'7.3.4 · CT (25)–(29) · Bảng 15–16 · P5.2 CPT Golden + applicability gate'},
   '10304-screw':{status:'VERIFIED',productionNumeric:true,source:'7.2.4 · CT (17)–(19) · Bảng 9–10 · P5.6 Screw Golden + applicability/no-invention gate'},
+  '10304-piled-raft':{status:'VERIFIED',productionNumeric:false,source:'7.4.5.1–7.4.5.7 · P5.8 method/applicability Golden · numerical interaction model required; no closed-form Production export'},
   '10304-spt-raw':{status:'LOCKED',productionNumeric:true,source:'Phụ lục D · D.1–D.6 · Bảng D.1 · SPT PDF Decision Pass · measured tip window + layer-representative shaft N; no continuous DCE interpolation'},
   '10304-spt-summary-explicit':{status:'VERIFIED',productionNumeric:true,source:'V26 · Phụ lục D/Bảng D.1 · user-supplied N̄ tip + Ns for declared shaft interval · coefficients/caps delegated to LOCKED table engine · Formula Guard'},
   '5574-pile-material-near-centered-rect':{status:'LOCKED',productionNumeric:true,source:'TCVN 5574:2018 · 8.1.2.4.3 · CT (49)–(50) · Bảng 16 · P1 Pass 1'},

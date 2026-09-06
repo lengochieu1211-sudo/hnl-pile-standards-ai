@@ -176,10 +176,35 @@ export function calcConstructionEffect10304(q=''){
 }
 
 export function verifyPiledRaft10304(q=''){
-  const IL=pick(q,['IL','I_L']); const E=pick(q,['E'],'(?:MPa)?'); const looseSand=pick(q,['loose_sand','cat_roi','cát rời'],'m?') ?? 0;
-  const rock=/tua da|tựa đá|rock-supported|mui coc.*da/i.test(q);
-  const missing=[]; if(IL==null) missing.push('I_L của đất loại sét đại diện'); if(E==null) missing.push('E mô đun biến dạng nền (MPa)');
-  if(missing.length) return {ok:false,methodOnly:true,missing};
-  const eligible=IL<0.5 && E>8 && looseSand<=1 && !rock;
-  return {ok:true,methodOnly:true,eligible,inputs:{IL,E,looseSand,rock},steps:[`7.4.5.2: kiểm I_L<0,5 và E>8 MPa → ${(IL<0.5&&E>8)?'đạt':'không đạt'}.`,`7.4.5.3: lớp cát rời ngay dưới móng không được dày >1 m → ${looseSand<=1?'đạt':'không đạt'}.`,`Cọc tựa đá: ${rock?'có → không xét truyền tải của bè xuống nền':'không'}.`,`7.4.5.4-7.4.5.7 yêu cầu mô hình tương tác cọc-đất-bè; tiêu chuẩn không cho công thức đóng để Excel tự sinh phản lực nền từ đầu.`],provenance:['TCVN 10304:2025 · 7.4.5.1-7.4.5.7 · trang 65-66']};
+  const norm=String(q).toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
+  const IL=pick(q,['IL','I_L']);
+  const E=pick(q,['E','E_nen','E nền','E nen'],'(?:MPa)?');
+  let looseSand=pick(q,['loose_sand','cat_roi','cát rời','loose sand'],'m?');
+  if(looseSand==null && /khong co (?:lop )?cat roi|loose_sand\s*=\s*0/.test(norm)) looseSand=0;
+  const rock=/tua da|tựa đá|rock-supported|mui coc.*da|mui coc.*rock/.test(norm);
+  const denseSand=/cat chat vua|cat chat\b|medium dense sand|dense sand/.test(norm) && !/cat roi|loose sand/.test(norm);
+  const cohesive=/dat set|set pha|clay|cohesive/.test(norm) || IL!=null;
+  const consolidatedYes=/site_consolidated\s*=\s*(?:true|1|yes)|da ket thuc co ket|co ket hoan tat|nen da co ket/.test(norm);
+  const consolidatedNo=/site_consolidated\s*=\s*(?:false|0|no)|chua ket thuc co ket|dang co ket/.test(norm);
+  const consolidationDeclared=consolidatedYes||consolidatedNo;
+  const interactions=['cọc–đất nền','đài/bè–đất nền','tương tác cọc–cọc qua đất nền','tương tác cọc–đài/bè'];
+  const designChecks=['biến dạng tổng thể và cấu kiện riêng','nội lực cọc giữa/biên và bản đài','độ lún','độ nghiêng','độ lún lệch'];
+  if(rock) return {ok:true,status:'VERIFIED_METHOD',methodOnly:true,designFinal:false,productionNumeric:false,eligible:false,mode:'PILE_ONLY_NO_RAFT_TRANSFER',numericalModelRequired:false,inputs:{IL,E,looseSand,rock,denseSand,cohesive,siteConsolidated:consolidationDeclared?consolidatedYes:null},interactions,designChecks,steps:['7.4.5.2: cọc tựa lên đá → tính như móng cọc, không xét truyền tải trọng của bản móng xuống nền.','Không được cộng sức chịu tải của bè vào cọc bằng công thức tự đặt.'],provenance:['TCVN 10304:2025 · 7.4.5.2 · trang 65','TCVN 10304:2025 · 7.4.5.4-7.4.5.7 · trang 65-66']};
+  const missing=[];
+  if(!denseSand && !cohesive) missing.push('Loại nền theo 7.4.5.2: cát chặt vừa/chặt hoặc đất loại sét.');
+  if(cohesive){ if(IL==null) missing.push('I_L của đất loại sét.'); if(E==null) missing.push('E mô đun biến dạng nền (MPa).'); }
+  if(looseSand==null) missing.push('Chiều dày lớp cát rời ngay dưới móng (m); nhập loose_sand=0 nếu không có.');
+  if(missing.length) return {ok:false,status:'REVIEW',methodOnly:true,designFinal:false,productionNumeric:false,missing,inputs:{IL,E,looseSand,rock,denseSand,cohesive,siteConsolidated:consolidationDeclared?consolidatedYes:null},interactions,designChecks,provenance:['TCVN 10304:2025 · 7.4.5.1-7.4.5.7 · trang 65-66']};
+  const soilEligible=denseSand || (cohesive && IL<0.5 && E>8);
+  const prohibitedLooseSand=looseSand>1;
+  const prohibitedUnconsolidated=consolidatedNo;
+  const eligible=soilEligible && !prohibitedLooseSand && !prohibitedUnconsolidated;
+  const reasons=[]; const warnings=[];
+  if(!soilEligible) reasons.push(`7.4.5.2 không thỏa: đất loại sét cần I_L<0,5 và E>8 MPa; đang I_L=${IL}, E=${E} MPa.`);
+  if(prohibitedLooseSand) reasons.push(`7.4.5.3 cấm dùng bè-cọc hỗn hợp khi lớp cát rời ngay dưới móng dày >1 m; đang ${looseSand} m.`);
+  if(prohibitedUnconsolidated) reasons.push('7.4.5.3 cấm dùng bè-cọc hỗn hợp khi khu đất xây dựng chưa kết thúc cố kết.');
+  if(!consolidationDeclared) warnings.push('7.4.5.3: chưa khai báo trạng thái cố kết; kết quả chỉ xác nhận phương pháp/applicability theo dữ liệu hiện có và phải kiểm tra điều kiện cố kết trước thiết kế cuối.');
+  const mode=eligible?'PILED_RAFT_NUMERICAL_MODEL_REQUIRED':'PILE_FOUNDATION_OR_ENGINEERING_REVIEW';
+  const steps=[denseSand?'7.4.5.2: nền cát chặt vừa/chặt → đạt điều kiện loại nền.':`7.4.5.2: đất loại sét I_L=${IL}<0,5 và E=${E}>8 MPa → ${soilEligible?'đạt':'không đạt'}.`,`7.4.5.3: lớp cát rời ngay dưới móng = ${looseSand} m → ${prohibitedLooseSand?'không đạt':'đạt'}.`,consolidationDeclared?`7.4.5.3: khu đất ${consolidatedYes?'đã kết thúc':'chưa kết thúc'} cố kết → ${prohibitedUnconsolidated?'không đạt':'đạt'}.`:'7.4.5.3: trạng thái cố kết chưa khai báo → phải xác minh trước thiết kế cuối.','7.4.5.4-7.4.5.7: phải xét 4 tương tác cọc–đất–bè, biến dạng và nội lực bằng mô hình số/không gian; không có công thức đóng để HNL tự sinh phản lực nền biến đổi từ đầu.','7.4.5.6: chiều dài và khoảng cách cọc phải được chọn theo độ lún, độ nghiêng và độ lún lệch cho phép theo TCVN 9362.'];
+  return {ok:true,status:'VERIFIED_METHOD',methodOnly:true,designFinal:false,productionNumeric:false,eligible,mode,numericalModelRequired:eligible,reasons,warnings,inputs:{IL,E,looseSand,rock,denseSand,cohesive,siteConsolidated:consolidationDeclared?consolidatedYes:null},interactions,designChecks,steps,provenance:['TCVN 10304:2025 · 7.4.5.1-7.4.5.4 · trang 65','TCVN 10304:2025 · 7.4.5.5-7.4.5.7 · trang 66','TCVN 9362 · giới hạn độ lún/độ nghiêng/độ lún lệch được 7.4.5.6 viện dẫn']};
 }

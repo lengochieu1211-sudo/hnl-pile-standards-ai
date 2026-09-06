@@ -756,6 +756,7 @@ function productionRegistryIdForResult(workflow={},result={}) {
   if(workflow.id==='10304-screw' && result?.screwMode==='CT17_19_TABLE9_10' && result?.designFinal===true) return '10304-screw';
   if(workflow.id==='10304-spt' && result?.inputMode==='EXPLICIT_SPT_SUMMARY') return '10304-spt-summary-explicit';
   if(workflow.id==='10304-spt' && result?.noInterpolationPolicy===true) return '10304-spt-raw';
+  if(workflow.id==='10304-piled-raft' && result?.methodOnly===true) return '10304-piled-raft';
   if(workflow.id==='5574-pile-material' && result?.workflow==='pile-material-5574-near-centered-rect') return '5574-pile-material-near-centered-rect';
   return null;
 }
@@ -768,6 +769,7 @@ export function canExportEngineeringResult(payload={}) {
   // carry methodOnly=true. Export is allowed only after the deterministic engine
   // itself confirms the required inputs with ok=true.
   if(!verified || result?.ok!==true) return false;
+  if(result?.methodOnly===true || result?.productionNumeric===false) return false;
   // Rock CT (7)/(8) without the required normative lower-bound q_b is deliberately
   // preliminary. It may be displayed/explained but must not leave HNL as a final
   // production workbook.

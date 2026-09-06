@@ -1,0 +1,133 @@
+name: P5.8 Piled Raft Source Certification v3
+
+on:
+  push:
+    branches: [p5/piled-raft-method-gate]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  certify-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: p5/piled-raft-method-gate
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Patch P5.8 source tests and exact contract
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          p=Path('src/tcvn10304-advanced.js'); s=p.read_text(encoding='utf-8')
+          new_fn=r'''export function verifyPiledRaft10304(q=''){
+            const norm=String(q).toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
+            const IL=pick(q,['IL','I_L']);
+            const E=pick(q,['E','E_nen','E nền','E nen'],'(?:MPa)?');
+            let looseSand=pick(q,['loose_sand','cat_roi','cát rời','loose sand'],'m?');
+            if(looseSand==null && /khong co (?:lop )?cat roi|loose_sand\s*=\s*0/.test(norm)) looseSand=0;
+            const rock=/tua da|tựa đá|rock-supported|mui coc.*da|mui coc.*rock/.test(norm);
+            const denseSand=/cat chat vua|cat chat\b|medium dense sand|dense sand/.test(norm) && !/cat roi|loose sand/.test(norm);
+            const cohesive=/dat set|set pha|clay|cohesive/.test(norm) || IL!=null;
+            const consolidatedYes=/site_consolidated\s*=\s*(?:true|1|yes)|da ket thuc co ket|co ket hoan tat|nen da co ket/.test(norm);
+            const consolidatedNo=/site_consolidated\s*=\s*(?:false|0|no)|chua ket thuc co ket|dang co ket/.test(norm);
+            const consolidationDeclared=consolidatedYes||consolidatedNo;
+            const interactions=['cọc–đất nền','đài/bè–đất nền','tương tác cọc–cọc qua đất nền','tương tác cọc–đài/bè'];
+            const designChecks=['biến dạng tổng thể và cấu kiện riêng','nội lực cọc giữa/biên và bản đài','độ lún','độ nghiêng','độ lún lệch'];
+            if(rock) return {ok:true,status:'VERIFIED_METHOD',methodOnly:true,designFinal:false,productionNumeric:false,eligible:false,mode:'PILE_ONLY_NO_RAFT_TRANSFER',numericalModelRequired:false,inputs:{IL,E,looseSand,rock,denseSand,cohesive,siteConsolidated:consolidationDeclared?consolidatedYes:null},interactions,designChecks,steps:['7.4.5.2: cọc tựa lên đá → tính như móng cọc, không xét truyền tải trọng của bản móng xuống nền.','Không được cộng sức chịu tải của bè vào cọc bằng công thức tự đặt.'],provenance:['TCVN 10304:2025 · 7.4.5.2 · trang 65','TCVN 10304:2025 · 7.4.5.4-7.4.5.7 · trang 65-66']};
+            const missing=[];
+            if(!denseSand && !cohesive) missing.push('Loại nền theo 7.4.5.2: cát chặt vừa/chặt hoặc đất loại sét.');
+            if(cohesive){ if(IL==null) missing.push('I_L của đất loại sét.'); if(E==null) missing.push('E mô đun biến dạng nền (MPa).'); }
+            if(looseSand==null) missing.push('Chiều dày lớp cát rời ngay dưới móng (m); nhập loose_sand=0 nếu không có.');
+            if(missing.length) return {ok:false,status:'REVIEW',methodOnly:true,designFinal:false,productionNumeric:false,missing,inputs:{IL,E,looseSand,rock,denseSand,cohesive,siteConsolidated:consolidationDeclared?consolidatedYes:null},interactions,designChecks,provenance:['TCVN 10304:2025 · 7.4.5.1-7.4.5.7 · trang 65-66']};
+            const soilEligible=denseSand || (cohesive && IL<0.5 && E>8);
+            const prohibitedLooseSand=looseSand>1;
+            const prohibitedUnconsolidated=consolidatedNo;
+            const eligible=soilEligible && !prohibitedLooseSand && !prohibitedUnconsolidated;
+            const reasons=[]; const warnings=[];
+            if(!soilEligible) reasons.push(`7.4.5.2 không thỏa: đất loại sét cần I_L<0,5 và E>8 MPa; đang I_L=${IL}, E=${E} MPa.`);
+            if(prohibitedLooseSand) reasons.push(`7.4.5.3 cấm dùng bè-cọc hỗn hợp khi lớp cát rời ngay dưới móng dày >1 m; đang ${looseSand} m.`);
+            if(prohibitedUnconsolidated) reasons.push('7.4.5.3 cấm dùng bè-cọc hỗn hợp khi khu đất xây dựng chưa kết thúc cố kết.');
+            if(!consolidationDeclared) warnings.push('7.4.5.3: chưa khai báo trạng thái cố kết; kết quả chỉ xác nhận phương pháp/applicability theo dữ liệu hiện có và phải kiểm tra điều kiện cố kết trước thiết kế cuối.');
+            const mode=eligible?'PILED_RAFT_NUMERICAL_MODEL_REQUIRED':'PILE_FOUNDATION_OR_ENGINEERING_REVIEW';
+            const steps=[denseSand?'7.4.5.2: nền cát chặt vừa/chặt → đạt điều kiện loại nền.':`7.4.5.2: đất loại sét I_L=${IL}<0,5 và E=${E}>8 MPa → ${soilEligible?'đạt':'không đạt'}.`,`7.4.5.3: lớp cát rời ngay dưới móng = ${looseSand} m → ${prohibitedLooseSand?'không đạt':'đạt'}.`,consolidationDeclared?`7.4.5.3: khu đất ${consolidatedYes?'đã kết thúc':'chưa kết thúc'} cố kết → ${prohibitedUnconsolidated?'không đạt':'đạt'}.`:'7.4.5.3: trạng thái cố kết chưa khai báo → phải xác minh trước thiết kế cuối.','7.4.5.4-7.4.5.7: phải xét 4 tương tác cọc–đất–bè, biến dạng và nội lực bằng mô hình số/không gian; không có công thức đóng để HNL tự sinh phản lực nền biến đổi từ đầu.','7.4.5.6: chiều dài và khoảng cách cọc phải được chọn theo độ lún, độ nghiêng và độ lún lệch cho phép theo TCVN 9362.'];
+            return {ok:true,status:'VERIFIED_METHOD',methodOnly:true,designFinal:false,productionNumeric:false,eligible,mode,numericalModelRequired:eligible,reasons,warnings,inputs:{IL,E,looseSand,rock,denseSand,cohesive,siteConsolidated:consolidationDeclared?consolidatedYes:null},interactions,designChecks,steps,provenance:['TCVN 10304:2025 · 7.4.5.1-7.4.5.4 · trang 65','TCVN 10304:2025 · 7.4.5.5-7.4.5.7 · trang 66','TCVN 9362 · giới hạn độ lún/độ nghiêng/độ lún lệch được 7.4.5.6 viện dẫn']};
+          }'''
+          ns,n=re.subn(r"export function verifyPiledRaft10304\(q=''\)\{[\s\S]*?\n\}",lambda _:new_fn,s,count=1)
+          if n!=1: raise SystemExit('verifyPiledRaft10304 replacement failed')
+          p.write_text(ns,encoding='utf-8',newline='\n')
+
+          p=Path('src/engineering-router.js'); s=p.read_text(encoding='utf-8')
+          old="if(workflow.id==='10304-spt' && result?.noInterpolationPolicy===true) return '10304-spt-raw';"
+          add="  if(workflow.id==='10304-piled-raft' && result?.methodOnly===true) return '10304-piled-raft';"
+          if add not in s:
+            if old not in s: raise SystemExit('registry insertion anchor missing')
+            s=s.replace(old,old+'\n'+add,1)
+          guard="  if(result?.methodOnly===true || result?.productionNumeric===false) return false;"
+          old2="if(!verified || result?.ok!==true) return false;"
+          if guard not in s:
+            if old2 not in s: raise SystemExit('export guard anchor missing')
+            s=s.replace(old2,old2+'\n'+guard,1)
+          # Preserve router precedence repair if already present; otherwise apply it.
+          if "'7888-material','10304-piled-raft','10304-end-bearing','10304-cpt'" not in s:
+            s=s.replace("'7888-material','10304-end-bearing','10304-cpt'","'7888-material','10304-piled-raft','10304-end-bearing','10304-cpt'",1)
+            s=s.replace("'10304-equivalent-block','10304-piled-raft','10304-construction-effect'","'10304-equivalent-block','10304-construction-effect'",1)
+          p.write_text(s,encoding='utf-8',newline='\n')
+
+          p=Path('src/production-status-registry.js'); s=p.read_text(encoding='utf-8')
+          anchor="  '10304-screw':{status:'VERIFIED',productionNumeric:true,source:'7.2.4 · CT (17)–(19) · Bảng 9–10 · P5.6 Screw Golden + applicability/no-invention gate'},"
+          entry="  '10304-piled-raft':{status:'VERIFIED',productionNumeric:false,source:'7.4.5.1–7.4.5.7 · P5.8 method/applicability Golden · numerical interaction model required; no closed-form Production export'},"
+          if entry not in s: s=s.replace(anchor,anchor+'\n'+entry,1)
+          p.write_text(s,encoding='utf-8',newline='\n')
+
+          p=Path('tools/pass83-test-count-gate.mjs'); s=p.read_text(encoding='utf-8')
+          if 'const PILED_RAFT_P5_ADDITIVE_TESTS = 10;' not in s:
+            s=s.replace('// P5.6 screw-pile promotion adds 10 additive CT17-19/Table9-10/applicability/export tests.','// P5.6 screw-pile promotion adds 10 additive CT17-19/Table9-10/applicability/export tests.\n// P5.8 piled-raft method gate adds 10 additive 7.4.5 applicability/no-invention/export tests.')
+            s=s.replace('// Never lower any certified component and never skip tests. Final expected suite = 644/644/0.','// Never lower any certified component and never skip tests. Final expected suite = 654/654/0.')
+            s=s.replace('const SCREW_P5_ADDITIVE_TESTS = 10;','const SCREW_P5_ADDITIVE_TESTS = 10;\nconst PILED_RAFT_P5_ADDITIVE_TESTS = 10;')
+            s=s.replace(' + SCREW_P5_ADDITIVE_TESTS;',' + SCREW_P5_ADDITIVE_TESTS + PILED_RAFT_P5_ADDITIVE_TESTS;')
+            s=s.replace("`screwP5Additive=${SCREW_P5_ADDITIVE_TESTS}`,","`screwP5Additive=${SCREW_P5_ADDITIVE_TESTS}`,`piledRaftP5Additive=${PILED_RAFT_P5_ADDITIVE_TESTS}`,",1)
+            s=s.replace(' + Screw P5 ${SCREW_P5_ADDITIVE_TESTS}`);',' + Screw P5 ${SCREW_P5_ADDITIVE_TESTS} + Piled Raft P5 ${PILED_RAFT_P5_ADDITIVE_TESTS}`);')
+          p.write_text(s,encoding='utf-8',newline='\n')
+
+          tests="""import test from 'node:test';
+          import assert from 'node:assert/strict';
+          import { solveEngineeringQuestion, engineeringExcelPayload } from '../src/engineering-router.js';
+          import { verifyPiledRaft10304 } from '../src/tcvn10304-advanced.js';
+          const solve=q=>solveEngineeringQuestion(q).result;
+          test('P5.8 dense sand applicability can reach verified method gate',()=>{const x=solve('móng bè-cọc nền cát chặt vừa loose_sand=0m site_consolidated=true');assert.equal(x.ok,true);assert.equal(x.status,'VERIFIED_METHOD');assert.equal(x.eligible,true);assert.equal(x.numericalModelRequired,true);});
+          test('P5.8 cohesive soil requires IL<0.5 and E>8 MPa',()=>{const x=solve('móng bè-cọc đất sét IL=0.4 E=10MPa loose_sand=0m site_consolidated=true');assert.equal(x.ok,true);assert.equal(x.eligible,true);});
+          test('P5.8 cohesive IL boundary rejects IL=0.5',()=>{const x=solve('móng bè-cọc đất sét IL=0.5 E=10MPa loose_sand=0m site_consolidated=true');assert.equal(x.eligible,false);assert.match(x.reasons.join(' '),/I_L<0,5/);});
+          test('P5.8 cohesive E boundary rejects E=8 MPa',()=>{const x=solve('móng bè-cọc đất sét IL=0.4 E=8MPa loose_sand=0m site_consolidated=true');assert.equal(x.eligible,false);assert.match(x.reasons.join(' '),/E>8/);});
+          test('P5.8 loose sand layer thicker than 1m prohibits combined piled raft',()=>{const x=solve('móng bè-cọc nền cát chặt loose_sand=1.2m site_consolidated=true');assert.equal(x.eligible,false);assert.match(x.reasons.join(' '),/>1 m/);});
+          test('P5.8 unconsolidated construction site is prohibited',()=>{const x=solve('móng bè-cọc nền cát chặt loose_sand=0m site_consolidated=false');assert.equal(x.eligible,false);assert.match(x.reasons.join(' '),/chưa kết thúc cố kết/);});
+          test('P5.8 rock-supported piles switch to pile-only mode',()=>{const x=solve('móng bè-cọc cọc tựa đá');assert.equal(x.mode,'PILE_ONLY_NO_RAFT_TRANSFER');assert.equal(x.eligible,false);});
+          test('P5.8 method-only result can never export Production workbook',()=>{const q='móng bè-cọc nền cát chặt loose_sand=0m site_consolidated=true';const x=solve(q);assert.equal(x.methodOnly,true);assert.equal(x.productionNumeric,false);assert.equal(engineeringExcelPayload(q).canExport,false);});
+          test('P5.8 missing loose-sand declaration stays REVIEW',()=>{const x=verifyPiledRaft10304('móng bè-cọc đất sét IL=0.4 E=10MPa site_consolidated=true');assert.equal(x.ok,false);assert.equal(x.status,'REVIEW');assert.match(x.missing.join(' '),/cát rời/);});
+          test('P5.8 undeclared consolidation preserves legacy eligibility but emits explicit warning',()=>{const x=verifyPiledRaft10304('móng bè-cọc IL=0.4 E=10 MPa loose_sand=0.5 m');assert.equal(x.ok,true);assert.equal(x.eligible,true);assert.match(x.warnings.join(' '),/chưa khai báo trạng thái cố kết/);assert.equal(x.interactions.length,4);assert.ok(x.designChecks.includes('độ lún lệch'));});
+          """.replace('          ','')+'\n'
+          Path('tests/p5-piled-raft-method-gate.test.mjs').write_text(tests,encoding='utf-8',newline='\n')
+          Path('docs/P5_8_PILED_RAFT_METHOD_GATE_EVIDENCE.md').write_text('# P5.8 Piled Raft Method / Applicability Gate\n\nSource: TCVN 10304:2025, 7.4.5.1-7.4.5.7, standard pages 65-66.\n\nNo closed-form piled-raft capacity formula is invented. The gate verifies applicability and required interactions; final design requires numerical/spatial deformation and internal-force assessment. Undeclared consolidation is surfaced as an explicit warning for backward compatibility; an explicitly unfinished-consolidation site is prohibited per 7.4.5.3. Production numeric Excel export is blocked.\n',encoding='utf-8',newline='\n')
+      - name: Focused P5.8 Golden
+        run: node --test tests/p5-piled-raft-method-gate.test.mjs
+      - name: Exact additive count 654
+        run: node tools/pass83-test-count-gate.mjs
+      - name: Full regression
+        run: npm test
+      - name: Commit certified source only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/tcvn10304-advanced.js src/engineering-router.js src/production-status-registry.js tools/pass83-test-count-gate.mjs tests/p5-piled-raft-method-gate.test.mjs docs/P5_8_PILED_RAFT_METHOD_GATE_EVIDENCE.md
+          git diff --cached --quiet && exit 0
+          git commit -m "feat(p5.8): certify piled-raft method and applicability gate"
+          git push origin HEAD:p5/piled-raft-method-gate

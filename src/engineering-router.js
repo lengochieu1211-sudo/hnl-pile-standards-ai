@@ -262,13 +262,73 @@ function calcBored10304(q='') {
   return {ok:true,status:'MIXED/MANUAL',RkKn:Rk,inputs:{A,u,qb,gammaC,gammaRR,gammaRf,sumFh,depth,IL,phi,gamma1p:gp,gamma1:g1,d},qbLookup,steps:[`CT (13): Rk=γc(γRR·qb·A+γRf·u·Σfi·hi).`,`Rk=${Rk.toFixed(3)} kN.`],provenance:['TCVN 10304:2025 · 7.2.3 · CT (13)–(15) · tr.37–42','Σfi·hi/qb nhập tay giữ MANUAL provenance']};
 }
 function calcScrew10304(q='') {
-  const c1=explicit(q,['c1','c_1']); const gamma1=explicit(q,['gamma1','γ1']); const h1=explicit(q,['h1','h_1'],'m?'); const A=explicit(q,['A','dien tich canh','diện tích cánh'],'(?:m2|m²)?');
-  const a1=explicit(q,['alpha1','α1']); const a2=explicit(q,['alpha2','α2']); const u=explicit(q,['u','chu vi'],'m?'); const fi=explicit(q,['fi','f_i'],'(?:kPa)?'); const h=explicit(q,['h','chieu dai than','chiều dài thân'],'m?'); const d=explicit(q,['d','duong kinh canh','đường kính cánh'],'m?');
-  const gammaC=explicit(q,['gamma_c','γc']) ?? 1; const gammaRR=explicit(q,['gamma_RR','γRR']) ?? 1; const gammaRf=explicit(q,['gamma_Rf','γRf']) ?? 1;
-  const missing=[]; for (const [v,nm] of [[c1,'c1'],[gamma1,'γ1'],[h1,'h1'],[A,'A'],[a1,'α1 Bảng 10'],[a2,'α2 Bảng 10'],[u,'u'],[fi,'fi'],[h,'h'],[d,'d']]) if(v==null) missing.push(nm);
-  if(missing.length) return {ok:false,missing};
+  const norm=n(q);
+  const c1=explicit(q,['c1','c_1'],'(?:kPa)?');
+  const gamma1=explicit(q,['gamma1','γ1'],'(?:kN/m3|kN/m³)?');
+  const h1=explicit(q,['h1','h_1','độ sâu cánh','do sau canh'],'m?');
+  let A=explicit(q,['A','dien tich canh','diện tích cánh'],'(?:m2|m²)?');
+  const phi1=explicit(q,['phi1','φ1','phi','φ'],'(?:deg|°)?');
+  const manualA1=explicit(q,['alpha1','α1']); const manualA2=explicit(q,['alpha2','α2']);
+  let u=explicit(q,['u','chu vi','chu vi thân','chu vi than'],'m?');
+  const fi=explicit(q,['fi','f_i'],'(?:kPa)?');
+  const h=explicit(q,['h','L','chieu dai than','chiều dài thân','chiều dài','chieu dai'],'m?');
+  const d=explicit(q,['d','duong kinh canh','đường kính cánh'],'m?');
+  const ds=explicit(q,['ds','d_shaft','đường kính thân','duong kinh than'],'m?');
+  const manualGammaC=explicit(q,['gamma_c','γc']);
+  let gammaRR=explicit(q,['gamma_RR','γRR']); let gammaRf=explicit(q,['gamma_Rf','γRf']);
+  const loadType=/doi dau|đổi dấu|alternat|reversal/.test(norm)?'reversal':(/keo|kéo|nho|nhổ|tension/.test(norm)?'tension':(/nen|nén|compression/.test(norm)?'compression':null));
+  const clay=/dat set|đất sét|set pha|sét pha|clay/.test(norm);
+  const sand=/cat|cát|sand/.test(norm);
+  let soilCondition=null;
+  if(clay){
+    if(/deo chay|dẻo chảy/.test(norm)) soilCondition='clay-flowing';
+    else if(/deo mem|dẻo mềm/.test(norm)) soilCondition='clay-soft';
+    else if(/cung|cứng|nua cung|nửa cứng|deo cung|dẻo cứng/.test(norm)) soilCondition='clay-hard';
+  } else if(sand){
+    if(/bao hoa|bão hòa|pha chay|pha chảy/.test(norm)) soilCondition='sand-saturated';
+    else if(/it am|ít ẩm|pha cung|pha cứng/.test(norm)) soilCondition='sand-dry-hard';
+    else if(/am|ẩm|pha deo|pha dẻo/.test(norm)) soilCondition='sand-wet-soft';
+  }
+  if(/hai canh|hai cánh|2 canh|2 cánh|nhieu canh|nhiều cánh|multi.?helix/.test(norm)) return {ok:false,status:'REVIEW',screwMode:'CT17_19',missing:['7.2.4 CT (17)–(19) được nêu cho cọc vít một cánh; hai/nhiều cánh phải dùng thí nghiệm hoặc mô hình đã được kiểm chứng.']};
+  if(/luc ngang|lực ngang|mo men|mô men|horizontal|moment/.test(norm)) return {ok:false,status:'REVIEW',screwMode:'CT17_19',missing:['7.2.4: trường hợp có lực ngang hoặc mô men không dùng trực tiếp CT (17)–(19); cần thí nghiệm hoặc mô hình đất đã được kiểm chứng.']};
+  const applicability=[];
+  if(d!=null && d>1.2+1e-12) applicability.push(`7.2.4 giới hạn đường kính cánh d ≤ 1,2 m; d=${d} m.`);
+  if(h!=null && h>10+1e-12) applicability.push(`7.2.4 giới hạn chiều dài L ≤ 10 m; L=${h} m.`);
+  if(d!=null&&h1!=null&&clay&&h1<5*d-1e-12) applicability.push(`Chú thích 2: đất sét yêu cầu độ sâu cánh h1 ≥ 5d; h1=${h1} m, 5d=${5*d} m.`);
+  if(d!=null&&h1!=null&&sand&&h1<6*d-1e-12) applicability.push(`Chú thích 2: đất cát yêu cầu độ sâu cánh h1 ≥ 6d; h1=${h1} m, 6d=${6*d} m.`);
+  if(applicability.length) return {ok:false,status:'REVIEW',screwMode:'CT17_19',inputs:{c1,gamma1,h1,A,phi1,u,fi,h,d,ds,loadType,soilCondition},missing:applicability};
+  const phiNodes=[13,15,16,18,20,22,24,26,28,30,32,34];
+  const alpha1Nodes=[7.8,8.4,9.4,10.1,12.1,15.0,18.0,23.1,29.5,38.0,48.4,64.9];
+  const alpha2Nodes=[2.8,3.3,3.8,4.5,5.5,7.0,9.2,12.3,16.5,22.5,31.0,44.4];
+  let a1=null,a2=null,table10Auto=false;
+  if(phi1!=null){
+    const idx=phiNodes.findIndex(v=>Math.abs(v-phi1)<=1e-9);
+    if(idx<0) return {ok:false,status:'REVIEW',screwMode:'CT17_19',missing:[`Bảng 10 chưa được VERIFIED nội suy cho φ1=${phi1}°. Hãy dùng đúng mốc 13,15,16,18,20,22,24,26,28,30,32,34° hoặc cung cấp bằng chứng quy tắc nội suy.`]};
+    a1=alpha1Nodes[idx]; a2=alpha2Nodes[idx]; table10Auto=true;
+  } else if(manualA1!=null&&manualA2!=null){ a1=manualA1; a2=manualA2; }
+  let gammaC=null,table9Auto=false;
+  const gammaTable={
+    'clay-hard':{compression:0.8,tension:0.7,reversal:0.7},
+    'clay-soft':{compression:0.8,tension:0.7,reversal:0.6},
+    'clay-flowing':{compression:0.7,tension:0.6,reversal:0.4},
+    'sand-dry-hard':{compression:0.8,tension:0.7,reversal:0.5},
+    'sand-wet-soft':{compression:0.7,tension:0.6,reversal:0.4},
+    'sand-saturated':{compression:0.6,tension:0.5,reversal:0.3}
+  };
+  if(loadType&&soilCondition){ gammaC=gammaTable[soilCondition]?.[loadType]??null; table9Auto=gammaC!=null; }
+  if(gammaC==null&&manualGammaC!=null) gammaC=manualGammaC;
+  if(A==null&&d>0&&loadType==='compression') A=Math.PI*d*d/4;
+  if(A==null&&d>0&&ds>0&&loadType==='tension') A=Math.PI*(d*d-ds*ds)/4;
+  if(u==null&&ds>0) u=Math.PI*ds;
+  if(/ho khoan dan|hố khoan dẫn|pilot bore/.test(norm) && (gammaRR==null||gammaRf==null)) return {ok:false,status:'REVIEW',screwMode:'CT17_19',missing:['Thi công trong hố khoan dẫn: phải xác định γR,R và γR,f theo điểm 2 Bảng 4; không tự lấy 1,0.']};
+  gammaRR=gammaRR??1; gammaRf=gammaRf??1;
+  const missing=[];
+  for(const [v,nm] of [[c1,'c1 (kPa)'],[gamma1,'γ1 (kN/m³)'],[h1,'h1 độ sâu cánh (m)'],[A,'A diện tích cánh (m²)'],[a1,'φ1 đúng mốc Bảng 10 hoặc α1 thủ công'],[a2,'φ1 đúng mốc Bảng 10 hoặc α2 thủ công'],[u,'u chu vi thân cọc (m)'],[fi,'fi Bảng 3/giá trị có provenance (kPa)'],[h,'L/h chiều dài thân trong đất (m)'],[d,'d đường kính cánh (m)'],[gammaC,'Loại tải + trạng thái đất để tra γc Bảng 9, hoặc γc thủ công']]) if(v==null) missing.push(nm);
+  if(!clay&&!sand && !(manualA1!=null&&manualA2!=null&&manualGammaC!=null)) missing.push('Loại đất vùng làm việc: đất sét/sét pha hoặc cát/cát pha để kiểm Chú thích 2.');
+  if(missing.length) return {ok:false,status:'REVIEW',screwMode:'CT17_19',missing};
   const R0=(a1*c1+a2*gamma1*h1)*A, Rf=u*fi*(h-d), Rk=gammaC*(gammaRR*R0+gammaRf*Rf);
-  return {ok:true,RkKn:Rk,inputs:{c1,gamma1,h1,A,a1,a2,u,fi,h,d,gammaC,gammaRR,gammaRf},steps:[`CT (18): Rk,0=(α1·c1+α2·γ1·h1)A=${R0.toFixed(3)} kN.`,`CT (19): Rk,f=u·fi·(h−d)=${Rf.toFixed(3)} kN.`,`CT (17): Rk=γc(γRR·Rk,0+γRf·Rk,f)=${Rk.toFixed(3)} kN.`],provenance:['TCVN 10304:2025 · 7.2.4 · CT (17)-(19) · tr.43-44','Bảng 9 · tr.43','Bảng 10 · tr.45']};
+  const finalVerified=table10Auto&&table9Auto;
+  return {ok:true,status:finalVerified?'VERIFIED':'MIXED/MANUAL',screwMode:'CT17_19_TABLE9_10',formulaId:17,RkKn:Rk,designFinal:finalVerified,productionNumeric:finalVerified,inputs:{c1,gamma1,h1,A,a1,a2,u,fi,h,d,ds,gammaC,gammaRR,gammaRf,phi1,loadType,soilCondition,table9Auto,table10Auto},steps:[`Bảng 10: φ1=${phi1??'MANUAL'}° → α1=${a1}; α2=${a2}.`,`Bảng 9: γc=${gammaC}${table9Auto?` (${soilCondition}/${loadType})`:' (MANUAL)'}.`,`CT (18): Rk,0=(α1·c1+α2·γ1·h1)A=${R0.toFixed(3)} kN.`,`CT (19): Rk,f=u·fi·(h−d)=${Rf.toFixed(3)} kN.`,`CT (17): Rk=γc(γR,R·Rk,0+γR,f·Rk,f)=${Rk.toFixed(3)} kN.`],provenance:['TCVN 10304:2025 · 7.2.4 · CT (17)–(19) · tr.43–44','TCVN 10304:2025 · Bảng 9 · tr.43','TCVN 10304:2025 · Bảng 10 · tr.45','Chú thích 2 tr.44: h1≥5d (đất sét), h1≥6d (đất cát)']};
 }
 function parseStaticLoadCurve10304(q='') {
   const points=[]; const re=/(\d+(?:[.,]\d+)?)\s*kN\s*(?:@|:|\/|->|→)\s*(\d+(?:[.,]\d+)?)\s*mm/gi; let m;
@@ -693,6 +753,7 @@ function productionRegistryIdForResult(workflow={},result={}) {
   if(workflow.id==='10304-end-bearing' && result?.Ks!=null) return '10304-end-bearing-rock';
   if(workflow.id==='10304-bored' && Array.isArray(result?.segmentResults) && result?.tipLayer) return '10304-bored-raw';
   if(workflow.id==='10304-cpt' && result?.cptMode) return '10304-cpt';
+  if(workflow.id==='10304-screw' && result?.screwMode==='CT17_19_TABLE9_10' && result?.designFinal===true) return '10304-screw';
   if(workflow.id==='10304-spt' && result?.inputMode==='EXPLICIT_SPT_SUMMARY') return '10304-spt-summary-explicit';
   if(workflow.id==='10304-spt' && result?.noInterpolationPolicy===true) return '10304-spt-raw';
   if(workflow.id==='5574-pile-material' && result?.workflow==='pile-material-5574-near-centered-rect') return '5574-pile-material-near-centered-rect';

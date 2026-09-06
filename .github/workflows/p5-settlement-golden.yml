@@ -1,0 +1,34 @@
+name: P5 Settlement Promotion Golden
+
+on:
+  push:
+    branches: [main, p5/settlement-promotion]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  settlement-promotion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Version identity
+        run: npm run check:version
+      - name: Search Brain lock
+        run: npm run check:search
+      - name: Settlement CT30-46 focused Golden
+        run: node --test tests/p5-settlement-promotion.test.mjs
+      - name: Exact additive test-count gate
+        run: node tools/pass83-test-count-gate.mjs
+      - name: Full regression suite
+        run: npm test

@@ -72,7 +72,7 @@ export function selectEngineeringWorkflow(question='') {
     if(driven) matches.push(driven);
   }
   // More specific workflow first.
-  const order=['pile-capacity-multiborehole','pile-capacity-integrated','7888-material','10304-end-bearing','10304-cpt','10304-spt','10304-static','10304-dynamic','10304-bored','10304-screw','10304-settlement-single','10304-settlement-group','10304-equivalent-block','10304-piled-raft','10304-construction-effect','5574-pile-material','10304-driven','5574-anchorage','5574-lap-splice','5574-annex-d','5574-annex-l','5574-annex-m','5574-circular','5574-corbel','5574-annex-g','5574-crack','5574-deformation','5574-prestress','5574-punch','5574-local','5574-torsion','5574-shear','5574-eccentric','5574-bending-rect','5574-material'];
+  const order=['pile-capacity-multiborehole','pile-capacity-integrated','7888-material','10304-piled-raft','10304-end-bearing','10304-cpt','10304-spt','10304-static','10304-dynamic','10304-bored','10304-screw','10304-settlement-single','10304-settlement-group','10304-equivalent-block','10304-construction-effect','5574-pile-material','10304-driven','5574-anchorage','5574-lap-splice','5574-annex-d','5574-annex-l','5574-annex-m','5574-circular','5574-corbel','5574-annex-g','5574-crack','5574-deformation','5574-prestress','5574-punch','5574-local','5574-torsion','5574-shear','5574-eccentric','5574-bending-rect','5574-material'];
   matches.sort((a,b)=>(order.indexOf(a.id)<0?999:order.indexOf(a.id))-(order.indexOf(b.id)<0?999:order.indexOf(b.id)));
   return matches[0] || null;
 }

@@ -1,0 +1,39 @@
+name: P5.8 Router Source Fix
+
+on:
+  push:
+    branches: [p5/piled-raft-method-gate]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch-router:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: p5/piled-raft-method-gate
+          fetch-depth: 0
+      - name: Prioritize piled-raft context before end-bearing
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('src/engineering-router.js')
+          s=p.read_text(encoding='utf-8')
+          if "'7888-material','10304-piled-raft','10304-end-bearing','10304-cpt'" not in s:
+            a="'7888-material','10304-end-bearing','10304-cpt'"
+            b="'7888-material','10304-piled-raft','10304-end-bearing','10304-cpt'"
+            if a not in s: raise SystemExit('priority anchor missing')
+            s=s.replace(a,b,1)
+            s=s.replace("'10304-equivalent-block','10304-piled-raft','10304-construction-effect'","'10304-equivalent-block','10304-construction-effect'",1)
+          p.write_text(s,encoding='utf-8',newline='\n')
+      - name: Commit source-only routing repair
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/engineering-router.js
+          git diff --cached --quiet && exit 0
+          git commit -m "fix(p5.8): route piled-raft context before end-bearing"
+          git push origin HEAD:p5/piled-raft-method-gate

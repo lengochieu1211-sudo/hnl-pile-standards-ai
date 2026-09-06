@@ -1,0 +1,93 @@
+name: P5.8 Piled Raft Manifest Sync
+
+on:
+  push:
+    branches: [p5/piled-raft-method-gate]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: p5/piled-raft-method-gate
+          fetch-depth: 0
+      - name: Synchronize exact source and release fingerprints
+        shell: python
+        run: |
+          from pathlib import Path
+          import hashlib, json, re
+
+          def raw_hash(path):
+              return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+          def norm_hash(path):
+              s=Path(path).read_text(encoding='utf-8').replace('\r\n','\n')
+              return hashlib.sha256(s.encode('utf-8')).hexdigest()
+
+          # Source sync uses raw repository bytes.
+          p=Path('tools/pass83-source-sync-gate.mjs')
+          s=p.read_text(encoding='utf-8')
+          sources={
+            'src/engineering-router.js': raw_hash('src/engineering-router.js'),
+            'src/tcvn10304-advanced.js': raw_hash('src/tcvn10304-advanced.js'),
+            'src/production-status-registry.js': raw_hash('src/production-status-registry.js'),
+          }
+          for f,h in sources.items():
+              pattern=r"('"+re.escape(f)+r"':'?)[0-9a-f]{64}('?)"
+              if re.search(pattern,s):
+                  s=re.sub(pattern,lambda m:m.group(1)+h+m.group(2),s,count=1)
+              else:
+                  anchor="  'src/spt-shared-spec.js':"
+                  idx=s.find(anchor)
+                  if idx<0: raise SystemExit('source-sync insertion anchor missing')
+                  line_end=s.find('\n',idx)
+                  s=s[:line_end+1]+f"  '{f}':'{h}',\n"+s[line_end+1:]
+          s=s.replace('refreshed through P5.6 screw-pile promotion','refreshed through P5.8 piled-raft method gate')
+          s=s.replace('P5.6 screw-pile-certified integration source synchronized; Search/PDF/AI preserved','P5.8 piled-raft-certified integration source synchronized; Search/PDF/AI preserved')
+          p.write_text(s,encoding='utf-8',newline='\n')
+
+          tracked=[
+            'src/engineering-router.js',
+            'src/tcvn10304-advanced.js',
+            'src/production-status-registry.js',
+            'tools/pass83-test-count-gate.mjs',
+            'tools/pass83-source-sync-gate.mjs',
+            'tests/v1.25.7.test.mjs',
+            'tests/p5-piled-raft-method-gate.test.mjs',
+            '.github/workflows/p5-piled-raft-golden.yml',
+            'docs/P5_8_PILED_RAFT_METHOD_GATE_EVIDENCE.md',
+          ]
+          rp=Path('RELEASE_SYNC_MANIFEST.json')
+          rm=json.loads(rp.read_text(encoding='utf-8'))
+          for f in tracked: rm['files'][f]=norm_hash(f)
+          rp.write_text(json.dumps(rm,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
+
+          fp=Path('FULL_OVERWRITE_MANIFEST.json')
+          fm=json.loads(fp.read_text(encoding='utf-8'))
+          for f in tracked: fm['files'][f]=norm_hash(f)
+          fm['files']['RELEASE_SYNC_MANIFEST.json']=norm_hash('RELEASE_SYNC_MANIFEST.json')
+          fm['fileCount']=len(fm['files'])
+          fp.write_text(json.dumps(fm,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
+
+          print('P5.8 router raw', sources['src/engineering-router.js'])
+          print('P5.8 advanced raw', sources['src/tcvn10304-advanced.js'])
+          print('P5.8 registry raw', sources['src/production-status-registry.js'])
+          print('release normalized', norm_hash('RELEASE_SYNC_MANIFEST.json'))
+          print('full fileCount', fm['fileCount'])
+      - name: Validate synchronized gates
+        run: |
+          node tools/pass83-source-sync-gate.mjs
+          node tools/release-sync-gate.mjs
+      - name: Commit synchronized fingerprints
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/pass83-source-sync-gate.mjs RELEASE_SYNC_MANIFEST.json FULL_OVERWRITE_MANIFEST.json
+          git diff --cached --quiet && exit 0
+          git commit -m "chore(p5.8): synchronize release and source fingerprints"
+          git push origin HEAD:p5/piled-raft-method-gate

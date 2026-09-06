@@ -128,7 +128,8 @@ test('v1.25.7 methodOnly flag never bypasses missing-input export gate',()=>{
   const complete=engineeringExcelPayload('móng bè-cọc IL=0.4 E=10 MPa loose_sand=0.5 m');
   assert.equal(complete.result?.ok,true);
   assert.equal(complete.result?.methodOnly,true);
-  assert.equal(complete.canExport,true);
+  // P5.8: VERIFIED_METHOD/methodOnly is a procedure/applicability result, never a final Production numeric workbook.
+  assert.equal(complete.canExport,false);
 });
 
 test('v1.25.7 visible textarea keeps raw LaTeX while parser uses normalizedQuestion',()=>{

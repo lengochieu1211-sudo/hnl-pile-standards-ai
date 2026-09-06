@@ -1,0 +1,37 @@
+name: P5 Piled Raft Method Gate Golden
+
+on:
+  push:
+    branches:
+      - main
+      - p5/piled-raft-method-gate
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  piled-raft-golden:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Single-version identity gate
+        run: node scripts/check-version-sync.mjs
+      - name: Search Brain lock gate
+        run: node scripts/check-search-brain.mjs
+      - name: P5.8 piled raft focused Golden
+        run: node --test tests/p5-piled-raft-method-gate.test.mjs
+      - name: Exact additive regression count
+        run: node tools/pass83-test-count-gate.mjs
+      - name: Full regression
+        run: npm test
